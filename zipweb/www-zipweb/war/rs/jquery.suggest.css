@@ -1,0 +1,36 @@
+@charset "utf-8";
+
+.ac_results {
+		border: 1px solid #FFCC66;
+		font-size:12px;
+/*		border-top:none;*/
+		background-color: white;
+		padding: 0;
+		margin: 0;
+		list-style: none;
+		position: absolute;
+		z-index: 10000;
+		line-height:20px;
+		display: none;
+		width:150px
+	}
+
+	.ac_results li {
+		display:block;
+		padding:2px 5px;
+		white-space: nowrap;
+		color: #101010;
+		text-align: left;
+	}
+
+	.ac_over {
+		cursor: pointer;
+		background-color: #F0F0B8;
+	}
+
+	.ac_match {
+		text-decoration: underline;
+		color: black;
+	}
+
+

@@ -143,7 +143,6 @@ window.cleaner={
 		style.borderLeft="solid 12px lightgreen"
 		style.backgroundColor="white"
 		style.zIndex=99999
-		menu.onclick="javascript:this.style.width=this.style.width=='50%' ? '0' : '50%'"
 	},
 	markContent: function(content){
 		content=content||document.getSelection().extend()
@@ -295,6 +294,13 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			cleaner.clearScriptAndStyle()
 			var res=cleaner.getPageInfo(info.uid,info.deep)
 			res.cmds=cleaner.save(info.uid)
+			res.title=document.title
+			var n=$1("meta[name$=eywords],meta[name=KEYWORDS]")
+			if(n){
+				var keywords=n[0].getAttribute('content').split(",")
+				keywords=keywords.length>5 ? keywords.slice(0,5) : keywords
+				res.keywords=keywords.join(',')
+			}	
 			if(cleaner.icon)
 				res.images.push(res.icon=cleaner.icon)
 			else if(res.images.length)

@@ -1,19 +1,19 @@
 chrome.runtime.onInstalled.addListener(function() {
-	chrome.contextMenus.create({"title": "Icon",  "contexts":["image"],"id": "icon"})
-	chrome.contextMenus.create({"title": "Content",  "contexts":["selection"],"id": "content"})
-	chrome.contextMenus.create({"title": "Navigator",  "contexts":["selection"],"id": "menu"})
-	chrome.contextMenus.create({"title": "Clear",  "contexts":["page"],"id": "clear"})
-	chrome.contextMenus.create({"title": "Remove",  "contexts":["selection"],"id": "remove"})
-	chrome.contextMenus.create({"title": "Below Content",  "contexts":["selection"],"id": "Below", parentId:"remove"})
-	chrome.contextMenus.create({"title": "Above Content",  "contexts":["selection"],"id": "Above", parentId:"remove"})
-	chrome.contextMenus.create({"title": "Selected",  "contexts":["selection"],"id": "Node", parentId:"remove"})
+	chrome.contextMenus.create({title: "ZipWeb",			contexts:["page","image","selection"],id: "main"})
+	chrome.contextMenus.create({title: "Icon",  			contexts:["image"],		id: "icon", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Content",  			contexts:["selection"],	id: "content", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Navigator", 		contexts:["selection"],	id: "menu", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Remove",  			contexts:["selection"],	id: "remove", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Below Content",  	contexts:["selection"],	id: "Below", 	parentId:"remove"})
+	chrome.contextMenus.create({title: "Above Content",  	contexts:["selection"],	id: "Above", 	parentId:"remove"})
+	chrome.contextMenus.create({title: "Selected",  		contexts:["selection"],	id: "Node", 	parentId:"remove"})
 	
-	chrome.contextMenus.create({"title": "Download", "contexts":["page"],"id": "download"})
-	chrome.contextMenus.create({"title": "Current Page", "contexts":["page"],"id": "download1","parentId":"download"})
-	chrome.contextMenus.create({"title": "1 Deep", "contexts":["page"],"id": "download2","parentId":"download"})
-	chrome.contextMenus.create({"title": "2 Deep", "contexts":["page"],"id": "download3","parentId":"download"})
-	chrome.contextMenus.create({"title": "Smart",  "contexts":["page"],"id": "download9","parentId":"download"})
-	chrome.contextMenus.create({"title": "Clean Page",  "contexts":["page"],"id": "clean","parentId":"download"})	
+	chrome.contextMenus.create({title: "Clear",  			contexts:["page"],		id: "clear", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Download", 			contexts:["page","image"],		id: "download", parentId:"main"})
+	chrome.contextMenus.create({title: "Current Page", 		contexts:["page","image"],		id: "download1",parentId:"download"})
+	chrome.contextMenus.create({title: "1 Deep", 			contexts:["page","image"],		id: "download2",parentId:"download"})
+	chrome.contextMenus.create({title: "2 Deep", 			contexts:["page","image"],		id: "download3",parentId:"download"})
+	chrome.contextMenus.create({title: "Smart",  			contexts:["page","image"],		id: "download9",parentId:"download"})	
 });
 
 chrome.contextMenus.onClicked.addListener(function(info,tab,a){
@@ -69,7 +69,10 @@ Downloader.prototype={
 			me.save(info)
 			if(me.isFirstPage(url)){
 				me.info.push("home="+info.file.name)
-				info.cmds && me.info.push("cmds="+info.cmds)
+				if(info.cmds.length>10){
+					me.info.push("cmds="+info.cmds)
+					me.save2Cloud(info)
+				}
 				if(info.icon){
 					var a=document.createElement('a')
 					a.href=info.icon
@@ -207,10 +210,6 @@ Downloader.prototype={
 				me.zipWriter=null
 				chrome.tabs.sendMessage(me.tab.id,{cmd:"save",zipURL:URL.createObjectURL(blob),uid:me.uid})
 				delete Downloader[me.uid]
-				var request=new XMLHttpRequest()
-				request.open("POST",)
-				request.send()
-				
 			})
 		})
 	},
@@ -226,5 +225,15 @@ Downloader.prototype={
 		return this.files.length==0 &&
 			this.images.length==0 &&
 			this.links.length==0;
+	},
+	save2Cloud: function(info){
+		var request=new XMLHttpRequest(),
+			data=[]
+		data.push("url="+encodeURI(info.url))
+		data.push("title="+encodeURI(info.title))
+		('keywords' in info) && data.push("tags="+encodeURI(info.keywords))
+		request.open("POST","http://getzipweb.com/book/post",true)
+		request.setRequestHeader("Content-type","application/x-www-form-urlencoded")
+		request.send(data.join('&'))
 	}
 }

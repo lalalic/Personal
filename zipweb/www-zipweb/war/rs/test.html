@@ -1,0 +1,334 @@
+<html>
+	<head>
+		<title>test</title>
+		<link type="text/stylesheet" src="/rs/blueprint/scree.css">
+		<style>
+			textarea.editor{min-width:300px; min-height:150px;width:80%;height:50%}
+			.toolbar{width:100%;height:25px}
+			.toolbar input{background:url('/rs/images/editor.png') no-repeat;padding-left:25px;border:0px;margin-right:20px;min-width:25px}
+			.toolbar input:hover{color:blue}
+			.toolbar select{float:left}
+			.toolbar .createlink{background-position:2px 0px}
+			.toolbar .bold{background-position:2px 0px}
+			.toolbar .image{background-position:2px -57px}
+			.toolbar .video{background-position:2px -28px}
+			.toolbar .face{background-position:2px 0px}
+			.toolbar .italic{background-position:2px -120px}
+			.content{border:1px #bbb solid; padding:5px; border-radius:5px; font:bigger;background-color:white}
+			.content img{width:250px;clear:both;display:block;margin:5px auto;border:3px solid greenyellow; border-radius:3px; padding:6px}
+			
+			.dialog{border:10px solid orange; border-radius:10px;background:white;padding:10px}
+			.dialog h5{margin-top:-30px}
+			.closer{cursor:default;font-weight:bold}
+			
+		</style>
+		<script src="/rs/jquery.min.js"></script>
+		<script>
+			(function($){
+				$.fn.uploader = function (options){
+					var iframeID='uploadframe',
+						o=$.extend({
+							service:'',	
+							json : true, 
+							beforeSubmit: function(){
+								this.action=$.ajax('/media/want2upload/media/return',{async:false}).responseText
+							},
+							complete : $.noop}, options)
+					
+					if (!$('#' + iframeID).length)
+						$('<iframe/>',{id:iframeID,name:iframeID}).hide().appendTo('body')
+					
+					return $(this).each(function (){
+						$(this).click(function(){
+							$('#'+iframeID+'form').remove()
+							$('<form></form>',{target:iframeID, id:iframeID+'form',method:'post',enctype:"multipart/form-data",action:o.service})
+								.css({position:'absolute',top:-1000}).appendTo('body')
+								.append($('<input type="file" name="file" multiple="true">').change(function(){$(this.form).submit()}))
+								.submit(function (){
+									if(false===o.beforeSubmit.apply(this))
+										return false;
+									var iframe = $('#' + iframeID).load(function (){
+										var response = iframe.contents().find('body'),
+											returnReponse=o.json?$.parseJSON(response.text()):response.text()
+										o.complete.apply(this, returnReponse)
+										iframe.unbind('load')
+										setTimeout(function (){response.empty()}, 1)
+									})
+								}).find('input[type=file]').click()
+						})
+					})
+				}
+				$.fn.centerAt=function(pos){//center element at pos
+					return this.each(function(){
+							var $this=$(this),
+								offset=$this.css(pos).position()
+							$this.css({left:Math.floor(offset.left-$this.width()/2), top:Math.floor(offset.top-$this.height()/2)})
+						})  
+				}
+				$.fn.center=function(){//get center of an element
+					var $this=$(this.get(0)),
+						pos=$(this).position()
+					return {left:pos.left+Math.floor($this.width()/2), top:pos.top+Math.floor($this.height()/2)}
+				}
+					
+				$.fn.dialog=function(options){
+					function Dialog(title,content,options){
+						var options=$.extend({},{onclose:$.noop},options||{}),
+							header=$('<h5 class="info">'+title+' <span class="right closer">X</span></h5>'),
+							dialog=$('<div class="dialog"/>').appendTo('body')
+								.css({position:'absolute','min-width':400,'min-height':300,left:200,top:300})
+								.append(header)
+								.append($(content))
+						header.find('span.closer').click(function(){
+							dialog.remove()
+							options.onclose()
+						})
+						dialog.centerAt($('body').center())
+						return dialog
+					}
+					return $(this).each(function(){this.dialog=Dialog(this.title,this,options)})
+				}
+				
+				$.editor=function(options){
+					this.options=$.extend({
+							commands:["bold"]
+						},options)
+					var o=this.options,
+						self=this,
+						commands=o.commands,
+						toolbar=$(o.toolbar),
+						content=$(o.content).attr('contenteditable',true),
+						defaultCommand={
+							type:'button',
+							execute: function(args,rng){
+								self.document.execCommand(this.command,false,args)
+							},
+							onCreate:$.noop,
+							fmtOption:function(){
+								return $('<option>'+this.title||this.name||this+'</option>',this)
+							}
+						}
+					this.document=content.get(0).ownerDocument
+					this.window=window
+					$.each(commands,function(){
+						var cmdDef=$.editor.getCommand(this),
+							cmd=$.extend({},defaultCommand,cmdDef.substr&&{command:cmdDef}||cmdDef),
+							name=cmd.command,
+							title=cmd.title||name
+
+						switch(cmd.type){
+						case 'button':
+							$('<input type="button" class="'+name+'" value="'+title+'">')
+								.appendTo(toolbar)
+								.click(function(){cmd.execute(self)	})
+						break
+						case 'select':					
+							var select=$('<select/>',{title:title}).addClass(name)
+								.appendTo(toolbar)
+								.change(function(){cmd.execute(self,$(this).val())})
+							$.each(cmd.options,function(){
+								select.append(cmd.fmtOption.call(this))
+							})
+						break
+						case 'dialog':
+							$('<input type="button" class="'+name+'" value="'+title+'">')
+								.appendTo(toolbar)
+								.click(function(){
+									self.saveRng()
+									var form=$('<form method="post"/>').attr('title',title+" settings")
+											.dialog({onclose:function(){self.restoreRng()}})
+									form.css('min-height',form.parent().height()-30)
+										
+									$.each(cmd.settings,function(){
+										$('<div/>')
+											.append($('<div class="span-2"/>').text(this.title||this.name))
+											.append($('<div class="span-6 last"/>').append($('<input/>',this)))
+											.appendTo(form)
+									})
+									cmd.onCreate(self,form)
+									form.append('<hr class="space"><div class="actions"><button type="submit">应用</button></div>')	
+										.submit(function(e){
+											e.preventDefault()		
+											var args={}
+											$.each($(this).serializeArray(),function(){args[this.name]=this.value})
+											self.restoreRng()
+											cmd.execute(self,args)
+											form.parent().remove()
+											return false
+										})
+								})
+						break
+						}
+					})
+				}
+				$.editor.getCommand=function(name){
+					for(var index in this.supported){
+						var cmd=this.supported[index]
+						if(name.substr && cmd.command==name)
+							return cmd
+						else if (cmd.command==name.command)
+							return $.extend({},cmd,name);
+					}
+					return name
+				}
+				$.editor.supported=[/*native supported command doesn't need be listed*/
+					{type:'button',command:'createlink',execute:function(){
+						document.execCommand(this.command,false,prompt("url","http://"))
+						}},
+					{type:'select',command:"face", options:['p','pre','h1','h2','h3','h4','h5','h6'],
+						formatOpt:function formatOpt(opt){return '<'+opt.value+'>'+opt.title+'</'+opt.value+'>'}},
+					{type:'dialog',command:'image', 
+						settings:[{name:'src',title:"图片网址"},{type:'button',value:'上传',class:'editorupload'}],
+						onCreate: function(editor,form){
+							$('.editorupload',form).uploader({complete:function(urls){
+								form.parent().remove()
+								urls.substr && (urls=[urls])
+								for(var i in urls)
+									editor.document.execCommand('insertImage',false,urls[i])
+							}})
+						},
+						execute: function(editor,args){
+							var img=editor.findInSel('img')
+							if(img)
+								$(img).attr(args)	
+							else if(args.src.length>0){
+								editor.document.execCommand('insertImage',false,args.src)
+							}
+						}
+					}
+				]
+				$.editor.prototype={
+					getSel : function() {
+						return (this.window.getSelection) ? this.window.getSelection() : this.document.selection;	
+					},
+					
+					getRng : function() {
+						var s = this.getSel();
+						if(!s) { return null; }
+						return (s.rangeCount > 0) ? s.getRangeAt(0) : s.createRange();
+					},
+					
+					selectRng : function(rng,s) {
+						if(this.window.getSelection) {
+							s.removeAllRanges();
+							s.addRange(rng);
+						} else {
+							rng.select();
+						}
+					},
+					saveRng : function() {
+						this.savedRange = this.getRng();
+						this.savedSel = this.getSel();
+					},
+					
+					restoreRng : function() {
+						if(this.savedRange) {
+							this.selectRng(this.savedRange,this.savedSel);
+						}
+					},
+					selElement: function(){
+						var r=this.getRng()
+						if(r.startContainer) {
+							var contain = r.startContainer;
+							if(r.cloneContents().childNodes.length == 1) {
+								for(var i=0;i<contain.childNodes.length;i++) {
+									var rng = contain.childNodes[i].ownerDocument.createRange();
+									rng.selectNode(contain.childNodes[i]);					
+									if(r.compareBoundaryPoints(Range.START_TO_START,rng) != 1 && 
+										r.compareBoundaryPoints(Range.END_TO_END,rng) != -1) {
+										return contain.childNodes[i]
+									}
+								}
+							}
+							return contain
+						} else {
+							return (this.getSel().type == "Control") ? r.item(0) : r.parentElement()
+						}
+					},
+					findInSel: function(selector){
+						var el=$(this.selElement())
+						if(el.is(selector))
+							return $(el)
+						var els=el.find(selector)
+						if(els.length)
+							return $(els.get(0))
+						return null
+					},
+					sanitize: function(){
+						var content=this.options.content,
+							v=content
+								.find('a').each(function(){$(this).before('<span>[a href="'+this.href+'"|</span>').after('<span>]</span>')})
+								.end().find('b').each(function(){$(this).before('<span>[b|</span>').after('<span>]</span>')})
+								.end().find('i').each(function(){$(this).before('<span>[i|</span>').after('<span>]</span>')})
+								.end().find('img').each(function(){$(this).before('<span>[img src="'+this.src+'"]</span>')})
+								.end().find('p,br,div,ul,ol,dt,dd').before('<span>[br]</span>')
+								.end()
+								.html().replace(/<[^><]*\/?>/g,'')
+									
+						content.html(v.replace(/\[(img|br|a|b|i)[^\[\]]*\]/g,function(t,tag){
+									alert(t)
+									switch(tag){
+									case 'b':case 'i':case 'a':
+										return t.replace('[','<').replace('|','>').replace(']','</'+tag+'>')
+									break;
+									case 'img':case 'br':
+										return t.replace('[','<').replace(']','>')
+									}
+									return t;
+								}))
+					},
+					afterpaste: function(){this.sanitize()},
+					val: function(){
+						this.sanitize()
+						return this.options.content.html()
+					}
+				}
+				
+				$.fn.editor=function(options){
+					$(this).each(function(){
+						var $this=$(this)
+							toolbar=$('<div class="toolbar"/>').insertBefore(this),
+							content=$('<div class="content"/>')
+								.css({'min-width':$this.width(),'min-height':$this.height()})
+								.insertBefore($this.hide()),
+							editor=new $.editor($.extend({content:content,toolbar:toolbar},options))
+						editor.textarea=this		
+						$(this.form).submit(function(){
+							$this.val(editor.val())
+						})
+						
+						content.bind('paste',function(e){
+							setTimeout(function(){editor.afterpaste()},0)					
+						})
+						
+						content.html(this.value)
+					})
+				}
+				
+				
+			})(jQuery)
+			
+			$(function(){
+				$(".editor").editor({
+					commands:[
+						{command:"bold",title:"关键字"},
+						{command:"createlink",title:"链接"},
+						{command:"image",title:"图片"},
+						{command:"video",title:"视频"},
+						{command:"italic",title:"引用"},
+						{command:"html",title:"HTML",execute:function(editor){
+							var v=editor.val()
+							$(editor.textarea).show().val(v)
+							//$('#shower').html(v)
+						}}
+					]
+				})
+				
+			})	
+		</script>
+	</head>
+	<body>
+		<textarea class="editor"></textarea>
+		<div id='shower'></div>
+	</body>
+</html>

@@ -465,12 +465,7 @@ public class User extends AModel {
 				throw new RuntimeException(
 						"the account has already been registered.");
 
-			try {
-				user = (User) this.getClass().getEnclosingClass().newInstance();
-			} catch (Exception e) {
-				throw new RuntimeException("Can't create "
-						+ this.getClass().getSimpleName());
-			}
+			user = (User) this.newInstance();
 			user.account = account;
 			user.email = email;
 			user.name = name;

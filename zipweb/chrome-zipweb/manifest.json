@@ -6,15 +6,16 @@
   "version": "1.0",
 
   "browser_action": {
-    "default_icon": "img/icon16.png",
+    "default_icon": "img/icon.png",
 	"default_title": "Drawer"
   },
   "background":{
 	"scripts":["background.js","zip.js","deflate.js"]
   },
   "icons": {
-		"16": "img/icon16.png",	
-		"48": "img/icon48.png"
+		"16": "img/icon.png",
+		"48": "img/icon.png",
+		"256": "img/icon.png"
    },
    "permissions":["tabs","contextMenus","<all_urls>"],
    "content_scripts":[
