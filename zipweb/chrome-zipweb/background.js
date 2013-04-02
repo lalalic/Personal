@@ -229,10 +229,14 @@ Downloader.prototype={
 	save2Cloud: function(info){
 		var request=new XMLHttpRequest(),
 			data=[]
-		data.push("url="+encodeURI(info.url))
-		data.push("title="+encodeURI(info.title))
-		('keywords' in info) && data.push("tags="+encodeURI(info.keywords))
-		request.open("POST","http://getzipweb.com/book/post",true)
+		data.push("url="+encodeURIComponent(info.url))
+		data.push("title="+encodeURIComponent(info.title))
+		data.push("cmds="+encodeURIComponent(info.cmds))
+		('keywords' in info) && data.push("tags="+encodeURIComponent(info.keywords))
+		('icon' in info) && data.push('thumbnail='+encodeURIComponent(info.icon))
+		('description' in info)&&data.push('description='+encodeURIComponent(info.description))
+		
+		request.open("POST","http://www.getzipweb.com/book/post",true)
 		request.setRequestHeader("Content-type","application/x-www-form-urlencoded")
 		request.send(data.join('&'))
 	}

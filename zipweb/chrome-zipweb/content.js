@@ -297,10 +297,14 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			res.title=document.title
 			var n=$1("meta[name$=eywords],meta[name=KEYWORDS]")
 			if(n){
-				var keywords=n[0].getAttribute('content').split(",")
+				var keywords=n.getAttribute('content').split(",")
 				keywords=keywords.length>5 ? keywords.slice(0,5) : keywords
 				res.keywords=keywords.join(',')
 			}	
+			
+			if((n=$1("meta[name$=escription],meta[name=DESCRIPTION]")))
+				res.description=n.getAttribute('content')			
+			
 			if(cleaner.icon)
 				res.images.push(res.icon=cleaner.icon)
 			else if(res.images.length)
