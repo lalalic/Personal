@@ -1,0 +1,26 @@
+<#macro content>
+<div class="col span-7 box leftround">
+    <h5><a href="/plan">计划旅行</a> 
+        <a href="/plan/create.html">+</a>
+        <form class="right" action="/plan/tag"><input type="search" name="s" placeholder="搜索..."></form></h5>
+    <ul id="planlist">
+        <script>jQuery(function($){$('#planlist').load("/plan/home")})</script>
+    </ul>
+</div>
+
+<div class="col span-7 box" style="position:relative">
+    <h5>在路上
+        <form class="right" action="/plan/tag"><input type="search" name="s" placeholder="搜索..."></form></h5>
+    <ul id="travallist" style="position:relative">
+        <script>jQuery(function($){$('#travallist').load("/diary/home")})</script>
+    </ul>
+</div>
+
+<div class="col span-7 box right rightround">
+    <h5>美图
+        <form class="right" action="/pic/tag"><input type="search" name="s" placeholder="搜索..."></form></h5>
+    <div id="piclist">
+       
+    </div>
+</div>
+</#macro>

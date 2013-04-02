@@ -1,0 +1,15 @@
+<data>
+	<taxs>
+		<tax>
+			<name>城市</name>
+			<tax>
+				<name>北京</name>
+				<tags>朝阳,海淀</tags>
+			</tax>
+			<tax>
+				<name>上海</name>
+				<tags>朝阳,海淀</tags>
+			</tax>
+		</tax>
+	</taxs>
+</data>

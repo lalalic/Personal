@@ -1,0 +1,323 @@
+<html>
+<head>
+<title>test jrelation</title>
+<style>
+.ui-wireit-terminal {
+   width: 30px;
+   height: 30px;
+   cursor: pointer;   
+   position: absolute;
+   background: transparent url(terminals.png) no-repeat scroll 0 0;
+   z-index: 6;
+}
+
+.ui-wireit-terminal-connected {
+   background-position: 0 -30px;
+}
+
+.ui-wireit-terminal-dropinvite {
+   background-position: 0 -60px;
+}
+
+.ui-wireit-wire{
+border: 0px;
+position: absolute;
+z-index: 0;
+}
+
+.ui-wireit-hide{display:none}
+
+canvas{z-index:0}
+#info{position:absolute;right:0;width:100px;height:500px;}
+
+.ui-path-item{position:absolute;border:1px solid green;width:100px;height:100px; z-index:1}
+.ui-path-center{position:absolute;border:1px solid green;width:100px;height:100px; z-index:1}
+</style>
+<script src="jquery-1.4.2.js"></script>
+<script src="jquery-ui-1.8.5.custom.js"></script>
+<script src="jquery.tmpl.min.js"></script>
+
+<!--[if IE]> 
+<script src="excanvas.js"></script>
+<![endif]-->
+	
+<script src="jquery.wireit.js"></script>
+<script>
+
+
+
+/*
+$(function(){
+	var model={
+		'out':[],
+		'in':{hello:{},world:{}},
+		'other':{},
+		info:1
+	}
+	
+	
+	//$('#t1').wireit("#t2, #t3")
+	var circle={
+				shape:'circle',
+				center:{x:400,y:400},
+				radius:200,
+				start:"bottom"},
+		horizon={
+				shape:'horizon',
+				center:{x:400,y:400},
+				width:200,
+				height:200
+			},
+		vertical={
+				shape:'vertical',
+				center:{x:400,y:400},
+				width:200,
+				height:200
+			}
+	
+	$('body').relation({
+		model:model,
+		node:false,
+		template:'#tmpl',
+		wire:{autoPosition:'leftright',drawingMethod:'bezier'},
+		path:$('body').path({path:vertical})
+	});
+	$('.box').draggable()
+	//$("body").drawEllipse(200, 200, 400, 400, {color:'orange', stroke: 1});
+//	$("body").mousemove(function(e){$('#pos').html(e.pageX+","+e.pageY)})
+})
+*/
+</script>
+<style>
+
+#wirecases{position:relative;width:100%;height:100%;border:2px solid gray}
+.port{width:150px;height:150px;border:0px dotted green;margin:5px;}
+.box{position:absolute;border:0px dotted green;}
+.right{float:right}
+.left{float:left}
+.center{position:relative;width:50px;height:50px;background-color:blue;text-align:center;line-height:50px;}
+.wirelayer{position:absolute;border:1px solid red}
+#AllInSameLayer{height:200px;margin:5px; border:2px solid blue;position:relative}
+#AllInDifferentLayer{height:200px;margin:5px; border:2px solid blue;position:relative}	
+#portsInDifferentLayer{height:400px;margin:5px; border:2px solid blue;position:relative}	
+
+
+#networks, #pathcases{position:relative;width:100%;height:100%;border:2px solid gray}
+#pathcases .case{width:800px;height:800px;border: 1px dotted red;position:relative}
+#pathcases .item,#pathcases .item2{border:1px solid blue;width:20px;height:20px;background-color:gray}
+.path-item{position:absolute}
+
+#info, #wirecases , #pathcases	{display:none}
+
+</style>
+<script>
+$(function(){
+	$('.port').draggable()
+	if($('#wirecases').is(':visible')){
+		$.wire("#AllInSameLayer .left","#AllInSameLayer .right")
+		
+		$.wire("#AllInDifferentLayer .left .port","#AllInDifferentLayer .right .port",{container:'#AllInDifferentLayer .wirelayer'})	
+		
+		$("#portsInDifferentLayer .left .port")
+			.wire("#portsInDifferentLayer .top .port, #portsInDifferentLayer .right .port",
+			{
+				container:'#wirelayer2',
+				autoPosition:"lr",
+				terminalOutOptions:{offsetPosition:"top"},
+				terminalInOptions:{offsetPosition:"bottom"}
+			})
+		
+		//$.wire("#portsInDifferentLayer .left .port","#portsInDifferentLayer .right .port",{container:'#wirelayer1'})	
+		
+		//$.wire("#portsInDifferentLayer .left .port","#portsInDifferentLayer .top .port",{container:'#wirelayer2',autoPosition:'leftright'})
+	}
+	if($('#pathcases').is(':visible')){
+			
+		for(var i=0;i<7;i++)$('#pathcases .circle').append($('#batchdivs').tmpl({i:i,c:'item'}))	
+		$('#pathcases .circle')
+			.path({name:'circle',accept:'.item',path:{start:'right'}})
+			
+		$('#pathcases .circle .center')
+			.centerAt($('#pathcases .circle').center())
+			.wire('#pathcases .circle .item',
+				{
+					width:1,
+					drawingMethod: 'arrows',
+					autoPosition:false,
+					terminalOutOptions:{offsetPosition:"center"},
+					terminalInOptions:{offsetPosition:"center"}
+				})
+		
+		for(var i=0;i<7;i++)$('#pathcases .circle').append($('#batchdivs').tmpl({i:i,c:'item2'}))	
+		$('#pathcases .circle').path({name:'circle2',accept:'.item2',
+			path:{radius:200,direction:'counterclockwise',start:'right'}})	
+
+		$('#pathcases .circle .center')
+			.centerAt($('#pathcases .circle').center())
+			.wire('#pathcases .circle .item2',
+				{
+					drawingMethod: 'bezierArrows',
+					autoPosition:false,
+					terminalOutOptions:{offsetPosition:"center"},
+					terminalInOptions:{offsetPosition:"center"}
+				})
+		
+		
+		
+		for(var i=0;i<3;i++) $('#pathcases .vertical').append($('#batchdivs').tmpl({i:i,c:'item'}))
+		$('#pathcases .vertical').path({name:'vertical',accept:'.item',path:{shape:'vertical',start:'bottom'}})
+		$('#pathcases .vertical .center')
+			.centerAt({left:0,top:$('#pathcases .vertical').center().top})
+			.wire('#pathcases .vertical .item',
+				{
+					drawingMethod: 'arrows',
+					autoPosition:'lr'
+				})
+		
+		
+		for(var i=0;i<7;i++) $('#pathcases .vertical').append($('#batchdivs').tmpl({i:i,c:'item2'}))
+		$('#pathcases .vertical').path({name:'vertical2',accept:'.item2',path:{shape:'vertical',start:'top', height:250}})
+		$('#pathcases .vertical .center')
+			.centerAt({left:0,top:$('#pathcases .vertical').center().top})
+			.wire('#pathcases .vertical .item2',
+				{
+					drawingMethod: 'arrows',
+					autoPosition:'lr'
+				})
+		
+		for(var i=0;i<7;i++)$('#pathcases .horizon').append($('#batchdivs').tmpl({i:i,c:'item'}))
+		$('#pathcases .horizon').path({name:'horizon',accept:'.item',path:{shape:'horizon',start:'left'}})
+		
+		$('#pathcases .horizon .center')
+			.centerAt({left:$('#pathcases .horizon').center().left,top:0})
+			.wire('#pathcases .horizon .item',
+				{
+					drawingMethod: 'arrows',
+					autoPosition:'tb'
+				})
+		
+		for(var i=0;i<7;i++)$('#pathcases .horizon').append($('#batchdivs').tmpl({i:i,c:'item2'}))
+		$('#pathcases .horizon').path({name:'horizon2',accept:'.item2',path:{shape:'horizon',start:'left',height:250}})
+		$('#pathcases .horizon .center')
+			.centerAt({left:$('#pathcases .horizon').center().left,top:0})
+			.wire('#pathcases .horizon .item2',
+				{
+					drawingMethod: 'arrows',
+					terminalOutOptions:{offsetPosition:"bottom"},
+					terminalInOptions:{offsetPosition:"top"}
+				})
+	}
+	
+	if($('#networks').is(':visible')){
+		var model;
+			model={
+				input:{
+					file1:'c://a.txt',
+					file2:'c://b.txt',
+					file3:'c://c.txt'
+				},
+				output:{
+					file1:'c://a.txt',
+					file2:'c://b.txt',
+					file3:'c://c.txt'
+				},
+				etc:['a','b']
+			}
+		$('#networks').network({
+			name:'network',
+			template:'#tmpl',
+			//path:{shape:'horizon',start:'left',width:200,height:250, center:{left:$('#networks').center().left,top:0}},
+			path:{start:'top',radius:200},
+			wire:{
+					width:1,
+					arrowLength:20,
+					borderwidth:0,
+					drawingMethod: 'bezierArrows',
+					autoPosition:false,
+					terminalOutOptions:{offsetPosition:"center"},
+					terminalInOptions:{offsetPosition:"center"}
+				},
+			model:{
+				input:{
+					file1:{half1:'c://a.txt',half2:'c://a.txt',half3:'c://a.txt'},
+					file2:'c://b.txt',
+					file3:'c://c.txt'
+				},
+				output:{
+					file1:'c://a.txt',
+					file2:'c://b.txt',
+					file3:'c://c.txt'
+				},
+				etc:['a','b']
+			}
+		})
+	}
+})
+</script>
+</head>
+<body>
+
+<script id="tmpl" type="text/tmpl">
+<center class="box" title="${name}" style="z-index:5"><h1>${name}</h1></center>
+</script>
+
+<script id="batchdivs" type="text/tmpl">
+<div class="${c}">${i}</div>
+</script>
+
+<script id="infoTmpl" type="text/tmpl">
+<div>${x}, ${y}</div>
+</script>
+<div id="info">information<button id="pos">position</button></div>
+<div id="pathcases">
+	<div class="case circle"><div class="center">center</div></div>
+	<div class="case vertical"><div class="center">center</div></div>
+	<div class="case horizon"><div class="center">center</div></div>
+</div>
+
+<div id="wirecases">
+	<div id="AllInSameLayer">
+		<div class="port left">samelayer left</div>
+		<div class="port right">samelayer right</div>
+	</div>
+
+	<div id="AllInDifferentLayer">
+		<div class="city left">
+			<div class="port">left</div>
+		</div>
+
+		<div class="city right">
+			<div class="port">right</div>
+		</div>
+
+		<div class="wirelayer"></div>
+
+	</div>
+
+	<div id="portsInDifferentLayer">
+		<div class="wirelayer" id="wirelayer2"></div>
+		<div class="wirelayer" id="wirelayer1"></div>
+		<center class="city top">
+			<div class="port">top</div>
+		</center>
+		
+		<div class="city left">
+			<div class="port">left</div>
+		</div>
+
+		<div class="city right">
+			<div class="port">right</div>
+		</div>
+
+	</div>
+</div>
+
+<div id="networks">
+	
+</div>
+
+<script type="text/tmpl" id="tree">
+	
+</script>
+</body>
+</html>

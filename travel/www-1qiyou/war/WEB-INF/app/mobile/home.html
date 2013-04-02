@@ -1,0 +1,22 @@
+<#macro init>
+	<#include "/com/yy/app/site/mobile/home.html">
+</#macro>
+
+<#macro content>
+	<div>
+		<table class="p">
+			<tr>
+				<td><a href="/plan">My Vacation1</a></td>
+				<td><a href="/track">My Track</a></td>
+			</tr>
+			<tr>
+				<td class="n a"><@cmd onclick="add.call(this)" needLogin=false label="+"></@cmd></td>
+				<td/>
+			</tr>
+			<tr>
+				<td class="n"><a href="/user/signup.html">Account</a></td>
+				<td class="n"><a href="">Setting</a></td>
+			</tr>
+		</table>
+	</div>
+</#macro>

@@ -1,0 +1,131 @@
+<#assign headMacros=["tmplCss"]+headMacros>
+<#include "/base.html">
+
+<#macro auth>
+    <#if user.ID==0>
+    <li><a href="/user/signin.html">登录</a></li>
+    <li><a href="/user/weibo/signin.html" title="新浪微博登录" style="background:url(/rs/images/wb.png) no-repeat;padding-left:17px">&nbsp;</a></li>
+    <li><a href="/user/signup.html">注册</a></li>
+    <#else>
+    <li><a href="/user/signout">退出</a></li>
+    <li><a href="/user/profile.html">设置</a></li>
+    </#if>
+</#macro>
+
+<#macro managedContent>
+    <div class="span-6 border quiet">    
+        <#local uis=user.managedUI categories=uis?keys>
+        <ul data-role="listview" data-inset="true">
+        <#list categories as category>
+            <li data-role="list-divider">${category}
+                <ul>
+                    <#list uis[category] as ui>
+                    <li><a href="${ui.url}">${ui.name}</a></li>
+                    </#list>
+                </ul>
+            </li>
+        </#list>
+        </ul>
+    </div>
+    <div class="span-18 last loud">
+        <div id="msg"></div>
+        <@content/>
+    </div>
+</#macro>
+
+<#macro tmplCss>
+<style>
+    .half{width:48%}
+    #header{height:50px;margin:5px auto;line-height: 50px; background-color:orange;border-radius:5px 5px 0 0}
+    #header #logo img{width:80px;margin-top:-80px;}
+    #header #auth li{font:smaller;list-style:none;display:inline}
+    #header a{text-decoration: none}
+    
+   .menu li{list-style:none; display:inline-block; min-width:80px;text-align:center;margin:10px auto auto auto;padding:0 5px}
+   .menu li.current{background-color:white;border-radius:5px 5px 0px 0px; color:#222}
+   
+   
+    #content{min-height:500px;}
+    
+    #footer{height:50px; margin:5px auto;background-color:silver;border-radius:0 0 5px 5px}
+    
+    .article{border:3px orange solid;border-radius:5px;padding:5px;min-height: 300px}
+    .article h3,.article h4{text-align:center;font-weight: bold}
+    .article.small{padding-left:50%}
+    
+    /*form input,form textarea, form select{min-width:140px;border-radius:5px;border:1px gray solid;padding:2px}*/
+    input.addable{min-width:100px!important}
+    form .dateUI select{min-width:0px}
+    form .actions{text-align:center;margin:auto 50px}
+    form .actions input{line-height:20px;min-width:100px;border-radius:5px;}
+    
+    h4{text-align:center;font-weight:bold}
+    
+    ul.tabs{height:30px;line-height:30px}
+    ul.tabs li{display:inline-block;min-width:60px; padding: 0 5px;text-align:center}
+    button a,.tabs a{text-decoration: none}
+    .tabs li.current{border-bottom:3px solid orange}
+    button{padding:5px 10px}
+    .round{border-radius:5px}
+    .box{border-radius:5px}
+    
+    select{padding:2px; min-width: 158px; }
+    #search select{min-width:1px; border:flat;background:transparent}
+    
+    textarea.2rows{height:3em; }
+    ul.actions{margin: 0px;padding: 0 0 0 2px; list-style: none;}
+    ul.actions li{display:inline;list-style:none}
+    table.fields>tbody>tr>td:first-child{min-width:5em;text-align:right; max-width:10em;font-weight:bold}
+    table.fields>tbody>tr>td:last-child{text-align:left}
+    body{
+       background-color: #2F2727;
+       background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727));
+       background-image: -webkit-linear-gradient(top, #1a82f7, #2F2727); 
+       background-image:    -moz-linear-gradient(top, #1a82f7, #2F2727);
+       background-image:     -ms-linear-gradient(top, #1a82f7, #2F2727);
+       background-image:      -o-linear-gradient(top, #1a82f7, #2F2727);
+    }
+    ul.suggest {display:none;position:absolute}
+    a{text-decoration:none}
+</style>
+<script>
+    jQuery(function($){$('#content').css('min-height',$(document).height()-$('#header').height()-$('#footer').height())})
+</script>
+</#macro>
+
+<#macro body>
+    <div id="header" class="span-24">
+        <div id="logo" class="span-4"><a href="/"><img src="/extend/rs/images/logo.png"/></a></div>
+        <div class="span-16">
+            <ul class="menu">
+                <li <#if request.path?length==0>class="current"</#if>><a href="/">首页</a></li>
+                <@menu/>
+            </ul>
+        </div>
+        <div  class="span-4 last"><ul id="auth"><@auth/></ul></div>
+    </div>
+    <div id="content" class="span-24">
+        <#if isManagedUI!false>
+            <@managedContent/>
+        <#else>
+            <@content/>
+        </#if>
+    </div>
+    <div id="footer" class="span-24">
+        <ul class="menu">
+            <@footerMenu/>
+        </ul>
+    </div>   
+</#macro>
+
+<#macro menu>
+	override menu macro in your template to show menus
+</#macro>
+
+<#macro footerMenu>
+	<@menu/>
+</#macro>
+
+<#macro menuItem title url>
+	<li <#if ("/"+request.path)?index_of(url)==0>class="current"</#if>><a href="${url}">${title}</a></li>
+</#macro>

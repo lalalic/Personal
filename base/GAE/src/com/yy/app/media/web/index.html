@@ -1,0 +1,110 @@
+<#macro init>
+    <#assign headMacros=headMacros+["mediaRS"]>
+</#macro>
+
+<#macro mediaRS>
+<script>
+	(function ($){
+		$.fn.upload = function (options){
+			options = $.extend({}, $.fn.upload.defaults, options)
+			
+			if (!$('#' + options.iframeID).length)
+				$('body').append('<iframe id="' + options.iframeID + '" name="' + options.iframeID + '" style="display:none" />')		
+			
+			return $(this).each(function (){
+				$(this).attr('target', options.iframeID)
+					.submit(function ()	{
+					    var form=this
+						this.action=$.ajax('/media/want2upload',{async:false}).responseText
+						var iframe = $('#' + options.iframeID).load(function (){
+							var response = iframe.contents().find('#images')
+							options.complete.apply(this, response)
+							iframe.unbind('load')
+							setTimeout(function (){response.remove()}, 1)
+							form.reset()
+						})
+					})
+			})
+		};
+		
+		
+		$.fn.upload.defaults ={
+			iframeID : 'uploadframe',
+			complete : $.noop
+		}
+	})(jQuery);
+	
+	function selectUploaderImage(){
+		if(window.selectImage!=undefined){
+			var url=$('img',this).attr('src'),
+				title=$(this).text().trim()
+			window.selectImage(url,title)
+		}
+	}
+	
+	 function albumIDOnChange(){
+        if(this.selectedIndex==0) 
+            return $('#images').empty(); 
+        $('#images').load('/media/album/'+$(this).val());
+        $('#newAlbum').val('')
+    }
+    
+	$(function(){
+		$('#uploader').upload({
+			complete:function(images){
+				$('#images').append($(images).children())
+			}
+		})
+	})
+</script>
+<style>
+	#images {position:relative;width:100%}
+	#images li{display:inline-block;border:2px solid lightyellow;margin:2px;text-align:center;font-size:smaller}
+	#images li img{width:150px;height:150px;}
+</style>
+</#macro>
+
+<#macro media>
+<article>
+    <#assign isEditable=true>
+    <script>
+       
+    </script>
+	<form id="uploader" method="post" enctype="multipart/form-data">
+	    <div>
+	    	<@addableSelectUI name="album" title="专辑">
+	    		<@optionUI options=albums mode="Model"/>
+	    	</@addableSelectUI>
+        </div>
+        <ol>
+	       <li><input type="file" name="file" multiple="true"></li>
+	       <li><input type="file" name="file" multiple="true"></li>
+		   <li><input type="file" name="file" multiple="true"></li>
+		   <li><input type="file" name="file" multiple="true"></li>
+           <li><input type="file" name="file" multiple="true"></li>
+        </ol>
+        <input type="submit" value="上载">
+	</form>
+	<@listmedia/>
+</article>
+</#macro>
+
+<#macro listmedia>
+<ul id="images" style="padding:5px;min-height:200px">
+	<#list resources as resource>
+	<li onclick="selectUploaderImage.apply(this)">
+		<img src="${resource.url}"/><br/>
+		<center>${resource.name}</center>
+	</li>
+	</#list>
+</ul>
+</#macro>
+
+<#macro listalbummedia>
+    <#list resources![] as resource>
+    <li onclick="selectUploaderImage.apply(this)">
+        <img src="${resource.url}"/><br/>
+        <center>${resource.name}</center>
+    </li>
+    </#list>
+</#macro>

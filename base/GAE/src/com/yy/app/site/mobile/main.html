@@ -1,0 +1,64 @@
+<#global template=website.defaultTemplate>
+<#if init??><@init/></#if>
+<#include "/"+template+".html">
+<#macro p name callback><button type="button" onclick="sv.photo('${callback}')" class="_p"><input type="file" name="${name}">P</button></#macro>
+<#macro o name><button type="button" onclick="sv.audio()" class="_o"><input type="file" name="${name}">O</button></#macro>
+	
+<#macro cmd href="" onclick="" label="" needLogin=true base="">
+    <#if needLogin && !user.isLoggedIn()>
+        <#if href==''>
+            <a <#nested> onclick="if(prompt('Need signin first','Do you want to signin and come back?')) document.location.href='/user/signin.html'" href="javascript:void(0)">${label}</a>
+            <#return>
+        <#elseif href?starts_with('#')>
+            <a <#nested> href="/user/signin.html?targetURL=${base}${href}">${label}</a>
+            <#return>
+        </#if>
+    </#if>
+    <a <#nested> href="<#if href!=''>${base}${href}<#else>javascript:void(0)</#if>" <#if onclick!=''>onclick="${onclick}"</#if>>${label}</a>
+</#macro>
+
+<#macro editor name content="" placeholder="">
+	<div>
+		<div class="ed">
+			<textarea name="${name}" <#nested/> placeholder="${placeholder}"></textarea>
+			<div>
+				<button type="button" onclick="edT.call(this)">T</button>
+				<button type="button" onclick="edP.call(this)">p</button>
+				<button type="button" onclick="edX.call(this)">x</button>
+			</div>
+		</div>
+	</div>
+	<style>
+	.ed div{margin-top:-1em}
+	.ed textarea{border-radius:0px;border:none; border-bottom:1px solid;background:transparent}
+	.ed input1{position:absolute;left:-200px;display:inline;border:none;width:100px}
+	.ed img{width:150px;min-height:100px;margin:2px auto;display:block}
+	.ed:nth-child(odd){background-color:#bbbbbb}
+	</style>
+	<script>	
+		(function(a){
+			window.edHTML=(a=$1('.ed')).outerHTML
+			$1('textarea',a).value="${content!''}";
+		})()
+		
+		var edT=function(a){
+				$p1(a=$p2(this)).insertBefore(m(edHTML),a.nextElementSibling)
+			},
+			edX=function(a){
+				if($('.ed').length==1)
+					return;
+				$p1(a=$p2(this)).removeChild(a)
+			},
+			edPID=0,
+			edP=function(b){
+				var a=m(edHTML),text=$1('textarea',a)
+				$p1(text).replaceChild(m("<center><img id='ed"+edPID+"' onclick='sv.photo(\"edImgCallback("+edPID+")\")' src='/placeholder.jpg'/></center>"),text)
+				var edDiv=$p2(this)
+				$p1(edDiv).insertBefore(a,edDiv.nextElementSibling)
+				edPID++;
+			},
+			edImgCallback=function(id){
+				return function(a,b){(b=$1('#ed'+id)).src=a;b.classList.add('uploading')}
+			};
+	</script>
+</#macro>

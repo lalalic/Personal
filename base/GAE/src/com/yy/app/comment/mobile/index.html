@@ -1,0 +1,22 @@
+<#macro show>
+	<ol id="cs">
+		<#list comments as c>
+		<li>${c.message}</li>
+		</#list>
+	</ol>
+	<@commentForm entityID/>
+</#macro>
+
+<#macro commentForm id>
+	<#if !user.isLoggedIn()>
+		<button><a href="/user/signin.html?target=/comment/list/${id}.html">Signin to Comment</a></button>
+		<#return/>
+	</#if>
+	<script>function photo(a){$1("#test").src=a}</script>
+    <form id="cf" class="actions" onsubmit="x('post','/comment/add',function(a){cs.appendChild(m('<li>'+cf.c.value+'</li>'));cf.c.value=''},'ID=${id}&comment='+r(this.c.value));return false">
+        <div style="float:left"><@p "photo" 'photo'/><@o "audio"/></div>
+        <input name="c" required="required" placeholder="comment" style="width:auto;height:1em;display:inline;margin:0;padding:5px;border-radius:0"/>
+        <div style="float:right"><button type="submit">save</button></div>
+    </form>
+</#macro>
+

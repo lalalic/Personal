@@ -1,0 +1,18 @@
+<#macro title>welcome to ${site}</#macro>
+<#macro content>
+	<div class="ui-grid-a">
+		<form class="ui-block-a" action="/talent/list" data-role="ajaxform"
+			data-success="on(talents):listTalents(talents)">
+			<input type="search" value="search talent"/>
+			<a data-role="button" href="/work/post.html">create work</a>
+		</form>
+		<form class="ui-block-b" action="/post/list" data-role="ajaxform"
+			data-success="on(works):listWorks(works)">
+			<input type="search" value="search work"/>
+		</form>
+	</div>
+	<div id="list">
+		<ul data-role="listview"  id="works">
+		</ul>
+	</div>
+</#macro>

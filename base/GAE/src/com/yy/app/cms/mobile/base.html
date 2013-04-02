@@ -1,0 +1,67 @@
+<#--
+show:
+    -showList
+        -action4List, filter4List
+        -vote, authorInfo
+    -show1 (show1Fields[, show1Extra])
+    -showSerial
+post:
+    -postForm (postFields)
+-->
+<#macro showList>
+	<ol class="list">
+		<#list posts as post>
+		<li><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
+		</#list>
+	</ol>
+	<center class="actions"><@action4List/></center>
+</#macro>
+
+<#macro action4List>
+	<button><a href="/${path}/create.html">+</a></button>
+	<button><a href="/${path}/">Q</a></button>
+</#macro>
+
+<#macro show1>
+	<div>
+		<h1>${post.title}</h1>
+		<div><@authorInfo post.author/></div>
+		<hr/>
+		<div>${post.content}</div>
+	</div>
+	<@show1Extra post/>
+	<center class="actions"><@action41 post/></center>
+</#macro>
+
+<#macro show1Extra post>
+</#macro>
+
+<#macro action41 post>
+	<@favoriteCMD post/>
+	<button><a href="/comment/list/${post.ID}.html">评论</a></button> 
+</#macro>
+
+<#macro favoriteCMD post>
+	<button onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$1('span',a).innerHTML=x.responseText})">收藏<span>${post.favorites}</span></button>
+</#macro>
+
+<#macro postForm>
+	<form action="/${path}/post" method="post">
+		<input type="hidden" name="parent" value="${post.parent!0}">
+        <input type="hidden" name="ID" value="${post.ID!0}">
+        <@postFields post/>
+        <center class="actions">
+            <button type="submit">发送</button> 
+            <button onclick="history.go(-1)">取消</button>
+        </center>
+	</form>
+</#macro>
+
+<#macro postFields post>
+	<input placeholder="标题" name="title" value="${post.title!}" required="required" style="border:none;font-weight:bold;text-align:center"/>
+	<@editor placeholder="内容" name="content" content=post.content>required</@editor>
+	<input placeholder="标签:11个月,发烧" name="tag" value="${post.tag!}">
+</#macro>
+
+<#macro authorInfo userID>
+</#macro>

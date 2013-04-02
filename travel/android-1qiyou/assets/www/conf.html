@@ -1,0 +1,61 @@
+<html>
+	<head>
+		<title>Settings</title>
+	</head>
+	<script>
+		function save(){
+			try{
+				var conf=service.getConf()
+				conf.set("user",this.user.value)
+				conf.set("password",this.password.value)
+				conf.set("whentrack",this.whentrack.selectedIndex)
+				conf.set("whenphoto",this.whenphoto.selectedIndex)
+				this.user.setFocus()
+			}catch(e){
+				console.error("save error:"+e.message);
+			}
+			console.info("saved")
+			return false
+		}
+		function init(){
+			try{
+				var form=document.getElementById('form')
+				var conf=service.getConf()
+				console.info("get configuration")
+				form.user.value=conf.get("user")
+				form.whentrack.selectedIndex=conf.getInt("whentrack")
+				form.whenphoto.selectedIndex=conf.getInt("whenphoto")
+			}catch(e){
+				console.error("init error:"+e.message);
+			}
+			console.info("initialized")
+		}
+	</script>
+	<body onload="init()">
+	<form method="post" onsubmit="return save.call(this)" id="form">
+		<table>
+			<tr><td>User Name</td></tr>
+			<tr><td><input name="user"></td></tr>
+			
+			<tr><td>Password</td></tr>
+			<tr><td><input type="password" name="password"></td></tr>
+			
+			<tr><td>When To Track</td></tr>
+			<tr><td>
+				<select name="whentrack">
+					<option>Always</option>
+					<option>Traveling</option>
+					<option>Manually</option>
+				</select></td></tr>
+			
+			<tr><td>When to Upload Photos</td></tr>
+			<tr><td><select name="whenphoto">
+					<option>Always</option>
+					<option>Traveling</option>
+					<option>Manually</option>
+				</select></td></tr>
+		</table>
+		<center><button type="submit">Save</button></center>
+	</form>
+	</body>
+</html>

@@ -1,0 +1,74 @@
+!com.yy.app.site.Profile
+
+#first register objectify models, you can add/remove/replace with yourself models, ignore orders
+models:
+  - com.yy.app.auth.User
+  - com.yy.app.auth.Role
+  - com.yy.app.cms.Post
+  - com.yy.app.cms.Like
+  - com.yy.app.cms.Favorite
+  - com.yy.app.build.Page
+  - com.yy.app.comment.Comment
+  - com.yy.app.tag.Tag
+  - com.yy.app.site.Metadata
+  - com.yy.app.media.Resource
+  - com.yy.app.media.Album
+  - com.yy.app.test.Performance
+  - com.equ.app.travel.Vacation
+  - com.equ.app.travel.Route
+  - com.equ.app.travel.Diary
+  - com.equ.app.travel.Photo
+  - com.equ.app.travel.Poll
+  - com.equ.app.travel.Track
+  - com.equ.app.travel.CellPoint
+
+#Web Site Information
+name: 1Qiu
+defaultTemplate: template
+description: <img style="width:100%" src="/extend/rs/images/logo.png">Life is a trip.
+
+#Account Configuration
+userView: !com.yy.app.auth.User$View {}
+#Super User
+adminPassword: admin
+admin: !com.yy.app.auth.User
+  account: admin
+  email: lalalic@gmail.com
+  name: admin
+
+#Automation Tester
+testerPassword: tester
+tester: !com.yy.app.auth.User
+  account: __tester__
+  name: tester
+  
+#Peformance Testing Switch
+trace: true
+
+#Weibo Connection
+weibo: 
+  key: 4015112465
+  secret: 17e9d19d3675c302d90bb09c6c55ad46
+  admin: minicheers
+  returnURL: http://www.1qiyou.com/user/weibo/oauthed
+  
+#Performance Testing switch
+trace: true
+
+#Content Configuration
+pageSize: 20
+blacklist: "(fuck)"
+anonymousComment: false
+
+#Initialize DB
+db:
+  tags: []
+
+#System Features
+versions:
+  0.1: 
+  - Plan Vacation with route on map
+  - Track Your Trip
+  - Create Route
+
+

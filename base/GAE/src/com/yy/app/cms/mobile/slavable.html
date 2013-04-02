@@ -1,0 +1,37 @@
+<#--
+show1Extra: implemented
+showSlaveList: [show1Slave (show1SlaveFields)]
+slavePost: (slavePostFields)
+-->
+<#macro init>
+	<#import "/com/yy/app/cms/mobile/base.html" as super><#--must import first, then include-->
+	<#include "/com/yy/app/cms/mobile/base.html">
+</#macro>
+
+<#macro show1Extra post>
+	<div style="float:right"><button><a href="/comment/list/${post.ID}.html">评论</a></button></div>
+	<#local slaves=post.slaves!>
+	<#if slaves?has_content>
+ 		<#list slaves as slave>
+ 			<@show1Slave slave/>
+ 		</#list>
+    </#if>
+</#macro>
+
+<#macro show1Slave post>
+	<div>
+		<h2>${post.title}</h2>
+		<div><@authorInfo post.author/></div>
+		<hr/>
+		<div>${post.content}</div>
+		<div style="float:right"><button><a href="/comment/list/${post.ID}.html">评论</a></button></div>
+	</div>
+</#macro>
+
+<#macro action41 post>
+	<@favoriteCMD post/>
+	<button>T</button>
+	<button>P</button>
+	<button>:}</button>
+</#macro>
+

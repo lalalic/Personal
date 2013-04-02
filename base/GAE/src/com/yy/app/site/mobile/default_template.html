@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html${(website.manifest)!}>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
+    <meta name="HandheldFriendly" content="True" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
+    <meta name="keywords" content="${keywords!}" />
+    <title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
+    <#noparse>
+    <script>
+    var doc=document,
+    	_l=this.localStorage,
+    	c=function(a){return unescape((document.cookie.match(a+'=(.+?);')||0)[1]||'')},
+    	t=function(a,b){return function(c,d){return a.replace(/#{([^}]*)}/g,function(a,f){return Function("x","with(x)return "+f).call(c,d||b||{})})}},
+    	s=function(a,b){return b?{get:function(c){return a[c]&&b.parse(a[c])},set:function(c,d){a[c]=b.stringify(d)}}:{}}(this.localStorage||{},JSON),
+    	e=function(a,b,c,d){c=c||document;d=c[b="on"+b];a=c[b]=function(e){d=d&&d(e=e||c.event);return(a=a&&b(e))?b:d};c=this},
+    	m=function(a,b,c){b=document;c=b.createElement("p");c.innerHTML=a;for(a=b.createDocumentFragment();b=c.firstChild;)a.appendChild(b);return a},
+    	$=function(a,b){return(b||document).querySelectorAll(a)},
+    	$1=function(a,b){return(b||document).querySelector(a)},
+    	$p1=function(n){return n.parentNode},$p2=function(n){return $p1($p1(n))},$p3=function(n){return $p2($p1(n))},$p4=function(n){return $p3($p1(n))},
+    	r=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
+    	_x=function(a){for(a=3;a--;)try{return new(XMLHttpRequest||ActiveXObject)(["Msxml2","Msxml3","Microsoft"][a]+".XMLHTTP")}catch(e){}},
+    	x=function(m,u,c,d,x){with(x=_x())return onreadystatechange=function(){readyState^4||c(this)},open(m,u,c),send(d),x},
+    	
+    	service=service||{
+    		conf:{
+	    		set:function(a,b){_l[a]=b},
+	    		get:function(a){return _l[a]},
+	    		getLong:function(a){try{return parseInt(this.get(a))}catch(e){return 0}},
+	    		getInt:function(){return this.getLong(a)},
+	    		getFloat:function(a){try{return parseFloat(this.get(a))}catch(e){return 0}},
+	    		setSession:function(a,b){}},
+    		getConf:function(){this.conf},
+    		photo:function(callback){eval(callback+"('test')")},
+    		audio:function(){},
+    		setPageable:function(){},
+    		upload:function(uri){}},
+    	sv=service,
+    	_i=function(a){window.$b=doc.body;if((a=c('JSESSIONID'))){sv.setSession(a,doc.location.host)};('init'in window)&&init()},
+    	l=function(a,b){(b=$1('#logger'))&&(b.innerHTML+="<li>"+a+"</li>")||(console && console.log(a))},
+    	photo=function(a){return function(b){$1(a).src=b;sv.upload(a)}};
+		
+    	window.onslide=function(){}
+    	NodeList.prototype.i=function(n){for(var i=0;i<this.length;i++)if(this.item(i)==n)return i;return -1;	}
+    	NodeList.prototype.n=function(n,a){return (a=this.i(n))!=-1 && a!=this.length-1 ?this.item(a+1):null;}
+    	NodeList.prototype.p=function(n,a){return (a=this.i(n))!=-1 && a!=0 ?this.item(a-1):null;}
+    	window.trigger=function(n,p,a,e){
+    		if(null==otse)
+    			return;
+    		e=document.createEvent('Event')
+    		e.initEvent(n,true,true)
+    		e.touches=otse.touches
+    		otse.target.dispatchEvent(e)
+    	}
+    	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g,'')}
+    	window.onerror=function(e){};
+    	
+    	(function(a,b,c,f,le){//offline
+    		a=applicationCache
+    		c=['cached','checking','downloading','error','noupdate','obsolete','progress','updateready']
+    		f=['uncached','idle','checking','downloading','updateready','obsolete']
+    		le=function(e,d){l(((d=navigator.onLine)?'on':'off')+'line '+e.type+':'+f[a.status]+(d&&e.type=='error')?' manifest error':'')}
+    		for(b in c) a.addEventListener(b,le,false)
+    		a.addEventListener('updateready',function(){a.swapCache();l('swap cache has been called')},false)})();
+    		
+    </script>
+	<style>
+		html,body{width:100%;height:100%;margin:0;padding:0;border:0;font-size:100%}
+		a{text-decoration:none}
+		.list{margin:0px;padding:20px;line-height:150%}
+		.list li{list-style:none}
+		.list a{line-height:2em;border-bottom:1px solid lightgray;display:block}
+		.actions{position:absolute;bottom:0px;width:100%}
+		.actions li{display:inline}
+		input,textarea{width:90%;margin:10px auto;display:block;padding:10px;border:1px solid lightgray;border-radius:10px}
+		textarea{height:5em}
+		button{
+			background-color: #7FBF4D;
+			border: 1px solid #63A62F;
+			border-bottom: 1px solid #5B992B;
+			border-radius: 1em;
+			box-shadow: inset 0 1px 0 0 #96CA6D;
+			color: white;
+			font: bold 11px/1 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+			padding: 7px 0 8px 0;
+			text-align: center;
+			text-shadow: 0 -1px 0 #4C9021;
+			min-width:2em;
+			height:2em;
+			line-height:0.8em;
+		}
+		button a{display:block}
+		._p input,._o input{display:none}
+		img.thumbnail{width:50px;height:50px}
+		#logger{position:absolute;bottom:0px;width:100%}
+		
+		.p{width:100%;margin:0;border:0;height:100%;min-height:100%;position:absolute}
+		.p:nth-child(2){left:100%}
+		.p:nth-child(3){left:200%}
+		.p:nth-child(4){left:300%}		
+	</style>
+	</#noparse>	
+	<#macro head></#macro><@head/>
+  </head>
+  	<body onload="_i()" class="${path} ${contentMacroName}" ontouchstart="window.otse=event">
+	<#macro content><@.main[contentMacroName]/></#macro><@content/>
+	<ol id="logger"></ol>
+	</body>
+</html>

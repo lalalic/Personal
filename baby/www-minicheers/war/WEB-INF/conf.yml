@@ -1,0 +1,79 @@
+!com.yy.app.site.Profile
+
+#first register objectify models
+models:
+  - com.yy.app.auth.User
+  - com.yy.app.auth.Role
+  - com.yy.app.cms.Post
+  - com.yy.app.cms.Like
+  - com.yy.app.cms.Favorite
+  - com.yy.app.build.Page
+  - com.yy.app.comment.Comment
+  - com.minicheers.app.ex.XTag
+  - com.yy.app.site.Metadata
+  - com.yy.app.media.Resource
+  - com.yy.app.media.Album
+  - com.minicheers.app.kindergarden.KinderGarden
+  - com.minicheers.app.kindergarden.Share
+  - com.minicheers.app.kindergarden.Instructor
+  - com.minicheers.app.kindergarden.ClassType
+  - com.minicheers.app.account.Account
+  - com.minicheers.app.account.Child
+  - com.minicheers.app.picbook.Book
+  - com.minicheers.app.picbook.Share
+  - com.minicheers.app.game.Game
+  - com.minicheers.app.game.Share
+  - com.minicheers.app.homeassit.HomeAssistant
+  - com.minicheers.app.homeassit.Share
+
+name: minicheers
+defaultTemplate: template
+description: <img style="width:100%" src="/extend/rs/images/concept/bestteacher.jpg">&nbsp;&nbsp;秉承<b>父母是最好的老师</b>的理念,让我们一起探讨如何与孩子一起探索世界, 沉淀行之有效的资源,并与父母们分享.
+userView: !com.minicheers.app.account.Account$View {}
+
+cityes: [&beijing 北京, &shanghai 上海]
+
+areas:
+  *beijing: [海淀,朝阳]
+  *shanghai: [徐汇,浦东]
+  
+weibo: 
+  key: 4015112465
+  secret: 17e9d19d3675c302d90bb09c6c55ad46
+  account: lalalic_weibo
+  returnURL: http://www.minicheers.com/account/weibo/token
+
+wbStatus: 
+  book: title1已经发布了,大家去http://www.minicheers.com/book/show/id1.shtml分享你的阅读心得吧.
+
+adminPassword: aa619916
+admin: !com.minicheers.app.account.Account
+  account: lalalic
+  email: lalalic@gmail.com
+  name: 李诚
+  
+testerPassword: 12345
+tester: !com.minicheers.app.account.Account
+  account: __tester__
+  name: tester
+
+pageSize: 20
+blacklist: "(fuck)"
+anonymousComment: false
+
+
+tagger: !com.minicheers.app.ex.XTag$View
+  initData:
+    Book.language: [英文原版,中文译本,中文原版,日文原版,双语绘本,其它语种]
+    Book.type: [Picture Book/绘本,Level Reading/分级读物]
+    Book.theme: [情绪管理,带韵律,简单重复式句型,无字书,与音乐结合的绘本,培养自信,睡眠,训练大小便,生病了,幼儿园集体生活,安全教育,父亲,兄弟姐妹,日常生活,单亲家庭,字母,识数,反义词,颜色形状,月份/星期/时间/季节,大自然,动物园,交通工具,有声书,立体翻翻书]
+    Book.suitableAge: [孕期,0-12个月,12-24个月,24-36个月,36个月以上]
+    
+versions:
+  0.1: 
+  - 点评早教机构
+  - 分享如何和孩子一起阅读绘本
+  - 分享如何和孩子一起玩游戏
+  - 点评保姆/家政
+
+

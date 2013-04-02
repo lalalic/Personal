@@ -1,0 +1,15 @@
+<#macro init>
+	<#import "/com/yy/app/cms/web/base.html" as base>
+	<#include "/com/yy/app/cms/web/base.html">
+	<@base.init/>
+    <#assign this={'model':'成熟路线','path':path}>
+</#macro>
+
+<#macro show1Fields post>
+	<p>${post.content}<@authorInfo post/></p>
+</#macro>
+
+<#macro filter4List>
+	<li><a href="/plan">旅行列表</a></li>
+	<@base.filter4List/>
+</#macro>

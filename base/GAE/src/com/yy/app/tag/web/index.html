@@ -1,0 +1,104 @@
+<#macro init>
+    <#global headMacros=headMacros+['init_tag']>
+</#macro>
+
+<#macro init_tag>
+     <style>
+        .tag{display:inline;margin:5px;list-style:none}
+        #tagCloud, #tagCloud ul{display:inline}
+        .children-true{border:2px solid #00DF68;display:block}
+        .children-true>ul{display:block!important}
+        .children-true>button{background-color:orange}
+    </style>
+    <script>
+        function showNewTag(tags){
+            var parents=[]
+            $(tags).each(function(){
+                var $tag=$('#tag-'+this.ID)
+                if($tag.length>0){
+                    $tag.removeClass('children-true box')
+                }else{
+                    $tag=$('<li/>',{class:'tag tagcloud-'+this.count, id:this.ID})
+                            .html('<button>'+this.name+'('+this.count+')</button><ul></ul>')
+                    $('#tagCloud').append($tag)
+                }
+                
+                if(this.included){
+                    $tag.addClass('children-true box').attr('children',this.included.join(','))
+                    parents.push($tag)
+                }
+            })
+
+           if(parents.length>0)
+               prettyCloud(parents)
+        }
+        
+        function prettyCloud(parents){
+            if(typeof(parents)=='undefined')
+                parents=$('#tagCloud li.children-true')
+            if(parents.length==0)
+                return
+            var $top=$('#tagCloud')
+            $.each(parents,function(){
+                $top.append($('>ul>li',this))
+                var $ul=$('>ul',this),
+                    included=$(this).attr('children').split(',')
+                for(var id in included)
+                    id && $ul.append($('#'+included[id]))
+            })
+        }
+        
+        $(function(){
+            prettyCloud()
+            $("li.tag button").live("click",function(e){
+                var $this=$(this).parent(), $tagForm=$('#tagForm')
+                if($this.is('.children-true')){
+                    tagForm.reset()
+                    var tags=[]
+                    tagForm.parentTag.value=$('>button>span',$this).text()
+                    $('>ul>li>button>span',$this).each(function(){tags.push($(this).text().trim())})
+                    tagForm.tags.value=tags.join(',')
+                }else{
+                    var v=tagForm.tags.value.split(',')||[],
+                        a=$('>button>span',$this).text().trim()
+                    if(v.indexOf(a)==-1){
+                        v.push(a)
+                        tagForm.tags.value=v.join(',')    
+                    }
+                }
+                return false
+            })
+        })
+    </script>   
+</#macro>
+
+<#macro tag>
+    	<h3>标签管理</h3>
+    	<div class="box">
+            <form action="/tag/create" method="post" id="tagForm"
+                onsubmit="return ajaxSubmit.call(this,event)"
+                onsuccess="showNewTag(data)">
+                <table>
+                    <tr><td>新标签</td><td><textarea name="tags" placeholder="北京，上海" style="height:3em"></textarea></td></tr>
+                    <tr><td>标签组名(可选)</td><td><input name="parentTag" placeholder="比如:中国城市"></td></tr>
+                </table>
+                <div class="actions"><button type="submit">保存</button></div>
+            </form>
+        </div>
+        <@tagCloud/>
+        <#assign isEditable=true>
+</#macro>
+
+<#macro tagCloud>
+        <h3>标签</h3>
+        <div class="box">
+            <ul id="tagCloud">
+                <#list tags as tag>
+                    <li class="tag tagcloud-${tag.count} <#if tag.included?has_content>children-true box</#if>" id="${tag.ID}" children="<#list tag.included![] as a>${a},</#list>">
+                        <button><span>${tag.name}</span>(${tag.count})</button>
+                        <ul></ul>
+                    </li>
+                </#list>
+            </ul>
+        </div>
+</#macro>

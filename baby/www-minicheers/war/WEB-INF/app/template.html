@@ -1,0 +1,7 @@
+<#include "/default_template.html">
+
+<#macro menu>
+	<#list [["品绘本","/huiben"],["玩游戏","/youxi"],["说家政","/jiazhen"],["评早教","/zaojiao"]] as item>
+		<@menuItem title=item[0] url=item[1]/>
+	</#list>
+</#macro>

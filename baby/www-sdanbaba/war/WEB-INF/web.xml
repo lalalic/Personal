@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?><web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+	<servlet>
+		<servlet-name>REST</servlet-name>
+		<servlet-class>com.yy.web.Init</servlet-class>
+		<init-param>
+	        <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+	        <param-value>true</param-value>
+    	</init-param>	
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>
+			    com.yy.app.auth,
+				com.yy.app.test,
+				com.yy.provider,
+				com.yy.app.site,
+				com.yy.app.build,
+				com.yy.app.media,
+				com.yy.app.tag,
+				com.yy.app.comment,
+				com.sdan
+			</param-value>
+		</init-param>
+		<init-param>
+         	<param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
+         	<param-value>
+         		com.yy.jersey.filter.HttpFilter,
+         		com.yy.jersey.filter.PathOverrideFilter,
+         		com.yy.jersey.filter.AuthFilter,
+         		com.yy.app.test.Runner
+         	</param-value>
+     	</init-param>		
+		<init-param>
+			<param-name>reCAPTCHA</param-name>
+			<param-value>public:6LfjUNMSAAAAAP2zyt8Wr8kziObpN-g6K6Btj6jY,private:6LfjUNMSAAAAAC39TmKRTZ7IVex5sxYwWi82QTaW</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>REST</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+</web-app>

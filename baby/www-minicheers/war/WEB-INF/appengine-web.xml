@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+	<application>www-minicheers</application>
+	<version>2</version>
+	<!-- Configure serving/caching of GWT files -->
+	<static-files>
+		<include path="/rs/**.*" expiration="365d" />
+		<include path="/extend/**.*" expiration="30d" />
+		<include path="/favicon.ico" expiration="365d" />
+		<include path="/wb_ff5ace9dc5a77e74.txt" expiration="365d" />
+	</static-files>
+	<!-- Configure java.util.logging -->
+	<system-properties>
+		<property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />
+		<property name="appengine.datastore.disableChunkSizeWarning" value="false" />
+		<property name="networkaddress.cache.ttl" value="500" />
+		
+	</system-properties>
+	<sessions-enabled>true</sessions-enabled>
+	<async-session-persistence enabled="true" />
+	<threadsafe>true</threadsafe>
+</appengine-web-app>

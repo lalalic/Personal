@@ -1,0 +1,67 @@
+<#macro init>
+    <#include "/com/yy/app/auth/web/index.html">
+    <@init_auth/>
+    <#global headMacros=headMacros+["account_rs"]>
+</#macro>
+
+<#macro account_rs>
+<script>
+function addChild(){
+    var children=$("form.child"),newChild
+    $(children.get(children.length-1))
+        .after(newChild=$(children.get(0)).clone())
+    newChild.find(":input").val("")
+}
+function deleteChild(){
+    var f=this, v=f.ID.value
+    if(v.length==0)
+        $(f).remove()
+    else{
+        $.post("/user/child/delete/"+v,function(){
+        	if($("form.child").length>1)
+            	$(f).remove()
+            else{
+            	$(':input',f).val("")
+            }
+        })
+    }
+}
+</script>
+</#macro>
+
+<#macro signupFormExtra>
+    <tr><td colspan="2"><b>孩子信息</b> <span style="font-size:smaller">(注册后可以添加多个孩子信息)</span><td></td></tr>
+    <tr><td>昵称</td><td><input name="nick" value="${(input.nick)!}"></td></tr>
+    <tr><td>出生日期</td><td><@dateUI name="childBirthday" value=(input.childBirthday?date('yyyy-M-d'))!.now/></td></tr>
+</#macro>
+
+<#macro profileFormExtra>
+    <tr rowspan="4"><td>地址信息</td><td><@locationUI model=user/></td></tr>
+</#macro>
+
+<#macro afterProfileForm>
+    <hr/>
+    <h3>孩子信息<button onclick="addChild()">添加...</button></h3>
+    <#local children=user.children>
+    <#if children!?has_content>
+        <#list children! as child><@childForm child/></#list>
+    <#else>
+        <@childForm {}/>
+    </#if>    
+</#macro>
+
+<#macro childForm child>
+<form action="/user/child/save" method="post" class="box child"
+    onsubmit="return ajaxSubmit.call(this,event)"
+    onsuccess="this.ID.value=data.ID">
+    <input name="ID" type="hidden" value="${child.ID!}">
+    <table class="fields">
+        <tr><td>昵称<@required/></td><td><input name="nick" value="${child.nick!}" required></td></tr>
+        <tr><td>出生日期<@required/></td><td><@dateUI name="birthday" value=child.birthday/></td></tr>
+        <tr><td>性别</td><td><@radioUI options=[[0,"男"],[1,"女"]] name="gender" values=[(child.gender)!0]/></td></tr>
+    </table>
+    <div class="actions">
+        <button type="submit">保存</button> 
+        <button type="button" onclick="deleteChild.call(this.form)">删除</button></div>
+</form>
+</#macro>

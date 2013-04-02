@@ -1,0 +1,56 @@
+!com.yy.app.site.Profile
+
+#first register objectify models
+models:
+  - com.yy.app.auth.User
+  - com.yy.app.auth.Role
+  - com.yy.app.cms.Post
+  - com.yy.app.cms.Like
+  - com.yy.app.cms.Favorite
+  - com.yy.app.build.Page
+  - com.yy.app.comment.Comment
+  - com.yy.app.site.Metadata
+  - com.yy.app.media.Resource
+  - com.yy.app.media.Album
+  - com.yy.app.tag.Tag
+  - com.sdan.Categorized
+
+
+name: 屎蛋爸爸
+defaultTemplate: template
+description: <img style="width:100%" src="/extend/rs/images/concept/bestteacher.jpg">&nbsp;&nbsp;秉承<b>父母是最好的老师</b>的理念,让我们一起探讨如何与孩子一起探索世界, 沉淀行之有效的资源,并与父母们分享.
+userView: !com.yy.app.auth.User$View {}
+  
+weibo: 
+  key: 4015112465
+  secret: 17e9d19d3675c302d90bb09c6c55ad46
+  account: lalalic_weibo
+  returnURL: http://www.minicheers.com/account/weibo/token
+
+wbStatus: 
+  categorized: title1已经发布了,去http://www.minicheers.com/i/show/id1.shtml瞧瞧.
+
+adminPassword: aa619916
+admin: !com.yy.app.auth.User
+  account: lalalic
+  email: lalalic@gmail.com
+  name: 李诚
+
+testerPassword: 12345
+tester: !com.yy.app.auth.User
+  account: __tester__
+  name: tester
+
+pageSize: 20
+blacklist: "(fuck)"
+anonymousComment: false
+
+tagger: !com.yy.app.tag.Tag$View
+  initData:
+    site.category: [健康]
+  
+versions:
+  0.1: 
+  - 健康
+
+

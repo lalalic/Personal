@@ -1,0 +1,50 @@
+<#macro head>
+	<script>
+		function save(){
+			try{
+				var conf=service.getConf()
+				conf.set("whentrack",this.whentrack.selectedIndex)
+				conf.set("whenphoto",this.whenphoto.selectedIndex)
+				this.user.setFocus()
+			}catch(e){
+				console.error("save error:"+e.message);
+			}
+			console.info("saved")
+			return false
+		}
+		function init(){
+			try{
+				var form=document.getElementById('form')
+				var conf=service.getConf()
+				console.info("get configuration")
+				form.whentrack.selectedIndex=conf.getInt("whentrack")
+				form.whenphoto.selectedIndex=conf.getInt("whenphoto")
+			}catch(e){
+				console.error("init error:"+e.message);
+			}
+			console.info("initialized")
+		}
+	</script>
+</#macro>
+
+<#macro content>
+	<form method="post" onsubmit="return save.call(this)" id="form">
+		<table>
+			<tr><td>When To Track</td></tr>
+			<tr><td>
+				<select name="whentrack">
+					<option>Always</option>
+					<option>Traveling</option>
+					<option>Manually</option>
+				</select></td></tr>
+			
+			<tr><td>When to Upload Photos</td></tr>
+			<tr><td><select name="whenphoto">
+					<option>Always</option>
+					<option>Traveling</option>
+					<option>Manually</option>
+				</select></td></tr>
+		</table>
+		<center><button type="submit">Save</button></center>
+	</form>
+</#macro>

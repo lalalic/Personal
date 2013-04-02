@@ -1,0 +1,21 @@
+<#macro metadata>
+    <#list ["default","site"] as cate>
+    <div class="box">
+        <h5><center> ${cate}</center></h5>
+        <button type="button" onclick="e.category.value='${cate}';e.ID.value='';e.key.value=''; e.value.value=''">Create...</button>
+        <#list this.list(cate) as m>
+            <a href="javascript:void(0)" id="${m.ID}"
+                onclick='e.ID.value="${m.ID}";e.category.value="${m.category}";e.key.value="${m.key}"; e.value.value="${m.value}"'>${key}:${value}</a> &nbsp;
+        </#list>
+    </div>
+    </#list>
+   <form method="post" id="e" class="box">
+       <input type="hidden" name="ID" value="">
+       <table class="fields">
+           <tr><td>Category<@required/></td><td><input name="category" value=""></td></tr>
+           <tr><td>Key<@required/></td><td><input name="key" value=""></td></tr>
+           <tr><td>Value<@required/></td><td><input name="value" value=""></td></tr>
+        </table>
+        <div class="actions"> <button type="submit">Save</button></div>
+    </form>
+</#macro>

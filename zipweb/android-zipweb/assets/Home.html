@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
+    <meta name="HandheldFriendly" content="True" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
+	<link rel="stylesheet" href="./lib/lungo.css"/>
+	<link rel="stylesheet" href="./lib/lungo.icon.css"/>
+	<link rel="stylesheet" href="./lib/lungo.icon.brand.css"/>
+	<link rel="stylesheet" href="./lib/theme.lungo.css"/>
+    <style>
+    	body,section,article{margin:0;padding:0;border:0}
+		#creator{background-color:#00A0B1}
+		#menu{position:fixed;display:none;width:40%;left:30%;top:100px;min-height:40%;background-color:black;color:white;z-index:999}
+		#menu>*{border-bottom:1px solid lightgray}
+	</style>	
+	<script src="./lib/quo.min.js"></script>
+	<script src="./lib/lungo.js"></script>
+	<script src="./lib/tile.js"></script>
+	<script>
+		(!('service' in window)) && (window.service={
+			books:[{url:1,title:'Test 1',path:'http://google.com/',home:'index.html'},
+			        {url:2,title:'Test 2',path:'http://google.com/',home:'index.html'},
+			        {url:3,title:'Test 3',path:'http://google.com/',home:'index.html'}],
+			install:function(t){TileLayer.add(t)},
+			getAllBooks: function(){return this.books},
+			getBook: function(url){}
+		})
+	
+		function addBook(book){
+			var oldTile=document.getElementById(book.url)
+			var tile=TileLayer.add(book.title,function(){document.location=this.dataset.href},book.icon&&("file://"+book.path+book.icon))
+				
+			if(oldTile){
+				tile.parentNode.insertBefore(tile,oldTile)
+				oldTile.parentNode.removeChild(oldTile)
+			}
+			tile.id=book.url
+			tile.dataset.url=book.url
+			tile.dataset.href="file://"+book.path+book.home
+			return tile
+		}
+
+		function removeBook(){
+			service.uninstall(this.dataset.url)
+			this.parentNode.removeChild(this)
+		}
+				
+		$$(document).ready(function(){
+			TileLayer.init(books,200,75,2,3,menu)
+			try{
+				var myBooks=JSON.parse(service.getAllBooks())
+				for(var len=myBooks.length, i=0;i<len;i++)
+					addBook(myBooks[i])
+			}catch(e){}
+			Lungo.init({name:'books'})
+		})
+	</script>
+  </head>
+  	<body class="app">
+		<section id="main" data-transition="slide">
+			<article id="books" class="active">
+				<div class="tile" id="creator" onclick="service.openFileDialog('service.install','application/zip')">
+					<span data-icon="plus"></span>
+				</div>
+			</article>
+		</section>
+		<div class="list intended">
+			<ul id="menu">
+				<li id="mRemove" onclick="removeBook.apply(TileLayer.current)"><span data-icon="remove">Remove</span></li>
+			</ul>
+		</div>
+	</body>
+</html>

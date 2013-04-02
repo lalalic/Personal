@@ -1,0 +1,314 @@
+<#--
+show:
+    -showList
+        -action4List, filter4List
+        -vote, authorInfo
+    -show1 (show1Fields[, show1Extra])
+    -showSerial
+post:
+    -postForm (postFields)
+
+vote:
+
+sidebar: 'myFavoritePost','authorFavoritePost', 'adminFavoritePost'
+
+round 1 testing:    
+    empty list of my favorite, and admin favorite
+    slave's like and favorite
+-->
+
+<#macro init>
+    <#global headMacros=headMacros+['cms_rs'] sidebarMacros=[]>
+    <#assign this={"model":"post","path":path}>
+    <#include "/comment/index.html">
+</#macro>
+
+<#macro cms_rs>
+        <style>
+        .vote{text-align:center;background-color:lightGoldenrodYellow;padding-right:5px}
+        .vote span{line-height:32px}
+        .vote .likeit, .vote .favorite, .vote .rate{text-indent: -99999em;font-size:1px; 
+            cursor:pointer;display:block;margin:0px auto;width:41px;height:32px;
+            background-image:url(/rs/images/icons.png);
+            background-repeat:no-repeat}
+            
+        .likeit{background-position:0px -192px}
+        .favorite{background-position:0px -456px}
+        .rate{background-position:0px -241px}
+        
+        .vote
+        
+        .post img{width:400px;clear:both;display:block;margin:5px auto;border:5px solid greenyellow; border-radius:5px; padding:10px}
+        .postlist img{display:none}
+     
+        .voteinfo .icon{text-align:right;margin:5px auto;padding-left:35px;line-height:32px; display:block; background-image:url(/rs/images/icons.png);background-repeat:no-repeat}
+        .postlist .vote{margin-right:5px}
+        .postlist .post1 .col{float:left}
+        .title{line-height:48px;font-weight:bold}
+    </style>
+    <script>
+    	function resolveUser(){
+            var users=[]
+            $('.resolving.user')
+	       		.removeClass('resolving')
+	       		.each(function(){
+	                var v=$(this).text().trim();
+	                if(!(v+"-" in users)){
+	                     users.push(v)
+	                     users[v+"-"]=1
+	                 }
+	            })
+            if(users.length==0)  return
+               
+            $.get("/user/get/"+users.join(","),function(users){
+                $.each(users,function(){
+                	$('.user-'+this.ID).text(this.name)
+                })
+            })
+        }
+       $(resolveUser)
+    </script>
+</#macro>
+
+    <#macro showList>
+        <div class="span-24">
+            <#if searchFilter.title??>
+            <div class="left title">${searchFilter.title}</div>
+            </#if>
+            <ul class="tabs right" id="search">
+                <@action4List/>
+                <@filter4List/> 
+            </ul>
+        </div>
+        <hr/>
+        <div class="span-24">
+            <div class="span-18 postlist">
+            <table style="width:100%">
+            	<#list posts as post><@show14List post/></#list>
+            </table>    
+            </div>
+             <div class="span-6 sidebar last">
+                 <@dynamicSidebarMacros macros=['searchBar','myFavoritePost','adminFavoritePost']+sidebarMacros post=posts/>
+             </div>
+        </div>
+    </#macro>
+    
+        <#macro show14List post>
+        	<#if !(show14Listed??)>
+        		<tr><td>名称</td><#if post.ratable><td>点评</td></#if><td>在本站</td></tr>
+        		<#assign show14Listed=true>
+        	</#if>
+            <tr class="post1 clear" id="${post.ID}">
+                <td><a href="/${this.path}/show/${post.ID}.shtml">${post.title!}</a></td>
+               	<#if post.ratable><td><@ratingUI post.generalRating/></td></#if>
+               	<td>
+               		<#local baseURI=this.path>
+               		<ul class="actions">
+               			<@action1Primary post/>
+                        <li>
+                            <@cmd onclick='$(this).next().load(\'/${baseURI}/like/${post.ID}\')' label="喜欢">title="I like it(click again to undo)"</@cmd>
+                            <span>${post.votes}</span>
+                        </li>
+                        <li>
+                            <@cmd onclick='$(this).next().load(\'/${baseURI}/favorite/${post.ID}\')' label="收藏">title="This is my favorite(click again to undo)"</@cmd>
+                            <span>${post.favorites}</span>
+                        </li>
+               		</ul>
+               	</td>
+            </tr>	
+        </#macro>
+        
+        <#macro filter4List>
+	        <#local o=searchFilter.orderField!"">
+	        <#list [["时间",""],["点评","-generalRating"],["喜欢","-votes"],["收藏","-favorites"]] as filter>
+	            <li <#if o==filter[1]>class="current"</#if>><a href="${matrix('o',filter[1])}">${filter[0]}</a></li>
+	        </#list>
+            <#nested>    
+        </#macro>
+        
+        <#macro action4List>
+            <li><a href="/${this.path}/create.html">+${this.model}</a></li>
+        </#macro>
+        
+        <#macro authorInfo post>
+            <span class="right">--<span class="user resolving user-${post.author}">${post.author}</span> on ${post.created?string('yyyy-M-d')}</span>
+        </#macro>
+        
+        <#macro vote post baseURI=this.path>
+            <div class="vote">
+                <#if post.votable>
+                    <@cmd onclick='$(this).next().load(\'/${baseURI}/like/${post.ID}\')' label="喜欢">title="I like it(click again to undo)" class="icon likeit"</@cmd>
+                    <span>${post.votes}</span>
+                </#if>
+                <#if post.favoritable>
+                    <@cmd onclick='$(this).next().load(\'/${baseURI}/favorite/${post.ID}\')' label="收藏">title="This is my favorite(click again to undo)" class="icon favorite"</@cmd>
+                    <span>${post.favorites}</span>
+                </#if>
+                <#if post.ratable>
+                    <a <#if (post.generalRating>0)> onmouseover="showRating.call(this,${post.ID})" onmouseout="hideRating.call(this,${post.ID})" </#if> class="icon rate">点评分</a>
+                    <span>${post.generalRating/10}<#if post.ratingCount!=0>/${post.ratingCount}</#if></span>
+                    <@rateDetail post/>
+                </#if>  
+            </div>
+        </#macro>
+        
+        <#macro rateDetail post></#macro>
+        
+
+    <#macro show1>
+        <div class="span-18">
+            <div class="post" id="${post.ID}">
+                <div>
+                    <#if (post.parent!0)!=0><a href="/${this.path}/show/${post.parent}.shtml">${post.parentModel().title}</a>--</#if>
+                    <div class="left title"><a href="/${this.path}/show/${post.ID}.shtml">${post.title}</a></div>
+                     <ul class="actions right"><@action4List/></ul>
+                </div>
+                <hr/>
+                
+                <div class="span-1">
+                    <@vote post=post/>
+                </div>
+                
+                <div class="span-17 last">
+                    <@show1Fields post/>
+                    <hr class="space"/>
+                    <div class="clear clearfix">
+                        <div class="span-1">
+                            &nbsp;
+                        </div>
+                        <div class="span-16 last">    
+                            <@comment model=post/>
+                        </div>
+                    </div>
+                </div>
+                <ul class="actions right">
+                	<@action1Primary post/>
+                	<@action1Secondary post/>
+            	</ul>
+            </div>
+            <@show1Extra post/>
+         </div>
+         
+         <div class="span-6 last">
+         	<@dynamicSidebarMacros macros=['searchBar','myFavoritePost','adminFavoritePost']+sidebarMacros post=post/>
+         </div>
+    </#macro>
+    
+        <#macro action1Primary post></#macro>
+        <#macro action1Secondary post>
+            <#if post.author=user.ID><li><@cmd href='/${this.path}/edit/${post.ID}.shtml' label="修改"/></li></#if>
+            <li><@commentButton post/></li>
+        </#macro>      
+        <#macro show1Extra post></#macro>  
+    
+    <#macro showSerial post>
+        <!--show a serials post-->
+    </#macro>
+
+<#macro postForm>
+    <div class="box">
+        <form action="/${this.path}/post" method="post">
+            <h4><#if (post.ID!0)==0>创建<#else>修改</#if> ${this.model}</h4>
+            <input type="hidden" name="parent" value="${post.parent!0}">
+            <input type="hidden" name="ID" value="${post.ID!0}">
+            <@postFields post/>
+            <div class="actions">
+                <button type="submit">保存</button> 
+                <button onclick="history.go(-1)">返回</button>
+            </div>
+        </form>
+    </div>
+</#macro>
+
+
+<#macro myFavoritePost post={}>
+    <#if user.isLoggedIn()>
+        <div class="box clearfix">
+            <h4>我的收藏</h4>
+            <ul id="myfavoritepost">
+            	 <span class="loading">loading...</span>
+                <script>$('#myfavoritepost').load("/${this.path}/my/favorite")</script>
+            </ul>
+        </div>
+    </#if>
+</#macro>
+
+
+<#macro authorFavoritePost post>
+    <#if user.ID==post.author><#return></#if>
+    <div class="box clearfix">
+        <h4><span class="user resolving user-${post.author}">${post.author}</span>的关注</h4>
+        <ul id="authorfavoritepost">
+            <span class="loading">loading...</span>
+            <script>$('#authorfavoritepost').load("/${this.path}/author/favorite/${post.ID}")</script>
+        </ul>
+    </div>
+</#macro>
+
+<#macro adminFavoritePost post>
+	<#if user.isAdmin()><#return></#if>
+    <div class="box clearfix">
+        <h4>系统推荐</h4>
+        <ul id="sysfavoritepost">
+            <span class="loading">loading...</span>
+            <script>$('#sysfavoritepost').load("/${this.path}/admin/favorite")</script>
+        </ul>
+    </div>
+</#macro>
+
+<#macro relatedPost post>
+    <div class="box clearfix">
+        <h4>相关</h4>
+        <ul id="relatedpost">
+            <span class="loading">loading...</span>
+            <script>$('#relatedpost').load("/${this.path}/related/${post.ID}")</script>
+        </ul>
+    </div>
+</#macro>
+
+<#macro searchBar post>
+    <script>
+        function search(event){
+            if(event.which==13 && this.value){
+                document.location='/${this.path};title*='+this.value+';t=名称以'+this.value+'开头的${this.model}'
+            }
+        }
+    </script>
+    <div class="box clearfix">
+        <h4>查询</h4>
+        <input placeholder="查询:名称" style="width:100%" onkeydown="search.call(this,event)" <#if searchFilter??>value="${searchFilter.of('title >=')}"</#if> >
+    </div>
+</#macro>
+
+
+<#macro listTitle>
+    <#list it as post><li><a href="/${this.path}/show/${post.ID}.shtml">${post.title}</a></li></#list>
+</#macro>
+
+<#macro tagLink value field title="">
+    <#if !(value?has_content)><#return></#if>
+    <#if !(value?is_enumerable)><#local value=[value]></#if>
+    <#list value as a>
+       <#local tag=website.tagger.get(a)>
+       <a href="/${this.path};attrs=${tag.ID};t=${title?replace('xx',tag.name?url)}" title="查看${title?replace('xx',tag.name)}">${tag.name}</a>&nbsp;
+    </#list>
+</#macro>
+
+<#macro dynamicSidebarMacros macros post>
+    <#list macros as macro>
+        <#if .main[macro]!?is_macro>
+            <@.main[macro] post/>
+        </#if>
+    </#list>
+</#macro>
+
+<#macro sidebox title post>
+    <div class="box clear clearfix">
+        <h4>${title}</h4>
+        <#nested>
+    </div>
+</#macro>
+
+<#macro show1Fields post>
+	<!-- you should override show1Field -->
+</#macro>

@@ -1,0 +1,23 @@
+<#macro postForm>
+	<form action="/route/post" method="post" style="padding:5px">
+        <input name="title" placeholder="*题目..." value="" style="width:100%" required>
+        <textarea name="content" placeholder="内容" style="width:100%;height:4em"></textarea>
+        <div class="actions"><button type="submit" class="right">保存</button> <button type="button" onclick="history.go(-1)">Back</button></div>
+    </form>
+</#macro>
+
+<#macro head>
+	<script src="/rs/jquery.min.js"></script>
+	<script>
+		jQuery(function($){
+			if(true || !navigator.onLine){
+				$("form").submit(function(){
+					service.addOffline("/route/post","title="+escape(this.title.value)+"&content="+escape(this.content.value))
+					return false;
+				})
+			}else{//submit
+				
+			}
+		})
+	</script>
+</#macro>
