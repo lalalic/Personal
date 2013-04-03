@@ -8,7 +8,7 @@ chrome.runtime.onInstalled.addListener(function() {
 	chrome.contextMenus.create({title: "Above Content",  	contexts:["selection"],	id: "Above", 	parentId:"remove"})
 	chrome.contextMenus.create({title: "Selected",  		contexts:["selection"],	id: "Node", 	parentId:"remove"})
 	
-	chrome.contextMenus.create({title: "Clear",  			contexts:["page"],		id: "clear", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Clear",  			contexts:["page"],				id: "clear", 	parentId:"main"})
 	chrome.contextMenus.create({title: "Download", 			contexts:["page","image"],		id: "download", parentId:"main"})
 	chrome.contextMenus.create({title: "Current Page", 		contexts:["page","image"],		id: "download1",parentId:"download"})
 	chrome.contextMenus.create({title: "1 Deep", 			contexts:["page","image"],		id: "download2",parentId:"download"})
@@ -28,6 +28,14 @@ chrome.contextMenus.onClicked.addListener(function(info,tab,a){
 			a=info.menuItemId.match(/^download(\d)/)
 			new Downloader(parseInt(a[1]),(new Date().getTime())+"",tab).start()
 			break
+		case "content":
+			chrome.contextMenus.update('content',{enabled:false})
+			chrome.tabs.sendMessage(tab.id,{"cmd":info.menuItemId,info:info})
+			break
+		case "menu":
+			chrome.contextMenus.update('menu',{enabled:false})
+			chrome.tabs.sendMessage(tab.id,{"cmd":info.menuItemId,info:info})
+			break
 		default:
 			chrome.tabs.sendMessage(tab.id,{"cmd":info.menuItemId,info:info})
 	}
@@ -35,8 +43,16 @@ chrome.contextMenus.onClicked.addListener(function(info,tab,a){
 
 
 chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
-	Downloader[info.uid].save(info)
-	sendResponse("ok")
+	switch(info.cmd){
+	case 'NewDocument':
+		chrome.contextMenus.update('content',{enabled:true})
+		chrome.contextMenus.update('menu',{enabled:true})
+		break
+	case 'content':
+	default:
+		Downloader[info.uid].save(info)
+		sendResponse("ok")
+	}
 })
 
 var Downloader=function(deep,uid,tab){

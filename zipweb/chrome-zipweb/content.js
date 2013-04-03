@@ -138,7 +138,7 @@ window.cleaner={
 		style.margin=0
 		style.padding=0
 		style.border="1px solid lightgreen"
-		style.width=0
+		style.width='20%'
 		style.left='-2px'
 		style.borderLeft="solid 12px lightgreen"
 		style.backgroundColor="white"
@@ -352,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function (a,b,c,m) {
 		chrome.extension.sendMessage(null,cleaner.getPageInfo(uid,deep),function(){
 			close()
 		})		
+	}else{
+		chrome.extension.sendMessage(null,{cmd:'NewDocument'})
 	}
 })
-

@@ -4,10 +4,8 @@
 	<version>1</version>
 	<!-- Configure serving/caching of GWT files -->
 	<static-files>
-		<include path="/rs/**.*" expiration="365d" />
-		<include path="/extend/**.*" expiration="30d" />
+		<include path="/lib/**.*" expiration="365d" />
 		<include path="/favicon.ico" expiration="365d" />
-		<include path="/wb_ff5ace9dc5a77e74.txt" expiration="365d" />
 	</static-files>
 	<!-- Configure java.util.logging -->
 	<system-properties>

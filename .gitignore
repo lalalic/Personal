@@ -162,9 +162,11 @@ pip-log.txt
 .DS_Store
 
 # java
-*.jar
-classes/
 *.class
+classes/
+*.jar
+#WEB-INF/classes/
+#WEB-INF/lib/
 
 #gae
 appengine-generated/

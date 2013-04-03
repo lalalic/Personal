@@ -4,10 +4,12 @@ window.TileLayer={
 	colors:["00A0B1","2E8DEF","A700AE","643EBF","BF1E4B","0A5BC4","DC572E","00A600","00A0B1","A700AE","643EBF","BF1E4B"],
 	init: function(container,max,min,rows,cols,menu){
 		max=max||200,min=min||75,rows=rows||2,cols=cols||3
+		var $container=$$(container),
+			fullWidth=$container.width(), fullHeight=$container.height()
 		var b=this.createStyleSheet() 
 			style=b.cssRules[b.insertRule(".tile{float:left;margin:5px; max-width:"+max+"px;min-width:"+min+"px;max-height:"+max+"px;min-height:"
 					+min+"px;border:0;padding:0;text-align:center;background:no-repeat center;border-radius:5px}",0)].style
-		var w=(this.lastWidth=innerWidth),h=(this.lastHeight=innerHeight),
+		var w=(this.lastWidth=fullWidth),h=(this.lastHeight=fullHeight),
 			rcMin=Math.min(rows,cols), rcMax=Math.max(rows,cols),
 			width=Math.floor(w/(w<h?rcMin:rcMax)-10),height=Math.floor(h/(w>h?rcMin:rcMax)-10)
 		style.width=width+"px"
@@ -16,8 +18,8 @@ window.TileLayer={
 		this.container=container;
 		this.last=this.container.firstChild
 		width=Math.min(max,width)
-		var n=Math.floor(innerWidth/(width+10)),
-			leftWidth=Math.floor((innerWidth-n*(width+10))/(n-1)),
+		var n=Math.floor(fullWidth/(width+10)),
+			leftWidth=Math.floor((fullWidth-n*(width+10))/(n-1)),
 			selectors=[".tile:nth-of-type("+n+"n)"]
 		for(var i=2;i<n;i++)
 			selectors.push(".tile:nth-of-type("+n+"n+"+i+")")
@@ -25,8 +27,8 @@ window.TileLayer={
 		if(!this.resizeListened){
 			this.resizeListened=true
 			window.addEventListener('resize',function(){
-				if(TileLayer.lastWidth==innerWidth &&
-					TileLayer.lastHeight==innerHeight)
+				if(TileLayer.lastWidth==fullWidth &&
+					TileLayer.lastHeight==fullHeight)
 					return
 				TileLayer.init(container,max,min,rows,cols)
 			})
@@ -58,7 +60,7 @@ window.TileLayer={
 		tile.className='tile'
 		tile.style.backgroundColor='#'+this.colors[Math.floor((Math.random()*10)+1)]
 		onclick && tile.addEventListener('click',onclick)
-		$$(tile).hold(function(){
+		this.menu && $$(tile).hold(function(){
 			TileLayer.current=this
 			$$(menu).show()
 		})

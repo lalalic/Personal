@@ -1,76 +1,10 @@
-<#macro head>
-<#noparse>
-	<style>
-		td{width:50%;height:33.333%;vertical-align:bottom;background:lightgray}
-		td.n{vertical-align:middle;text-align:center}
-	</style>
-	<script>
-		function init(){
-			sv.setPageable(true)
-			window.initPageHTML=$p1($1('.p')).innerHTML
-			loadItems()
-			window.onslide=function(a,b,c){
-				b=$b.scrollWidth/(c=$('.p').length)
-				$b.scrollLeft=a!=-1 ? (Math.floor($b.scrollLeft/b)+a)%c*b : (Math.round($b.scrollLeft/b)*b)
-			}
-		}
-		
-		function loadItems(){
-			if(!_l['list'])
-				_l['list']=""
-			else{
-				for(var i=0, items=_l['list'].split("|"), len=items.length,td=$1('.p .a');i<len;i++)
-					td=doAdd(td,items[i].trim())
-			}
-		}
-		
-		function add(){
-			$p1(this).appendChild(m("<p><input placeholder='tag1,tag2,..' onchange='this.blur()' onblur='if(!doAdd.doing)doAdd.call(this)' autofocus='true'/></p>"))
-		}
-		function doAdd(td,v,a,next,$b){
-			doAdd.doing=true;
-			typeof(v)=='undefined' && (_l['list']+=("|"+(v=this.value.trim())))
-			if(!v)	return doAdd.doing=false,td;
-			$b=$p1($1('.p'))
-			!td && this!=window && (td=$p2(this)) && td.removeChild($p1(this))
-			if(!td) return doAdd.doing=false;
-			if((next=$('td',$p3(td)).n(td))!=null && next.children.length==0)
-				next.classList.add('n'),next.classList.add('a')				
-			else{
-				$b.appendChild(m("<table class='p'><tr><td class='n a'/><td/></tr><tr><td/><td/></tr><tr><td/><td/></tr></table>"))
-				next=$1('td',$b.lastChild)
-			}
-			while(td.firstChild!=null)
-				next.appendChild(td.firstChild)
-			td.innerHTML="<a href='.'>"+v+"</a>"
-			td.classList && (td.classList.remove('n'), td.classList.remove('a'))
-			td.addEventListener('longpress',function(e){doDelete.call(this)})
-			td.addEventListener('dblclick',function(e){doDelete.call(this)})
-			return doAdd.doing=false,next;
-		}
-		doAdd.doing=false
-		
-		function doDelete(){
-			_l['list']=_l['list'].replace("|"+this.innerText.trim(),'')
-			$p1($1('.p')).innerHTML=window.initPageHTML
-			loadItems()
-		}
-	</script>
-</#noparse>		
-</#macro>
-
 <#macro content>
-	<div>
-		<table class="p">
-			<tr>
-				<td><a href="/i">Test</a></td>
-				<td class="n a"><@cmd onclick="add.call(this)" needLogin=false label="+"></@cmd></td>
-			</tr>
-			<tr><td/><td/></tr>
-			<tr>
-				<td class="n"><a href="/user/signup.html">Account</a></td>
-				<td class="n"><a href="">Setting</a></td>
-			</tr>
-		</table>
-	</div>
+<section id="main" data-transition="slide">
+	<article id="tiles" class="active">
+		<div class="tile" id="creator" style="background-color:#00A0B1" 
+		onclick="var t=prompt('Please give a title','title');t && TileLayer.add(t)">
+			<span data-icon="plus"></span>
+		</div>
+	</article>
+</section>	
 </#macro>

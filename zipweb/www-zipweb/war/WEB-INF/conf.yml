@@ -11,9 +11,9 @@ models:
   - com.yy.zipweb.Book
 
 
-name: 
-defaultTemplate: template
-description: Zip it as a book
+name: ZipWeb
+defaultTemplate: default_template
+description: Read it offline
 userView: !com.yy.app.auth.User$View {}
   
 weibo: 
