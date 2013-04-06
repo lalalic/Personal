@@ -33,6 +33,7 @@ public class Home extends WebActivity {
 		this.cache4Offline=false;
 		if(Configuration.getInstance(this).get("installed").length()==0)
 			installNatives();
+
 		this.browser.setWebViewClient(new ViewClient(this.browser){
 			@Override
 			public void onPageFinished(WebView view, String url) {
@@ -52,6 +53,7 @@ public class Home extends WebActivity {
 				"", "Installing Book...",true,false);
 		new Thread(){
 			public void run(){
+				removeFolder(Home.this.browser.getOfflineRoot());
 				AssetManager assetManager = Home.this.getAssets();
 		        String[] books = null;
 		        Book book=null;
@@ -130,7 +132,21 @@ public class Home extends WebActivity {
 		return true;
 	}
 
-
+	protected void removeFolder(String folder){
+		File root=new File(folder);
+		if(root.exists() && root.isDirectory()){
+			root.listFiles(new FileFilter(){
+				@Override
+				public boolean accept(File file) {
+					if(file.isDirectory())
+						file.listFiles(this);
+					file.delete();
+					return false;
+				}
+			});
+			root.delete();
+		}
+	}
 
 	private class Book{
 		String title;
@@ -180,7 +196,7 @@ public class Home extends WebActivity {
 				Configuration conf=Configuration.getInstance(Home.this);
 				String oldPath=conf.getValue("select path from book where url=?",new String[]{this.url});
 				if(oldPath!=null)
-					this.removeFolder(oldPath);
+					removeFolder(oldPath);
 				db=conf.getWritableDatabase();
 				ContentValues values=new ContentValues();
 				values.put("url", this.url);
@@ -216,22 +232,6 @@ public class Home extends WebActivity {
 			db.delete("book", "url=?", new String[]{this.url});
 			removeFolder(this.path);
 			db.close();
-		}
-		
-		private void removeFolder(String folder){
-			File root=new File(folder);
-			if(root.exists() && root.isDirectory()){
-				root.listFiles(new FileFilter(){
-					@Override
-					public boolean accept(File file) {
-						if(file.isDirectory())
-							file.listFiles(this);
-						file.delete();
-						return false;
-					}
-				});
-				root.delete();
-			}
 		}
 		
 		void unzip() throws Exception{

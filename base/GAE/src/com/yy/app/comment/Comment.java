@@ -15,8 +15,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
@@ -29,12 +29,12 @@ import com.yy.app.test.TestValue;
 import com.yy.rs.Required;
 
 @Required({"message","entityID"})
-@Unindexed
+@Unindex
 public class Comment extends AModel {
-	@Indexed
+	@Index
 	public Long entityID;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long owner;
 	public String ownerName;
 	public String email;
@@ -43,7 +43,7 @@ public class Comment extends AModel {
 	public String photoUrl;
 	public String audioUrl;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long serial;
 	
 	public String getCommenter(){
@@ -97,7 +97,7 @@ public class Comment extends AModel {
 				}else
 					throw new RuntimeException("Have to signin to comment. ");
 			}
-			ObjectifyService.begin().put(comment);
+			ObjectifyService.ofy().save().entity(comment).now();
 			return comment;
 		}
 		

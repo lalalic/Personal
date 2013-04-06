@@ -1,8 +1,8 @@
 package com.yy.app.test;
 
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Unindex;
 
-@Unindexed
+@Unindex
 public class PerfItem{
 	public String name;
 	public long when;

@@ -2,7 +2,7 @@ chrome.runtime.onInstalled.addListener(function() {
 	chrome.contextMenus.create({title: "ZipWeb",			contexts:["page","image","selection"],id: "main"})
 	chrome.contextMenus.create({title: "Icon",  			contexts:["image"],		id: "icon", 	parentId:"main"})
 	chrome.contextMenus.create({title: "Content",  			contexts:["selection"],	id: "content", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Navigator", 		contexts:["selection"],	id: "menu", 	parentId:"main"})
+	chrome.contextMenus.create({title: "Menu", 		contexts:["selection"],	id: "menu", 	parentId:"main"})
 	chrome.contextMenus.create({title: "Remove",  			contexts:["selection"],	id: "remove", 	parentId:"main"})
 	chrome.contextMenus.create({title: "Below Content",  	contexts:["selection"],	id: "Below", 	parentId:"remove"})
 	chrome.contextMenus.create({title: "Above Content",  	contexts:["selection"],	id: "Above", 	parentId:"remove"})
@@ -87,7 +87,6 @@ Downloader.prototype={
 				me.info.push("home="+info.file.name)
 				if(info.cmds.length>10){
 					me.info.push("cmds="+info.cmds)
-					me.save2Cloud(info)
 				}
 				if(info.icon){
 					var a=document.createElement('a')
@@ -241,19 +240,5 @@ Downloader.prototype={
 		return this.files.length==0 &&
 			this.images.length==0 &&
 			this.links.length==0;
-	},
-	save2Cloud: function(info){
-		var request=new XMLHttpRequest(),
-			data=[]
-		data.push("url="+encodeURIComponent(info.url))
-		data.push("title="+encodeURIComponent(info.title))
-		data.push("cmds="+encodeURIComponent(info.cmds))
-		('keywords' in info) && data.push("tags="+encodeURIComponent(info.keywords))
-		('icon' in info) && data.push('thumbnail='+encodeURIComponent(info.icon))
-		('description' in info)&&data.push('description='+encodeURIComponent(info.description))
-		
-		request.open("POST","http://www.getzipweb.com/book/post",true)
-		request.setRequestHeader("Content-type","application/x-www-form-urlencoded")
-		request.send(data.join('&'))
 	}
 }

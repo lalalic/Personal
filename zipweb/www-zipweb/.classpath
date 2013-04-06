@@ -11,8 +11,8 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.9.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-multipart-1.9.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.9.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/objectify-3.1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/recaptcha4j-0.0.7.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/yamlbeans-1.06.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/objectify-4.0b2.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

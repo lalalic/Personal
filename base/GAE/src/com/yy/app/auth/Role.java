@@ -16,8 +16,8 @@ import javax.ws.rs.core.MediaType;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.site.Profile;
@@ -27,11 +27,11 @@ import com.yy.rs.Uniques;
 
 @Entity
 @Uniques({ "name" })
-@Unindexed
+@Unindex
 public class Role extends AModel {
 	public final static String ADMIN = "admin";
 	public static Set<String> CAPS = new HashSet<String>();
-	@Indexed
+	@Index
 	public String name;
 
 	private Set<String> capabilities;
@@ -77,17 +77,17 @@ public class Role extends AModel {
 			String password, String name) {
 		User.View userView = Profile.I.userView;
 		Role adminRole;
-		Objectify store = ObjectifyService.begin();
+		Objectify store = ObjectifyService.ofy();
 
-		User admin = (User) store
-				.query(userView.getClass().getEnclosingClass())
-				.filter("account", account).get();
+		User admin = (User) store.load()
+				.type(userView.getClass().getEnclosingClass())
+				.filter("account", account).first().get();
 
 		if (admin == null)
 			admin = userView.doSignup(account, email, password,
 					password, name, true, null, null);
 
-		adminRole = store.query(Role.class).filter("name", Role.ADMIN).get();
+		adminRole = store.load().type(Role.class).filter("name", Role.ADMIN).first().get();
 		if (adminRole == null) {
 			adminRole = new Role();
 			adminRole.name = Role.ADMIN;
@@ -95,11 +95,11 @@ public class Role extends AModel {
 		}
 		adminRole.setCapabilities(CAPS);
 		adminRole.members.add(admin.ID);
-		store.put(adminRole);
+		store.save().entity(adminRole).now();
 
 		if (admin.role != adminRole.ID) {
 			admin.role = adminRole.ID;
-			store.put(admin);
+			store.save().entity(admin).now();
 		}
 
 		return admin;
@@ -115,7 +115,7 @@ public class Role extends AModel {
 				@FormParam("name") String name,
 				@FormParam("capabilities") Set<String> capabilities,
 				@FormParam("members") Set<Long> members) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			ArrayList<AModel> entities = new ArrayList<AModel>();
 
 			Role role = (Role) this.get(store, ID);
@@ -126,7 +126,7 @@ public class Role extends AModel {
 			if (!Role.ADMIN.equalsIgnoreCase(role.name)) {
 				role.name = name;
 				role.setCapabilities(capabilities);
-				store.put(role);
+				store.save().entity(role).now();
 				if (ID == 0)
 					ID = role.ID;
 			}
@@ -143,7 +143,7 @@ public class Role extends AModel {
 				for (long personID : role.members) {// remove
 					if (members.contains(personID))
 						continue;
-					User person = store.get(User.class, personID);
+					User person = store.load().type(User.class).id(personID).get();
 					person.role = null;
 					entities.add(person);
 				}
@@ -153,7 +153,7 @@ public class Role extends AModel {
 				for (long personID : members) {// add
 					if (role.members.contains(personID))
 						continue;
-					User person = store.get(User.class, personID);
+					User person = store.load().type(User.class).id(personID).get();
 					person.role = ID;
 					entities.add(person);
 				}
@@ -167,7 +167,7 @@ public class Role extends AModel {
 					&& role.members.size() == 0)
 				Role.reject();
 
-			store.put(entities);
+			store.save().entities(entities).now();
 			return role;
 		}
 
@@ -176,12 +176,12 @@ public class Role extends AModel {
 		@Caps("Assign Roles")
 		public static void assign(@FormParam("role") long roleID,
 				@FormParam("user") long personID) {
-			Objectify store = ObjectifyService.begin();
-			User person = store.get(User.class, personID);
+			Objectify store = ObjectifyService.ofy();
+			User person = store.load().type(User.class).id(personID).get();
 			person.role = roleID;
-			Role role = store.get(Role.class, roleID);
+			Role role = store.load().type(Role.class).id(roleID).get();
 			role.members.add(personID);
-			store.put(person, role);
+			store.save().entities(person, role).now();
 		}
 
 		@POST
@@ -189,9 +189,9 @@ public class Role extends AModel {
 		@Caps("Assign Roles")
 		public static void revoke(@FormParam("role") long roleID,
 				@FormParam("user") long personID) {
-			Objectify store = ObjectifyService.begin();
-			User person = store.get(User.class, personID);
-			Role role = store.get(Role.class, roleID);
+			Objectify store = ObjectifyService.ofy();
+			User person = store.load().type(User.class).id(personID).get();
+			Role role = store.load().type(Role.class).id(roleID).get();
 			if (roleID == person.role)
 				person.role = null;
 
@@ -201,7 +201,7 @@ public class Role extends AModel {
 			if (Role.ADMIN.equals(role.name) && role.members.size() == 0)
 				Role.reject();
 
-			store.put(person, role);
+			store.save().entities(person, role).now();
 		}
 
 		@GET

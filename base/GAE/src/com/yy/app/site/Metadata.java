@@ -11,8 +11,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.test.Test;
@@ -26,11 +26,11 @@ import com.yy.rs.Uniques;
 
 @Uniques({ "category+key" })
 @Required({"category","key","value"})
-@Unindexed
+@Unindex
 public class Metadata extends AModel {
-	@Indexed
+	@Index
 	public String category;
-	@Indexed
+	@Index
 	public String key;
 	public String value;
 
@@ -45,7 +45,7 @@ public class Metadata extends AModel {
 	public static class View extends AModel.View {
 		@Override
 		public List<Metadata> list(String category) {
-			return ObjectifyService.begin().query(Metadata.class)
+			return ObjectifyService.ofy().load().type(Metadata.class)
 					.filter("categroy", category).list();
 		}
 
@@ -68,12 +68,12 @@ public class Metadata extends AModel {
 
 				@TestValue(field = "value", value = "test") 
 				@FormParam("value") String value) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Metadata meta = (Metadata) this.get(store, ID);
 			meta.category = category;
 			meta.key = key;
 			meta.value = value;
-			store.put(meta);
+			store.save().entity(meta).now();
 			return viewable(viewDataModel("Metadata Management", "metadata",
 					"this", this));
 		}

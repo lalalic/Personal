@@ -30,8 +30,8 @@ import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.googlecode.objectify.condition.IfTrue;
 import com.sun.jersey.api.view.Viewable;
@@ -53,35 +53,35 @@ import com.yy.rs.TagAttr;
 import com.yy.rs.Uniques;
 
 @Entity
-@Unindexed
+@Unindex
 @Uniques("guid")
 public class Post extends AModel {
 	public static final int STATUS_PRIVATE = 0;
 	public static final int STATUS_PUBLISH = 1;
 	public static final int STATUS_DRAFT = 2;
 
-	@Indexed(IfTrue.class)
+	@Index(IfTrue.class)
 	public Boolean serial;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String title;
 	private Text content;
 	public String excerpt;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Integer status;
 	
 	public Boolean allowComment = true;
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String guid;
 
-	@Indexed
+	@Index
 	public int votes = 0;
 
-	@Indexed
+	@Index
 	public int favorites = 0;
 
-	@Indexed
+	@Index
 	public int generalRating = 0;
 	public int generalRatingSum;
 	public int ratingCount = 0;
@@ -120,9 +120,8 @@ public class Post extends AModel {
 	}
 
 	public void removeComments(long entityID) {
-		Objectify store = ObjectifyService.begin();
-		store.delete(store.query(Comment.class)
-				.ancestor(new Key<Post>(this.getClass(), entityID)).fetchKeys());
+		Objectify store = ObjectifyService.ofy();
+		store.delete().type(Comment.class).ids(store.load().ancestor(Key.create(this.getClass(), entityID)).keys()).now();
 	}
 
 	@Override
@@ -169,7 +168,7 @@ public class Post extends AModel {
 					.replaceAll("id1", this.ID.toString());
 			this.weiboID = weibo.status(message);
 			this.resolveAttrs=false;
-			ObjectifyService.begin().put(this);
+			ObjectifyService.ofy().save().entity(this).now();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -203,9 +202,9 @@ public class Post extends AModel {
 				if (attrs != null && attrs.isEmpty())
 					removed.removeAll(attrs);
 				if (!removed.isEmpty()) {
-					for (Tag t : (ObjectifyService.begin().get(
+					for (Tag t : (ObjectifyService.ofy().load().type(
 							(Class<? extends Tag>) Profile.I.tagger.getClass()
-									.getEnclosingClass(), removed).values())) {
+									.getEnclosingClass()).ids(removed).values())) {
 						t.dec(this);
 						tags.add(t);
 					}
@@ -217,9 +216,9 @@ public class Post extends AModel {
 				if (oldAttrs != null && oldAttrs.isEmpty())
 					added.removeAll(oldAttrs);
 				if (!added.isEmpty()) {
-					for (Tag t : (ObjectifyService.begin().get(
+					for (Tag t : (ObjectifyService.ofy().load().type(
 							(Class<? extends Tag>) Profile.I.tagger.getClass()
-									.getEnclosingClass(), added).values())) {
+									.getEnclosingClass()).ids(added).values())) {
 						t.inc(this);
 						tags.add(t);
 					}
@@ -227,7 +226,7 @@ public class Post extends AModel {
 			}
 
 			if (!tags.isEmpty())
-				ObjectifyService.begin().put(tags);
+				ObjectifyService.ofy().save().entities(tags).now();
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
@@ -279,9 +278,9 @@ public class Post extends AModel {
 		@Test(value = ".guid", model = EnclosingModel.class, removeTester = true)
 		public Viewable show(@PathParam("guid") String guid,
 				@Context UriInfo uriInfo) {
-			Post post = (Post) ObjectifyService.begin()
-					.query(getClass().getEnclosingClass()).filter("guid", guid)
-					.get();
+			Post post = (Post) ObjectifyService.ofy().load()
+					.type(getClass().getEnclosingClass()).filter("guid", guid)
+					.first().get();
 			return viewable(viewDataModel(post.title, "show1", "post", post));
 		}
 
@@ -299,8 +298,8 @@ public class Post extends AModel {
 		@Produces({ MediaType.APPLICATION_JSON })
 		@SuppressWarnings("unchecked")
 		public List<? extends Post> listSerialPosts() {
-			return (List<? extends Post>) ObjectifyService.begin()
-					.query(getClass().getEnclosingClass())
+			return (List<? extends Post>) ObjectifyService.ofy().load()
+					.type(getClass().getEnclosingClass())
 					.filter("serial", true).list();
 		}
 
@@ -315,22 +314,22 @@ public class Post extends AModel {
 		}
 
 		protected int doLikeit(Post post) {
-			Objectify store = ObjectifyService.begin();
-			Like vote = store.query(Like.class)
+			Objectify store = ObjectifyService.ofy();
+			Like vote = store.load().type(Like.class)
 					.filter("author", User.getCurrentUserID())
-					.filter("entityID", post.ID).get();
+					.filter("entityID", post.ID).first().get();
 			if (vote != null) {
-				store.delete(vote);
+				store.delete().entity(vote).now();
 				post.votes--;
 				if (post.votes < 0)
 					post.votes = 0;
-				store.put(post);
+				store.save().entity(post).now();
 			} else {
 				vote = new Like();
 				vote.entityID = post.ID;
 				vote.entityType = post.entityType();
 				post.votes++;
-				store.put(vote, post);
+				store.save().entities(vote, post).now();
 			}
 
 			return post.votes;
@@ -347,22 +346,22 @@ public class Post extends AModel {
 		}
 
 		protected int doFavorite(Post post) {
-			Objectify store = ObjectifyService.begin();
-			Favorite favorite = store.query(Favorite.class)
+			Objectify store = ObjectifyService.ofy();
+			Favorite favorite = store.load().type(Favorite.class)
 					.filter("author", User.getCurrentUserID())
-					.filter("entityID", post.ID).get();
+					.filter("entityID", post.ID).first().get();
 			if (favorite != null) {
-				store.delete(favorite);
+				store.delete().entity(favorite).now();
 				post.favorites--;
 				if (post.favorites < 0)
 					post.favorites = 0;
-				store.put(post);
+				store.save().entities(post).now();
 			} else {
 				favorite = new Favorite();
 				favorite.entityID = post.ID;
 				favorite.entityType = post.entityType();
 				post.favorites++;
-				store.put(favorite, post);
+				store.save().entities(favorite, post).now();
 			}
 
 			return post.favorites;
@@ -374,8 +373,8 @@ public class Post extends AModel {
 		@Caps
 		@Test
 		public Viewable myFavorite() {
-			Objectify store = ObjectifyService.begin();
-			List<Favorite> favorites = store.query(Favorite.class)
+			Objectify store = ObjectifyService.ofy();
+			List<Favorite> favorites = store.load().type(Favorite.class)
 					.filter("author", User.getCurrentUserID())
 					.filter("entityType", this.newInstance().entityType())
 					.order("-ID").list();
@@ -384,8 +383,8 @@ public class Post extends AModel {
 			List<Long> IDs = new ArrayList<Long>();
 			for (Favorite favorite : favorites)
 				IDs.add(favorite.entityID);
-			Collection<Object> posts = store.get(
-					this.getClass().getEnclosingClass(), IDs).values();
+			Collection<?> posts = store.load().type(this.getClass().getEnclosingClass())
+				.ids(IDs).values();
 			return viewable(viewDataModel("", "listTitle", "template",
 					"empty_template", "it", posts));
 		}
@@ -395,8 +394,8 @@ public class Post extends AModel {
 		@Produces(MediaType.TEXT_HTML)
 		@Test
 		public Viewable adminFavorite() {
-			Objectify store = ObjectifyService.begin();
-			List<Favorite> favorites = store.query(Favorite.class)
+			Objectify store = ObjectifyService.ofy();
+			List<Favorite> favorites = store.load().type(Favorite.class)
 					.filter("author", Profile.I.getAdmin().ID)
 					.filter("entityType", this.newInstance().entityType())
 					.order("-ID").list();
@@ -406,7 +405,7 @@ public class Post extends AModel {
 			List<Object> posts = new ArrayList<Object>(10);
 			if (!IDs.isEmpty())
 				posts.addAll(store
-						.get(this.getClass().getEnclosingClass(), IDs).values());
+						.load().type(this.getClass().getEnclosingClass()).ids(IDs).values());
 
 			return viewable(viewDataModel("", "listTitle", "template",
 					"empty_template", "it", posts));
@@ -418,8 +417,8 @@ public class Post extends AModel {
 		@Caps
 		@Test
 		public Viewable myLike() {
-			Objectify store = ObjectifyService.begin();
-			List<Like> likes = store.query(Like.class)
+			Objectify store = ObjectifyService.ofy();
+			List<Like> likes = store.load().type(Like.class)
 					.filter("author", User.getCurrentUserID())
 					.filter("entityType", this.newInstance().entityType())
 					.order("-ID").list();
@@ -428,8 +427,8 @@ public class Post extends AModel {
 			List<Long> IDs = new ArrayList<Long>();
 			for (Favorite favorite : likes)
 				IDs.add(favorite.entityID);
-			Collection<Object> posts = store.get(
-					this.getClass().getEnclosingClass(), IDs).values();
+			Collection<?> posts = store.load().type(this.getClass().getEnclosingClass())
+				.ids(IDs).values();
 			return viewable(viewDataModel("", "listTitle", "template",
 					"empty_template", "it", posts));
 		}
@@ -450,12 +449,12 @@ public class Post extends AModel {
 				@TestValue(field = "title", value = Runner.TEST_TITLE) @FormParam("title") String title,
 				@TestValue(field = "content", value = Runner.TEST_CONTENT) @FormParam("content") String content)
 				throws URISyntaxException {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Post post = (Post) this.get(store, ID);
 			post.parent = parent;
 			post.title = title;
 			post.setContent(content);
-			store.put(post);
+			store.save().entity(post).now();
 			post.postPersist();
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + post.ID + ".shtml"))

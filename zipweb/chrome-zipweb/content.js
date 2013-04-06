@@ -138,7 +138,7 @@ window.cleaner={
 		style.margin=0
 		style.padding=0
 		style.border="1px solid lightgreen"
-		style.width='20%'
+		style.width='0px'
 		style.left='-2px'
 		style.borderLeft="solid 12px lightgreen"
 		style.backgroundColor="white"
@@ -259,6 +259,27 @@ window.cleaner={
 	},
 	release: function(uid){
 		localStorage.removeItem(uid+"_clean")
+	},
+	save2Cloud: function(){
+		var request=new XMLHttpRequest(),data=[]
+		data.push("url="+btoa(location.href))
+		data.push("title="+btoa(document.title))
+		data.push("cmds="+btoa(JSON.stringify(this.cmds)))
+		var n=$1("meta[name$=eywords],meta[name=KEYWORDS]")
+		if(n){
+			var keywords=n.getAttribute('content').split(",")
+			keywords=keywords.length>5 ? keywords.slice(0,5) : keywords
+			data.push("tags="+btoa(keywords.join(',')))
+		}	
+			
+		if((n=$1("meta[name$=escription],meta[name=DESCRIPTION]")))
+			data.push('description='+btoa(n.getAttribute('content')))
+
+		this.icon && data.push('thumbnail='+btoa(this.icon))
+		
+		request.open("POST","http://www.getzipweb.com/book/post",true)
+		request.setRequestHeader("Content-type","application/x-www-form-urlencoded")
+		request.send(data.join('&'))
 	}
 }
 
@@ -295,20 +316,13 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			var res=cleaner.getPageInfo(info.uid,info.deep)
 			res.cmds=cleaner.save(info.uid)
 			res.title=document.title
-			var n=$1("meta[name$=eywords],meta[name=KEYWORDS]")
-			if(n){
-				var keywords=n.getAttribute('content').split(",")
-				keywords=keywords.length>5 ? keywords.slice(0,5) : keywords
-				res.keywords=keywords.join(',')
-			}	
-			
-			if((n=$1("meta[name$=escription],meta[name=DESCRIPTION]")))
-				res.description=n.getAttribute('content')			
 			
 			if(cleaner.icon)
 				res.images.push(res.icon=cleaner.icon)
 			else if(res.images.length)
-				res.icon=res.images[0]
+				cleaner.icon=(res.icon=res.images[0])
+			
+			cleaner.save2Cloud()
 			sendResponse(res)
 		}
 		break

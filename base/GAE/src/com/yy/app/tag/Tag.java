@@ -17,8 +17,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.rs.AdminUI;
@@ -26,9 +26,9 @@ import com.yy.rs.Caps;
 import com.yy.rs.Uniques;
 
 @Uniques({ "name" })
-@Unindexed
+@Unindex
 public class Tag extends AModel {
-	@Indexed
+	@Index
 	public String name;
 
 	public long count = 0;
@@ -64,8 +64,8 @@ public class Tag extends AModel {
 					"Taxonomy Management",
 					"tag",
 					"tags",
-					ObjectifyService.begin()
-							.query(getClass().getEnclosingClass()).list()));
+					ObjectifyService.ofy().load()
+							.type(getClass().getEnclosingClass()).list()));
 		}
 
 		@POST
@@ -74,11 +74,11 @@ public class Tag extends AModel {
 		@Caps("Tag Management")
 		public List<Tag> create(@FormParam("parentTag") String parentTag,
 				@FormParam("tags") String tags) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Tag parent = null;
 			if (parentTag != null && parentTag.length() > 0) {
-				parent = (Tag) store.query(this.getClass().getEnclosingClass())
-						.filter("name", parentTag).get();
+				parent = (Tag) store.load().type(this.getClass().getEnclosingClass())
+						.filter("name", parentTag).first().get();
 				if (parent == null) {
 					parent = (Tag) newInstance();
 					parent.name = parentTag;
@@ -91,9 +91,9 @@ public class Tag extends AModel {
 			for (String term : terms) {
 				if (term.length() < 1)
 					continue;
-				Tag tag = (Tag) store
-						.query(this.getClass().getEnclosingClass())
-						.filter("name", term).get();
+				Tag tag = (Tag) store.load()
+						.type(this.getClass().getEnclosingClass())
+						.filter("name", term).first().get();
 				if (tag == null) {
 					tag = (Tag) newInstance();
 					tag.name = term;
@@ -103,7 +103,7 @@ public class Tag extends AModel {
 			}
 
 			if (newTags.size() > 0)
-				store.put(newTags);
+				store.save().entities(newTags).now();
 
 			if (parent != null) {
 				parent.included = new ArrayList<Long>();
@@ -113,20 +113,20 @@ public class Tag extends AModel {
 				if (parent.ID == null || parent.ID == 0)
 					allTags.add(0, parent);
 
-				store.put(parent);
+				store.save().entity(parent).now();
 			}
 
 			return allTags;
 		}
 
 		public Tag get(String name) {
-			Objectify store = ObjectifyService.begin();
-			Tag tag = (Tag) store.query(this.getClass().getEnclosingClass())
-					.filter("name", name).get();
+			Objectify store = ObjectifyService.ofy();
+			Tag tag = (Tag) store.load().type(this.getClass().getEnclosingClass())
+					.filter("name", name).first().get();
 			if (tag == null) {
 				tag = (Tag) newInstance();
 				tag.name = name;
-				store.put(tag);
+				store.save().entity(tag).now();
 			}
 			return tag;
 		}
@@ -139,7 +139,7 @@ public class Tag extends AModel {
 			for (Tag tag : tags)
 				if(!category.included.contains(tag.ID))
 					category.included.add(tag.ID);
-			ObjectifyService.begin().put(category);
+			ObjectifyService.ofy().save().entity(category).now();
 			return category.included;
 		}
 
@@ -153,7 +153,7 @@ public class Tag extends AModel {
 				Tag t = get(key);
 				if(!category.included.contains(t.ID)){
 					category.included.add(t.ID);
-					ObjectifyService.begin().put(category);
+					ObjectifyService.ofy().save().entity(category).now();
 				}
 				return t.ID;
 			}
@@ -162,10 +162,10 @@ public class Tag extends AModel {
 		@SuppressWarnings("unchecked")
 		public Collection<Tag> list(String cat) {
 			Tag category = get(cat);
-			return ObjectifyService
-					.begin()
-					.get((Class<? extends Tag>) getClass().getEnclosingClass(),
-							category.included).values();
+			return (Collection<Tag>)ObjectifyService
+					.ofy().load()
+					.type((Class<? extends Tag>) getClass().getEnclosingClass())
+					.ids(category.included).values();
 		}
 
 		public String listName(List<Long> ids) {
@@ -179,10 +179,10 @@ public class Tag extends AModel {
 					return "";
 			}
 			@SuppressWarnings("unchecked")
-			Collection<Tag> tags = ObjectifyService
-					.begin()
-					.get((Class<? extends Tag>) getClass().getEnclosingClass(),
-							ids).values();
+			Collection<Tag> tags = (Collection<Tag>)ObjectifyService
+					.ofy().load()
+					.type((Class<? extends Tag>) getClass().getEnclosingClass())
+					.ids(ids).values();
 
 			StringBuilder names = new StringBuilder();
 			for (Tag t : tags)
@@ -201,7 +201,7 @@ public class Tag extends AModel {
 		 * @param data
 		 */
 		public void setInitData(Map<String, List<String>> data) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			List<Tag> tags = new ArrayList<Tag>();
 			Tag cat, tag;
 			for (String key : data.keySet()) {
@@ -210,10 +210,10 @@ public class Tag extends AModel {
 					tags.add(tag);
 				}
 				cat = get(key);
-				for (Tag t : store.put(tags).values())
+				for (Tag t : store.save().entities(tags).now().values())
 					if (!cat.included.contains(t.ID))
 						cat.included.add(t.ID);
-				store.put(cat);
+				store.save().entity(cat).now();
 				tags.clear();
 				cat = null;
 			}

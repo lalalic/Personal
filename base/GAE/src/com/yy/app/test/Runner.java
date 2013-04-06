@@ -52,16 +52,17 @@ public class Runner extends AModel.View implements ResourceFilterFactory {
 	public String host;
 	public String session;
 
+	@SuppressWarnings("unchecked")
 	@POST
 	@Path("clean")
 	public Response clean() throws URISyntaxException{
-		Objectify store=ObjectifyService.begin();
+		Objectify store=ObjectifyService.ofy();
 		@SuppressWarnings("rawtypes")
-		List keys;
+		List keys=null;
 		for(Class<?> clazz : Profile.I.modelTypes){
-			keys=store.query(clazz).filter("author", Profile.I.getTester().ID).listKeys();
+			keys=store.load().type(clazz).filter("author", Profile.I.getTester().ID).keys().list();
 			if(!keys.isEmpty())
-				store.delete(keys);
+				store.delete().keys(keys).now();
 		}
 		return Response.seeOther(new URI("/test")).build();
 	}

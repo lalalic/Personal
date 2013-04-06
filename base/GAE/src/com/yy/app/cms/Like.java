@@ -1,7 +1,8 @@
 package com.yy.app.cms;
 
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.EntitySubclass;
 
-@Unindexed
+@EntitySubclass(index=false)
 public class Like extends Favorite {
+	
 }

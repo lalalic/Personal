@@ -25,13 +25,13 @@ import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.multipart.FormDataParam;
 import com.yy.app.AModel;
 
 @Entity(name = "__BlobInfo__")
-@Unindexed
+@Unindex
 public class Resource {
 	@Id
 	public String ID;
@@ -102,7 +102,7 @@ public class Resource {
 		public Viewable save(@FormDataParam("albumID") long albumID,
 				@FormDataParam("albumName") String newAlbum,
 				@Context HttpServletRequest request) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Album album = Album.getAlbum(albumID, newAlbum);
 
 			BlobstoreService service = BlobstoreServiceFactory
@@ -112,14 +112,13 @@ public class Resource {
 				return indexUI();
 			List<Resource> resources = new ArrayList<Resource>();
 			for (BlobKey key : uploads.get("file")) {
-				Resource resource = store.get(Resource.class,
-						key.getKeyString());
+				Resource resource = store.load().type(Resource.class).id(key.getKeyString()).get();
 				resources.add(resource);
 				album.addResource(resource.ID);
 			}
 			
 
-			store.put(album);
+			store.save().entity(album).now();
 			return viewable(viewDataModel("Uploaded Resources", "listmedia",
 					"resources", resources, "template", "empty_template"));
 		}
@@ -141,9 +140,8 @@ public class Resource {
 		@Path("album/{album}")
 		@Produces(MediaType.TEXT_HTML)
 		public Viewable showAlbum(@PathParam("album") long ID) {
-			Objectify store = ObjectifyService.begin();
-			Album album = ID == 0 ? Album.getAlbum(null) : store.get(
-					Album.class, ID);
+			Objectify store = ObjectifyService.ofy();
+			Album album = ID == 0 ? Album.getAlbum(null) : store.load().type(Album.class).id(ID).get();
 			return viewable(viewDataModel("Album", "listalbummedia", "resources",
 					album.getResources(), "template",
 					"empty_template"));

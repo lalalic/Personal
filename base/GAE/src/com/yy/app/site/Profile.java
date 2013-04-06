@@ -77,14 +77,14 @@ public class Profile {
 	}
 
 	public void setTester(User tester) {
-		Objectify store = ObjectifyService.begin();
-		this.tester = store.query(tester.getClass())
-				.filter("account", tester.account).get();
+		Objectify store = ObjectifyService.ofy();
+		this.tester = store.load().type(tester.getClass())
+				.filter("account", tester.account).first().get();
 		if (this.tester == null) {
 			tester.setPassword(testerPassword, testerPassword);
 			tester.author=admin.ID;
 			tester.role=admin.role;
-			store.put(tester);
+			store.save().entity(tester).now();
 			this.tester = tester;
 		}
 	}
@@ -139,24 +139,24 @@ public class Profile {
 	@SuppressWarnings({ "unchecked" })
 	private List<Long> insertTag(Object tag) {
 		List<Long> tagIDs = new ArrayList<Long>();
-		Objectify store = ObjectifyService.begin();
+		Objectify store = ObjectifyService.ofy();
 		if (tag instanceof List) {
 			for (Object t : (List) tag)
 				tagIDs.addAll(insertTag(t));
 		} else if (tag instanceof String) {
-			Tag t = store.query(Tag.class).filter("name", tag.toString()).get();
+			Tag t = store.load().type(Tag.class).filter("name", tag.toString()).first().get();
 			if (t == null) {
 				t = new Tag();
 				t.name = tag.toString();
-				store.put(t);
+				store.save().entity(t).now();
 			}
 			tagIDs.add(t.ID);
 		} else if (tag instanceof Map) {
 			Map<String, Object> aGroupTag = (Map<String, Object>) tag;
 			for (String parent : aGroupTag.keySet()) {
 				List<Long> children = insertTag(aGroupTag.get(parent));
-				Tag parentTag = store.query(Tag.class).filter("name", parent)
-						.get();
+				Tag parentTag = store.load().type(Tag.class).filter("name", parent)
+						.first().get();
 				if (parentTag == null) {
 					parentTag = new Tag();
 					parentTag.name = parent;
@@ -165,7 +165,7 @@ public class Profile {
 					continue;
 				}
 				parentTag.included = children;
-				store.put(parentTag);
+				store.save().entity(parentTag).now();
 				tagIDs.add(parentTag.ID);
 			}
 		}

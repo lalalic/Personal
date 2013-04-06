@@ -39,14 +39,14 @@ public class Blog extends Post {
 				@FormParam("serial") @DefaultValue("false") boolean serial,
 				@FormParam("parent") @DefaultValue("0") long parent,
 				@FormParam("statusx") @DefaultValue("0") int status) {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Post post = null;
 			if (ID == 0) {
 				Role.requestCapabilities("Create Post");
 				post = (Post) this.newInstance();
 			} else {
-				post = (Post) store
-						.get(this.getClass().getEnclosingClass(), ID);
+				post = (Post) store.load()
+						.type(this.getClass().getEnclosingClass()).id(ID).get();
 				if (post.author != User.getCurrentUserID())
 					Role.requestCapabilities("Change Other's Post");
 			}

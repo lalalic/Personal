@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MiniWeb</string>
+    <string name="app_name">ZipWeb</string>
     <string name="url_home">file:///android_asset/Home.html</string>
     <string-array name="schema">
     	<item>CREATE TABLE BOOK(url TEXT PRIMARY KEY,title TEXT NOT NULL,home TEXT NOT NULL,path TEXT UNIQUE NOT NULL,icon TEXT)</item>    

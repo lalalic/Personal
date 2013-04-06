@@ -3,8 +3,10 @@ package com.yy.app.cms;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
 
+import com.googlecode.objectify.annotation.Entity;
 import com.yy.app.auth.User;
 
+@Entity
 public class Favorite{
 	@Id 
 	public Long ID;

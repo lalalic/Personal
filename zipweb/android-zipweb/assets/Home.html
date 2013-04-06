@@ -23,7 +23,7 @@
 			        {url:2,title:'Test 2',path:'http://google.com/',home:'index.html'},
 			        {url:3,title:'Test 3',path:'http://google.com/',home:'index.html'}],
 			install:function(t){TileLayer.add(t)},
-			getAllBooks: function(){return this.books},
+			getAllBooks: function(){return JSON.stringify(this.books)},
 			getBook: function(url){}
 		})
 	
@@ -60,8 +60,8 @@
   	<body class="app">
 		<section id="main" data-transition="slide">
 			<article id="books" class="active">
-				<div class="tile" id="creator" onclick="service.openFileDialog('service.install','application/zip')">
-					<span data-icon="plus"></span>
+				<div class="tile" id="creator" data-icon="plus" 
+					onclick="service.openFileDialog('service.install','application/zip')">
 				</div>
 			</article>
 		</section>

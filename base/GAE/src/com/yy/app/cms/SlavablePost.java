@@ -20,7 +20,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
+import com.googlecode.objectify.annotation.Index;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.SearchFilter;
@@ -34,7 +34,7 @@ import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 
 public abstract class SlavablePost extends Post {
-	@Indexed
+	@Index
 	public int slaveCount = 0;
 
 	@Transient
@@ -68,7 +68,7 @@ public abstract class SlavablePost extends Post {
 		SlavablePost tester = (SlavablePost) super.tester();
 		AModel slave = (AModel) this.getSlaveClass().newInstance();
 		slave = slave.tester();
-		ObjectifyService.begin().put(slave);
+		ObjectifyService.ofy().save().entity(slave).now();
 		return tester;
 	}
 
@@ -148,10 +148,10 @@ public abstract class SlavablePost extends Post {
 				@PathParam("ID") long ID,
 				@TestValue(field = "content", value = Runner.TEST_CONTENT) @FormParam("content") String content) {
 			assert ID > 0;
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Post slave = this.getSlave(ID);
 			slave.setContent(content);
-			store.put(slave);
+			store.save().entity(slave).now();
 			slave.postPersist();
 			return true;
 		}

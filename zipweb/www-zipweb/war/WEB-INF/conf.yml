@@ -4,7 +4,6 @@
 models:
   - com.yy.app.auth.User
   - com.yy.app.auth.Role
-  - com.yy.app.cms.Like
   - com.yy.app.cms.Favorite
   - com.yy.app.site.Metadata
   - com.yy.app.tag.Tag

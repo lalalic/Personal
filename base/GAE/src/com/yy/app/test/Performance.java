@@ -16,11 +16,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.site.Profile;
 
-@Unindexed
+@Unindex
 public class Performance {
 	public static final long UNKNOWN=-1l;
 	@Transient
@@ -50,7 +50,7 @@ public class Performance {
 			if(p.ignore || p.items.size()<3)
 				return;
 			p.add("service.end",0,UNKNOWN);
-			ObjectifyService.begin().put(I.get());
+			ObjectifyService.ofy().save().entity(I.get()).now();
 		}
 	}
 	
@@ -65,7 +65,7 @@ public class Performance {
 	public boolean ignore;
 	
 	@Embedded
-	@Unindexed
+	@Unindex
 	public List<PerfItem> items=new ArrayList<PerfItem>();
 	
 	public void add(String name, int level, long duration){
@@ -102,7 +102,7 @@ public class Performance {
 			Map<String, Object> info = new HashMap<String, Object>();
 			info.put("titleContent", "Performance");
 			info.put("contentMacroName", "show");
-			info.put("it", ObjectifyService.begin().query(Performance.class).list());
+			info.put("it", ObjectifyService.ofy().load().type(Performance.class).list());
 			return new Viewable("/perf/perf.html",info);
 		}
 		
@@ -110,7 +110,7 @@ public class Performance {
 		@Path("remove/{ID:\\d+\\.\\d+}")
 		@Produces(MediaType.APPLICATION_JSON)
 		public boolean remove(@PathParam("ID")String ID){
-			ObjectifyService.begin().delete(Performance.class, ID);
+			ObjectifyService.ofy().delete().type(Performance.class).id(ID).now();
 			return true;
 		}
 	}

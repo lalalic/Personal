@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Query;
+import com.googlecode.objectify.cmd.Query;
 import com.yy.app.site.Profile;
 
 public class SearchFilter{
@@ -59,7 +59,7 @@ public class SearchFilter{
 	
 	@SuppressWarnings("rawtypes")
 	private Query getFilteredQuery(int limit){
-		Query query=ObjectifyService.begin().query(type);
+		Query query=ObjectifyService.ofy().load().type(type);
 		if(limit>0)
 			query.limit(limit);
 		if(bookmark>0)

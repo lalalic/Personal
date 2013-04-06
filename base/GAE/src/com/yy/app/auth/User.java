@@ -33,8 +33,8 @@ import net.tanesha.recaptcha.ReCaptchaFactory;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
@@ -50,17 +50,17 @@ import com.yy.util.Email;
 @Entity
 @Uniques({ "account" })
 @Required({ "account" })
-@Unindexed
+@Unindex
 public class User extends AModel {
 	public static final String SESSION_CURRENT_USERID = "u";
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String email;
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String account;
 
 	public String name;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String activationKey;
 	public String status;
 	public Boolean spam;
@@ -74,14 +74,14 @@ public class User extends AModel {
 
 	public int type = 0;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long role;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String sinaID;
 	public Boolean sinaConnected;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public String ip;
 
 	// contact information
@@ -137,8 +137,7 @@ public class User extends AModel {
 		if (currentUser.role == null) {
 			roleCaps = new HashSet<String>();
 		} else {
-			Role role = ObjectifyService.begin().get(Role.class,
-					currentUser.role);
+			Role role = ObjectifyService.ofy().load().type(Role.class).id(currentUser.role).get();
 			roleCaps = role.getCapabilities();
 		}
 
@@ -155,7 +154,7 @@ public class User extends AModel {
 			caps = new HashSet<String>();
 			return caps;
 		}
-		Role role = ObjectifyService.begin().get(Role.class, currentUser.role);
+		Role role = ObjectifyService.ofy().load().type(Role.class).id(currentUser.role).get();
 		caps = role.getCapabilities();
 		return caps;
 	}
@@ -178,8 +177,8 @@ public class User extends AModel {
 		if (currentUser.role == null)
 			return false;
 
-		Role admin = ObjectifyService.begin().query(Role.class)
-				.filter("name", Role.ADMIN).get();
+		Role admin = ObjectifyService.ofy().load().type(Role.class)
+				.filter("name", Role.ADMIN).first().get();
 		if (admin == null)
 			return false;
 		return admin.ID == currentUser.role;
@@ -223,9 +222,8 @@ public class User extends AModel {
 			anonymouse.name = "anonymouse";
 			return anonymouse;
 		}
-		return (User) ObjectifyService.begin().get(
-				Profile.I.userView.getClass().getEnclosingClass(),
-				getCurrentUserID());
+		return (User) ObjectifyService.ofy().load().type(Profile.I.userView.getClass().getEnclosingClass())
+				.id(getCurrentUserID()).get();
 	}
 
 	@Path("user")
@@ -242,13 +240,13 @@ public class User extends AModel {
 				@DefaultValue("/")@QueryParam("targetURL") String targetURL,
 				@Context HttpServletRequest request) throws Exception {
 			
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Weibo wb = new Weibo();
 			Map<String, Object> tokenInfo = wb.getAccessToken(code);
 			String uid = tokenInfo.get("uid").toString();
 
 			@SuppressWarnings("unchecked")
-			List<User> users=(List<User>)store.query(this.getClass().getEnclosingClass())
+			List<User> users=(List<User>)store.load().type(this.getClass().getEnclosingClass())
 					.filter("sinaID", uid).limit(2).list();
 			User user;
 			
@@ -261,7 +259,7 @@ public class User extends AModel {
 				user.account="weibo_" + uid;
 				user.newPassword();
 				user.sinaID = uid;
-				store.put(user);
+				store.save().entity(user).now();
 			}else{
 				user=users.get(0);
 				if(users.size()==2 && (user.sinaConnected==null || !user.sinaConnected))
@@ -303,7 +301,7 @@ public class User extends AModel {
 			current.gender = gender;
 			current.birthday = parseDate(birthday);
 			beforeSave(current, req);
-			ObjectifyService.begin().put(current);
+			ObjectifyService.ofy().save().entity(current).now();
 			return true;
 		}
 
@@ -334,10 +332,10 @@ public class User extends AModel {
 
 		private User signin(String account, String password,
 				HttpServletRequest req) {
-			Objectify store =ObjectifyService.begin();
-			User user = (User) store
-					.query(this.getClass().getEnclosingClass())
-					.filter("account", account).get();
+			Objectify store =ObjectifyService.ofy();
+			User user = (User) store.load()
+					.type(this.getClass().getEnclosingClass())
+					.filter("account", account).first().get();
 
 			if (user != null && user.checkPassword(password) != 0) {
 				if (req != null) {
@@ -347,7 +345,7 @@ public class User extends AModel {
 							&& (current.sinaConnected==null || !current.sinaConnected)){
 						user.sinaID=current.sinaID;
 						user.sinaConnected=true;
-						store.put(user);
+						store.save().entity(user).now();
 					}
 					makeSession(req, user);
 				}
@@ -448,19 +446,19 @@ public class User extends AModel {
 			 * RuntimeException("verification code is not correct."); }
 			 */
 
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 
 			if (email != null && email.length() > 0) {
 				User.checkEmail(email);
-				user = (User) store.query(this.getClass().getEnclosingClass())
-						.filter("email", email).get();
+				user = (User) store.load().type(this.getClass().getEnclosingClass())
+						.filter("email", email).first().get();
 				if (user != null)
 					throw new RuntimeException(
 							"the email has already been registered.");
 			}
 
-			user = (User) store.query(this.getClass().getEnclosingClass())
-					.filter("account", account).get();
+			user = (User) store.load().type(this.getClass().getEnclosingClass())
+					.filter("account", account).first().get();
 			if (user != null)
 				throw new RuntimeException(
 						"the account has already been registered.");
@@ -482,7 +480,7 @@ public class User extends AModel {
 				user.sinaConnected=true;
 			}
 
-			store.put(user);
+			store.save().entity(user).now();
 			if (req != null) {
 				makeSession(req, user);
 			}
@@ -493,8 +491,8 @@ public class User extends AModel {
 			if (req == null)
 				return;
 			// same IP can't have more than 1 account
-			int sameIPCount = ObjectifyService.begin()
-					.query(this.getClass().getEnclosingClass())
+			int sameIPCount = ObjectifyService.ofy().load()
+					.type(this.getClass().getEnclosingClass())
 					.filter("ip", req.getRemoteAddr()).count();
 			if (sameIPCount > 0)
 				throw new RuntimeException("same IP can't signup two accounts.");
@@ -512,9 +510,9 @@ public class User extends AModel {
 		@POST
 		@Path("forgetpassword")
 		public String forgetPassword(@FormParam("email") String email) {
-			User user = (User) ObjectifyService.begin()
-					.query(this.getClass().getEnclosingClass())
-					.filter("email", email).get();
+			User user = (User) ObjectifyService.ofy()
+					.load().type(this.getClass().getEnclosingClass())
+					.filter("email", email).first().get();
 
 			if (user == null)
 				throw new RuntimeException(
@@ -583,7 +581,7 @@ public class User extends AModel {
 			User user = User.getCurrentUser();
 			user.checkPassword(oldPassword);
 			user.setPassword(newPassword, newPassword1);
-			ObjectifyService.begin().put(user);
+			ObjectifyService.ofy().save().entity(user).now();
 			return true;
 		}
 
@@ -591,15 +589,15 @@ public class User extends AModel {
 		@Path("activate/{key}")
 		@Produces(MediaType.TEXT_HTML)
 		public Viewable activate(@PathParam("key") String key) {
-			Objectify store = ObjectifyService.begin();
-			User user = (User) store.query(this.getClass().getEnclosingClass())
-					.filter("activationKey", key).get();
+			Objectify store = ObjectifyService.ofy();
+			User user = (User) store.load().type(this.getClass().getEnclosingClass())
+					.filter("activationKey", key).first().get();
 			if (user == null) {
 				return viewable(viewDataModel("Activation Failed",
 						"activation_failed"));
 			} else {
 				user.activationKey = null;
-				store.put(user);
+				store.save().entity(user).now();
 				return viewable(viewDataModel("Activation Success",
 						"activation_complete"));
 			}
@@ -610,8 +608,8 @@ public class User extends AModel {
 		@Produces(MediaType.APPLICATION_JSON)
 		@Test(value = "__tester__", patterns = "True")
 		public boolean existing(String account) {
-			return ObjectifyService.begin()
-					.query(getClass().getEnclosingClass())
+			return ObjectifyService.ofy().load()
+					.type(getClass().getEnclosingClass())
 					.filter("account", account).count() > 0;
 		}
 	}

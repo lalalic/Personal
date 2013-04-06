@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
+    <meta name="HandheldFriendly" content="True" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
+	<link rel="stylesheet" href="file:///android_asset/lib/lungo.css"/>
+	<link rel="stylesheet" href="file:///android_asset/lib/lungo.icon.css"/>
+	<link rel="stylesheet" href="file:///android_asset/lib/lungo.icon.brand.css"/>
+	<link rel="stylesheet" href="file:///android_asset/lib/theme.lungo.css"/>
+	<script src="file:///android_asset/lib/quo.min.js"></script>
+	<script src="file:///android_asset/lib/lungo.js"></script>
+	<script src="file:///android_asset/lib/tile.js"></script>
+	<script>
+		function splash(){
+			$$("img")
+				.style('height',(innerHeight-1)+"px")
+				.style('width',(innerWidth-1)+"px")
+		}
+	</script>
+  </head>
+  	<body class="app" onload="Lungo.init({name:'main'});Lungo.Element.Carousel(descs);splash()">
+		<section id="desc1" data-transition="slide">
+			<article id="descs" class="active" data-control="carousel">
+			 <div>
+				<div align="center">
+					<img src="desc1.jpg" style="border:1px solid lightgray">
+				</div>
+				<div align="center">
+					<img src="desc2.jpg">
+				</div>
+			</div>
+			</article>
+		</section>
+	</body>
+</html>

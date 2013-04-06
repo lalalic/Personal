@@ -2,17 +2,17 @@ package com.yy.app.tag;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
 import com.yy.app.AModel;
 
-@Unindexed
+@Unindex
 public class TagEntity extends AModel {
-	@Indexed
+	@Index
 	public String entityType;
-	@Indexed
+	@Index
 	public Long entityID;
-	@Indexed
+	@Index
 	public Long tagID;
 	public Integer order;
 	public long count=0;
@@ -20,11 +20,11 @@ public class TagEntity extends AModel {
 	@Override
 	protected void prePersist() {
 		super.prePersist();
-		Objectify store=ObjectifyService.begin();
-		Tag tag=store.get(Tag.class, tagID);
-		TagEntity tagEntity=store.query(TagEntity.class)
+		Objectify store=ObjectifyService.ofy();
+		Tag tag=store.load().type(Tag.class).id(tagID).get();
+		TagEntity tagEntity=store.load().type(TagEntity.class)
 			.filter("entityType", this.entityType)
-			.filter("entityID", 0).get();
+			.filter("entityID", 0).first().get();
 		if(tagEntity==null){
 			tagEntity=new TagEntity();
 			tagEntity.entityID=0l;
@@ -32,7 +32,7 @@ public class TagEntity extends AModel {
 		}
 		tagEntity.count++;
 		tag.count++;
-		store.put(tag,tagEntity);
+		store.save().entities(tag,tagEntity).now();
 	}
 	
 }

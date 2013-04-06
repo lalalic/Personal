@@ -7,7 +7,7 @@ import com.yy.provider.oauth.Weibo;
 public class Slave extends Post {
 	protected static Class<? extends Post> MASTER;
 	public Post getMaster(){
-		return ObjectifyService.begin().get(MASTER,parent);
+		return ObjectifyService.ofy().load().type(MASTER).id(parent).get();
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class Slave extends Post {
 			else
 				this.weiboID = weibo.status(message);
 			this.resolveAttrs=false;
-			ObjectifyService.begin().put(this);
+			ObjectifyService.ofy().save().entity(this).now();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

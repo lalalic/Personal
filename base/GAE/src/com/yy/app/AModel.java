@@ -35,13 +35,14 @@ import javax.ws.rs.core.UriInfo;
 
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Query;
 import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Unindex;
+import com.googlecode.objectify.cmd.Query;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.auth.NotLoginException;
@@ -55,46 +56,46 @@ import com.yy.rs.TagAttr;
 import com.yy.rs.Uniques;
 
 @JsonFilter(value = "RoleBasedFilter")
-@Unindexed
+@Unindex
 public class AModel {
 	protected static final Logger log = Logger
 			.getLogger(AModel.class.getName());
 
 	@Id
-	@Indexed
+	@Index
 	public Long ID;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long parent;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long author;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Long lastModifier;
 
 	public String thumbnail;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Date modified;
 
 	public Date created;
 
-	@Indexed
+	@Index
 	public Set<Long> attrs;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Boolean __tester;
 
 	public List<? extends AModel> getChildren() {
-		return ObjectifyService.begin().query(this.getClass())
+		return ObjectifyService.ofy().load().type(this.getClass())
 				.filter("parent", ID).list();
 	}
 
 	public AModel parentModel() {
 		try {
 			if (parent != null && parent != 0)
-				return ObjectifyService.begin().get(this.getClass(), parent);
+				return ObjectifyService.ofy().load().key(Key.create(this.getClass(), parent)).get();
 		} catch (NotFoundException e) {
 			return null;
 		}
@@ -209,14 +210,14 @@ public class AModel {
 
 	public AModel tester() throws InstantiationException,
 			IllegalAccessException {
-		Objectify store = ObjectifyService.begin();
-		AModel model = store.query(this.getClass()).filter("__tester", true)
+		Objectify store = ObjectifyService.ofy();
+		AModel model = store.load().type(this.getClass()).filter("__tester", true).first()
 				.get();
 		if (model == null) {
 			model = this.getClass().newInstance();
 			model = initTester(model);
 			model.__tester = true;
-			store.put(model);
+			store.save().entity(model).now();
 		}
 		return model;
 	}
@@ -226,11 +227,11 @@ public class AModel {
 	}
 
 	public void removeTester() {
-		Objectify store = ObjectifyService.begin();
-		AModel tester = store.query(this.getClass()).filter("__tester", true)
-				.get();
+		Objectify store = ObjectifyService.ofy();
+		AModel tester = store.load().type(this.getClass()).filter("__tester", true)
+				.first().get();
 		if (tester != null)
-			store.delete(tester);
+			store.delete().entity(tester).now();
 	}
 
 	public Object fieldOf(String fieldName) throws SecurityException,
@@ -269,14 +270,14 @@ public class AModel {
 			return;
 
 		Object value;
-		Objectify store = ObjectifyService.begin();
+		Objectify store = ObjectifyService.ofy();
 		Query<? extends AModel> query;
 		int count = 0;
 		StringBuilder message = new StringBuilder();
 
 		for (String[] aUniques : allUniques) {
 			for (String unique : aUniques) {
-				query = store.query(this.getClass());
+				query = store.load().type(this.getClass());
 				if (message.length() > 0)
 					message.delete(0, message.length() - 1);
 				message.append(type).append("(");
@@ -442,7 +443,7 @@ public class AModel {
 				@FormParam("thumbnail") String thumbnail) {
 			AModel model = get(ID);
 			model.thumbnail = thumbnail;
-			ObjectifyService.begin().put(model);
+			ObjectifyService.ofy().save().entity(model).now();
 			return model.thumbnail;
 		}
 
@@ -450,8 +451,9 @@ public class AModel {
 		@Path("{ID:\\d+}")
 		@Produces({ MediaType.APPLICATION_JSON })
 		public AModel get(@PathParam("ID") long ID) {
-			return (AModel) ObjectifyService.begin().get(
-					this.getClass().getEnclosingClass(), ID);
+			return (AModel) ObjectifyService.ofy().load()
+				.type(this.getClass().getEnclosingClass())
+				.id(ID).get();
 		}
 
 		@POST
@@ -494,21 +496,20 @@ public class AModel {
 		@GET
 		@Path("get/{IDs:\\d+(,\\d+)*}")
 		@Produces(MediaType.APPLICATION_JSON)
-		public Collection<? extends Object> list(@PathParam("IDs") String IDs) {
+		public Collection<?> list(@PathParam("IDs") String IDs) {
 			List<Long> IDList = new ArrayList<Long>();
 			for (String ID : IDs.split(","))
 				IDList.add(Long.parseLong(ID));
 
-			Collection<Object> list = ObjectifyService.begin()
-					.get(this.getClass().getEnclosingClass(), IDList).values();
+			Collection<?> list = ObjectifyService.ofy().load().type(this.getClass().getEnclosingClass())
+				.ids(IDList).values();
 			return list;
 		}
 
 		public AModel get(Objectify store, long ID) {
 			try {
 				return (AModel) (ID == 0 ? this.getClass().getEnclosingClass()
-						.newInstance() : store.get(this.getClass()
-						.getEnclosingClass(), ID));
+						.newInstance() : store.load().type(this.getClass().getEnclosingClass()).id(ID).get());
 			} catch (Exception e) {
 				return null;
 			}
