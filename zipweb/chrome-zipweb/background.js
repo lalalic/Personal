@@ -1,19 +1,22 @@
+function _(key){
+	return chrome.i18n.getMessage(key)
+}
 chrome.runtime.onInstalled.addListener(function() {
 	chrome.contextMenus.create({title: "ZipWeb",			contexts:["page","image","selection"],id: "main"})
-	chrome.contextMenus.create({title: "Icon",  			contexts:["image"],		id: "icon", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Content",  			contexts:["selection"],	id: "content", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Menu", 		contexts:["selection"],	id: "menu", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Remove",  			contexts:["selection"],	id: "remove", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Below Content",  	contexts:["selection"],	id: "Below", 	parentId:"remove"})
-	chrome.contextMenus.create({title: "Above Content",  	contexts:["selection"],	id: "Above", 	parentId:"remove"})
-	chrome.contextMenus.create({title: "Selected",  		contexts:["selection"],	id: "Node", 	parentId:"remove"})
+	chrome.contextMenus.create({title: _("Icon"),  			contexts:["image"],		id: "icon", 	parentId:"main"})
+	chrome.contextMenus.create({title: _("Content"),		contexts:["selection"],	id: "content", 	parentId:"main"})
+	chrome.contextMenus.create({title: _("Menu"), 			contexts:["selection"],	id: "menu", 	parentId:"main"})
+	chrome.contextMenus.create({title: _("Remove"),  			contexts:["selection"],	id: "remove", 	parentId:"main"})
+	chrome.contextMenus.create({title: _("BelowContent"),  	contexts:["selection"],	id: "Below", 	parentId:"remove"})
+	chrome.contextMenus.create({title: _("AboveContent"),  	contexts:["selection"],	id: "Above", 	parentId:"remove"})
+	chrome.contextMenus.create({title: _("Selected"), 	 		contexts:["selection"],	id: "Node", 	parentId:"remove"})
 	
-	chrome.contextMenus.create({title: "Clear",  			contexts:["page"],				id: "clear", 	parentId:"main"})
-	chrome.contextMenus.create({title: "Download", 			contexts:["page","image"],		id: "download", parentId:"main"})
-	chrome.contextMenus.create({title: "Current Page", 		contexts:["page","image"],		id: "download1",parentId:"download"})
-	chrome.contextMenus.create({title: "1 Deep", 			contexts:["page","image"],		id: "download2",parentId:"download"})
-	chrome.contextMenus.create({title: "2 Deep", 			contexts:["page","image"],		id: "download3",parentId:"download"})
-	chrome.contextMenus.create({title: "Smart",  			contexts:["page","image"],		id: "download9",parentId:"download"})	
+	chrome.contextMenus.create({title: _("Clear"),  			contexts:["page"],				id: "clear", 	parentId:"main"})
+	chrome.contextMenus.create({title: _("Download"), 			contexts:["page","image"],		id: "download", parentId:"main"})
+	chrome.contextMenus.create({title: _("CurrentPage"), 		contexts:["page","image"],		id: "download1",parentId:"download"})
+	chrome.contextMenus.create({title: _("Deep1"), 			contexts:["page","image"],		id: "download2",parentId:"download"})
+	chrome.contextMenus.create({title: _("Deep2"), 			contexts:["page","image"],		id: "download3",parentId:"download"})
+	chrome.contextMenus.create({title: _("Smart"),  			contexts:["page","image"],		id: "download9",parentId:"download"})	
 });
 
 chrome.contextMenus.onClicked.addListener(function(info,tab,a){

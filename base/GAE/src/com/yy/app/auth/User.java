@@ -448,15 +448,13 @@ public class User extends AModel {
 
 			if (email != null && email.length() > 0) {
 				User.checkEmail(email);
-				user = (User) store.load().type(this.getClass().getEnclosingClass())
-						.filter("email", email).first().get();
+				user = (User) this.get("email", email);
 				if (user != null)
 					throw new RuntimeException(
 							"the email has already been registered.");
 			}
 
-			user = (User) store.load().type(this.getClass().getEnclosingClass())
-					.filter("account", account).first().get();
+			user = (User) this.get("account", account);
 			if (user != null)
 				throw new RuntimeException(
 						"the account has already been registered.");
