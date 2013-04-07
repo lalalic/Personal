@@ -1,0 +1,39 @@
+<#macro post>
+	<#local page=it>
+	<h4><#if ((page.ID!0)>0)>修改<#else>新加</#if>网页</h4>
+    <form action="/page/post" method="post">
+        <table class="fields">
+        	<tr><td>标题<@required/></td><td><input name="title" value="${page.title!}" required></td></tr>
+        	<tr><td>网络地址唯一名<@required/></td><td><input name="guid" value="${page.guid!}" required>
+        			<span>http://minicheers.com/page/<a href="#">aboutus</a>.shtml</span></td></tr>
+        	<tr><td>系列主题?</td><td>
+
+        		<@checkboxUI name="serial" options=[["true","是的,有些子网页将包括在这个系列里<br/>"],["false",'不是,这是单独的网页                    或是以下这个系列里的内容页']] values=[page.serial!false?string]/>
+        		<select name="parent" style="max-width:10em">
+        			<option value="0">系列...</option>
+        			<@optionUI options=serials! value=page.parent!/>
+        		</select>
+
+        		</td></tr>
+        	<tr><td>网页内容<@required/></td><td><@editor name="content" content=page.content!/></td></tr>
+        </table>
+        <div class="actions"><button type="submit">publish</button></div>
+    </form>
+</#macro>   
+
+<#macro showList pages=it>
+	<h4>管理网页
+		<div class="right"><button type="button"><a href="/page/create.html">创建新的网页</a></button></div></h4>
+    <ul>
+    <#list pages! as page>
+    	<li><a href="/page/${page.guid!page.ID}.shtml">[查看]</a> <a href="/page/edit/${page.ID}.shtml">${page.title}</a></li>
+    </#list>
+    </ul>
+</#macro>
+
+<#macro show>
+	<#local page=it>
+	<h4>${page.title!}</h4>
+	<p>${page.content!}</p>
+</#macro>
+
