@@ -41,7 +41,6 @@ import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnLoad;
 import com.googlecode.objectify.annotation.OnSave;
-import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.cmd.Query;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
@@ -56,7 +55,6 @@ import com.yy.rs.TagAttr;
 import com.yy.rs.Uniques;
 
 @JsonFilter(value = "RoleBasedFilter")
-@Unindex
 public class AModel {
 	protected static final Logger log = Logger
 			.getLogger(AModel.class.getName());
@@ -292,7 +290,9 @@ public class AModel {
 					message.append(field).append("=").append(value).append(",");
 					if (value != null) {
 						allIsNull = false;
-						query.filter(field, value);
+						query=query.filter(field, value);
+						if(query.count()==0)
+							break;
 					}
 				}
 				message.deleteCharAt(message.length() - 1).append(")");
