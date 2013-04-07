@@ -17,7 +17,6 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.site.Profile;
@@ -27,7 +26,6 @@ import com.yy.rs.Uniques;
 
 @Entity
 @Uniques({ "name" })
-@Unindex
 public class Role extends AModel {
 	public final static String ADMIN = "admin";
 	public static Set<String> CAPS = new HashSet<String>();

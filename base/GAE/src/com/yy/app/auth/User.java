@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -33,8 +32,8 @@ import net.tanesha.recaptcha.ReCaptchaFactory;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
@@ -50,7 +49,6 @@ import com.yy.util.Email;
 @Entity
 @Uniques({ "account" })
 @Required({ "account" })
-@Unindex
 public class User extends AModel {
 	public static final String SESSION_CURRENT_USERID = "u";
 	@Index(IfNotNull.class)
@@ -201,7 +199,7 @@ public class User extends AModel {
 		return resList;
 	}
 
-	@Transient
+	@Ignore
 	public static final ThreadLocal<Long> currentUserID = new ThreadLocal<Long>() {
 		@Override
 		protected Long initialValue() {

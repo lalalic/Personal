@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Embedded;
-import javax.persistence.Id;
-import javax.persistence.Transient;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -16,14 +13,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Embed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Unindex;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.site.Profile;
 
-@Unindex
+@Entity
 public class Performance {
 	public static final long UNKNOWN=-1l;
-	@Transient
+	@Ignore
 	private static final ThreadLocal<Performance> I = new ThreadLocal<Performance>();
 	public static void log(String name, int level,long duration){
 		if(Profile.I.trace)
@@ -61,10 +62,10 @@ public class Performance {
 	
 	public Date when;
 	
-	@Transient
+	@Ignore
 	public boolean ignore;
 	
-	@Embedded
+	@Embed
 	@Unindex
 	public List<PerfItem> items=new ArrayList<PerfItem>();
 	

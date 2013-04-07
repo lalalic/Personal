@@ -2,11 +2,11 @@ package com.yy.app.tag;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
 import com.yy.app.AModel;
 
-@Unindex
+@Entity
 public class TagEntity extends AModel {
 	@Index
 	public String entityType;

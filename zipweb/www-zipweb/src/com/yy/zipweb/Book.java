@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.jdo.annotations.Index;
-import javax.jdo.annotations.Unique;
-import javax.persistence.Entity;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -17,7 +14,9 @@ import javax.ws.rs.core.Response;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Unindex;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
+
 import com.sun.jersey.core.util.Base64;
 import com.yy.app.cms.Post;
 import com.yy.app.site.Profile;
@@ -27,15 +26,14 @@ import com.yy.rs.TagAttr;
 import com.yy.rs.Uniques;
 
 @Entity
-@Unindex
 @Uniques("url")
 public class Book extends Post{
 	@Index
-	@Unique
 	public String url;
 	public Map<String,Integer> cleaners;
 	@TagAttr
 	public List<Long> tags;
+	public int count;
 	
 	@Path("book")
 	public static class View extends Post.View{
@@ -62,27 +60,28 @@ public class Book extends Post{
 			if(description!=null)
 				description=new String(Base64.decode(description));
 			Objectify store = ObjectifyService.ofy();
-			Book post = (Book)store.load().type(this.getClass().getEnclosingClass())
-				.filter("url", url).first().get();
+			Book post = (Book)this.get("url", url);
 			if(post==null){
 				post=(Book)this.newInstance();
 				post.title = title;
 				post.url=url;
 				post.excerpt=description;
 				post.cleaners=new HashMap<String, Integer>();
-				post.cleaners.put(cmds, 1);
+				if(cmds!=null)
+					post.cleaners.put(cmds, 1);
 				post.tags=Profile.I.tagger.parseList(tags,"book.tags");
-			}else{
+			}else if(cmds!=null){
 				if(post.cleaners.containsKey(cmds))
 					post.cleaners.put(cmds, post.cleaners.get(cmds)+1);
 				else
 					post.cleaners.put(cmds, 1);
 			}
+			post.count++;
 			
 			if(thumbnail!=null)
 				post.thumbnail=thumbnail;
 			
-			store.save().entity(post).now();
+			store.save().entity(post);
 			post.postPersist();
 			return Response.noContent().build();
 		}

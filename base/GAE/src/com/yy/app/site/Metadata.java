@@ -11,8 +11,9 @@ import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
+
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.test.Test;
@@ -26,7 +27,7 @@ import com.yy.rs.Uniques;
 
 @Uniques({ "category+key" })
 @Required({"category","key","value"})
-@Unindex
+@Entity
 public class Metadata extends AModel {
 	@Index
 	public String category;

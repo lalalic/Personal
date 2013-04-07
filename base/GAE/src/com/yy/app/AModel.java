@@ -455,6 +455,12 @@ public class AModel {
 				.type(this.getClass().getEnclosingClass())
 				.id(ID).get();
 		}
+		
+		public AModel get(String filter, Object value){
+			return (AModel) ObjectifyService.ofy().load()
+				.type(this.getClass().getEnclosingClass())
+				.filter(filter, value).first().get();
+		}
 
 		@POST
 		@Path("remove/{ID:\\d+}")

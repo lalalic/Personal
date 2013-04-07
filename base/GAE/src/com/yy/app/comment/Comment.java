@@ -15,8 +15,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
@@ -29,7 +29,7 @@ import com.yy.app.test.TestValue;
 import com.yy.rs.Required;
 
 @Required({"message","entityID"})
-@Unindex
+@Entity
 public class Comment extends AModel {
 	@Index
 	public Long entityID;

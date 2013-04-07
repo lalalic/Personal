@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.persistence.Transient;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -20,6 +19,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
@@ -37,9 +37,9 @@ public abstract class SlavablePost extends Post {
 	@Index
 	public int slaveCount = 0;
 
-	@Transient
+	@Ignore
 	transient public SearchFilter slaveFilter;
-	@Transient
+	@Ignore
 	transient public int filteredSlaveCount = -1;
 
 	public SlavablePost() {
@@ -47,19 +47,16 @@ public abstract class SlavablePost extends Post {
 	}
 
 	@SuppressWarnings("rawtypes")
-	@Transient
 	public List getSlaves() {
 		slaveFilter.addFilter("parent", ID);
 		this.filteredSlaveCount = slaveFilter.getCount();
 		return slaveFilter.list();
 	}
 
-	@Transient
 	public Class<?> getSlaveClass() {
 		return this.getSlaveView().getClass().getEnclosingClass();
 	}
 
-	@Transient
 	public abstract Post.View getSlaveView();
 
 	@Override

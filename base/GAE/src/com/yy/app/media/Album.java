@@ -6,13 +6,14 @@ import java.util.List;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
+
 import com.yy.app.AModel;
 import com.yy.app.auth.User;
 import com.yy.rs.Uniques;
 
-@Unindex
+@Entity
 @Uniques("author+name")
 public class Album extends AModel {
 	private final static String ALBUM_MISC = "__misc__";

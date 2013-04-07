@@ -6,8 +6,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.PrePersist;
-import javax.persistence.Transient;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -17,8 +15,11 @@ import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
+import com.googlecode.objectify.annotation.OnSave;
+
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.rs.AdminUI;
@@ -26,7 +27,7 @@ import com.yy.rs.Caps;
 import com.yy.rs.Uniques;
 
 @Uniques({ "name" })
-@Unindex
+@Entity
 public class Tag extends AModel {
 	@Index
 	public String name;
@@ -35,10 +36,10 @@ public class Tag extends AModel {
 
 	public List<Long> included = new ArrayList<Long>();
 
-	@Transient
+	@Ignore
 	public String includedStr;
 
-	@PrePersist
+	@OnSave
 	protected void saveChildren() {
 		if (includedStr == null || includedStr.length() == 0)
 			return;

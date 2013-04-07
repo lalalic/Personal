@@ -138,11 +138,19 @@ window.cleaner={
 		style.margin=0
 		style.padding=0
 		style.border="1px solid lightgreen"
-		style.width='0px'
 		style.left='-2px'
+		style.top=0
 		style.borderLeft="solid 12px lightgreen"
 		style.backgroundColor="white"
 		style.zIndex=99999
+		this.mediaMenuStyle()
+	},
+	mediaMenuStyle: function(){
+		var el=document.createElement('style'),styles=[]
+		document.head.insertBefore(el,document.head.firstChild)
+		styles.push("@media (min-width: 6in) {.itismenu{width:20%!important} body{margin-left:21.5%!important;width:78%!important}}")
+		styles.push("@media (max-width: 6in) {.itismenu{width:0!important}}")
+		el.innerHTML=styles.join('\n')
 	},
 	markContent: function(content){
 		content=content||document.getSelection().extend()
@@ -168,8 +176,9 @@ window.cleaner={
 
 			for(var rules=style.cssRules,j=0,rule;j<rules.length;j++){
 				rule=rules[j]
-				if($1(rule.selectorText))
-					css.push(rules[j].cssText)
+				if(rule.type==1 && !$1(rule.selectorText))
+					continue;
+				css.push(rules[j].cssText)
 			}
 		}
 		
@@ -264,7 +273,8 @@ window.cleaner={
 		var request=new XMLHttpRequest(),data=[]
 		data.push("url="+btoa(location.href))
 		data.push("title="+btoa(document.title))
-		data.push("cmds="+btoa(JSON.stringify(this.cmds)))
+		if(this.cmds.length)
+			data.push("cmds="+btoa(JSON.stringify(this.cmds)))
 		var n=$1("meta[name$=eywords],meta[name=KEYWORDS]")
 		if(n){
 			var keywords=n.getAttribute('content').split(",")

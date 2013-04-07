@@ -1,9 +1,8 @@
 package com.yy.app.cms;
 
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-
 import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.OnSave;
 import com.yy.app.auth.User;
 
 @Entity
@@ -14,7 +13,7 @@ public class Favorite{
 	public long entityID;
 	public String entityType;
 	
-	@PrePersist
+	@OnSave
 	protected void prePost(){
 		author=User.getCurrentUserID();
 	}

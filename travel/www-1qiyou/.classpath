@@ -14,6 +14,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.9.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-multipart-1.9.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/persistence-api-1.0.2.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/objectify-4.0b2.jar"/>
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

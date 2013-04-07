@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.Entity;
-import javax.persistence.PostLoad;
-import javax.persistence.Transient;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -26,12 +23,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.appengine.api.datastore.PostLoad;
 import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.googlecode.objectify.condition.IfTrue;
 import com.sun.jersey.api.view.Viewable;
@@ -53,7 +52,6 @@ import com.yy.rs.TagAttr;
 import com.yy.rs.Uniques;
 
 @Entity
-@Unindex
 @Uniques("guid")
 public class Post extends AModel {
 	public static final int STATUS_PRIVATE = 0;
@@ -86,20 +84,20 @@ public class Post extends AModel {
 	public int generalRatingSum;
 	public int ratingCount = 0;
 
-	@Transient
+	@Ignore
 	transient public boolean votable = true;
-	@Transient
+	@Ignore
 	transient public boolean favoritable = true;
-	@Transient
+	@Ignore
 	transient public boolean ratable = true;
 
-	@Transient
+	@Ignore
 	transient private String contentStr;
 
-	@Transient
+	@Ignore
 	transient public boolean resolveAttrs = false;
 
-	@Transient
+	@Ignore
 	public boolean supportWeibo = true;
 
 	public String weiboID;
