@@ -17,9 +17,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import javax.persistence.Id;
-import javax.persistence.PostLoad;
-import javax.persistence.PrePersist;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -40,7 +37,10 @@ import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.OnLoad;
+import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.cmd.Query;
 import com.googlecode.objectify.condition.IfNotNull;
@@ -106,7 +106,7 @@ public class AModel {
 		return this.ID == null || this.ID == 0;
 	}
 
-	@PrePersist
+	@OnSave
 	protected void prePersist() {
 		this.modified = new Date();
 		if (this.author == null)
@@ -123,7 +123,7 @@ public class AModel {
 		}
 	}
 
-	@PostLoad
+	@OnLoad
 	protected void postLoad() {
 		populateTagAttr();
 	}
