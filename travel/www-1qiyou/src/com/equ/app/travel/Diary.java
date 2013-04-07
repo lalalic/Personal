@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.test.EnclosingModel;
 import com.yy.app.test.Runner;
@@ -27,7 +27,7 @@ import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 import com.yy.rs.Required;
 
-@Unindexed
+@Entity
 @Required("start")
 public class Diary extends Vacation {
 	@Override
@@ -38,7 +38,7 @@ public class Diary extends Vacation {
 	
 	public Vacation vacation(){
 		if(parent!=null && parent!=0)
-			return ObjectifyService.begin().get(Vacation.class,parent);
+			return ObjectifyService.ofy().load().type(Vacation.class).id(parent).get();
 		return null;
 	}
 	
@@ -82,7 +82,7 @@ public class Diary extends Vacation {
 				@FormParam("route") String route,
 				@FormParam("thumbnail") String thumbnail) 
 				throws URISyntaxException {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Diary post = (Diary) this.get(store, ID);
 			post.parent = parent;
 			post.title = title;
@@ -90,7 +90,7 @@ public class Diary extends Vacation {
 			post.setRoute(route);
 			post.thumbnail=thumbnail;
 			post.resolveAttrs=true;
-			store.put(post);
+			store.save().entity(post).now();
 			post.postPersist();
 			return Response.seeOther(
 					new URI("/plan/show;"+path()+"/" + parent + ".shtml"))

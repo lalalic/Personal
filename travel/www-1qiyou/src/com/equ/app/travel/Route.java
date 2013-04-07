@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import javax.persistence.Transient;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -21,7 +20,8 @@ import javax.ws.rs.core.UriInfo;
 import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.SearchFilter;
 import com.yy.app.cms.Post;
@@ -34,11 +34,11 @@ import com.yy.app.test.TestValues;
 import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 
-@Unindexed
+@Entity
 public class Route extends Slave{
 	public static final int STATUS_GOOD=10;
 	private Text route;
-	@Transient
+	@Ignore
 	private String routeStr;
 	
 	public Route(){
@@ -55,7 +55,7 @@ public class Route extends Slave{
 	
 	public Vacation vacation(){
 		if(parent!=null && parent!=0)
-			return ObjectifyService.begin().get(Vacation.class,parent);
+			return ObjectifyService.ofy().load().type(Vacation.class).id(parent).get();
 		return null;
 	}
 	
@@ -144,7 +144,7 @@ public class Route extends Slave{
 				@FormParam("route") String route,
 				@FormParam("thumbnail") String thumbnail) 
 				throws URISyntaxException {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Route post = (Route) this.get(store, ID);
 			post.parent = parent;
 			post.title = title;
@@ -154,7 +154,7 @@ public class Route extends Slave{
 			post.resolveAttrs=true;
 			if(parent==0)
 				post.status=STATUS_GOOD;
-			store.put(post);
+			store.save().entity(post).now();
 			post.postPersist();
 			return Response.seeOther(
 					new URI(parent!=0 ? "/plan/show/" + parent + ".shtml" : "/route/show/" + post.ID + ".shtml"))
@@ -172,7 +172,7 @@ public class Route extends Slave{
 
 	@Override
 	public Post getMaster() {
-		return ObjectifyService.begin().get(Vacation.class,parent);
+		return ObjectifyService.ofy().load().type(Vacation.class).id(parent).get();
 	}
 
 }

@@ -19,8 +19,8 @@ import javax.ws.rs.core.Response;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.app.auth.User;
@@ -33,22 +33,22 @@ import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 import com.yy.rs.Required;
 
-@Unindexed
+@Entity
 @Required("title")
 public class Poll extends AModel {
 	
-	@Indexed
+	@Index
 	public String title;
 	public List<Long> items;
 	public List<Integer> results;
 	public List<Long> polledMembers;
-	@Indexed
+	@Index
 	public boolean closed;
 	
 	
 	public Collection<Route> getRoutes(){
 		if(items!=null && !items.isEmpty())
-			return ObjectifyService.begin().get(Route.class, items).values();
+			return ObjectifyService.ofy().load().type(Route.class).ids(items).values();
 		return null;
 	}
 	
@@ -72,14 +72,14 @@ public class Poll extends AModel {
 				@FormParam("title") String title,
 				@FormParam("items") List<Long> items) 
 				throws URISyntaxException {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Poll post = (Poll) this.get(store, ID);
 			if(post.closed)
 				throw new RuntimeException("Closed Poll.");
 			post.parent = parent;
 			post.title = title;
 			post.items=items;
-			store.put(post);
+			store.save().entity(post).now();
 			return Response.seeOther(new URI("/plan/show/"+parent+".shtml")).build();
 		}
 		
@@ -91,7 +91,7 @@ public class Poll extends AModel {
 		public synchronized Viewable select(
 				@PathParam("ID")long ID,
 				@PathParam("route")long route ){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			Poll poll =(Poll) this.get(store, ID);
 			if(poll.closed)
 				throw new RuntimeException("Closed Poll.");
@@ -107,10 +107,10 @@ public class Poll extends AModel {
 			Integer r=poll.results.get(index);
 			poll.results.set(index,r+1);
 			poll.polledMembers.add(User.getCurrentUserID());
-			store.put(poll);
+			store.save().entity(poll).now();
 			return viewable(viewDataModel("","pollRoute",
 					"template","empty_template",
-					"it",ObjectifyService.begin().get(Vacation.class,poll.parent)));
+					"it",ObjectifyService.ofy().load().type(Vacation.class).id(poll.parent).get()));
 		}
 		
 		@GET
@@ -118,7 +118,7 @@ public class Poll extends AModel {
 		@Produces(MediaType.TEXT_HTML)
 		@Caps
 		public Viewable addItem(@PathParam("ID")long ID, @PathParam("route")long route){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			Poll poll =(Poll) this.get(store, ID);
 			if(poll.closed)
 				throw new RuntimeException("Closed Poll.");
@@ -128,10 +128,10 @@ public class Poll extends AModel {
 				poll.results=new ArrayList<Integer>();
 			poll.items.add(route);
 			poll.results.add(new Integer(0));
-			store.put(poll);
+			store.save().entity(poll).now();
 			return viewable(viewDataModel("","pollRoute",
 					"template","empty_template",
-					"it",ObjectifyService.begin().get(Vacation.class,poll.parent)));
+					"it",ObjectifyService.ofy().load().type(Vacation.class).id(poll.parent).get()));
 		}
 		
 		@GET
@@ -139,7 +139,7 @@ public class Poll extends AModel {
 		@Produces(MediaType.TEXT_HTML)
 		@Caps
 		public Viewable removeItem(@PathParam("ID")long ID, @PathParam("route")long route){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			Poll poll =(Poll) this.get(store, ID);
 			if(poll.closed)
 				throw new RuntimeException("Closed Poll.");
@@ -151,10 +151,10 @@ public class Poll extends AModel {
 						poll.results.remove(index);
 				}
 			}
-			store.put(poll);
+			store.save().entity(poll).now();
 			return viewable(viewDataModel("","pollRoute",
 					"template","empty_template",
-					"it",ObjectifyService.begin().get(Vacation.class,poll.parent)));
+					"it",ObjectifyService.ofy().load().type(Vacation.class).id(poll.parent).get()));
 		}
 		
 		@GET
@@ -162,13 +162,13 @@ public class Poll extends AModel {
 		@Produces(MediaType.TEXT_HTML)
 		@Caps
 		public Viewable close(@PathParam("ID")long ID){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			Poll poll =(Poll) this.get(store, ID);
 			poll.closed=true;
-			store.put(poll);
+			store.save().entity(poll).now();
 			return viewable(viewDataModel("","pollRoute",
 					"template","empty_template",
-					"it",ObjectifyService.begin().get(Vacation.class,poll.parent)));
+					"it",ObjectifyService.ofy().load().type(Vacation.class).id(poll.parent).get()));
 		}
 	}
 }

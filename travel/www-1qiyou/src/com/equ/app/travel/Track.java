@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.persistence.Embedded;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,8 +21,9 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Embed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.sun.jersey.multipart.FormDataParam;
 import com.yy.app.AModel;
 import com.yy.app.auth.User;
@@ -32,7 +32,7 @@ import com.yy.app.test.TestValue;
 import com.yy.rs.Caps;
 import com.yy.util.CellLocation;
 
-@Unindexed
+@Entity
 public class Track extends AModel {
 	static class TimedPointComparaor implements Comparator<TimedPoint>{
 
@@ -42,13 +42,12 @@ public class Track extends AModel {
 		}
 		
 	}
-	@Indexed
+	@Index
 	public Long start;
-	@Indexed
+	@Index
 	public Long end;
 	
-	@Embedded
-	@Unindexed
+	@Embed
 	private TreeSet<TimedPoint> points=new TreeSet<TimedPoint>(new TimedPointComparaor());
 	
 	public TreeSet<TimedPoint> getPoints(){
@@ -71,7 +70,7 @@ public class Track extends AModel {
 	
 	public Track tryMerge(){
 		if(points.size()<80){
-			Track latest=ObjectifyService.begin().query(Track.class).filter("author", User.getCurrentUserID()).get();
+			Track latest=ObjectifyService.ofy().load().type(Track.class).filter("author", User.getCurrentUserID()).first().get();
 			if(latest!=null && latest.points.size()<80 && latest.end>points.first().time.getTime()){
 				latest.points.addAll(points);
 				return latest;
@@ -93,24 +92,22 @@ public class Track extends AModel {
 			if(end==Long.MAX_VALUE)
 				return search(user,start);
 			
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			
 			List<Key<Track>> startIDs, endIDs;
 			int limit=0;
 			
 			do{
 				limit+=5;
-				endIDs=store.query(Track.class)
+				endIDs=store.load().type(Track.class)
 					.filter("end <= ", end)
 					.filter("author", user)
-					.limit(limit)
-					.listKeys();
+					.limit(limit).keys().list();
 				
-				startIDs=store.query(Track.class)
+				startIDs=store.load().type(Track.class)
 					.filter("start >= ", start)
 					.filter("author", user)
-					.limit(limit)
-					.listKeys();
+					.limit(limit).keys().list();
 
 				startIDs.retainAll(endIDs);
 			}while(startIDs.size()==limit);
@@ -119,10 +116,10 @@ public class Track extends AModel {
 			case 0:
 				return new TreeSet<TimedPoint>(new TimedPointComparaor());
 			case 1:
-				return store.get(startIDs.get(0)).points;
+				return store.load().key(startIDs.get(0)).get().points;
 			default:
 				TreeSet<TimedPoint> points=new TreeSet<TimedPoint>(new TimedPointComparaor());
-				for(Track al: store.get(startIDs).values())
+				for(Track al: store.load().keys(startIDs).values())
 					points.addAll(al.points);
 				return points;
 			}
@@ -135,8 +132,8 @@ public class Track extends AModel {
 		public Collection<TimedPoint> search(
 				@TestValue("1") @PathParam("author") long user,
 				@TestValue("1000") @PathParam("start") long start){
-			Objectify store=ObjectifyService.begin();
-			List<Track> locus=store.query(Track.class)
+			Objectify store=ObjectifyService.ofy();
+			List<Track> locus=store.load().type(Track.class)
 				.filter("start >= ", start)
 				.filter("author", user)
 				.list();
@@ -159,7 +156,7 @@ public class Track extends AModel {
 		public Collection<TimedPoint> planTrack(
 				@PathParam("planID")long ID,
 				@PathParam("author")long user){
-			Vacation v=ObjectifyService.begin().get(Vacation.class, ID);
+			Vacation v=ObjectifyService.ofy().load().type(Vacation.class).id(ID).get();
 			if(v.started()){
 				return search(user,v.start.getTime(), v.end==null ? Long.MAX_VALUE : v.end.getTime());
 			}else
@@ -172,7 +169,7 @@ public class Track extends AModel {
 		@Caps
 		public Collection<TimedPoint> planTrack(
 				@PathParam("planID")long ID){
-			Vacation v=ObjectifyService.begin().get(Vacation.class, ID);
+			Vacation v=ObjectifyService.ofy().load().type(Vacation.class).id(ID).get();
 			if(v.started())
 				return search(User.getCurrentUserID(),v.start.getTime(), v.end!=null ? v.end.getTime() : Long.MAX_VALUE);
 			else
@@ -197,7 +194,7 @@ public class Track extends AModel {
 				TimedPoint aLoc=null;
 				String lastLeft=null;
 
-				Objectify service = ObjectifyService.begin();
+				Objectify service = ObjectifyService.ofy();
 				Track track=new Track();
 
 				while ((readLen = fileStream.read(buffer)) != -1) { 
@@ -232,7 +229,7 @@ public class Track extends AModel {
 				
 				if(!track.points.isEmpty()){
 					track=track.tryMerge();
-					service.put(track);
+					service.save().entity(track);
 				}
 				
 				return track.points;
@@ -267,7 +264,7 @@ public class Track extends AModel {
 					else{
 						CellPoint cp;
 						try{
-							cp=ObjectifyService.begin().get(CellPoint.class,ID);
+							cp=ObjectifyService.ofy().load().type(CellPoint.class).id(ID).get();
 							aLoc.pt=cp.pt;
 						}catch(NotFoundException ex){
 							float[] latlng = CellLocation.convertCell2Latlng(
@@ -275,7 +272,7 @@ public class Track extends AModel {
 									Integer.parseInt(cellInfo[2]));
 							aLoc.pt = new GeoPt(latlng[0], latlng[1]);
 							cp=new CellPoint(ID, aLoc.pt);
-							ObjectifyService.begin().put(cp);
+							ObjectifyService.ofy().save().entity(cp).now();
 						}
 						caches.put(ID, aLoc.pt);
 					}

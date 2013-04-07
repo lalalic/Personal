@@ -27,8 +27,8 @@ import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.GeoPt;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.sun.jersey.multipart.FormDataParam;
 import com.yy.app.auth.User;
 import com.yy.app.media.Resource;
@@ -37,18 +37,18 @@ import com.yy.app.test.TestValue;
 import com.yy.photo.Jpeg;
 import com.yy.rs.Caps;
 
-@Unindexed
+@Entity
 public class Photo{
 	private static final DateFormat takenParser = new SimpleDateFormat("yyyy:M:d H:m:s");
 	protected static final Logger log = Logger.getLogger(Photo.class.getName());
 	@Id
 	public String ID;//same as resource.ID
 	public String title;
-	@Indexed
+	@Index
 	public GeoPt loc;
-	@Indexed
+	@Index
 	public Date taken;
-	@Indexed
+	@Index
 	public long author;
 	
 	public String getUrl(){
@@ -101,7 +101,7 @@ public class Photo{
 				@FormDataParam("vID") @DefaultValue("0")long vID,
 				@FormDataParam("date") @DefaultValue("0")long taken,
 				@Context HttpServletRequest request){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			BlobstoreService service = BlobstoreServiceFactory.getBlobstoreService();
 			Map<String, List<BlobKey>> uploads = service.getUploads(request);
 			if(uploads==null || uploads.isEmpty())
@@ -116,8 +116,8 @@ public class Photo{
 				defaultPt=new GeoPt(lat,lng);
 			long currentUser=User.getCurrentUserID();
 			for (BlobKey key : uploads.get("file")) {
-				Resource res = store.get(Resource.class,
-						key.getKeyString());
+				Resource res = store.load().type(Resource.class)
+						.id(key.getKeyString()).get();
 				
 				Photo p=new Photo();
 				p.ID=res.ID;
@@ -146,7 +146,7 @@ public class Photo{
 				track=track.tryMerge();
 				models.add(track);
 			}
-			store.put(models);
+			store.save().entities(models).now();
 			return photos;
 		}
 		
@@ -173,8 +173,8 @@ public class Photo{
 				@TestValue("9999") @PathParam("end")long end){
 			if(end==Long.MAX_VALUE)
 				end=new Date().getTime()+24*60*60*1000;
-			Objectify store=ObjectifyService.begin();
-			List<Photo> ps=store.query(Photo.class)
+			Objectify store=ObjectifyService.ofy();
+			List<Photo> ps=store.load().type(Photo.class)
 				.filter("taken >= ", new Date(start))
 				.filter("taken <= ", new Date(end))
 				.filter("author", user)
@@ -198,7 +198,7 @@ public class Photo{
 		public List<Photo> planPhoto(
 				@PathParam("planID")long ID,
 				@PathParam("author")long user){
-			Vacation v=ObjectifyService.begin().get(Vacation.class, ID);
+			Vacation v=ObjectifyService.ofy().load().type(Vacation.class).id(ID).get();
 			if(v.started())
 				return search(user,v.start.getTime(), v.end!=null ? v.end.getTime() : Long.MAX_VALUE);
 			else
@@ -210,7 +210,7 @@ public class Photo{
 		@Produces(MediaType.APPLICATION_JSON)
 		public List<Photo> planPhoto(
 				@PathParam("planID")long ID){
-			Vacation v=ObjectifyService.begin().get(Vacation.class, ID);
+			Vacation v=ObjectifyService.ofy().load().type(Vacation.class).id(ID).get();
 			if(v.started())
 				return search(User.getCurrentUserID(),v.start.getTime(), v.end!=null ? v.end.getTime() : Long.MAX_VALUE);
 			else

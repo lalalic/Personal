@@ -24,8 +24,8 @@ import javax.ws.rs.core.Response;
 import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.auth.User;
@@ -45,19 +45,19 @@ import com.yy.rs.Caps;
  * creating all people can favorite/like Maomao select a Plan as final to start
  * travel the group post pic, message during|after travel from pc|phone|pad
  */
-@Unindexed
+@Entity
 public class Vacation extends SlavablePost {
 	private Text route;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Date start;
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Date end;
 
-	@Indexed
+	@Index
 	public int days;
 
-	@Indexed(IfNotNull.class)
+	@Index(IfNotNull.class)
 	public Set<Long> members;
 
 	@Transient
@@ -94,10 +94,11 @@ public class Vacation extends SlavablePost {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Transient
 	public Collection<User> getMembersInfo() {
-		return (Collection<User>) ObjectifyService.begin()
-				.get(User.getCurrentUser().getClass(), members).values();
+		return (Collection<User>) ObjectifyService.ofy().load()
+				.type(User.getCurrentUser().getClass()).ids(members).values();
 	}
 
 	public boolean removeMember(long user) {
@@ -144,7 +145,7 @@ public class Vacation extends SlavablePost {
 
 	@Transient
 	public List<Poll> getClosedPolls() {
-		return ObjectifyService.begin().query(Poll.class)
+		return ObjectifyService.ofy().load().type(Poll.class)
 				.filter("parent", this.ID)
 				.filter("closed", true).list();
 	}
@@ -157,8 +158,8 @@ public class Vacation extends SlavablePost {
 	public Poll getCurrentPoll() {
 		if (currentPollResolved)
 			return currentPoll;
-		currentPoll = ObjectifyService.begin().query(Poll.class)
-				.filter("parent", this.ID).filter("closed", false).get();
+		currentPoll = ObjectifyService.ofy().load().type(Poll.class)
+				.filter("parent", this.ID).filter("closed", false).first().get();
 		currentPollResolved = true;
 		return currentPoll;
 	}
@@ -180,9 +181,9 @@ public class Vacation extends SlavablePost {
 	
 	@Transient
 	public Track getLocus(){
-		return ObjectifyService.begin().query(Track.class)
+		return ObjectifyService.ofy().load().type(Track.class)
 			.filter("author", author)
-			.filter("parent", ID).get();
+			.filter("parent", ID).first().get();
 	}
 
 	@Path("plan")
@@ -234,7 +235,7 @@ public class Vacation extends SlavablePost {
 				@DefaultValue("0") @FormParam("days") int days)
 				throws URISyntaxException {
 
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Vacation post = (Vacation) this.get(store, ID);
 			post.parent = parent;
 			post.title = title;
@@ -249,7 +250,7 @@ public class Vacation extends SlavablePost {
 			else if (days != 0)
 				post.days = parse(days);
 			post.resolveAttrs=true;
-			store.put(post);
+			store.save().entity(post).now();
 			post.postPersist();
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + post.ID + ".shtml"))
@@ -264,12 +265,12 @@ public class Vacation extends SlavablePost {
 			Vacation v = (Vacation) this.get(ID);
 			assert v != null;
 			if (!v.ended() && v.addMember(User.getCurrentUserID()))
-				ObjectifyService.begin().put(v);
+				ObjectifyService.ofy().save().entity(v);
 			return true;
 		}
 		
 		public List<Vacation> getOnRoad(){
-			return ObjectifyService.begin().query(Vacation.class)
+			return ObjectifyService.ofy().load().type(Vacation.class)
 				.filter("author", User.getCurrentUserID())
 				.filter("end>=", nextDay(new Date()))
 				.filter("start<=", new Date())
@@ -292,7 +293,7 @@ public class Vacation extends SlavablePost {
 		@Caps
 		@Test
 		public Viewable want2track(){
-			List<Vacation> vacations=ObjectifyService.begin().query(Vacation.class)
+			List<Vacation> vacations=ObjectifyService.ofy().load().type(Vacation.class)
 				.filter("author", User.getCurrentUserID())
 				.filter("end>=", nextDay(new Date()))
 				.list();

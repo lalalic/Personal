@@ -3,9 +3,9 @@ package com.equ.app.travel;
 import java.util.Date;
 
 import com.google.appengine.api.datastore.GeoPt;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
 
-@Unindexed
+@Entity
 public class TimedPoint {
 	public Date time;
 	public GeoPt pt;

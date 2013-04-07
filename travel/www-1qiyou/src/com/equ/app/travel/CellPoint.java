@@ -1,11 +1,10 @@
 package com.equ.app.travel;
 
-import javax.persistence.Id;
-
 import com.google.appengine.api.datastore.GeoPt;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Id;
 
-@Unindexed
+@Entity
 public class CellPoint {
 	@Id
 	public String ID;//"cellID,lac"

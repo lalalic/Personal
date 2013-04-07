@@ -1,18 +1,18 @@
 package com.equ.app.travel;
 
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.yy.app.cms.Post;
 import com.yy.app.cms.Slave;
 
-@Unindexed
+@Entity
 public class PlaceNote extends Slave{
-	@Indexed
+	@Index
 	public String place;
 
 	@Override
 	public Post getMaster() {
-		return ObjectifyService.begin().get(Place.class,parent);
+		return ObjectifyService.ofy().load().type(Place.class).id(parent).get();
 	}
 }
