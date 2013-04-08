@@ -22,7 +22,7 @@ window.TileLayer={
 		for(var i=2;i<n;i++)
 			selectors.push(".tile:nth-of-type("+n+"n+"+i+")")
 		b.insertRule(selectors.join(',')+"{margin-left:"+(leftWidth+5)+"px}",b.cssRules.length)
-		b.insertRule(".tile p{line-height:"+(2*Math.min(max,height)-20)+"px}")
+		b.insertRule(".tile p{white-space:pre;overflow:hidden;color:white;margin:auto 4px;line-height:"+(2*Math.min(max,height)-20)+"px}")
 		if(!this.resizeListened){
 			this.resizeListened=true
 			window.addEventListener('resize',function(){

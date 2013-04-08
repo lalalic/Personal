@@ -3,7 +3,7 @@
 
   "name": "ZipWeb",
   "description": "__MSG_desc__",
-  "version": "1.2",
+  "version": "1.5",
   "default_locale": "en",
   "background":{
 	"scripts":["background.js","zip.js","deflate.js"]

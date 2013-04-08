@@ -9,7 +9,7 @@ import com.yy.m.R;
 import com.yy.m.data.Configuration;
 
 public class WebActivity extends BaseActivity {
-	private final static String LAST_FINAL_URL="_last_url";
+	public final static String LAST_FINAL_URL="_last_url";
 	public WebViewEx browser;
 	protected boolean cache4Offline=true;
 

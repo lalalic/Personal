@@ -12,9 +12,9 @@ NodeList.prototype.indexOf = function(n){
 			return i;
 	return -1
 }
-NodeList.prototype.filters = function(){
+NodeList.prototype.ancestors = function(){
 	var result=[]
-	for(var i=0,n;i<this.length;i++){
+	for(var i=0,n;i<this.length;i++){ 
 		n=this[i]
 		result.indexOf(n)==-1 && result.push(n)
 		while(n.parentElement){
@@ -98,49 +98,59 @@ window.cleaner={
 		content && this.markContent(content)
 		menu && this.markMenu(menu)
 		
-		var keeped=$9('.keepme'),
-			filters=keeped.filters(),
+		var ancestors=$9('.keepme').ancestors(),
 			selectors=[],
 			style,content
 		
-		for(var i=0;i<keeped.length;i++){
-			var keep=keeped[i]
+		for(var i=0,keep;i<ancestors.length;i++){
+			keep=ancestors[i]
+			if(keep==document.documentElement || keep==document.body)
+				continue
 			keep.classList.remove('keepme')
-			this.clearBoth(keep,filters)
-			while((keep=keep.parentElement) && keep!=document.body)
-				this.clearBoth(keep,filters)
+			this.clearBoth(keep,ancestors)
 		}
-		
-		filters=$9('.makecontent').filters()
-		for(var i=0,n; i<filters.length;i++){
-			n=xPath.query(xPath.getPath(filters[i]))
+		for(var i=0, mins=$9("[min-width]",$1('.makecontent'));i<mins.length;i++)
+			mins[i].style.minWidth=""
+				
+		ancestors=$9('.makecontent').ancestors()
+		for(var i=0,n; i<ancestors.length;i++){
+			n=xPath.query(xPath.getPath(ancestors[i]))
 			if(!n) continue
 			if(n.classList.contains('makecontent')){
 				n.classList.remove('makecontent')
 				content=n
-				for(var j=0;j<content.children.length;j++)
-					content.children[j].style.width="100%"
+				for(var j=0,temp;j<content.children.length;j++){
+					(temp=content.children[j].style).width="100%"
+					temp.minWidth=""
+				}
 			}
 			style=n.style
 			style.margin=0
 			style.border=0
 			style.padding=0
 			style.width="100%"
+			style.minWidth=""
 		}
-		var menu=$1('.makemenu')
+		var menu=$1('.makemenu'),a=menu
 		if(!menu) return
+		
+		while((a=a.parentElement) 
+			&& a!=document.body 
+			&& a!=document.documentElement 
+			&& ancestors.indexOf(a)==-1){
+			a.style.width=0
+			a.style.minWidth=""
+		}
 		menu.classList.remove('makemenu')
-		document.body.style.marginLeft="12px"
 		style=menu.style
 		style.overflow="hidden"
 		style.position="fixed"
 		style.minHeight="100%"
 		style.margin=0
 		style.padding=0
-		style.border="1px solid lightgreen"
-		style.left='-2px'
+		style.border=0
 		style.top=0
-		style.borderLeft="solid 12px lightgreen"
+		style.left=0
 		style.backgroundColor="white"
 		style.zIndex=99999
 		this.mediaMenuStyle()
@@ -148,9 +158,10 @@ window.cleaner={
 	mediaMenuStyle: function(){
 		var el=document.createElement('style'),styles=[]
 		document.head.insertBefore(el,document.head.firstChild)
-		styles.push("@media (min-width: 6in) {.itismenu{width:20%!important} body{margin-left:21.5%!important;width:78%!important}}")
-		styles.push("@media (max-width: 6in) {.itismenu{width:0!important}}")
+		styles.push("@media (min-width: 6in) {.itismenu{width:20%!important} body{margin-left:21.5%!important;width:78%!important}#menuSprite{width:0!important;overflow:hidden}}")
+		styles.push("@media (max-width: 6in) {.itismenu{width:0}}")
 		el.innerHTML=styles.join('\n')
+		this.mediaMenuStyle=function(){}
 	},
 	markContent: function(content){
 		content=content||document.getSelection().extend()
@@ -168,6 +179,7 @@ window.cleaner={
 	clearScriptAndStyle: function(){
 		//trim css
 		var css=[]
+		!$1('#makeStyle') && css.push("pre{white-space:pre-wrap!important;} #menuSprite{position:fixed;bottom:20px;right:20px;background-color:black;opacity:0.7;border-radius:10px}")
 		for(var style,styles=document.styleSheets,len=styles.length, i=0;i<len;i++){
 			if((style=styles[i]).disabled)
 				continue;
@@ -178,6 +190,7 @@ window.cleaner={
 				rule=rules[j]
 				if(rule.type==1 && !$1(rule.selectorText))
 					continue;
+				rule.type==1 && (rule.style.minWidth="")
 				css.push(rules[j].cssText)
 			}
 		}
@@ -186,12 +199,10 @@ window.cleaner={
 		this.clearNode($9("style"))
 		this.clearNode($9('link'))
 		var el=document.createElement('style')
+		el.id="makeStyle"
 		document.head.insertBefore(el,document.head.firstChild)
 		el.innerHTML=css.join('')+"\r\n"
-		
-		el=document.createElement('script')
-		el.src="file:///android_asset/lib/quo.min.js"
-		document.head.insertBefore(el,document.head.firstChild)
+		this.createSprite()
 	},
 	clearSpecified: function(){
 		var cmd
@@ -218,7 +229,9 @@ window.cleaner={
 			path="."
 		else{
 			path=path.substring(1,path.lastIndexOf('/'))
-			path=path.replace(/\w+/g,'..')
+			for(var i=0, path=path.split('/');i<path.length;i++)
+				path[i]=".."
+			path=path.join('/')
 		}
 		
 		for(var i=0,imgs=document.images,img,a=document.createElement("a");i<imgs.length;i++){
@@ -269,6 +282,21 @@ window.cleaner={
 	release: function(uid){
 		localStorage.removeItem(uid+"_clean")
 	},
+	createSprite: function(){
+		var el=document.createElement('div'),
+			onclick="var a=document.querySelector('.itismenu');if(!a) return;var b=a.style;b.width=(b.width=='auto'?'0':'auto')",
+			onload="if(!document.querySelector('.itismenu')) this.width=0"
+		document.body.appendChild(el)
+		el.id="menuSprite"
+		el.innerHTML='<img src="file:///android_asset/lib/menu.ico" onclick="'+onclick+'" onload="'+onload+'">'
+		this.createSprite=function(){}
+	},
+	getTitle: function(){
+		var a=document.title
+		if(a.length<15)
+			return a.title
+		return a.substring(0,15)
+	},
 	save2Cloud: function(){
 		var request=new XMLHttpRequest(),data=[]
 		data.push("url="+btoa(location.href))
@@ -305,7 +333,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 		var a=document.createElement("a")
 		document.body.appendChild(a)
 		a.href=info.zipURL
-		a.download=document.title+".zip"
+		a.download=cleaner.getTitle()+".zip"
 		a.click()
 		document.body.removeChild(a)
 		window.onunload=function(){	cleaner.release(info.uid)}
@@ -325,7 +353,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			cleaner.clearScriptAndStyle()
 			var res=cleaner.getPageInfo(info.uid,info.deep)
 			res.cmds=cleaner.save(info.uid)
-			res.title=document.title
+			res.title=cleaner.getTitle()
 			
 			if(cleaner.icon)
 				res.images.push(res.icon=cleaner.icon)
@@ -348,6 +376,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			content:xPath.getPath($1('.makecontent')), 
 			menu: xPath.getPath($1('.makemenu'))})
 		cleaner.clearContentAndMenu()
+		cleaner.clearScriptAndStyle()
 		break
 	case "Node":
 	case "Above":

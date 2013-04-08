@@ -58,3 +58,4 @@ gen/
 
 conf.yml
 wb_*.txt
+*.apk

@@ -21,7 +21,7 @@
 		(!('service' in window)) && (window.service={
 			books:[{url:1,title:'Test 1',path:'http://google.com/',home:'index.html'},
 			        {url:2,title:'Test 2',path:'http://google.com/',home:'index.html'},
-			        {url:3,title:'Test 3',path:'http://google.com/',home:'index.html'}],
+			        {url:3,title:'Test 3 test test test test tet teta afasf asdf af asf',path:'http://google.com/',home:'index.html'}],
 			install:function(t){TileLayer.add(t)},
 			getAllBooks: function(){return JSON.stringify(this.books)},
 			getBook: function(url){}
@@ -50,7 +50,7 @@
 			TileLayer.init(books,200,75,2,3,menu)
 			try{
 				var myBooks=JSON.parse(service.getAllBooks())
-				for(var len=myBooks.length, i=0;i<len;i++)
+				for(var len=Math.min(myBooks.length,4), i=0;i<len;i++)
 					addBook(myBooks[i])
 			}catch(e){}
 			Lungo.init({name:'books'})

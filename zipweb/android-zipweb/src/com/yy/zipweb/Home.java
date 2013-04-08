@@ -21,10 +21,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.webkit.WebView;
 
 import com.yy.m.data.Configuration;
-import com.yy.m.view.ViewClient;
 import com.yy.m.view.WebActivity;
 
 public class Home extends WebActivity {
@@ -33,24 +31,13 @@ public class Home extends WebActivity {
 		this.cache4Offline=false;
 		if(Configuration.getInstance(this).get("installed").length()==0)
 			installNatives();
-
-		this.browser.setWebViewClient(new ViewClient(this.browser){
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				super.onPageFinished(view, url);
-				Home.this.browser.runJS(new StringBuilder()
-					.append("$$(document.body)")
-					.append(".swipeRight(function(){$$('.itismenu').style('width','50%')})")
-					.append(".swipeLeft(function(){$$('.itismenu').style('width','0px')})")
-					.toString()
-				);
-			}
-		});
+		if(saved!=null && saved.containsKey(LAST_FINAL_URL))
+			saved.remove(LAST_FINAL_URL); 
 	}
 	
 	private void installNatives(){
 		final ProgressDialog loading = ProgressDialog.show(this.browser.getContext(), 
-				"", "Installing Book...",true,false);
+				"", this.getString(R.string.installingBook)+"...",true,false);
 		new Thread(){
 			public void run(){
 				removeFolder(Home.this.browser.getOfflineRoot());
@@ -61,8 +48,8 @@ public class Home extends WebActivity {
 		        	books = assetManager.list("books");
 		            for (int i = 0; i < books.length; i++){
 		            	try {
-		            		loading.setTitle("Instaling "+books[i]+"...");
-							book=new Book(new ZipInputStream(assetManager.open("books/"+books[i])));
+		            		loading.setTitle(Home.this.getString(R.string.installing)+" "+books[i]+"...");
+							book=new Book(new ZipInputStream(assetManager.open("books/"+books[i])),asTitle(books[i]));
 							book.install();
 							Home.this.browser.runJS("addBook("+book+")");
 						} catch (Exception e) {
@@ -79,12 +66,21 @@ public class Home extends WebActivity {
 		}.start();
 	}
 	
+	private String asTitle(String name){
+		int i=name.lastIndexOf('.');
+		if(i==-1)
+			return name;
+		return name.substring(0, i);
+	}
+	
 	public void install(final String filePath){
-		final ProgressDialog loading = ProgressDialog.show(this.browser.getContext(), "", "Installing...",true,false);
+		final ProgressDialog loading = ProgressDialog.show(this.browser.getContext(), "", 
+				this.getString(R.string.installing)+"...",true,false);
 		new Thread(){
 			public void run(){
 				try {
-					Book book=new Book(new ZipInputStream(new FileInputStream(filePath)));
+					File file=new File(filePath);
+					Book book=new Book(new ZipInputStream(new FileInputStream(file)), asTitle(file.getName()));
 					book.install();
 					Home.this.browser.runJS("addBook("+book+")");
 				} catch (Exception e) {
@@ -99,7 +95,7 @@ public class Home extends WebActivity {
 	public void uninstall(final String url){
 		final Book book=new Book(url);
 		final ProgressDialog loading = ProgressDialog.show(this.browser.getContext(), 
-				"", "Uninstalling "+book.title,true,false);
+				"", this.getString(R.string.uninstalling)+" "+book.title,true,false);
 		new Thread(){
 			@Override
 			public void run(){
@@ -184,9 +180,10 @@ public class Home extends WebActivity {
 			}
 		}
 		
-		Book(ZipInputStream is){
+		Book(ZipInputStream is, String title){
 			this.is=is;
 			this.path=Home.this.browser.getOfflineRoot();
+			this.title=title;
 		}
 
 		void install() throws Exception{
@@ -266,7 +263,8 @@ public class Home extends WebActivity {
 				info.load(new FileInputStream(this.path + "info.properties"));
 				this.url=info.getProperty("url");
 				this.home=info.getProperty("home");
-				this.title=info.getProperty("title");
+				if(this.title==null)
+					this.title=info.getProperty("title");
 				this.icon=info.getProperty("icon");
 			} finally {
 				try {
