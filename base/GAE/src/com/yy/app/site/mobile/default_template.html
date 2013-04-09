@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html${(website.manifest)!}>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
-    <meta name="HandheldFriendly" content="True" />
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
-    <meta name="keywords" content="${keywords!}" />
-    <title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
-    <#noparse>
-	<link rel="stylesheet" href="/lib/lungo.css"/>
-	<link rel="stylesheet" href="/lib/lungo.icon.css"/>
-	<link rel="stylesheet" href="/lib/lungo.icon.brand.css"/>
-	<link rel="stylesheet" href="/lib/theme.lungo.css"/>
-	<script src="/lib/quo.min.js"></script>
-	<script src="/lib/lungo.js"></script>	
-	<script src="/lib/tile.js"></script>
-	</#noparse>
-	<#macro head></#macro><@head/>
-  </head>
-  	<body class="app ${path} ${contentMacroName}">
-		<#macro content><@.main[contentMacroName]/></#macro><@content/>
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
+		<meta name="HandheldFriendly" content="True" />
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
+		<meta name="keywords" content="${keywords!}" />
+		<title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
+		<#noparse>
+		<link rel="stylesheet" href="/lib/lungo.css"/>
+		<link rel="stylesheet" href="/lib/lungo.icon.css"/>
+		<link rel="stylesheet" href="/lib/lungo.icon.brand.css"/>
+		<link rel="stylesheet" href="/lib/theme.lungo.css"/>
+		<script src="/lib/quo.min.js"></script>
+		<script src="/lib/lungo.js"></script>
+		</#noparse>
+		<#macro head></#macro><@head/>
+	</head>
+ 	<body class="app ${path} ${contentMacroName}">
+ 		<#macro content><@.main[contentMacroName]/></#macro>
+ 		<#macro body>
+ 			<section id="main" data-transition="slide">
+				<article id="article1" class="active">
+					<@content/>
+				</article>
+			</section>
+			<script>
+				Lungo.init({name:"home"})
+				('TileLayer' in window) && TileLayer.init(books,200,75,3,2)
+			</script>
+		</#macro><@body/>
 	</body>
 </html>

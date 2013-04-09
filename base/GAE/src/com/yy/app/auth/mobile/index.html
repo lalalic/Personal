@@ -1,24 +1,60 @@
 <#macro signin action="/user/signin.html">
-<form action="${action}" method="post" onsubmit="var a=sv.getconf();a.set('user',this.account.value);a.set('password',this.password.value)">
+<form class="form" id="signin"
+	action="${action}" 
+	method="post">
     <input type="hidden" name="targetURL" value="${targetURL!}"/>
     <#if error??><div id="msg"><div class="error">${error!}</div></div></#if>
-    <input name="account" value="${input.account!}" required="required" placeholder="User Name"/>
-    <input type="password" name="password" required="required" placeholder="Password"/>
-    <div><a href="/user/forgetpassword.html">Forget Password?</a> Or <a href="/user/signup.html?targetURL=${targetURL!}">New Account</a></div>
-    <div class="actions"><button type="submit">Save</button></div>
+    <fieldset>
+    	<label>User Name</label>
+    	<input type="text" name="account" value="${accountName!}" required="required">
+    </fieldset>
+    
+    <fieldset>
+    	<label>Password</label>
+    	<input type="password" name="password" required="required" placeholder="*****"/>
+    </fieldset>
+    
+    <nav class="groupbar">
+    	<a href="/user/forgetpassword.html">Forget Password?</a>
+    	<a href="/user/signup.html?targetURL=${targetURL!}">New Account</a>
+    	<a href="#" onclick="signin.submit()" class="button">Signin</a>
+    </nav>
 </form>
 </#macro>
 
-<#macro signupForm action="/user/signup.html">
-<form action="${action}" method="post" onsubmit="this.thumbnail=sv.uploaded($1('#up').src)">
+<#macro signup action="/user/signup.html">
+<form class="form" id="signup"
+	action="${action}" 
+	method="post" 
+	onsubmit="this.thumbnail=sv.uploaded($1('#up').src)">
 	<input type="hidden" name="targetURL" value="${targetURL!'/'}">
 	<#if error??><div id="msg"><div class="error">${error!}</div></div></#if>
-    <input name="account" value="${input.account!}" required="required" placeholder="User Name"/>
-    <input type="password" name="password" required="required" placeholder="Password"/>
-    <input type="password" name="passwordAgain" required="required" placeholder="Password Again">
-    <center><img style="width:150px;height:150px;" onclick="sv.photo('photo(`#up`)')" id="up" src="${input.thumbnail!}"/></center>
-    <input type="hidden" name="thumbnail" value="${input.thumbnail!}">
-    <div><a href="/user/forgetpassword.html">Forget Password?</a> Or <a href="/user/signin.html?targetURL=${targetURL!}">Has Account?</a></div>
-	<div class="actions"><button type="submit">Save</button></div>
+	<fieldset>
+    	<label>User Name</label>
+    	<input type="text" name="account" value="${accountName!}" required="required">
+    </fieldset>
+    
+    <fieldset>
+    	<label>Password</label>
+    	<input type="password" name="password" required="required" placeholder="*****"/>
+    </fieldset>
+    
+    <fieldset>
+    	<label>Password Again</label>
+    	<input type="password" name="passwordAgain" required="required" placeholder="*****"/>
+    </fieldset>
+
+	<fieldset>
+		<label>Thumbnail</label>
+		<br/>
+    	<img style="width:150px;height:150px;" onclick="sv.photo('photo(`#up`)')" id="up" src="${thumbnail!}"/>
+    	<input type="hidden" name="thumbnail" value="${thumbnail!}">
+    </fieldset>
+    
+    <nav class="groupbar">
+    	<a href="/user/forgetpassword.html">Forget Password?</a>
+    	<a href="/user/signin.html?targetURL=${targetURL!}">Has Account?</a>
+    	<a href="#" onclick="signup.submit()" class="button">Signup</a>
+    </nav>
 </form>
 </#macro>

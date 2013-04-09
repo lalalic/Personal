@@ -1,40 +1,20 @@
-<#macro content>
+<#macro head>
+	<script src="/lib/tile.js"></script>
+</#macro>
+
+<#macro body>
 <section id="main" data-transition="slide">
-	<header data-title="Zip to read offline">
+	<header data-title="ZipWeb">
 		<nav>
 			<a href="/" data-icon="home"></a>
 			<a href="#settings" data-router="aside" data-icon="settings"></a>
-			<span class="right"><input type="search"><a href="#books" data-icon="search" data-router="article"></a></span>
+			
 			<a href="/user/signin.html" class="right" data-icon="users"></a>
+			<a href="#books" class="right" data-router="article" data-icon="search"></a>
 		</nav>
 	</header>
 	<article id="desc" class="active">
-		<div style="height:50%; border-bottom:1px solid lightblue;box-shadow:1px blue">
-			<img src="/lib/images/chrome refine.png" style="float:left;height:80%;margin:auto">
-			<div style="width:50%;float:right" class="list">
-				<ul>
-					<li>You can Zip
-						<ul>
-							<li>Current Page</li>
-							<li>1 Deep</li>
-							<li>2 Deep</li>
-							<li>Smart</li>
-						</ul>	
-					</li>
-					<li>
-						<a class="button" href="" data-icon="install">install</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-		<div style="height:50%">
-			<img src="/lib/images/mobile app.png" style="float:left;height:80%;margin:auto">
-			<ul>
-				<li>
-					<a class="button" href="" data-icon="install">install</a>
-				</li>
-			</ul>
-		</div>
+		description here
 	</article>
 	<article id="books">
 		<div class="tile" style="background-color:#00A0B1">
@@ -58,7 +38,8 @@
 	</article>
 </aside>
 <script>
-	Lungo.init({name:"home"})
 	TileLayer.init(books,200,75,3,2)
+	TileLayer.add({title:"Objectify"})
+	Lungo.init({name:"home"})
 </script>
 </#macro>

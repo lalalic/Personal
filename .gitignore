@@ -48,7 +48,7 @@ Desktop.ini
 classes/
 *.jar
 #WEB-INF/classes/
-#WEB-INF/lib/
+lib/
 
 #gae
 appengine-generated/
