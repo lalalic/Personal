@@ -1,6 +1,11 @@
 function _(key){
 	return chrome.i18n.getMessage(key)
 }
+if (typeof String.prototype.endsWith !== 'function') {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
 chrome.runtime.onInstalled.addListener(function() {
 	chrome.contextMenus.create({title: "ZipWeb",			contexts:["page","image","selection"],id: "main"})
 	chrome.contextMenus.create({title: _("Icon"),  			contexts:["image"],		id: "icon", 	parentId:"main"})
@@ -77,11 +82,11 @@ var Downloader=function(deep,uid,tab){
 }
 Downloader.prototype={
 	start: function(url,deep){
-		var me=this
+		var me=this,a
 		if(!this.waitUntil(this.zipWriter,function(){me.start(url,deep)}))
-			return this
-		this.isFirstPage(url) && this.links.unshift({href:this.tab.url,deep:this.deep})
-		this.downloading[url||this.tab.url]=1
+			return false
+		if(this.isFirstPage(url))
+			this.links.unshift((this.downloading[this.tab.url]={href:this.tab.url,deep:this.deep}))
 		if(typeof(deep)=='undefined')
 			deep=this.deep-1
 		chrome.tabs.sendMessage(this.tab.id,{cmd:"download",url:url,uid:this.uid,deep:deep},function(info){
@@ -99,6 +104,7 @@ Downloader.prototype={
 				me.tryClose()
 			}
 		})
+		return true
 	},
 	isFirstPage:function(url){
 		return !url;
@@ -108,9 +114,24 @@ Downloader.prototype={
 		info.file.content=new zip.TextReader(info.file.content)
 		this.files.push(info.file)
 		this.saved[info.url]=1
-		this.links.shift()
-		delete this.downloading[info.url]
+		this.removeLink(info.url)
 		this.push(info)
+	},
+	removeLink: function(url,url2){
+		url2=url.endsWith('/')?url.substr(0,url.length-1):url+"/"
+		if(this.downloading[url]){
+			var i=this.links.indexOf(this.downloading[url])
+			if(i!=-1)
+				this.links.splice(i,1)
+			delete this.downloading[url]
+		}
+		url=url2
+		if(this.downloading[url]){
+			var i=this.links.indexOf(this.downloading[url])
+			if(i!=-1)
+				this.links.splice(i,1)
+			delete this.downloading[url]
+		}
 	},
 	push: function(info){
 		for(var i=0,a=info.images,len=a.length;i<len; i++){
@@ -164,8 +185,10 @@ Downloader.prototype={
 		var link=this.links[0]
 		if(link.href in this.saved || link.href in this.downloading)
 			this.links.shift()
-		else			
-			this.start(link.href,link.deep-1)
+		else{			
+			if(this.start(link.href,link.deep-1))
+				this.downloading[link.href]=link
+		}
 	},
 	zip: function(){
 		if(this.files.length==0)
@@ -210,6 +233,8 @@ Downloader.prototype={
 		console.info("added "+file.name)
 	},
 	getFileName: function(url){
+		if(url.endsWith('/'))
+			url+="index.html";
 		return url.substring(url.indexOf('/',9)+1).replace('?','%3F')
 	},
 	tryClose: function(onClose){

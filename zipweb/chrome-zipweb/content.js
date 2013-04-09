@@ -24,6 +24,13 @@ NodeList.prototype.ancestors = function(){
 	}
 	return result
 }
+
+if (typeof String.prototype.endsWith !== 'function') {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
+
 window.$1=function (selector,context){
 	return document.querySelector(selector,context||document)
 },
@@ -224,16 +231,12 @@ window.cleaner={
 	},
 	_toRelatives: function(){
 		var host=document.location.hostname,
-			path=document.location.pathname
-		if(path=="/")
-			path="."
-		else{
-			path=path.substring(1,path.lastIndexOf('/'))
-			for(var i=0, path=path.split('/');i<path.length;i++)
-				path[i]=".."
-			path=path.join('/')
-		}
-		
+			path=this._fixPathname(document.location.pathname)
+		path=path.substring(1,path.lastIndexOf('/'))
+		for(var i=0, path=path.split('/');i<path.length;i++)
+			path[i]=".."
+		path=path.join('/')
+
 		for(var i=0,imgs=document.images,img,a=document.createElement("a");i<imgs.length;i++){
 			img=imgs[i]
 			a.href=img.src
@@ -245,14 +248,27 @@ window.cleaner={
 			if(((a=link.protocol.toLowerCase())!='http:' && a!="https:" ) ||
 				link.hostname!=host)
 				continue
-			link.href=path+link.pathname
+			link.href=path+this._fixPathname(link.pathname)
 		}
 	},
+	_fixPathname:function(pathname,a){
+		pathname=(pathname||'/').split('/')
+		a=pathname.pop()
+		a=a||'index.html'
+		a.indexOf('.')==-1&&(a+="/index.html")
+		pathname.push(a)
+		return pathname.join('/')
+	},
+	getFileName: function(pathname,search){
+		pathname=this._fixPathname(pathname)
+		return pathname.substring(1)+search.replace('?','%3F')
+	},
+	FILEPRO:/^file:/,
 	getPageInfo: function(uid,deep){
 		var info={images:[],links:[],uid:uid,url:location.href.replace(location.hash,''),cmd:"content"}
-		info.file={name:location.pathname.substring(1)+location.search.replace('?','%3F')}
+		info.file={name:this.getFileName(location.pathname,location.search)}
 		for(var i=0,d=document.images,l=d.length;i<l;i++)
-			info.images.push(d[i].src)
+			!this.FILEPRO.test(d[i].src)&&info.images.push(d[i].src)
 			
 		if(deep>0){
 			for(var i=0,d=document.links,l=d.length,a,b;i<l;i++){
@@ -291,11 +307,18 @@ window.cleaner={
 		el.innerHTML='<img src="file:///android_asset/lib/menu.ico" onclick="'+onclick+'" onload="'+onload+'">'
 		this.createSprite=function(){}
 	},
-	getTitle: function(){
-		var a=document.title
-		if(a.length<15)
-			return a.title
-		return a.substring(0,15)
+	createDownloading: function(a){
+		(a=document.createElement('div')).id="downloading"
+		document.body.appendChild(a)
+		with(a.style)
+			position="fixed", left=top=0,height=width="100%"
+		a.innerHTML='<img oncontextmenu="return false" src="http://www.paoloscarano.com/images/blue_loading.gif" style="width:100%;height:100%;opacity:0.7">'
+	},
+	finish: function(a){
+		(a=$1('#downloading')) && document.body.removeChild(a)
+	},
+	getTitle: function(a){
+		return (a=document.title.split('-')[0]).length<15?a:a.substring(0,15)
 	},
 	save2Cloud: function(){
 		var request=new XMLHttpRequest(),data=[]
@@ -336,6 +359,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 		a.download=cleaner.getTitle()+".zip"
 		a.click()
 		document.body.removeChild(a)
+		cleaner.finish()
 		window.onunload=function(){	cleaner.release(info.uid)}
 		console.debug("saved "+a.download)
 		break
@@ -352,6 +376,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			}
 			cleaner.clearScriptAndStyle()
 			var res=cleaner.getPageInfo(info.uid,info.deep)
+			cleaner.createDownloading()
 			res.cmds=cleaner.save(info.uid)
 			res.title=cleaner.getTitle()
 			
@@ -362,6 +387,7 @@ chrome.extension.onMessage.addListener(function(info,sender,sendResponse){
 			
 			cleaner.save2Cloud()
 			sendResponse(res)
+			
 		}
 		break
 	
