@@ -17,7 +17,7 @@
 				com.yy.app.media,
 				com.yy.app.tag,
 				com.yy.app.comment,
-				com.sdan
+				com.yy.supernaiba
 			</param-value>
 		</init-param>
 		<init-param>
