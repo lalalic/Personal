@@ -11,7 +11,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
@@ -32,6 +34,7 @@ public class Tag extends AModel {
 	@Index
 	public String name;
 
+	@Index
 	public long count = 0;
 
 	public List<Long> included = new ArrayList<Long>();
@@ -118,6 +121,12 @@ public class Tag extends AModel {
 			}
 
 			return allTags;
+		}
+		
+		@GET
+		@Path("cloud")
+		public Viewable cloud(@Context UriInfo uriInfo){
+			return viewable(viewDataModel("Tag Cloud","cloud","tags",this.list(uriInfo)));
 		}
 
 		public Tag get(String name) {
