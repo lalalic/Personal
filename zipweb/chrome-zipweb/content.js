@@ -304,7 +304,7 @@ window.cleaner={
 			onload="if(!document.querySelector('.itismenu')) this.width=0"
 		document.body.appendChild(el)
 		el.id="menuSprite"
-		el.innerHTML='<img src="file:///android_asset/lib/menu.ico" onclick="'+onclick+'" onload="'+onload+'">'
+		el.innerHTML='<img src="file:///android_res/drawable/menu.ico" onclick="'+onclick+'" onload="'+onload+'">'
 		this.createSprite=function(){}
 	},
 	createDownloading: function(a){
