@@ -1,1 +1,5 @@
-<#include "/com/yy/supernaiba/mobile/index.html">
+<#macro init>
+	<#import "/com/yy/supernaiba/mobile/index.html" as categorized>
+	<#include "/com/yy/supernaiba/mobile/index.html">
+	<@categorized.init/>
+</#macro>

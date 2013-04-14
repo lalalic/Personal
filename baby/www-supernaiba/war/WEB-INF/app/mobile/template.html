@@ -1,8 +1,8 @@
 <#include "/default_template.html">
 
 <#macro header>
-<#if headerMacroName!false><@.main[headerMacroName]/> <#return></#if>
-<header data-title="超级奶爸">
+<#if headerMacroName??><@.main[headerMacroName]/> <#return></#if>
+<header data-title="<@title/>">
 	<nav>
 		<@headerNav/>
 	</nav>
@@ -10,13 +10,13 @@
 </#macro>
 
 <#macro headerNav>
-	<#if headerNavMacroName!false><@.main[headerNavMacroName]/> <#return></#if>
+	<#if headerNavMacroName??><@.main[headerNavMacroName]/> <#return></#if>
 	<a href="/" data-icon="home"></a>
 	<a href="#settings" class="right" data-router="aside" data-icon="settings"></a>
 </#macro>
 
 <#macro footer>
-<#if headerMacroName!false><@.main[footerMacroName]/> <#return></#if>
+<#if footerMacroName??><@.main[footerMacroName]/> <#return></#if>
 <footer>
 	<nav>
 		<@footerNav/>
@@ -25,7 +25,7 @@
 </#macro>
 
 <#macro footerNav>
-	<#if footerNavMacroName!false><@.main[footerNavMacroName]/> <#return></#if>
+	<#if footerNavMacroName??><@.main[footerNavMacroName]/> <#return></#if>
 	<a href="#" data-icon="refresh"></a>
 	<a href="#" data-icon="help"></a>
 	<a href="#" data-icon="share"></a>
@@ -33,7 +33,7 @@
 </#macro>
 
 <#macro aside>
-<#if headerMacroName!false><@.main[asideMacroName]/> <#return></#if>
+<#if asideMacroName??><@.main[asideMacroName]/> <#return></#if>
 <aside id="settings">
 	<article class="active">
 		<@asideContent/>
@@ -42,7 +42,7 @@
 </#macro>
 
 <#macro asideContent>
-<#if asideContentMacroName!false><@.main[asideContentMacroName]/> <#return></#if>
+<#if asideContentMacroName??><@.main[asideContentMacroName]/> <#return></#if>
 <div class="list">
 	<ul>
 		<li><a href="/user/signin.html" data-icon="user">登录</a></li>
