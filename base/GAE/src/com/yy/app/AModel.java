@@ -245,6 +245,17 @@ public class AModel {
 			return method.invoke(this);
 		}
 	}
+	
+	@SuppressWarnings("deprecation")
+	public static long getDay(Date date){
+		if(date==null)
+			date=new Date();
+		return Long.valueOf(new StringBuilder()
+				.append(date.getYear()+1900)
+				.append(date.getMonth()<9?"0":"").append(date.getMonth()+1)
+				.append(date.getDate()<9?"0":"").append(date.getDate())
+				.toString());
+	}
 
 	/**
 	 * check unique field before any persist

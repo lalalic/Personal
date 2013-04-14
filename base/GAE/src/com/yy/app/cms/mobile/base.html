@@ -11,15 +11,15 @@ post:
 <#macro showList>
 	<ol class="list">
 		<#list posts as post>
-		<li><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
+		<li class="arrow"><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
 		</#list>
 	</ol>
-	<center class="actions"><@action4List/></center>
+	<#assign footerNavMacroName='action4List'>
 </#macro>
 
 <#macro action4List>
-	<button><a href="/${path}/create.html">+</a></button>
-	<button><a href="/${path}/">Q</a></button>
+	<a data-icon="plus" href="/${path}/create.html">创建</a>
+	<a data-icon="search" href="/${path}/">查询</a>
 </#macro>
 
 <#macro show1>
@@ -30,7 +30,7 @@ post:
 		<div>${post.content}</div>
 	</div>
 	<@show1Extra post/>
-	<center class="actions"><@action41 post/></center>
+	<#assign footerNavMacroName='action41'>
 </#macro>
 
 <#macro show1Extra post>
@@ -38,29 +38,43 @@ post:
 
 <#macro action41 post>
 	<@favoriteCMD post/>
-	<button><a href="/comment/list/${post.ID}.html">评论</a></button> 
+	<a data-icon="comment" href="/comment/list/${post.ID}.html">评论</a>
 </#macro>
 
 <#macro favoriteCMD post>
-	<button onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$1('span',a).innerHTML=x.responseText})">收藏<span>${post.favorites}</span></button>
+	<a data-icon="star" data-count="${post.favorites}" href="#"
+		onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$$('span',a).innerHTML=x.responseText})">收藏</a>
 </#macro>
 
 <#macro postForm>
-	<form action="/${path}/post" method="post">
+	<form action="/${path}/post" method="post" class="form">
 		<input type="hidden" name="parent" value="${post.parent!0}">
         <input type="hidden" name="ID" value="${post.ID!0}">
         <@postFields post/>
-        <center class="actions">
-            <button type="submit">发送</button> 
-            <button onclick="history.go(-1)">取消</button>
-        </center>
 	</form>
+	<#assign footerNavMacroName='postFooterNav'>
+</#macro>
+
+<#macro postFooterNav>
+	<a data-icon="save" href="#" onclick="$$('.active form').submit()"></a>
+	<a data-icon="back" href="#" ></a>
 </#macro>
 
 <#macro postFields post>
-	<input placeholder="标题" name="title" value="${post.title!}" required="required" style="border:none;font-weight:bold;text-align:center"/>
-	<@editor placeholder="内容" name="content" content=post.content>required</@editor>
-	<input placeholder="标签:11个月,发烧" name="tag" value="${post.tag!}">
+	<fieldset>
+		<label>标题</label>
+		<input name="title" value="${post.title!}" required="required"/>
+	</fieldset>
+	
+	<fieldset>
+		<label>内容</label>
+		<textarea name="content" required="required">${post.title!}</textarea>
+	</fieldset>
+	
+	<fieldset>
+		<label>标签</label>
+		<input placeholder="11个月,发烧" name="tag" value="${post.tag!}">
+	</fieldset>
 </#macro>
 
 <#macro authorInfo userID>

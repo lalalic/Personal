@@ -3,6 +3,7 @@ package com.yy.app.tag;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,6 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnSave;
-
 import com.sun.jersey.api.view.Viewable;
 import com.yy.app.AModel;
 import com.yy.rs.AdminUI;
@@ -58,7 +58,7 @@ public class Tag extends AModel {
 
 	@Path("tag")
 	public static class View extends AModel.View {
-
+		public static Map<String, Long> baseTags;
 		@GET
 		@Path("admin.html")
 		@AdminUI({ "Resource", "Tag" })
@@ -140,6 +140,12 @@ public class Tag extends AModel {
 			}
 			return tag;
 		}
+		
+		public long getID(String tag){
+			if(baseTags.containsKey(tag))
+				return baseTags.get(tag);
+			return this.get(tag).ID;
+		}
 
 		public List<Long> parseList(String pendings, String cat) {
 			if (pendings == null || pendings.isEmpty())
@@ -211,6 +217,8 @@ public class Tag extends AModel {
 		 * @param data
 		 */
 		public void setInitData(Map<String, List<String>> data) {
+			if(baseTags==null)
+				baseTags=new HashMap<String,Long>();
 			Objectify store = ObjectifyService.ofy();
 			List<Tag> tags = new ArrayList<Tag>();
 			Tag cat, tag;
@@ -218,8 +226,10 @@ public class Tag extends AModel {
 				for (String aTag : data.get(key)) {
 					tag = get(aTag);
 					tags.add(tag);
+					baseTags.put(aTag, tag.ID);
 				}
 				cat = get(key);
+				baseTags.put(key, cat.ID);
 				for (Tag t : store.save().entities(tags).now().values())
 					if (!cat.included.contains(t.ID))
 						cat.included.add(t.ID);

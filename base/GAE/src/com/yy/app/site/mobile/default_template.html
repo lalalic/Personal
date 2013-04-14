@@ -18,15 +18,20 @@
 	</head>
  	<body class="app ${path} ${contentMacroName}">
  		<#macro content><@.main[contentMacroName]/></#macro>
+ 		<#macro header><@.main[headerMacroName]/></#macro>
+ 		<#macro footer><@.main[footerMacroName]/></#macro>
+ 		<#macro aside><@.main[asideMacroName]/></#macro>
  		<#macro body>
  			<section id="main" data-transition="slide">
+				<@header/>
 				<article id="article1" class="active">
 					<@content/>
 				</article>
+				<@footer/>
 			</section>
+			<@aside/>
 			<script>
 				Lungo.init({name:"home"})
-				('TileLayer' in window) && TileLayer.init(books,200,75,3,2)
 			</script>
 		</#macro><@body/>
 	</body>

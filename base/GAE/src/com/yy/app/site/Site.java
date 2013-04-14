@@ -18,7 +18,7 @@ public class Site extends AModel.View{
 	@Produces({ MediaType.TEXT_HTML})
 	@Test
 	public Viewable home(){
-		return viewable("/home.html",viewDataModel("Welcome",""));
+		return viewable("/home.html",viewDataModel("Welcome","content"));
 	}
 	
 	@Path("itsnotexisting")
