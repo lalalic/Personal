@@ -1,10 +1,9 @@
-package com.minicheers.app.picbook;
+package com.supernaiba.app.book;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
-import javax.persistence.Transient;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -16,10 +15,11 @@ import javax.ws.rs.core.Response;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.EntitySubclass;
+import com.googlecode.objectify.annotation.Ignore;
+import com.googlecode.objectify.annotation.Index;
+import com.supernaiba.app.Categorized;
 import com.yy.app.cms.Post;
-import com.yy.app.cms.SlavablePost;
 import com.yy.app.site.Profile;
 import com.yy.app.test.EnclosingModel;
 import com.yy.app.test.Runner;
@@ -30,28 +30,28 @@ import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 import com.yy.rs.TagAttr;
 
-@Unindexed
-public class Book extends SlavablePost {
-	@Indexed
+@EntitySubclass
+public class Book extends Categorized {
+	@Index
 	public String alias;
 
-	@Transient
+	@Ignore
 	@TagAttr
 	public List<Long> writer;
-	@Transient
+	@Ignore
 	@TagAttr
 	public Long language;
-	@Transient
+	@Ignore
 	@TagAttr
 	public List<Long> translator;
 
-	@Transient
+	@Ignore
 	@TagAttr
 	public Long publisher;
-	@Transient
+	@Ignore
 	@TagAttr
 	public List<Long> type;
-	@Transient
+	@Ignore
 	@TagAttr
 	public List<Long> theme;
 	
@@ -65,7 +65,7 @@ public class Book extends SlavablePost {
 	}
 
 	@Path("huiben")
-	public static class View extends SlavablePost.View {
+	public static class View extends Categorized.View {
 
 		@POST
 		@Path("post")
@@ -85,7 +85,7 @@ public class Book extends SlavablePost {
 				@FormParam("publisher") String publisher,
 				@FormParam("type") List<Long> type,
 				@FormParam("theme") List<Long> theme) throws URISyntaxException {
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Book book = (Book) this.get(store, ID);
 			String typeName = book.entityType();
 			book.title = title;
@@ -100,7 +100,7 @@ public class Book extends SlavablePost {
 			book.type = type;
 			book.theme = theme;
 			book.resolveAttrs=true;
-			store.put(book);
+			store.save().entity(book).now();
 			book.postPersist();
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + book.ID + ".shtml"))
@@ -127,7 +127,7 @@ public class Book extends SlavablePost {
 				@FormParam("generalRating") int generalRating)
 				throws URISyntaxException {
 			assert parent > 0;
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Share post = (Share) new Share.View().get(store, ID);
 			post.parent = parent;
 			post.setContent(content);
@@ -145,7 +145,7 @@ public class Book extends SlavablePost {
 			}
 			post.generalRating = generalRating;
 			post.resolveAttrs=true;
-			store.put(post, book);
+			store.save().entities(post, book).now();
 			post.postPersist();
 			return slavePostResponse(ID==0,post);
 		}

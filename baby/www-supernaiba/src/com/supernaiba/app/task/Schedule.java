@@ -1,4 +1,4 @@
-package com.yy.supernaiba.task;
+package com.supernaiba.app.task;
 
 import java.util.List;
 

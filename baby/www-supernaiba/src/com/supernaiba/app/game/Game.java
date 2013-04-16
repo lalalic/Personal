@@ -1,4 +1,4 @@
-package com.minicheers.app.game;
+package com.supernaiba.app.game;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,10 +15,10 @@ import javax.ws.rs.core.Response;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.EntitySubclass;
+import com.googlecode.objectify.annotation.Index;
+import com.supernaiba.app.Categorized;
 import com.yy.app.cms.Post;
-import com.yy.app.cms.SlavablePost;
 import com.yy.app.test.EnclosingModel;
 import com.yy.app.test.Runner;
 import com.yy.app.test.Test;
@@ -27,11 +27,11 @@ import com.yy.app.test.TestValues;
 import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 
-@Unindexed
-public class Game extends SlavablePost {
+@EntitySubclass
+public class Game extends Categorized {
 	
-	@Indexed public Set<String> types;
-	@Indexed public Integer fromType=0;
+	@Index public Set<String> types;
+	@Index public Integer fromType=0;
 	public String from;
 	public Set<String> goal;
 	
@@ -45,7 +45,7 @@ public class Game extends SlavablePost {
 	}
 	
 	@Path("youxi")
-	public static class View extends SlavablePost.View{		
+	public static class View extends Categorized.View{		
 		@POST
 		@Path("post")
 		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -68,7 +68,7 @@ public class Game extends SlavablePost {
 				@FormParam("from3") String from3,
 				@FormParam("goal") Set<String> goal)
 				throws URISyntaxException{
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Game game=(Game)this.get(store,ID);
 			game.parent=parse(parent);
 			game.title=title;
@@ -89,7 +89,7 @@ public class Game extends SlavablePost {
 			
 			game.goal=goal;
 			game.setContent(content);
-			store.put(game);
+			store.save().entity(game).now();
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + game.ID + ".shtml"))
 					.build();
@@ -116,14 +116,14 @@ public class Game extends SlavablePost {
 				@FormParam("suitableAges") Set<String> suitableAge) 
 				throws URISyntaxException {
 			assert parent!=0;
-			Objectify store = ObjectifyService.begin();
+			Objectify store = ObjectifyService.ofy();
 			Share post = (Share) new Share.View().get(store, ID);
 			post.parent = parent;
 			post.setContent(content);
 			post.title=title;
 			post.tools=tools;
 			post.suitableAge=suitableAge;			
-			store.put(post);
+			store.save().entity(post).now();
 
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + parent + ".shtml"))

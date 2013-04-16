@@ -19,13 +19,7 @@
 		<link>
 			<name>base</name>
 			<type>2</type>
-			<locationURI>base</locationURI>
+			<locationURI>WORKSPACE_LOC/personal/base/GAE/src</locationURI>
 		</link>
 	</linkedResources>
-	<variableList>
-		<variable>
-			<name>base</name>
-			<value>$%7BWORKSPACE_LOC%7D/Personal/base/GAE/src</value>
-		</variable>
-	</variableList>
 </projectDescription>

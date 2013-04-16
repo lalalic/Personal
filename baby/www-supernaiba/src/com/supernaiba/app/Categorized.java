@@ -1,4 +1,4 @@
-package com.yy.supernaiba;
+package com.supernaiba.app;
 
 import java.util.Set;
 
@@ -9,7 +9,6 @@ import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnSave;
 import com.yy.app.cms.SlavablePost;
 import com.yy.app.site.Profile;
-import com.yy.app.tag.Tag;
 import com.yy.rs.TagAttr;
 
 @Entity

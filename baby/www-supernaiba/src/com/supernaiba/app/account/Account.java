@@ -1,4 +1,4 @@
-package com.minicheers.app.account;
+package com.supernaiba.app.account;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
 import com.yy.app.auth.User;
 import com.yy.app.test.Runner;
 import com.yy.app.test.Test;
@@ -27,7 +27,7 @@ import com.yy.rs.Uniques;
 
 @Uniques({ "account" })
 @Required({ "account" })
-@Unindexed
+@Entity
 public class Account extends User {
 	public String city;
 	public String area;
@@ -36,7 +36,7 @@ public class Account extends User {
 	
 	@Override
 	public List<Child> getChildren(){
-		return ObjectifyService.begin().query(Child.class).filter("parent", this.ID).list();
+		return ObjectifyService.ofy().load().type(Child.class).filter("parent", this.ID).list();
 	}
 	
 	@Path("user")
@@ -57,7 +57,7 @@ public class Account extends User {
 			child.nick=childName;
 			child.birthday=this.parseDate(req.getParameter("childBirthday"));
 			child.parent=user.ID;
-			ObjectifyService.begin().put(child,user);
+			ObjectifyService.ofy().save().entities(child,user).now();
 			return user;
 		}
 		
@@ -90,13 +90,13 @@ public class Account extends User {
 				
 				@TestValue(field="gender", value="男") 
 				@FormParam("gender")String gender){
-			Objectify store=ObjectifyService.begin();
+			Objectify store=ObjectifyService.ofy();
 			Child child=(Child)new Child.View().get(store,ID);
 			child.nick=nick;
 			child.birthday=this.parseDate(birthday);
 			child.gender=gender;
 			child.parent=User.getCurrentUserID();
-			store.put(child);
+			store.save().entity(child).now();
 			return child;
 		}
 		
@@ -106,11 +106,11 @@ public class Account extends User {
 		@Caps
 		@Test(value=".ID", model=Child.class)
 		public boolean deleteChild(@PathParam("ID") long ID){
-			Objectify store=ObjectifyService.begin();
-			Child child=store.get(Child.class,ID);
+			Objectify store=ObjectifyService.ofy();
+			Child child=store.load().type(Child.class).id(ID).get();
 			if(child.parent!=User.getCurrentUserID())
 				throw new RuntimeException("You don't have right to delete.");
-			store.delete(child);
+			store.delete().entity(child);
 			return true;
 		}
 		

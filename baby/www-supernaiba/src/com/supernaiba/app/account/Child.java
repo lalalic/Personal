@@ -1,16 +1,16 @@
-package com.minicheers.app.account;
+package com.supernaiba.app.account;
 
 import java.util.Calendar;
 import java.util.Date;
 
-import com.googlecode.objectify.annotation.Indexed;
-import com.googlecode.objectify.annotation.Unindexed;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Index;
 import com.yy.app.AModel;
 
-@Unindexed
+@Entity
 public class Child extends AModel {
 	public String nick;
-	@Indexed
+	@Index
 	public Date birthday;
 	public String gender;
 	
