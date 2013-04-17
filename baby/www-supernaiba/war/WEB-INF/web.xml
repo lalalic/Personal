@@ -20,7 +20,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 				com.yy.app.build,
 				com.yy.app.media,
 				com.yy.app.comment,
-				com.minicheers.app
+				com.supernaiba.app
 			</param-value>
 		</init-param>
 		<init-param>

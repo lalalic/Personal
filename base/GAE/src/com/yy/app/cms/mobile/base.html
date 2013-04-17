@@ -8,13 +8,24 @@ show:
 post:
     -postForm (postFields)
 -->
+<#macro init>
+    <#assign this={"model":"post","path":path}>
+</#macro>
+
 <#macro showList>
-	<ol class="list">
-		<#list posts as post>
-		<li class="arrow"><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
-		</#list>
-	</ol>
 	<#assign footerNavMacroName='action4List'>
+	
+	<ol class="list">
+		<#if posts?size==0>
+			<li>没有呢</li>
+			<#return>
+		<#else>
+			<#list posts as post>
+			<li class="arrow"><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
+			</#list>
+		</#if>
+	</ol>
+
 </#macro>
 
 <#macro action4List>
@@ -69,7 +80,7 @@ post:
 		<label>内容</label>
 		<textarea name="content" required="required">${post.title!}</textarea>
 	</fieldset>
-	
+	<#nested/>
 	<fieldset>
 		<label>标签</label>
 		<input placeholder="11个月,发烧" name="tag" value="${post.tag!}">
