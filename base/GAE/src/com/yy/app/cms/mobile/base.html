@@ -14,10 +14,9 @@ post:
 
 <#macro showList>
 	<#assign footerNavMacroName='action4List'>
-	
 	<ol class="list">
 		<#if posts?size==0>
-			<li>没有呢</li>
+			<li><div  class="info">没有呢</div></li>
 			<#return>
 		<#else>
 			<#list posts as post>
@@ -58,12 +57,12 @@ post:
 </#macro>
 
 <#macro postForm>
+	<#assign footerNavMacroName='postFooterNav'>
 	<form action="/${path}/post" method="post" class="form">
 		<input type="hidden" name="parent" value="${post.parent!0}">
         <input type="hidden" name="ID" value="${post.ID!0}">
         <@postFields post/>
 	</form>
-	<#assign footerNavMacroName='postFooterNav'>
 </#macro>
 
 <#macro postFooterNav>
@@ -72,18 +71,22 @@ post:
 
 <#macro postFields post>
 	<fieldset>
-		<label>标题</label>
-		<input name="title" value="${post.title!}" required="required"/>
+		<label>标题</label><br/>
+		<input type="text" name="title" value="${post.title!}" required="required"/>
 	</fieldset>
 	
-	<fieldset>
-		<label>内容</label>
-		<textarea name="content" required="required">${post.title!}</textarea>
-	</fieldset>
+	<@postFieldContent post/>
 	<#nested/>
 	<fieldset>
-		<label>标签</label>
-		<input placeholder="11个月,发烧" name="tag" value="${post.tag!}">
+		<label>标签</label><br/>
+		<input type="text" placeholder="11个月,发烧" name="tag" value="${post.tag!}">
+	</fieldset>
+</#macro>
+
+<#macro postFieldContent post>
+	<fieldset>
+		<label>内容</label><br/>
+		<textarea name="content" required="required">${post.title!}</textarea>
 	</fieldset>
 </#macro>
 
