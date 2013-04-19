@@ -1,3 +1,23 @@
-<#global template=website.defaultTemplate>
+<#global template=website.defaultTemplate pageCacheKeys={}>
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
+
+<#macro script src key version="1">
+	<#if (cookie[key])??>
+		<script>document.writeln(localStorage["${key}"])</script>
+		<#return>
+	<#else>
+		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
+		<script id="${key}"><#include src encoding="utf-8" parse=false></script>
+	</#if>
+</#macro>
+
+<#macro link href key version="1" rel="">
+	<#if (cookie[key])??>
+		<script>document.writeln(localStorage["${key}"])</script>
+		<#return>
+	<#else>
+		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
+		<style id="${key}"><#include href encoding="utf-8" parse=false></style>
+	</#if>
+</#macro>

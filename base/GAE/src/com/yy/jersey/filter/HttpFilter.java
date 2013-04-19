@@ -51,6 +51,7 @@ public class HttpFilter implements ResourceFilterFactory {
 			vars.put("user", User.getCurrentUser());
 			vars.put("path", path);
 			vars.put("request", req);
+			vars.put("cookie", req.getCookieNameValueMap());
 			vars.put("response", res);
 			return res;
 		}

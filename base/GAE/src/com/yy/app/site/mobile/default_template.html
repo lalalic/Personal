@@ -6,14 +6,12 @@
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
 		<meta name="keywords" content="${keywords!}" />
 		<title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
-		<#noparse>
-		<link rel="stylesheet" href="/lib/lungo.css"/>
-		<link rel="stylesheet" href="/lib/lungo.icon.css"/>
-		<link rel="stylesheet" href="/lib/lungo.icon.brand.css"/>
-		<link rel="stylesheet" href="/lib/theme.lungo.css"/>
-		<script src="/lib/quo.min.js"></script>
-		<script src="/lib/lungo.js"></script>
-		</#noparse>
+		<@link rel="stylesheet" href="/lib/lungo.css" key="lungo.css"/>
+		<@link rel="stylesheet" href="/lib/lungo.icon.css" key="lungo.icon.css"/>
+		<@link rel="stylesheet" href="/lib/theme.lungo.css" key="theme.lungo.css"/>
+		<@script src="/lib/quo.min.js" key="quo.min.js"/>
+		<@script src="/lib/lungo.js" key="lungo.js"/>
+		
 		<#macro head></#macro><@head/>
 	</head>
  	<body class="app ${path} ${contentMacroName}">
