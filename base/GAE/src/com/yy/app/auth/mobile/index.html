@@ -1,5 +1,5 @@
 <#macro signin action="/user/signin.html">
-	<#assign footerNavMacroName='signinAction'>
+	<#assign footerNavMacro='signinAction'>
 	<form class="form" id="signin"
 		action="${action}" 
 		method="post">
@@ -24,7 +24,7 @@
 </#macro>
 
 <#macro signup action="/user/signup.html">
-	<#assign footerNavMacroName='signupAction'>
+	<#assign footerNavMacro='signupAction'>
 	<form class="form" id="signup"
 		action="${action}" 
 		method="post" 

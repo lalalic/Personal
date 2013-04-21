@@ -21,3 +21,59 @@
 		<style id="${key}"><#include href encoding="utf-8" parse=false></style>
 	</#if>
 </#macro>
+
+<#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
+	<#local mode=optionMode(options, mode)>
+	<#list options as option>
+		<#local v=itemValue(mode, option, startIndex) title=itemTitle(mode, option, name)>
+		<option  value="${v}" <#if value?string==v?string>selected="selected"</#if>>${prefix}${title!}</option>
+		<#local startIndex=startIndex+1>
+    </#list>
+</#macro>
+
+<#function itemValue mode option index=0>
+	<#switch mode>
+		<#case "Model">
+			<#return option.ID>
+		<#case "ValueName">
+			<#return option[0]>
+		<#case "OnlyValue">
+			<#return option>
+		<#case "IndexName">
+			<#return index>
+	</#switch>
+</#function>
+
+<#function itemTitle mode option name="name">
+	<#switch mode>
+		<#case "Model">
+			<#return option[name]>
+		<#case "ValueName">
+			<#return option[1]>
+	</#switch>
+	<#return option>
+</#function>
+
+<#function optionMode options mode="OnlyValue">
+    <#if options?size==0>
+        <#return "None">
+    <#elseif mode!="OnlyValue">
+        <#return mode>
+    <#else>
+        <#local aoption=options[0]>
+        <#if aoption?is_enumerable>
+            <#return "ValueName">
+        <#elseif aoption?is_hash>
+            <#return "Model">
+        </#if>
+    </#if>
+    <#return "OnlyValue">
+</#function>
+
+<#macro run macro>
+     <#if macro?is_string>
+     	<@.main[macro]/>
+     <#elseif macro?is_hash>
+     	<@.main[macro.name] macro.arg/>
+     </#if>
+</#macro>

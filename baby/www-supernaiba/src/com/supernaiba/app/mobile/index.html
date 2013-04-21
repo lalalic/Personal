@@ -8,31 +8,23 @@
 	<@cms.postFields post>
 		<fieldset>
 			<label>年龄</label>
-			<select name="suitableAge" multiple="multiple">
-				<option>孕期</option>
-				<option>半岁</option>
-				<option>1岁</option>
-				<option>1.5</option>
+			<select name="age" multiple="multiple">
+				<@optionUI website.tagger.list("ages")/>
 			</select>
 		</fieldset>
+		
 		<fieldset>
 			<label>性别</label>
-			<select name="suitableGender" multiple="multiple">
-				<option>男</option>
-				<option>女</option>
+			<select name="gender" multiple="multiple">
+				<@optionUI website.tagger.list("gender")/>
 			</select>
 		</fieldset>
 		
 		<fieldset>
 			<label>目标</label>
 			<select name="caps" multiple="multiple">
-				<#local caps=website.tagger.list("capbility")>
-				<#list caps as cap>
-					<option value="${cap.ID}">${cap.name}</option>
-				</#list>
+				<@optionUI website.tagger.list("capabilities")/>
 			</select>
-		</fieldset>
-		
-		
+		</fieldset>		
 	</@cms.postFields>
 </#macro>

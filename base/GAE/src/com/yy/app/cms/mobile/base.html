@@ -13,9 +13,9 @@ post:
 </#macro>
 
 <#macro showList>
-	<#assign footerNavMacroName='action4List'>
+	<#assign footerNavMacro='action4List' titleContent=this.model>
 	<ol class="list">
-		<#if posts?size==0>
+		<#if count==0>
 			<li><div  class="info">没有呢</div></li>
 			<#return>
 		<#else>
@@ -33,6 +33,7 @@ post:
 </#macro>
 
 <#macro show1>
+	<#assign footerNavMacro={'name':'action41','arg':post}>
 	<div>
 		<h1>${post.title}</h1>
 		<div><@authorInfo post.author/></div>
@@ -40,7 +41,6 @@ post:
 		<div>${post.content}</div>
 	</div>
 	<@show1Extra post/>
-	<#assign footerNavMacroName='action41'>
 </#macro>
 
 <#macro show1Extra post>
@@ -48,16 +48,16 @@ post:
 
 <#macro action41 post>
 	<@favoriteCMD post/>
-	<a data-icon="comment" href="/comment/list/${post.ID}.html">评论</a>
+	<a data-icon="pencil" href="/comment/list/${post.ID}.html"></a>
 </#macro>
 
 <#macro favoriteCMD post>
 	<a data-icon="star" data-count="${post.favorites}" href="#"
-		onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$$('span',a).innerHTML=x.responseText})">收藏</a>
+		onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$$('span',a).innerHTML=x.responseText})"></a>
 </#macro>
 
 <#macro postForm>
-	<#assign footerNavMacroName='postFooterNav'>
+	<#assign footerNavMacro='postFooterNav' titleContent=titleContent+' '+this.model>
 	<form action="/${path}/post" method="post" class="form">
 		<input type="hidden" name="parent" value="${post.parent!0}">
         <input type="hidden" name="ID" value="${post.ID!0}">
@@ -66,7 +66,7 @@ post:
 </#macro>
 
 <#macro postFooterNav>
-	<a data-icon="upload" href="#" onclick="$$('.active form').submit()">保存</a>
+	<a data-icon="upload" href="#" onclick="document.querySelector('.active form').submit()">保存</a>
 </#macro>
 
 <#macro postFields post>
