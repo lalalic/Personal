@@ -2,23 +2,23 @@
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
-<#macro script src key version="1">
-	<#if (cookie[key])??>
-		<script>document.writeln(localStorage["${key}"])</script>
+<#macro script src="" key="" version="1">
+	<#if ((cookie[key])??) && cookie[key][0]==version>
+		<script>_c("${key}")</script>
 		<#return>
 	<#else>
 		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
-		<script id="${key}"><#include src encoding="utf-8" parse=false></script>
+		<script id="${key}"><#if src!=""><#include src encoding="utf-8" parse=false><#else><#nested></#if></script>
 	</#if>
 </#macro>
 
-<#macro link href key version="1" rel="">
-	<#if (cookie[key])??>
-		<script>document.writeln(localStorage["${key}"])</script>
+<#macro link href="" key="" version="1" rel="">
+	<#if ((cookie[key])??) && cookie[key][0]=version>
+		<script>_c("${key}")</script>
 		<#return>
 	<#else>
 		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
-		<style id="${key}"><#include href encoding="utf-8" parse=false></style>
+		<style id="${key}"><#if href!=""><#include href encoding="utf-8" parse=false><#else><#nested></#if></style>
 	</#if>
 </#macro>
 

@@ -9,7 +9,7 @@ import com.googlecode.objectify.annotation.Index;
 import com.supernaiba.app.Categorized;
 import com.yy.app.cms.Post;
 
-@EntitySubclass
+@EntitySubclass(index=true)
 public class Game extends Categorized {
 	
 	@Index public Set<String> types;

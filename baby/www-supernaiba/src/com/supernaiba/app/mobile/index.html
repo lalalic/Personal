@@ -26,5 +26,14 @@
 				<@optionUI website.tagger.list("capabilities")/>
 			</select>
 		</fieldset>		
-	</@cms.postFields>
+	</@>
+</#macro>
+
+<#macro show1>
+	<#assign footerNavMacro={'name':'action41','arg':post}>
+	<div>
+		<div class="right secondary"><@authorInfo post.author/></div>
+		<div>${post.content}</div>
+	</div>
+	<@show1Extra post/>
 </#macro>

@@ -15,7 +15,7 @@ post:
 <#macro showList>
 	<#assign footerNavMacro='action4List' titleContent=this.model>
 	<ol class="list">
-		<#if count==0>
+		<#if posts?size==0>
 			<li><div  class="info">没有呢</div></li>
 			<#return>
 		<#else>
@@ -47,13 +47,14 @@ post:
 </#macro>
 
 <#macro action41 post>
-	<@favoriteCMD post/>
 	<a data-icon="pencil" href="/comment/list/${post.ID}.html"></a>
+	<@favoriteCMD post/>
+	<a data-icon="share" href="#"></a>
 </#macro>
 
 <#macro favoriteCMD post>
 	<a data-icon="star" data-count="${post.favorites}" href="#"
-		onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$$('span',a).innerHTML=x.responseText})"></a>
+		onclick="var a=this;x('get','/${path}/favorite/${post.ID}',function(x){$1('.count',a).innerHTML=x.responseText})"></a>
 </#macro>
 
 <#macro postForm>
@@ -66,27 +67,24 @@ post:
 </#macro>
 
 <#macro postFooterNav>
-	<a data-icon="upload" href="#" onclick="document.querySelector('.active form').submit()">保存</a>
+	<a data-icon="upload" href="#" onclick="$1('.active form').submit()">保存</a>
 </#macro>
 
 <#macro postFields post>
 	<fieldset>
-		<label>标题</label><br/>
-		<input type="text" name="title" value="${post.title!}" required="required"/>
+		<input placeholder="${this.model}标题" type="text" name="title" value="${post.title!}" required="required" style="text-align:center"/>
 	</fieldset>
 	
 	<@postFieldContent post/>
 	<#nested/>
 	<fieldset>
-		<label>标签</label><br/>
-		<input type="text" placeholder="11个月,发烧" name="tag" value="${post.tag!}">
+		<input type="text" placeholder="标签: 11个月,身体协调" name="tag" value="${post.tag!}">
 	</fieldset>
 </#macro>
 
 <#macro postFieldContent post>
 	<fieldset>
-		<label>内容</label><br/>
-		<textarea name="content" required="required">${post.title!}</textarea>
+		<textarea placeholder="内容" name="content" required="required">${post.title!}</textarea>
 	</fieldset>
 </#macro>
 

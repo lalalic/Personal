@@ -62,12 +62,12 @@ public class SearchFilter{
 		Query query=ObjectifyService.ofy().load().type(type);
 		if(limit>0)
 			query=query.limit(limit);
+		
 		if(bookmark>0)
 			query=query.filter("ID", bookmark);
 		
 		if(orderField!=null && orderField.length()>0)
 			query=query.order(orderField);
-
 
 		for(int i=0; i<filterFields.size(); i++)
 			query=query.filter(filterFields.get(i), filterValues.get(i));

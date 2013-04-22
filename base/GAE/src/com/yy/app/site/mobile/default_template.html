@@ -6,6 +6,17 @@
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
 		<meta name="keywords" content="${keywords!}" />
 		<title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
+		<script>_c=function(key){document.writeln(localStorage[key])}</script>
+		<@script key="${website.name}.basic" version="1.5">
+			<#noparse>
+			var
+			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
+			$9=function(s,c){return(c||document).querySelectorAll(s)},
+			m=function(h/*tml*/,d,c){b=document;c=b.createElement("p");c.innerHTML=h;for(a=b.createDocumentFragment();b=c.firstChild;)a.appendChild(b);return a},
+			_x=function(a){for(a=3;a--;)try{return new(XMLHttpRequest||ActiveXObject)(["Msxml2","Msxml3","Microsoft"][a]+".XMLHTTP")}catch(e){}},
+			x=function(m/*ethod*/,u/*rl*/,c/*allback*/,d/*ata*/,x){with(x=_x())return onreadystatechange=function(){readyState^4||c(this)},open(m,u,c),send(d),x}
+			</#noparse>
+		</@>		
 		<@link rel="stylesheet" href="/lib/lungo.css" key="lungo.css"/>
 		<@link rel="stylesheet" href="/lib/lungo.icon.css" key="lungo.icon.css"/>
 		<@link rel="stylesheet" href="/lib/theme.lungo.css" key="theme.lungo.css"/>

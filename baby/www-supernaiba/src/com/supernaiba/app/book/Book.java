@@ -30,7 +30,7 @@ import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 import com.yy.rs.TagAttr;
 
-@EntitySubclass
+@EntitySubclass(index=true)
 public class Book extends Categorized {
 	@Index
 	public String alias;
