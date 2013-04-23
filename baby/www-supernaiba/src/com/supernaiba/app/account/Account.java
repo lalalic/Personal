@@ -16,11 +16,7 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
 import com.yy.app.auth.User;
-import com.yy.app.test.Runner;
 import com.yy.app.test.Test;
-import com.yy.app.test.TestValue;
-import com.yy.app.test.TestValues;
-import com.yy.app.test.Tests;
 import com.yy.rs.Caps;
 import com.yy.rs.Required;
 import com.yy.rs.Uniques;
@@ -56,6 +52,7 @@ public class Account extends User {
 			Child child=new Child();
 			child.nick=childName;
 			child.birthday=this.parseDate(req.getParameter("childBirthday"));
+			child.gender=Long.parseLong(req.getParameter("gender"));
 			child.parent=user.ID;
 			ObjectifyService.ofy().save().entities(child,user).now();
 			return user;
@@ -75,21 +72,11 @@ public class Account extends User {
 		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 		@Produces(MediaType.APPLICATION_JSON)
 		@Caps
-		@Tests({@Test, @Test})
 		public Child save(
-				@TestValues({
-					@TestValue,
-					@TestValue(field="ID", value=".ID", model=Child.class)
-					})
 				@DefaultValue("0") @FormParam("ID") long ID,
-				@TestValue(field="nick", value=Runner.TEST_TITLE) 
 				@FormParam("nick")String nick,
-				
-				@TestValue(field="birthday", value="2010-5-1") 
 				@FormParam("birthday")String birthday,
-				
-				@TestValue(field="gender", value="男") 
-				@FormParam("gender")String gender){
+				@FormParam("gender")long gender){
 			Objectify store=ObjectifyService.ofy();
 			Child child=(Child)new Child.View().get(store,ID);
 			child.nick=nick;

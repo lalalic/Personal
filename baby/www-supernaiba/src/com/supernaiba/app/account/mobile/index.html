@@ -1,3 +1,16 @@
 <#macro init>
+	<#import "/com/yy/app/auth/mobile/index.html" as auth>
     <#include "/com/yy/app/auth/mobile/index.html">
+</#macro>
+
+<#macro signup action="/user/signup.html">
+	<@auth.signup action>
+		<fieldset>
+			<legend>宝宝信息</legend>
+			<input placeholder="昵称" type="text" name="nick" value="${(input.nick)!}">
+			<label>生日</label>
+			<input type="date" name="childBirthday" value="(input.childBirthday?date('yyyy-M-d'))!">
+			<select name="gender"><@optionUI options=website.tagger.list("gender")/></select>
+		</fieldset>
+	</@>
 </#macro>

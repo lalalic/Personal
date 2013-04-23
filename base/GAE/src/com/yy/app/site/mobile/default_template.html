@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html${(website.manifest)!}>
+<html>
 	<head>
 		<meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
 		<meta name="HandheldFriendly" content="True" />
@@ -7,7 +7,7 @@
 		<meta name="keywords" content="${keywords!}" />
 		<title><#macro title>${titleContent!"Hi"}</#macro><@title/> - ${website.name}</title>
 		<script>_c=function(key){document.writeln(localStorage[key])}</script>
-		<@script key="${website.name}.basic" version="1.6">
+		<@script key="base.js" version="1.6">
 			<#noparse>
 			var
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
@@ -23,7 +23,7 @@
 		<@link rel="stylesheet" href="/lib/theme.lungo.css" key="theme.lungo.css"/>
 		<@script src="/lib/quo.min.js" key="quo.min.js"/>
 		<@script src="/lib/lungo.js" key="lungo.js"/>
-		<@link key="${website.name}.css" version="1">
+		<@link key="base.css" version="1">
 			header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
 		</@>
 		<#macro head></#macro><@head/>

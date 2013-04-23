@@ -4,15 +4,13 @@
 		action="${action}" 
 		method="post">
 	    <input type="hidden" name="targetURL" value="${targetURL!}"/>
-	    <#if error??><div id="msg"><p data-icon="error">${error!}</p></div></#if>
+	    <#if error??><center data-icon="error">${error!}</center></#if>
 	    <fieldset>
-	    	<label>User Name</label>
-	    	<input type="text" name="account" value="${accountName!}" required="required">
+	    	<input placeholder="user name" type="text" name="account" value="${accountName!}" required="required">
 	    </fieldset>
 	    
 	    <fieldset>
-	    	<label>Password</label>
-	    	<input type="password" name="password" required="required" placeholder="*****"/>
+	    	<input placeholder="password" type="password" name="password" required="required"/>
 	    </fieldset>
 	</form>
 </#macro>
@@ -26,32 +24,23 @@
 <#macro signup action="/user/signup.html">
 	<#assign footerNavMacro='signupAction'>
 	<form class="form" id="signup"
-		action="${action}" 
-		method="post" 
-		onsubmit="this.thumbnail=sv.uploaded($1('#up').src)">
+		action="${action}" method="post">
 		<input type="hidden" name="targetURL" value="${targetURL!'/'}">
-		<#if error??><div id="msg"><p data-icon="error">${error!}</p></div></#if>
-		<fieldset>
-	    	<label>User Name</label>
-	    	<input type="text" name="account" value="${accountName!}" required="required">
-	    </fieldset>
-	    
+		<#if error??><center data-icon="error">${error!}</center></#if>
 	    <fieldset>
-	    	<label>Password</label>
-	    	<input type="password" name="password" required="required" placeholder="*****"/>
+	    	<legend>帐号信息</legend>
+	    	<center class="column four"><img style="width:150px;height:150px;" onclick="thumbnailFile.click()" id="thumb" src="${thumbnail!}"/></center>
+	    	<input type="file" name="file" id="thumbnailFile"
+	    		style="position:fixed;top:-99999px" accept="image/*"
+	    		onchange="!/media/.test(this.form.action)&&x('post','/media/want2upload'+this.form.action,function(x,a){with(a=$1('.active form')){action=x.responseText;enctype='multipart/form-data'}})">
+	   		<div class="column six">
+		   		<input placeholder="user name" type="text" name="account" value="${accountName!}" required="required">
+		   		<input placeholder="email" type="email" name="email" value="${(input.email)!}" required="required">
+		    	<input placeholder="password" type="password" name="password" required="required">
+		    	<input placeholder="password again" type="password" name="passwordAgain" required="required">
+	    	</div>
 	    </fieldset>
-	    
-	    <fieldset>
-	    	<label>Password Again</label>
-	    	<input type="password" name="passwordAgain" required="required" placeholder="*****"/>
-	    </fieldset>
-	
-		<fieldset>
-			<label>Thumbnail</label>
-			<br/>
-	    	<img style="width:150px;height:150px;" onclick="sv.photo('photo(`#up`)')" id="up" src="${thumbnail!}"/>
-	    	<input type="hidden" name="thumbnail" value="${thumbnail!}">
-	    </fieldset>
+	    <#nested>
 	</form>
 </#macro>
 

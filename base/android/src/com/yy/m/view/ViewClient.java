@@ -28,4 +28,6 @@ public class ViewClient extends WebViewClient{
 	public void onPageFinished(WebView view, String url) {
 		view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
 	}
+	
+	
 }

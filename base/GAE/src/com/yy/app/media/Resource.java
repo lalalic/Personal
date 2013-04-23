@@ -71,7 +71,9 @@ public class Resource {
 				@PathParam("type") String type,
 				@Context UriInfo uri) {
 			return BlobstoreServiceFactory.getBlobstoreService()
-					.createUploadUrl(uri.getPath().substring("media/want2upload".length()));
+					.createUploadUrl(uri!=null ? 
+							uri.getPath().substring("media/want2upload".length()) :
+							"/"+resource+"/"+type);
 		}
 		
 		@POST

@@ -38,6 +38,9 @@ public class Categorized extends SlavablePost{
 	@TagAttr
 	public Set<Long> cap;
 	
+	@TagAttr
+	public long duration;
+	
 	protected String getCategoryName(){
 		return null;
 	}
@@ -68,7 +71,8 @@ public class Categorized extends SlavablePost{
 				@FormParam("content")String content,
 				@FormParam("age") Set<Long> age,
 				@FormParam("gender")Set<Long> gender,
-				@FormParam("cap") Set<Long> cap)
+				@FormParam("cap") Set<Long> cap,
+				@FormParam("duration") long duration)
 				throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();
 			Categorized post = (Categorized) this.get(store, ID);
@@ -77,6 +81,7 @@ public class Categorized extends SlavablePost{
 			post.age=age;
 			post.gender=gender;
 			post.cap=cap;
+			post.duration=duration;
 			post.setContent(content);
 			store.save().entity(post).now();
 			post.postPersist();

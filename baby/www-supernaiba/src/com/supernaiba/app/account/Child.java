@@ -6,13 +6,16 @@ import java.util.Date;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
 import com.yy.app.AModel;
+import com.yy.rs.TagAttr;
 
 @Entity
 public class Child extends AModel {
 	public String nick;
 	@Index
 	public Date birthday;
-	public String gender;
+	
+	@TagAttr
+	public long gender;
 	
 	@SuppressWarnings("deprecation")
 	public int getMonthes() {

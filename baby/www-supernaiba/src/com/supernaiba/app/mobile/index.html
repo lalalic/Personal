@@ -21,7 +21,14 @@
 		</fieldset>
 		
 		<fieldset>
-			<label>目标</label>
+			<label>时间(分)</label>
+			<select name="duration">
+				<@optionUI website.tagger.list("duration")/>
+			</select>
+		</fieldset>
+		
+		<fieldset>
+			<label>目的</label>
 			<select name="caps" multiple="multiple">
 				<@optionUI website.tagger.list("capabilities")/>
 			</select>

@@ -39,9 +39,8 @@
 
 <#macro asideContent>
 <#if asideContentMacro??><@run asideContentMacro/> <#return></#if>
-<div class="list">
-	<ul>
-		<li><a href="/user/signin.html" data-icon="user">登录</a></li>
-	</ul>
-</div>
+<ul class="list">
+	<li><a data-icon="user">帐号绑定</a></li>
+	<li><a href="/" data-icon="user">宝宝管理</a></li>
+</ul>
 </#macro>
