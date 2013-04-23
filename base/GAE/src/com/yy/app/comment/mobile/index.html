@@ -1,11 +1,15 @@
 <#macro show>
 	<#assign footerNavMacro={'name':'commentForm','arg':entityID}>
-	<ol id="cs">
+	<ol id="cs" class="list">
 		<#if comments?size==0>
-			<li>No Comment Yet</li>
+			<li class="text align_center" id="noComment">No Comment Yet</li>
 		<#else>
 			<#list comments as c>
-			<li>${c.message}</li>
+			<li>${c.message}
+				<small>
+				<a class="right">${c.created?datetime}</a>
+				<a class="right">${c.ownerName}</a></li>
+				</small>
 			</#list>
 		</#if>
 	</ol>
@@ -15,9 +19,11 @@
 	<#if !user.isLoggedIn()>
 		<a data-icon="user" href="/user/signin.html?target=/comment/list/${id}.html">Signin to Comment</a>
 	<#else>
-		<a><input type="text" placeholder="input comment here..." id="$c" style="line-height:44px;width:100%"></a>
-		<a data-icon="upload" href="#" 
-			onclick="x('post','/command/add',function(){cs.appendChild(m('<li>'+$c.value+'</li>'));$c.value=''},'ID=${id}&comment='+r($.value))"></a>
+		<a>
+			<input type="text" placeholder="comment..." id="$c" class="column nine left">
+			<span data-icon="upload" class="column one" 
+				onclick="x('post','/comment/add',function(){$1('#noComment')&&cs.removeChild(noComment);cs.appendChild(h('<li>'+$c.value+'</li>'));$c.value=''},'ID=${id}&comment='+e($c.value))"/>
+		</a>
 	</#if>
 </#macro>
 
