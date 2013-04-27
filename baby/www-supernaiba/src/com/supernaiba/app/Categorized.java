@@ -76,7 +76,7 @@ public class Categorized extends SlavablePost{
 				throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();
 			Categorized post = (Categorized) this.get(store, ID);
-			post.parent = parent;
+			post.setParent(parent);
 			post.title = title;
 			post.age=age;
 			post.gender=gender;

@@ -4,22 +4,35 @@
 
 <#macro script src="" key="" version="1">
 	<#if ((cookie[key])??) && cookie[key][0]==version>
-		<script>_c("${key}")</script>
+		<script>_c("${key}","script")</script>
 		<#return>
 	<#else>
-		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
+		<script>_ca("${key}","${version}")</script>
 		<script id="${key}"><#if src!=""><#include src encoding="utf-8" parse=false><#else><#nested></#if></script>
 	</#if>
 </#macro>
 
 <#macro link href="" key="" version="1" rel="">
 	<#if ((cookie[key])??) && cookie[key][0]=version>
-		<script>_c("${key}")</script>
+		<script>_c("${key}","style")</script>
 		<#return>
 	<#else>
-		<script>document.addEventListener('DOMContentLoaded',function(){localStorage["${key}"]=window["${key}"].outerHTML;document.cookie="${key}=${version}"})</script>
+		<script>_ca("${key}","${version}")</script>
 		<style id="${key}"><#if href!=""><#include href encoding="utf-8" parse=false><#else><#nested></#if></style>
 	</#if>
+</#macro>
+
+<#macro cache key version="1">
+	<#if ((cookie[key])??) && cookie[key][0]=version>
+		<#return>
+	<#else>
+		<script>_ca("${key}","${version}")</script>
+		<script type="text/tmpl" id="${key}"><#nested></script>
+	</#if>
+</#macro>
+
+<#macro tmpl key>
+	<script>$t(_l["${key}"],<#nested>);</script>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>

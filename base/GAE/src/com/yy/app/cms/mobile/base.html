@@ -14,17 +14,21 @@ post:
 
 <#macro showList>
 	<#assign footerNavMacro='action4List' titleContent=this.model>
+	<#--<@cache key="${this.model}.showList">-->
 	<ol class="list">
 		<#if posts?size==0>
 			<li><div  class="info">没有呢</div></li>
 			<#return>
 		<#else>
 			<#list posts as post>
-			<li class="arrow"><a href="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
+			<li class="arrow"><a href="/${this.path}/show/${post.ID}.shtml">${post.title}</a></li>
 			</#list>
 		</#if>
 	</ol>
-
+	<#--
+	</@>
+	<@tmpl>{path:${this.path},posts:[<#list posts as post>{ID:${post.ID},title:"${post.title}"}}</#list>]}</@>
+	-->
 </#macro>
 
 <#macro action4List>

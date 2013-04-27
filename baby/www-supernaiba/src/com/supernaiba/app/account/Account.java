@@ -1,6 +1,7 @@
 package com.supernaiba.app.account;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -10,11 +11,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
+import com.sun.jersey.api.view.Viewable;
 import com.yy.app.auth.User;
 import com.yy.app.test.Test;
 import com.yy.rs.Caps;
@@ -37,25 +41,42 @@ public class Account extends User {
 	
 	@Path("user")
 	public static class View extends User.View{
-
-		@Override
-		public User doSignup(String account, String email, String password,
-				String passwordAgain, String name, boolean agreePolicy,
-				String thumbnail,	HttpServletRequest req) {
-			Account user=(Account)super.doSignup(account, email, password, passwordAgain, name,
-					agreePolicy, thumbnail,req);
-			if(req==null)
-				return user;
-			String childName=req.getParameter("childNick");
-			if(childName==null)
-				return user;
-			Child child=new Child();
-			child.nick=childName;
-			child.birthday=this.parseDate(req.getParameter("childBirthday"));
-			child.gender=Long.parseLong(req.getParameter("gender"));
-			child.parent=user.ID;
-			ObjectifyService.ofy().save().entities(child,user).now();
-			return user;
+		@POST
+		@Path("signup.html")
+		@Produces(MediaType.TEXT_HTML)
+		public Viewable signup(
+				@FormParam("account") String account,
+				@FormParam("email") String email,
+				@FormParam("password") String password,
+				@FormParam("passwordAgain") String passwordAgain,
+				@FormParam("name") String name,
+				@DefaultValue("false") @FormParam("policy") boolean agreePolicy,
+				@FormParam("thumbnail") String thumbnail,
+				@FormParam("targetURL") @DefaultValue("/")String targetURL,
+				@FormParam("childNick") String childNick,
+				@FormParam("childBirthday") String childBirthday,
+				@FormParam("gender") long gender,
+				@Context HttpServletRequest req) {
+			Viewable view=super.signup(account, email, password, passwordAgain, name, agreePolicy, thumbnail, targetURL, req);
+			if(childNick==null)
+				return view;
+			@SuppressWarnings("unchecked")
+			Map<String, Object> data = (Map<String, Object>) view.getModel();
+			if(data.containsKey("error")){
+				@SuppressWarnings("unchecked")
+				Map<Object,Object> input=(Map<Object,Object>)data.get("input");
+				input.put("childNick", childNick);
+				input.put("gender", gender);
+				input.put("childBirthday", childBirthday);
+			}else{
+				Child child=new Child();
+				child.nick=childNick;
+				child.birthday=this.parseDate(childBirthday);
+				child.gender=gender;
+				child.parent=Ref.create(User.getCurrentUser());
+				ObjectifyService.ofy().save().entities(child);
+			}
+			return view;
 		}
 		
 		@Override
@@ -82,7 +103,7 @@ public class Account extends User {
 			child.nick=nick;
 			child.birthday=this.parseDate(birthday);
 			child.gender=gender;
-			child.parent=User.getCurrentUserID();
+			child.parent=Ref.create(User.getCurrentUser());
 			store.save().entity(child).now();
 			return child;
 		}
@@ -95,7 +116,7 @@ public class Account extends User {
 		public boolean deleteChild(@PathParam("ID") long ID){
 			Objectify store=ObjectifyService.ofy();
 			Child child=store.load().type(Child.class).id(ID).get();
-			if(child.parent!=User.getCurrentUserID())
+			if(child.parent.getKey().getId()!=User.getCurrentUserID())
 				throw new RuntimeException("You don't have right to delete.");
 			store.delete().entity(child);
 			return true;

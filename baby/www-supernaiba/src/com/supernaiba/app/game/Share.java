@@ -16,10 +16,4 @@ public class Share extends Slave {
 	public static class View extends Post.View{
 		
 	}
-
-	@Override
-	public Post getMaster() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

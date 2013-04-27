@@ -72,7 +72,7 @@ public class Page extends Post {
 				@FormParam("content") String content) throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();
 			Page post = (Page) this.get(store, ID);
-			post.parent = parse(parent);
+			post.setParent(parent);
 			post.title = title;
 			post.guid=guid;
 			post.setContent(content);

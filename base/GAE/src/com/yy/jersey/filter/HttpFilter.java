@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.sun.jersey.api.model.AbstractMethod;
@@ -23,6 +24,11 @@ import com.yy.app.test.Performance;
 
 public class HttpFilter implements ResourceFilterFactory {
 	static final Logger log = Logger.getLogger(AuthFilter.class.getName());
+	static final Map<String,String> encoding=new HashMap<String,String>();
+	static{
+		encoding.put("charset", "utf-8");
+	}
+	static final MediaType UTF8MediaType=new MediaType("text","html",encoding);
 
 	private class Filter implements ResourceFilter, ContainerResponseFilter {
 		String path="";
@@ -46,13 +52,18 @@ public class HttpFilter implements ResourceFilterFactory {
 				view = new Viewable(view.getTemplateName(), vars);
 				res.setEntity(view);
 			}
-
+			
 			vars.put("website", Profile.I);
 			vars.put("user", User.getCurrentUser());
 			vars.put("path", path);
 			vars.put("request", req);
 			vars.put("cookie", req.getCookieNameValueMap());
 			vars.put("response", res);
+			if(vars.containsKey("ETAG"))
+				res.getHttpHeaders().add("ETag", vars.get("ETAG"));
+			if(UTF8MediaType.isCompatible((MediaType)res.getHttpHeaders().getFirst("Content-Type")))
+				res.getHttpHeaders().putSingle("Content-Type", UTF8MediaType);
+
 			return res;
 		}
 

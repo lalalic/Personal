@@ -5,11 +5,6 @@ import com.yy.app.site.Profile;
 import com.yy.provider.oauth.Weibo;
 
 public class Slave extends Post {
-	protected static Class<? extends Post> MASTER;
-	public Post getMaster(){
-		return ObjectifyService.ofy().load().type(MASTER).id(parent).get();
-	}
-
 	@Override
 	protected void post2WB() {
 		if (!this.supportWeibo || this.weiboID != null
@@ -26,7 +21,7 @@ public class Slave extends Post {
 					.replaceAll("excerpt1", this.excerpt)
 					.replaceAll("id2", parent.toString());
 
-			Post master = this.getMaster();
+			Post master = (Post)this.parent.get();
 			if (master.weiboID != null)
 				this.weiboID = weibo.repost(master.weiboID, message);
 			else

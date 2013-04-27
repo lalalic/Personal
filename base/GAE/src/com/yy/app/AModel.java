@@ -3,13 +3,11 @@ package com.yy.app;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +31,9 @@ import javax.ws.rs.core.UriInfo;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
@@ -64,7 +62,9 @@ public class AModel {
 	public Long ID;
 
 	@Index(IfNotNull.class)
-	public Long parent;
+	public Ref<? extends AModel> parent;
+	
+	public List<Ref<AModel>> children;
 
 	@Index(IfNotNull.class)
 	public Long author;
@@ -85,19 +85,18 @@ public class AModel {
 	@Index(IfNotNull.class)
 	public Boolean __tester;
 
-	public List<? extends AModel> getChildren() {
+	public Collection<? extends AModel> getChildren() {
+		if(children!=null)
+			return ObjectifyService.ofy().load().refs(children).values();
 		return ObjectifyService.ofy().load().type(this.getClass())
-				.filter("parent", ID).list();
+				.filter("parent", Ref.create(this)).list();
 	}
-
-	public AModel parentModel() {
-		try {
-			if (parent != null && parent != 0)
-				return ObjectifyService.ofy().load().key(Key.create(this.getClass(), parent)).get();
-		} catch (NotFoundException e) {
-			return null;
-		}
-		return null;
+	
+	public void setParent(long parentID){
+		if(parentID!=0)
+			this.parent=Ref.create(Key.create(this.getClass(), parentID));
+		else
+			this.parent=null;
 	}
 
 	public boolean isNew() {
@@ -199,11 +198,12 @@ public class AModel {
 	}
 
 	protected void remove() {
-		List<? extends AModel> children = getChildren();
+		Collection<? extends AModel> children = getChildren();
 		if (children != null) {
 			for (AModel child : children)
 				child.remove();
 		}
+		ObjectifyService.ofy().delete().entity(this);
 	}
 
 	public AModel tester() throws InstantiationException,
@@ -229,7 +229,7 @@ public class AModel {
 		AModel tester = store.load().type(this.getClass()).filter("__tester", true)
 				.first().get();
 		if (tester != null)
-			store.delete().entity(tester).now();
+			store.delete().entity(tester);
 	}
 
 	public Object fieldOf(String fieldName) throws SecurityException,
@@ -337,10 +337,8 @@ public class AModel {
 		return c.getSimpleName();
 	}
 
-	private static final DateFormat dateParser = new SimpleDateFormat(
-			"yyyy-M-d");
-	private static final DateFormat datetimeParser = new SimpleDateFormat(
-			"yyyy-M-d-H-m");
+	private static final String DATE_FORMAT = "yyyy-M-d";
+	private static final String DATETIME_FORMAT = "yyyy-M-d-H-m";
 
 	public static class View {
 		protected String template="/index.html";
@@ -351,9 +349,9 @@ public class AModel {
 				return null;
 			try {
 				if (date.split("-").length > 3) {
-					return datetimeParser.parse(date);
+					return new SimpleDateFormat(DATE_FORMAT).parse(date);
 				}
-				return dateParser.parse(date);
+				return new SimpleDateFormat(DATETIME_FORMAT).parse(date);
 			} catch (ParseException e) {
 				throw new RuntimeException(e.getMessage());
 			}
@@ -424,26 +422,30 @@ public class AModel {
 			return this.path;
 		}
 
-		protected Map<String, Object> viewDataModel(String title,
+		protected Map<Object, Object> makeMap(Object... infos){
+			Map<Object, Object> info = new HashMap<Object, Object>();
+			if (infos != null && infos.length % 2 == 0) {
+				for (int i = 0; i < infos.length; i++)
+					info.put(infos[i], infos[++i]);
+			}
+			return info;
+		}
+		
+		protected Map<Object, Object> viewDataModel(String title,
 				String contentMacroName, Object... infos) {
-			Map<String, Object> info = new HashMap<String, Object>();
+			Map<Object, Object> info = makeMap(infos);
 			if (title != null)
 				info.put("titleContent", title);
 			if (contentMacroName != null)
 				info.put("contentMacroName", contentMacroName);
-
-			if (infos != null && infos.length % 2 == 0) {
-				for (int i = 0; i < infos.length; i++)
-					info.put((String) infos[i], infos[++i]);
-			}
 			return info;
 		}
 
-		protected Viewable viewable(String tmpl, Map<String, Object> info) {
+		protected Viewable viewable(String tmpl, Map<Object, Object> info) {
 			return new Viewable("/" + this.path() + "/" + tmpl, info);
 		}
 
-		protected Viewable viewable(Map<String, Object> info) {
+		protected Viewable viewable(Map<Object, Object> info) {
 			return new Viewable("/" + this.path() + template, info);
 		}
 
@@ -530,24 +532,6 @@ public class AModel {
 			} catch (Exception e) {
 				return null;
 			}
-		}
-
-		protected Map<String, String> getParameters(HttpServletRequest req,
-				String... names) {
-			Map<String, String> input = new HashMap<String, String>();
-			if (names != null && names.length > 0) {
-				for (String name : names)
-					input.put(name, req.getParameter(name));
-			} else {
-				String name;
-				@SuppressWarnings("rawtypes")
-				Enumeration e = req.getParameterNames();
-				while (e.hasMoreElements()) {
-					input.put(name = e.nextElement().toString(),
-							req.getParameter(name));
-				}
-			}
-			return input;
 		}
 
 		@GET

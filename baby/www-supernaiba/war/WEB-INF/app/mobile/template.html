@@ -17,7 +17,7 @@
 
 <#macro footer>
 <#if footerMacro??><@run footerMacro/> <#return></#if>
-<footer><nav><@footerNav/></nav></footer>
+<footer><nav class="groupbar"><@footerNav/></nav></footer>
 </#macro>
 
 <#macro footerNav>
@@ -40,7 +40,10 @@
 <#macro asideContent>
 <#if asideContentMacro??><@run asideContentMacro/> <#return></#if>
 <ul class="list">
-	<li><a data-icon="user">帐号绑定</a></li>
-	<li><a href="/" data-icon="user">宝宝管理</a></li>
+	<#if !user.isLoggedIn()>
+	<li><a data-icon="user" href="/user/signin.html">登录</a></li>	
+	<#else>
+	<li><a data-icon="user" href="#" onclick="x('get','/user/signout',function(){document.location.reload()})">退出[${user.account}]</a></li>		
+	</#if>
 </ul>
 </#macro>

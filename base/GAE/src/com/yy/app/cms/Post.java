@@ -23,7 +23,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import com.google.appengine.api.datastore.PostLoad;
 import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
@@ -31,6 +30,7 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.OnLoad;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.googlecode.objectify.condition.IfTrue;
 import com.sun.jersey.api.view.Viewable;
@@ -102,7 +102,7 @@ public class Post extends AModel {
 
 	public String weiboID;
 
-	@PostLoad
+	@OnLoad
 	protected void resolveText() {
 		if (content != null)
 			this.contentStr = this.content.getValue();
@@ -240,7 +240,7 @@ public class Post extends AModel {
 				@DefaultValue("0") @QueryParam("parent") long parent)
 				throws InstantiationException, IllegalAccessException {
 			Post post = (Post) this.newInstance();
-			post.parent = parent;
+			post.setParent(parent);
 			return viewable(viewDataModel("Create", "postForm", "post", post));
 		}
 
@@ -288,7 +288,7 @@ public class Post extends AModel {
 		@Test(value = { ".ID" }, model = EnclosingModel.class)
 		public Viewable show(@PathParam("ID") long ID, @Context UriInfo uriInfo) {
 			Post post = (Post) this.get(ID);
-			return viewable(viewDataModel(post.title, "show1", "post", post));
+			return viewable(viewDataModel(post.title, "show1", "post", post,"ETAG",post.modified.toString()));
 		}
 
 		@GET
@@ -449,7 +449,7 @@ public class Post extends AModel {
 				throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();
 			Post post = (Post) this.get(store, ID);
-			post.parent = parent;
+			post.setParent(parent);
 			post.title = title;
 			post.setContent(content);
 			store.save().entity(post);

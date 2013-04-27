@@ -129,7 +129,7 @@ public class Book extends Categorized {
 			assert parent > 0;
 			Objectify store = ObjectifyService.ofy();
 			Share post = (Share) new Share.View().get(store, ID);
-			post.parent = parent;
+			post.setParent(parent);
 			post.setContent(content);
 			post.title = title;
 			post.tool = tool;

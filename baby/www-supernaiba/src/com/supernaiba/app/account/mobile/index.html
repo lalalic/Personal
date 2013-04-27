@@ -5,12 +5,13 @@
 
 <#macro signup action="/user/signup.html">
 	<@auth.signup action>
+		<input type="hidden" name="policy" value="true">
+		<div class="text align_center bold">宝宝</div>
 		<fieldset>
-			<legend>宝宝信息</legend>
-			<input placeholder="昵称" type="text" name="nick" value="${(input.nick)!}">
+			<input placeholder="昵称" type="text" name="childNick" value="${(input.childNick)!}">
 			<label>生日</label>
-			<input type="date" name="childBirthday" value="(input.childBirthday?date('yyyy-M-d'))!">
-			<select name="gender"><@optionUI options=website.tagger.list("gender")/></select>
+			<input type="date" name="childBirthday" value="${(input.childBirthday)!}">
+			<select name="gender"><@optionUI options=website.tagger.list("gender") value=(input.gender)!/></select>
 		</fieldset>
 	</@>
 </#macro>

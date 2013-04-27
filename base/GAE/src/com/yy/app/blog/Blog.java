@@ -64,7 +64,7 @@ public class Blog extends Post {
 			post.allowComment = allowComment;
 			post.serial = serial ? serial : null;
 
-			post.parent = parse(parent);
+			post.setParent(parent);
 			return post;
 		}
 

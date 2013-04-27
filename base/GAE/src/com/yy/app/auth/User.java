@@ -27,8 +27,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import net.tanesha.recaptcha.ReCaptchaFactory;
-
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
@@ -321,7 +319,7 @@ public class User extends AModel {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> data = (Map<String, Object>) view
 						.getModel();
-				data.put("accountName", account);
+				data.put("input", this.makeMap("account",account,"targetURL",targetURL));
 				data.put("error", e.getMessage());
 				return Response.ok(view).build();
 			}
@@ -366,12 +364,12 @@ public class User extends AModel {
 		public Viewable signupUI() {
 			return viewable(viewDataModel(
 					"sign up",
-					"signup",
+					"signup"/*,
 					"captchaHTML",
 					ReCaptchaFactory.newReCaptcha(
 							"6LfjUNMSAAAAAP2zyt8Wr8kziObpN-g6K6Btj6jY",
 							"6LfjUNMSAAAAAC39TmKRTZ7IVex5sxYwWi82QTaW", false)
-							.createRecaptchaHtml(null, null)));
+							.createRecaptchaHtml(null, null)*/));
 		}
 
 		@POST
@@ -385,6 +383,7 @@ public class User extends AModel {
 				@FormParam("name") String name,
 				@DefaultValue("false") @FormParam("policy") boolean agreePolicy,
 				@FormParam("thumbnail") String thumbnail,
+				@FormParam("targetURL") @DefaultValue("/")String targetURL,
 				@Context HttpServletRequest req) {
 			User user = null;
 			try {
@@ -395,7 +394,9 @@ public class User extends AModel {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> data = (Map<String, Object>) view
 						.getModel();
-				data.put("input", this.getParameters(req));
+				data.put("input", makeMap("account", account, "email",email, 
+						"name",name, "agreePolicy",agreePolicy,
+						"thumbnail",thumbnail,"targetURL",targetURL));
 				data.put("error", e.getMessage());
 				return view;
 			}
@@ -428,7 +429,7 @@ public class User extends AModel {
 				throw new RuntimeException("password can't be empty.");
 
 			if (!password.equals(passwordAgain))
-				throw new RuntimeException("two passwords don't equal.");
+				throw new RuntimeException("password doesn't match.");
 
 			/*
 			 * if (req != null) { ReCaptcha captcha =
@@ -531,7 +532,7 @@ public class User extends AModel {
 				req.getSession().removeAttribute("currentUserID");
 				req.getSession().invalidate();
 			}
-			return Response.seeOther(new URI("/")).build();
+			return Response.ok().build();
 		}
 
 		@GET
