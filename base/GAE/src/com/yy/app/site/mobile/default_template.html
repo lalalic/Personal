@@ -24,11 +24,12 @@
 			footer nav.groupbar{top:0px}
 			footer nav.groupbar a{line-height:44px;height:44px!important}
 			section > footer > nav > a.active{-webkit-box-shadow: inset 0 -3px 0 #0093d5;box-shadow: inset 0 -3px 0 #0093d5;}
-		</@>				
-		<@script key="base.js" version="1.7">
+		</@>
+		<@script key="mustache.js" src="/lib/mustache.js"/>		
+		<@script key="base.js" version="1.8">
 			<#noparse>
 			var
-			$t/*emplate*/=function(a,b){return(a+'').replace(/\{\{([^{}]+)}}/g,function(c,d){return d in(b||{})?(/^f/.test(typeof b[d])?b[d]():b[d]):c})},
+			$t/*emplate*/=Mustache.to_html,
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
 			$9=function(s,c){return(c||document).querySelectorAll(s)},
 			e/*ncode*/=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
@@ -47,7 +48,7 @@
  		<#macro body>
  			<section id="main" data-transition="slide">
 				<@header/>
-				<article id="home" class="active">
+				<article id="main.1" class="active">
 					<@content/>
 				</article>
 				<@footer/>

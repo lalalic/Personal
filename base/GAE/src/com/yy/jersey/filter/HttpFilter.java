@@ -63,7 +63,11 @@ public class HttpFilter implements ResourceFilterFactory {
 				res.getHttpHeaders().add("ETag", vars.get("ETAG"));
 			if(UTF8MediaType.isCompatible((MediaType)res.getHttpHeaders().getFirst("Content-Type")))
 				res.getHttpHeaders().putSingle("Content-Type", UTF8MediaType);
-
+			
+			if(req.getQueryParameters().containsKey("section")){
+				vars.put("template", "section");
+				vars.put("section", req.getQueryParameters().getFirst("section"));
+			}
 			return res;
 		}
 

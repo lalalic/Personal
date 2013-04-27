@@ -1,0 +1,37 @@
+<section id="${section}" data-transition="slide">
+<@header/>
+<article id="${section}.1" class="active">
+	<@.main[contentMacroName]/>
+</article>
+<@footer/>
+</section>
+
+
+<#macro header>
+<#if headerMacro??><@run headerMacro/> <#return></#if>
+<header data-title="${titleContent}">
+	<nav>
+		<@headerNav/>
+	</nav>
+</header>	
+</#macro>
+
+<#macro headerNav>
+	<#if headerNavMacro??><@run headerNavMacro/> <#return></#if>
+	<a href="/" data-icon="home"></a>
+	<a href="#back" data-icon="left" data-router="section"></a>
+	<a href="#settings" class="right" data-router="aside" data-icon="settings"></a>
+</#macro>
+
+<#macro footer>
+<#if footerMacro??><@run footerMacro/> <#return></#if>
+<footer><nav class="groupbar"><@footerNav/></nav></footer>
+</#macro>
+
+<#macro footerNav>
+	<#if footerNavMacro??><@run footerNavMacro/> <#return></#if>
+	<a href="#" data-icon="refresh"></a>
+	<a href="#" data-icon="help"></a>
+	<a href="#" data-icon="share"></a>
+	<a href="#" data-icon="brand twitter"></a>
+</#macro>

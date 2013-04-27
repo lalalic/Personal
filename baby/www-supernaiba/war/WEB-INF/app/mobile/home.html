@@ -1,7 +1,7 @@
 <#macro content>
 <div class="list indented">
 	<ul>
-		<@cat "游戏" "/youxi"/>
+		<@cat "游戏" "/youxi?template=section&section=posts"/>
 		<@cat "阅读" "/huiben"/>
 		<@cat "画画" "/draw"/>
 		<@cat "拼图" "/jigsaw"/>
@@ -14,6 +14,6 @@
 
 <#macro cat title url>
 	<li class="arrow">
-		<a href="${url}"><strong>${title}</strong></a>
+		<a href="#posts" data-router="section" data-async="${url}" ><strong>${title}</strong></a>
 	</li>
 </#macro>

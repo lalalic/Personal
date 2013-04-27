@@ -1,4 +1,4 @@
-<#global template=website.defaultTemplate pageCacheKeys={}>
+<#global template=website.defaultTemplate>
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
@@ -32,7 +32,7 @@
 </#macro>
 
 <#macro tmpl key>
-	<script>$t(_l["${key}"],<#nested>);</script>
+	<script>document.writeln($t(("${key}" in window)&&window['${key}'].innerHTML||_l["${key}"],<#nested>));</script>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
