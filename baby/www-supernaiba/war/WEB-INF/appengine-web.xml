@@ -4,7 +4,7 @@
 	<version>2</version>
 	<!-- Configure serving/caching of GWT files -->
 	<static-files>
-		<include path="/lib/**.*" expiration="365d" />
+		<include path="/example/**.*" expiration="365d" />
 		<include path="/rs/**.*" expiration="365d" />
 		<include path="/extend/**.*" expiration="30d" />
 		<include path="/favicon.ico" expiration="365d" />

@@ -1,19 +1,26 @@
 <#macro signin action="/user/signin.html">
 	<#assign footerNavMacro='signinAction'>
+	<@_tmpl key="signin">
+	<#noparse>
 	<form class="form" id="signin"
-		action="${action}" 
+		action="{{action}}" 
 		method="post">
-	    <input type="hidden" name="targetURL" value="${((targetURL)!input.targetURL)!'/'}"/>
+	    <input type="hidden" name="targetURL" value="{{targetURL}}"/>
 	    <input type="submit" class="unvisible">
-	    <#if error??><center data-icon="error">${error!}</center></#if>
+	    <center>{{error}}</center>
 	    <fieldset>
-	    	<input placeholder="帐号" type="text" name="account" value="${(input.account)!}" required="required"  autofocus="autofocus">
+	    	<input placeholder="帐号" type="text" name="account" value="{{account}}" required="required"  autofocus="autofocus">
 	    </fieldset>
 	    
 	    <fieldset>
 	    	<input placeholder="密码" type="password" name="password" required="required"/>
 	    </fieldset>
 	</form>
+	</#noparse>
+	</@>
+	<@_data key="signin">
+		{action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}"}
+	</@>
 </#macro>
 
 <#macro signinAction>
@@ -24,29 +31,36 @@
 
 <#macro signup action="/user/signup.html">
 	<#assign footerNavMacro='signupAction'>
+	<@_tmpl key="signup" version="1.1.1">
+	<#noparse>
 	<form class="form" id="signup"
-		action="${action}" method="post">
-		<input type="hidden" name="targetURL" value="${((targetURL)!input.targetURL)!'/'}">
+		action="{{action}}" method="post">
+		<input type="hidden" name="targetURL" value="{{targetURL}}">
 		<input type="submit" class="unvisible">
-		<#if error??><center data-icon="error">${error!}</center></#if>
+		<center>{{error}}</center>
 	    <fieldset>
-	    	<#--
+	    	<!--
 	    	<legend>帐号信息</legend>
 	    	<center class="column four"><img style="width:150px;height:150px;" onclick="thumbnailFile.click()" id="thumb" src="${thumbnail!}"/></center>
 	    	<input type="file" name="file" id="thumbnailFile"
 	    		style="position:fixed;top:-99999px" accept="image/*"
 	    		onchange="!/media/.test(this.form.action)&&x('post','/media/want2upload'+this.form.action,function(x,a){with(a=$1('.active form')){action=x.responseText;enctype='multipart/form-data'}})">
 	   		<div class="column six">
-		   		<input placeholder="email" type="email" name="email" value="${(input.email)!}" required="required">
+		   		<input placeholder="email" type="email" name="email" value="{{email}}" required="required">
 		   	-->
-		   		<input placeholder="帐号" type="text" name="account" value="${(input.account)!}" required="required" autofocus="autofocus">	
+		   		<input placeholder="帐号" type="text" name="account" value="{{account}}" required="required" autofocus="autofocus">	
 		    	<input placeholder="密码" type="password" name="password" 
 		    		required="required" onchange="this.form.passwordAgain.pattern='^'+this.value+'$'" 
 		    		pattern="[A-Za-z0-9\!\@\#\$\%\^\&\*\-]{6}" title="至少6个字符">
 		    	<input placeholder="密码确认" type="password" name="passwordAgain" required="required" title="确保与密码一样">
-	    </fieldset>
+	    </fieldset>	</#noparse>
 	    <#nested>
 	</form>
+
+	</@>
+	<@_data key="signup">
+		{action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}",email:"${(input.email)!}"}
+	</@>
 </#macro>
 
 <#macro signupAction>

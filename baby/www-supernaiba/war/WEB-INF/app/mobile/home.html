@@ -1,19 +1,22 @@
 <#macro content>
 <div class="list indented">
 	<ul>
-		<@cat "游戏" "/youxi?template=section&section=posts"/>
-		<@cat "阅读" "/huiben"/>
-		<@cat "画画" "/draw"/>
-		<@cat "拼图" "/jigsaw"/>
-		<@cat "运动" "/exercise"/>
-		<@cat "手工" "/handwork"/>
-		<@cat "DVD" "/dvd"/>
+		<@_tmpl key="home.cats" version="1.0">
+			<#noparse>
+			{{#cates}}
+			<li class="arrow"><a href="#posts" data-router="section" data-async="/{{url}}" ><strong>{{title}}</strong></a></li>
+			{{/cates}}
+			</#noparse>
+		</@>
+		<@_data "home.cats">
+			{cates:[{title:"游戏", url:"youxi?template=section&section=posts"},
+			{title: "阅读",url:"huiben"},
+			{title: "画画",url:"draw"},
+			{title: "拼图",url:"jigsaw"},
+			{title: "运动",url:"exercise"},
+			{title: "手工",url:"handwork"},
+			{title: "DVD",url:"dvd"}]}
+		</@>
 	</ul>
 </div>
-</#macro>
-
-<#macro cat title url>
-	<li class="arrow">
-		<a href="#posts" data-router="section" data-async="${url}" ><strong>${title}</strong></a>
-	</li>
 </#macro>

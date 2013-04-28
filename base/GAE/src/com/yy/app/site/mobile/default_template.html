@@ -14,10 +14,10 @@
 			_ca/*che*/=function(k/*key*/,v/*ersion*/,d/*ocument*/){(d=document).addEventListener('DOMContentLoaded',function(){_l[k]=window[k].innerHTML;d.cookie=k+"="+v})}
 		</script>
 		</#noparse>
-		<@link rel="stylesheet" href="/lib/lungo.css" key="lungo.css"/>
-		<@link rel="stylesheet" href="/lib/lungo.icon.css" key="lungo.icon.css"/>
-		<@link rel="stylesheet" href="/lib/theme.lungo.css" key="theme.lungo.css"/>		
-		<@link key="base.css" version="3">
+		<@link key="lungo" href="/lib/lungo.css" rel="stylesheet"/>
+		<@link key="lungo.icon" href="/lib/lungo.icon.css" rel="stylesheet"/>
+		<@link key="theme.lungo" href="/lib/theme.lungo.css" rel="stylesheet"/>	
+		<@link key="base" version="3">
 			header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
 			fieldset>legend{align:center}
 			.unvisible {position:fixed;top:-100px}
@@ -25,11 +25,10 @@
 			footer nav.groupbar a{line-height:44px;height:44px!important}
 			section > footer > nav > a.active{-webkit-box-shadow: inset 0 -3px 0 #0093d5;box-shadow: inset 0 -3px 0 #0093d5;}
 		</@>
-		<@script key="mustache.js" src="/lib/mustache.js"/>		
-		<@script key="base.js" version="1.8">
+		<@script key="base" version="1.8.0">
 			<#noparse>
 			var
-			$t/*emplate*/=Mustache.to_html,
+			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k]||_l[k])))(d))},
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
 			$9=function(s,c){return(c||document).querySelectorAll(s)},
 			e/*ncode*/=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
@@ -37,10 +36,11 @@
 			_x=function(a){for(a=3;a--;)try{return new(XMLHttpRequest||ActiveXObject)(["Msxml2","Msxml3","Microsoft"][a]+".XMLHTTP")}catch(e){}},
 			x=function(m/*ethod*/,u/*rl*/,c/*allback*/,d/*ata*/,x){with(x=_x())return onreadystatechange=function(){readyState^4||status^200||c(this)},open(m,u,c),send(d),x}
 			</#noparse>
-		</@>
+		</@>		
 		<#macro head></#macro><@head/>
 	</head>
  	<body class="app ${path} ${contentMacroName}">
+		<@script key="mustache" src="/lib/mustache.js"/>		
  		<#macro content><@.main[contentMacroName]/></#macro>
  		<#macro header><@.main[headerMacroName]/></#macro>
  		<#macro footer><@.main[footerMacroName]/></#macro>
@@ -54,8 +54,8 @@
 				<@footer/>
 			</section>
 			<@aside/>
-			<@script src="/lib/quo.min.js" key="quo.min.js"/>
-			<@script src="/lib/lungo.js" key="lungo.js"/>
+			<@script key="quo" src="/lib/quo.min.js"/>
+			<@script key="lungo" src="/lib/lungo.js" />
 			<script>Lungo.init({name:"home"})</script>
 		</#macro><@body/>
 	</body>

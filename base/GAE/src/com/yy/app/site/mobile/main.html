@@ -2,8 +2,9 @@
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
-<#macro script src="" key="" version="1">
-	<#if ((cookie[key])??) && cookie[key][0]==version>
+<#macro script key src="" version="1">
+	<#local key="js."+key>
+	<#if ((cookie[key][0])!"")==version>
 		<script>_c("${key}","script")</script>
 		<#return>
 	<#else>
@@ -12,8 +13,9 @@
 	</#if>
 </#macro>
 
-<#macro link href="" key="" version="1" rel="">
-	<#if ((cookie[key])??) && cookie[key][0]=version>
+<#macro link key href="" version="1" rel="">
+	<#local key="css."+key>
+	<#if ((cookie[key][0])!"")==version>
 		<script>_c("${key}","style")</script>
 		<#return>
 	<#else>
@@ -22,8 +24,9 @@
 	</#if>
 </#macro>
 
-<#macro cache key version="1">
-	<#if ((cookie[key])??) && cookie[key][0]=version>
+<#macro _tmpl key version="1">
+	<#local key="html."+key>
+	<#if ((cookie[key][0])!"")==version>
 		<#return>
 	<#else>
 		<script>_ca("${key}","${version}")</script>
@@ -31,8 +34,8 @@
 	</#if>
 </#macro>
 
-<#macro tmpl key>
-	<script>document.writeln($t(("${key}" in window)&&window['${key}'].innerHTML||_l["${key}"],<#nested>));</script>
+<#macro _data key>
+	<script>$t("html.${key}",<#nested>)</script>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
