@@ -1,21 +1,21 @@
 <#macro content>
 <div class="list indented">
 	<ul>
-		<@_tmpl key="home.cats" version="1.0">
+		<@_tmpl key="home.cats" version="1.1.0">
 			<#noparse>
 			{{#cates}}
-			<li class="arrow"><a href="#posts" data-router="section" data-async="/{{url}}" ><strong>{{title}}</strong></a></li>
+			<li class="arrow"><a href="#{{url}}_showList" data-router="section" data-async="/{{url}}" ><strong>{{title}}</strong></a></li>
 			{{/cates}}
 			</#noparse>
 		</@>
 		<@_data "home.cats">
-			{cates:[{title:"游戏", url:"youxi?template=section&section=posts"},
+			data={cates:[{title:"游戏", url:"youxi"},
 			{title: "阅读",url:"huiben"},
 			{title: "画画",url:"draw"},
 			{title: "拼图",url:"jigsaw"},
 			{title: "运动",url:"exercise"},
 			{title: "手工",url:"handwork"},
-			{title: "DVD",url:"dvd"}]}
+			{title: "DVD",url:"dvd"}]};
 		</@>
 	</ul>
 </div>

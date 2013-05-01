@@ -2,9 +2,7 @@
 	<#assign footerNavMacro='signinAction'>
 	<@_tmpl key="signin">
 	<#noparse>
-	<form class="form" id="signin"
-		action="{{action}}" 
-		method="post">
+	<form class="form" id="signin" action="{{action}}"	method="post">
 	    <input type="hidden" name="targetURL" value="{{targetURL}}"/>
 	    <input type="submit" class="unvisible">
 	    <center>{{error}}</center>
@@ -19,7 +17,7 @@
 	</#noparse>
 	</@>
 	<@_data key="signin">
-		{action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}"}
+		data={action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}"};
 	</@>
 </#macro>
 
@@ -31,7 +29,7 @@
 
 <#macro signup action="/user/signup.html">
 	<#assign footerNavMacro='signupAction'>
-	<@_tmpl key="signup" version="1.1.1">
+	<@_tmpl key="signup" version="1.1.2">
 	<#noparse>
 	<form class="form" id="signup"
 		action="{{action}}" method="post">
@@ -56,10 +54,10 @@
 	    </fieldset>	</#noparse>
 	    <#nested>
 	</form>
-
 	</@>
 	<@_data key="signup">
-		{action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}",email:"${(input.email)!}"}
+		data={action:"${action}",targetURL:"${((targetURL)!input.targetURL)!'/'}",error:"${error!}",account:"${(input.account)!}",email:"${(input.email)!}"};
+		<#nested true>
 	</@>
 </#macro>
 

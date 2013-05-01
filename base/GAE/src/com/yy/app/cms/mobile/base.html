@@ -20,7 +20,7 @@ post:
 			<#return>
 		<#else>
 			<#list posts as post>
-			<li class="arrow"><a href="#post" data-router="section" data-async="/${path}/show/${post.ID}.shtml?template=section&section=post">${post.title}</a></li>
+			<li class="arrow"><a href="#${path}_show1" data-router="section" data-async="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
 			</#list>
 		</#if>
 	</ol>

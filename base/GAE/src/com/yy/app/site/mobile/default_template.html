@@ -11,7 +11,7 @@
 			var 
 			_l/*ocalStorage*/=localStorage,
 			_c=function(key,tag){document.writeln('<'+tag+'>'+localStorage[key]+'</'+tag+'>')},
-			_ca/*che*/=function(k/*key*/,v/*ersion*/,d/*ocument*/){(d=document).addEventListener('DOMContentLoaded',function(){_l[k]=window[k].innerHTML;d.cookie=k+"="+v})}
+			_cf=function(k/*key*/,v/*ersion*/){_l[k]=window[k].innerHTML;document.cookie=k+"="+v}
 		</script>
 		</#noparse>
 		<@link key="lungo" href="/lib/lungo.css" rel="stylesheet"/>
@@ -25,10 +25,10 @@
 			footer nav.groupbar a{line-height:44px;height:44px!important}
 			section > footer > nav > a.active{-webkit-box-shadow: inset 0 -3px 0 #0093d5;box-shadow: inset 0 -3px 0 #0093d5;}
 		</@>
-		<@script key="base" version="1.8.0">
+		<@script key="base" version="1.8.1">
 			<#noparse>
 			var
-			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k]||_l[k])))(d))},
+			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k].innerHTML||_l[k])))(d))},
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
 			$9=function(s,c){return(c||document).querySelectorAll(s)},
 			e/*ncode*/=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
@@ -39,24 +39,28 @@
 		</@>		
 		<#macro head></#macro><@head/>
 	</head>
- 	<body class="app ${path} ${contentMacroName}">
+ 	<body class="app ${path!'home'} ${contentMacroName}">
 		<@script key="mustache" src="/lib/mustache.js"/>		
  		<#macro content><@.main[contentMacroName]/></#macro>
  		<#macro header><@.main[headerMacroName]/></#macro>
  		<#macro footer><@.main[footerMacroName]/></#macro>
  		<#macro aside><@.main[asideMacroName]/></#macro>
  		<#macro body>
- 			<section id="main" data-transition="slide">
+ 			<section id="${path}_${contentMacroName}" data-transition="">
 				<@header/>
-				<article id="main.1" class="active">
+				<article id="${path}_${contentMacroName}_1" class="active">
 					<@content/>
 				</article>
 				<@footer/>
 			</section>
 			<@aside/>
-			<@script key="quo" src="/lib/quo.min.js"/>
-			<@script key="lungo" src="/lib/lungo.js" />
-			<script>Lungo.init({name:"home"})</script>
+			<@script key="quo" src="/lib/quo.${debug}js"/>
+			<@script key="lungo" src="/lib/lungo.${debug}js" />
+			<script>
+				Quo.ajaxSettings.headers.xhr=1
+				$t=function(a){alert(a)}
+				Lungo.init({name:"home"})
+			</script>
 		</#macro><@body/>
 	</body>
 </html>

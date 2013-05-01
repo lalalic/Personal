@@ -56,18 +56,19 @@ public class HttpFilter implements ResourceFilterFactory {
 			vars.put("website", Profile.I);
 			vars.put("user", User.getCurrentUser());
 			vars.put("path", path);
-			vars.put("request", req);
+			vars.put("request", req); 
 			vars.put("cookie", req.getCookieNameValueMap());
 			vars.put("response", res);
+			vars.put("url", req.getRequestUri().toString());
+			if(req.getHeaderValue("xhr")!=null && !vars.containsKey("template") && 
+					!req.getQueryParameters().containsKey("template")){
+				vars.put("template", "section");
+			}
 			if(vars.containsKey("ETAG"))
 				res.getHttpHeaders().add("ETag", vars.get("ETAG"));
 			if(UTF8MediaType.isCompatible((MediaType)res.getHttpHeaders().getFirst("Content-Type")))
 				res.getHttpHeaders().putSingle("Content-Type", UTF8MediaType);
-			
-			if(req.getQueryParameters().containsKey("section")){
-				vars.put("template", "section");
-				vars.put("section", req.getQueryParameters().getFirst("section"));
-			}
+
 			return res;
 		}
 

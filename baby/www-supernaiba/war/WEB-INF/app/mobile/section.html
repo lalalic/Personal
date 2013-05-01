@@ -1,6 +1,6 @@
-<section id="${section}" data-transition="slide">
+<section id="${path}_${contentMacroName}" data-transition="" data-url="${url}">
 <@header/>
-<article id="${section}.1" class="active">
+<article id="${path}_${contentMacroName}_1" class="active">
 	<@.main[contentMacroName]/>
 </article>
 <@footer/>
@@ -10,6 +10,7 @@
 <#macro header>
 <#if headerMacro??><@run headerMacro/> <#return></#if>
 <header data-title="${titleContent}">
+	<script>document.title="${titleContent}"</script>
 	<nav>
 		<@headerNav/>
 	</nav>
