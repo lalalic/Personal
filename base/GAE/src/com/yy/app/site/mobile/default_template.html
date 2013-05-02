@@ -56,11 +56,53 @@
 			<@aside/>
 			<@script key="quo" src="/lib/quo.${debug}js"/>
 			<@script key="lungo" src="/lib/lungo.${debug}js" />
-			<script>
-				Quo.ajaxSettings.headers.xhr=1
-				$t=function(a){alert(a)}
+			<@script key="lungo.init" version="1.0.8"><#noparse>
+				Quo.ajaxSettings.headers.xhr=1//identify section template
+				Lungo.Router.History = (function(undefined) {//rewrite to use history API
+					var lastSection=null,backedSection=null
+					window.onpopstate=function(e){
+						if(!e.state||!'section' in e.state) return
+						if(!$1(e.state.section)){
+							Lungo.Resource.load(location.href)
+							Lungo.Boot.Data.init(e.state.section)
+						}
+						backedSection=lastSection
+						Lungo.Router.section(e.state.section)
+						if(backedSection){
+							$1(backedSection).remove()
+							backedSection=null
+						}	
+					}
+				    return {
+				        add: function(section_id, url) {
+					       	if((url=Lungo.dom(section_id).data('url')) && url!=location.href)
+					       		history.pushState({section:section_id},null,url);
+					       	else
+					       		history.replaceState({section:section_id},document.title,location.href);
+					       	lastSection=section_id
+					     },
+				        current: function() {
+					         return history.state.section
+					     },
+				        removeLast: function(){}
+				    };
+				})();
+				Quo.fn.__append=Quo.fn.append
+				Quo.fn.append=function(value){
+					var context=Quo.fn.__append.apply(this,arguments)
+					if(Lungo.Core.toType(value)=="string" && /^\s*\<section/i.test(value)){/*ajax section; not public API*/
+						for(var scripts=$9('script',$1('section:last-of-type')),i=scripts.length-1,sc;i>-1;i++){
+							sc=scripts[i]
+							document.write=document.writeln=function(v){
+								sc.insertAdjacentHTML('afterEnd',v)
+							}
+							eval(sc.innerHTML)
+						}
+					}
+					return context
+				}
 				Lungo.init({name:"home"})
-			</script>
+			</#noparse></@>
 		</#macro><@body/>
 	</body>
 </html>

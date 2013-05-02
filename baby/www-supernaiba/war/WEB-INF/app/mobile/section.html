@@ -10,7 +10,6 @@
 <#macro header>
 <#if headerMacro??><@run headerMacro/> <#return></#if>
 <header data-title="${titleContent}">
-	<script>document.title="${titleContent}"</script>
 	<nav>
 		<@headerNav/>
 	</nav>
@@ -20,7 +19,6 @@
 <#macro headerNav>
 	<#if headerNavMacro??><@run headerNavMacro/> <#return></#if>
 	<a href="/" data-icon="home"></a>
-	<a href="#back" data-icon="left" data-router="section"></a>
 	<a href="#settings" class="right" data-router="aside" data-icon="settings"></a>
 </#macro>
 

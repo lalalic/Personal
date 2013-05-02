@@ -14,16 +14,17 @@ post:
 
 <#macro showList>
 	<#assign footerNavMacro='action4List' titleContent=this.model>
+	<@_tmpl key="showList"><#noparse>
 	<ol class="list">
-		<#if posts?size==0>
-			<li><div  class="info">没有呢</div></li>
-			<#return>
-		<#else>
-			<#list posts as post>
-			<li class="arrow"><a href="#${path}_show1" data-router="section" data-async="/${path}/show/${post.ID}.shtml">${post.title}</a></li>
-			</#list>
-		</#if>
+		{{#empty}}<li><div  class="info">没有呢</div></li>{{/empty}}
+		{{#posts}}
+			<li class="arrow"><a href="#{{path}}_show1" data-router="section" data-async="/{{path}}/show/{{ID}}.shtml">{{title}}</a></li>
+		{{/posts}}
 	</ol>
+	</#noparse></@>
+	<@_data key="showList">
+		data={empty:${posts?size}==0,path:"${path}",posts:[<#list posts as p>{ID:"${p.ID}",title:"${p.title}"},</#list>]};
+	</@>
 </#macro>
 
 <#macro action4List>
@@ -33,6 +34,7 @@ post:
 
 <#macro show1>
 	<#assign footerNavMacro={'name':'action41','arg':post}>
+	<@_tmpl key="show1">
 	<div>
 		<h1>${post.title}</h1>
 		<div><@authorInfo post.author/></div>
@@ -40,6 +42,7 @@ post:
 		<div>${post.content}</div>
 	</div>
 	<@show1Extra post/>
+	</@>
 </#macro>
 
 <#macro show1Extra post>

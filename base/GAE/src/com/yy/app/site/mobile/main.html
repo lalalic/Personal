@@ -3,7 +3,7 @@
 <#include "/"+template+".html">
 
 <#macro script key src="" version="1">
-	<#if src?contains('debug')><script>	<#include src encoding="utf-8" parse=false>	</script><#return></#if>
+	<#if debug??><script><#if src!=""><#include src encoding="utf-8" parse=false><#else><#nested></#if></script><#return></#if>
 	<#local key="js."+key>
 	<#if ((cookie[key][0])!"")==version>
 		<script>_c("${key}","script")</script>
@@ -36,7 +36,7 @@
 </#macro>
 
 <#macro _data key>
-	<script>$t("html.${key}",(function(data){<#nested>;return data})())</script>
+	<script>$t("html.${key}",(function(data){data={};<#nested>;return data})())</script>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
