@@ -17,7 +17,8 @@
 		<@link key="lungo" href="/lib/lungo.css" rel="stylesheet"/>
 		<@link key="lungo.icon" href="/lib/lungo.icon.css" rel="stylesheet"/>
 		<@link key="theme.lungo" href="/lib/theme.lungo.css" rel="stylesheet"/>	
-		<@link key="base" version="3">
+		<@link key="base" version="1.0">
+			section.hide{display:none}
 			header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
 			fieldset>legend{align:center}
 			.unvisible {position:fixed;top:-100px}
@@ -60,18 +61,16 @@
 				Quo.ajaxSettings.headers.xhr=1//identify section template
 				Lungo.Router.History = (function(undefined) {//rewrite to use history API
 					var lastSection=null,backedSection=null
-					window.onpopstate=function(e){
+					window.onpopstate=function(e,forward){
 						if(!e.state||!'section' in e.state) return
-						if(!$1(e.state.section)){
+						if((forward=!$1(e.state.section))){
 							Lungo.Resource.load(location.href)
 							Lungo.Boot.Data.init(e.state.section)
 						}
 						backedSection=lastSection
 						Lungo.Router.section(e.state.section)
-						if(backedSection){
+						if(backedSection && !forward)
 							$1(backedSection).remove()
-							backedSection=null
-						}	
 					}
 				    return {
 				        add: function(section_id, url) {
