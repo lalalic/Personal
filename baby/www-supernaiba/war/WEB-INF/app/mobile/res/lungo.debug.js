@@ -1313,7 +1313,7 @@ Lungo.Boot.Events = (function(lng, undefined) {
         event.preventDefault();
         var link = lng.dom(this);
 
-        if (link.data("async")) {
+        if (link.data("async") && lng.dom(link.href).length==0) {
             _loadAsyncTarget(link);
         } else {
             _selectTarget(link);
@@ -1353,7 +1353,7 @@ Lungo.Boot.Events = (function(lng, undefined) {
     var _loadAsyncTarget = function(link) {
         lng.Notification.show();
         lng.Resource.load(link.data("async"));
-        link[0].removeAttribute("data-async");
+        //link[0].removeAttribute("data-async");
         lng.Boot.Data.init( link.attr(ATTRIBUTE.HREF) );
 
         setTimeout(function() {

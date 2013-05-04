@@ -18,7 +18,7 @@
 		<@link key="lungo.icon" href="/lib/lungo.icon.css" rel="stylesheet"/>
 		<@link key="theme.lungo" href="/lib/theme.lungo.css" rel="stylesheet"/>	
 		<@link key="base" version="1.0">
-			section.hide{display:none}
+			section>header{border-radius:0;-webkit-border-radius:0}
 			header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
 			fieldset>legend{align:center}
 			.unvisible {position:fixed;top:-100px}
@@ -42,12 +42,12 @@
 	</head>
  	<body class="app ${path!'home'} ${contentMacroName}">
 		<@script key="mustache" src="/lib/mustache.js"/>		
- 		<#macro content><@.main[contentMacroName]/></#macro>
- 		<#macro header><@.main[headerMacroName]/></#macro>
- 		<#macro footer><@.main[footerMacroName]/></#macro>
- 		<#macro aside><@.main[asideMacroName]/></#macro>
+ 		<#macro content><@run contentMacroName!"_empty"/></#macro>
+ 		<#macro header><@run headerMacroName!"_empty"/></#macro>
+ 		<#macro footer><@run footerMacroName!"_empty"/></#macro>
+ 		<#macro aside><@run asideMacroName!"_empty"/></#macro>
  		<#macro body>
- 			<section id="${path}_${contentMacroName}" data-transition="">
+ 			<section id="${path}_${contentMacroName}" data-url="${url}">
 				<@header/>
 				<article id="${path}_${contentMacroName}_1" class="active">
 					<@content/>
@@ -57,7 +57,7 @@
 			<@aside/>
 			<@script key="quo" src="/lib/quo.${debug}js"/>
 			<@script key="lungo" src="/lib/lungo.${debug}js" />
-			<@script key="lungo.init" version="1.0.8"><#noparse>
+			<@script key="lungo.init"><#noparse>
 				Quo.ajaxSettings.headers.xhr=1//identify section template
 				Lungo.Router.History = (function(undefined) {//rewrite to use history API
 					var lastSection=null,backedSection=null
@@ -69,8 +69,8 @@
 						}
 						backedSection=lastSection
 						Lungo.Router.section(e.state.section)
-						if(backedSection && !forward)
-							$1(backedSection).remove()
+						if(backedSection && backedSection!=e.state.section && !forward)
+							Lungo.dom(backedSection).remove()
 					}
 				    return {
 				        add: function(section_id, url) {
@@ -105,3 +105,4 @@
 		</#macro><@body/>
 	</body>
 </html>
+<#global outputed=true>
