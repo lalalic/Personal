@@ -1,29 +1,30 @@
 <#macro show>
 	<#assign footerNavMacro={'name':'commentForm','arg':entityID}>
+	<@_tmpl key="comment"><#noparse>
 	<ol id="cs" class="list">
-		<#if comments?size==0>
-			<li class="text align_center" id="noComment">No Comment Yet</li>
-		<#else>
-			<#list comments as c>
-			<li>${c.message}
-				<small>
-				<a class="right">${c.created?datetime}</a>
-				<a class="right">${c.ownerName}</a></li>
-				</small>
-			</#list>
-		</#if>
+		{{#empty}}<li class="text align_center" id="noComment">No Comment Yet</li>{{/empty}}
+		{{#comments}}
+			<li>{{m}}<i class="right">{{c}}@{{w}}</i></li>
+		{{/comments}}
 	</ol>
+	</#noparse></@>
+	<@_data key="comment">
+		data={empty:0==${comments?size},comments:[<#list comments as c>{m:"${c.message}",c:"${c.ownerName}",w:"${c.created?datetime}"},</#list>]};		
+	</@>
 </#macro>
 
 <#macro commentForm id>
 	<#if !user.isLoggedIn()>
 		<a data-icon="user" href="/user/signin.html?target=/comment/list/${id}.html">Signin to Comment</a>
 	<#else>
+		<@_tmpl key="commentForm"><#noparse>
 		<a>
 			<input type="text" placeholder="comment..." id="$c" class="column nine left">
 			<span data-icon="upload" class="column one" 
-				onclick="x('post','/comment/add',function(){$1('#noComment')&&cs.removeChild(noComment);cs.appendChild(h('<li>'+$c.value+'</li>'));$c.value=''},'ID=${id}&comment='+e($c.value))"/>
+				onclick="x('post','/comment/add',function(){$1('#noComment')&&cs.removeChild(noComment);cs.appendChild(h('<li>'+$c.value+'</li>'));$c.value=''},'ID={{ID}}&comment='+e($c.value))"/>
 		</a>
+		</#noparse></@>
+		<@_data key="commentForm">data={ID:"${id}"}</@>
 	</#if>
 </#macro>
 

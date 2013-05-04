@@ -49,7 +49,7 @@ post:
 </#macro>
 
 <#macro action41 post>
-	<a data-icon="pencil" data-router="section" href="#comments" data-async="/comment/list/${post.ID}.html?template=section&section=comments"></a>
+	<a data-icon="pencil" class="small" data-router="section" href="#comment_show" data-async="/comment/list/${post.ID}.html"></a>
 	<@favoriteCMD post/>
 	<a data-icon="share" href="#"></a>
 </#macro>
