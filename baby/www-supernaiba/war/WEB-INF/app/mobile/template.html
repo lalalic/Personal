@@ -2,7 +2,7 @@
 
 <#macro header>
 <#if headerMacro??><@run headerMacro/> <#return></#if>
-<header data-title="<@title/>">
+<header data-title="${titleContent!website.name}">
 	<nav>
 		<@headerNav/>
 	</nav>
@@ -12,7 +12,7 @@
 <#macro headerNav>
 	<#if headerNavMacro??><@run headerNavMacro/> <#return></#if>
 	<a href="/" data-icon="home"></a>
-	<a href="#settings" class="right" data-router="aside" data-icon="settings"></a>
+	<a href="${url}" data-icon="refresh" class="right"></a>
 </#macro>
 
 <#macro footer>
@@ -22,28 +22,11 @@
 
 <#macro footerNav>
 	<#if footerNavMacro??><@run footerNavMacro/> <#return></#if>
-	<a href="#" data-icon="refresh"></a>
-	<a href="#" data-icon="help"></a>
 	<a href="#" data-icon="share"></a>
-	<a href="#" data-icon="brand twitter"></a>
-</#macro>
-
-<#macro aside>
-<#if asideMacro??><@run asideMacro/> <#return></#if>
-<aside id="settings">
-	<article class="active scroll">
-		<@asideContent/>
-	</article>
-</aside>
-</#macro>
-
-<#macro asideContent>
-<#if asideContentMacro??><@run asideContentMacro/> <#return></#if>
-<ul class="list">
 	<#if !user.isLoggedIn()>
-	<li><a data-icon="user" href="/user/signin.html">登录</a></li>	
+		<a data-icon="user" href="#signin" data-async="/user/signin.html?targetURL=${url}">登录</a>
 	<#else>
-	<li><a data-icon="user" href="#" onclick="x('get','/user/signout',function(){document.location.reload()})">退出[${user.account}]</a></li>		
+		<a data-icon="remove" href="#" onclick="x('get','/user/signout',function(){document.location.reload()})">[${user.account}]</a></li>		
 	</#if>
-</ul>
+	<a href="#" data-icon="menu"></a>
 </#macro>

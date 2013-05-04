@@ -1,9 +1,10 @@
-<#global template=website.defaultTemplate debug="debug.">
+<#global template=website.defaultTemplate debug="debug." ver="1.0">
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
 <#macro script key src="" version="1">
-	<#if debug??><script><#if src!=""><#include src encoding="utf-8" parse=false><#else><#nested></#if></script><#return></#if>
+	<#local version=ver>
+	<#if debug!=""><script><#if src!=""><#include src encoding="utf-8" parse=false><#else><#nested></#if></script><#return></#if>
 	<#local key="js."+key>
 	<#if ((cookie[key][0])!"")==version>
 		<script>_c("${key}","script")</script>
@@ -15,6 +16,7 @@
 </#macro>
 
 <#macro link key href="" version="1" rel="">
+	<#local version=ver>
 	<#local key="css."+key>
 	<#if ((cookie[key][0])!"")==version>
 		<script>_c("${key}","style")</script>
@@ -26,6 +28,7 @@
 </#macro>
 
 <#macro _tmpl key version="1">
+	<#local version=ver>
 	<#local key="html."+key>
 	<#if ((cookie[key][0])!"")==version>
 		<#return>
@@ -94,3 +97,4 @@
      	<@.main[macro.name] macro.arg/>
      </#if>
 </#macro>
+<#macro _empty></#macro>
