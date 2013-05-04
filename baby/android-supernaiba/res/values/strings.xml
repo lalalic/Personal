@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">mobile-sdanbaba</string>
-    <string name="url_home">http://192.168.1.3</string>
-    <string name="title_activity_home">sdan</string>
+    <string name="app_name">SuperNaiba</string>
+    <string name="url_home">http://192.168.1.6</string>
+    <string name="title_activity_home">超级奶爸</string>
 </resources>
