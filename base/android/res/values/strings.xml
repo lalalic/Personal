@@ -7,5 +7,6 @@
     <string name="storage_removed">Storage was removed or unmounted.</string>
     <string name="choose_file">Select a file</string>
     <string name="error_selecting_file">Error selecting File</string>
-    <string-array name="schema"></string-array>   
+    <string-array name="schema"></string-array>
+    <string name="browserAgent">android mobile </string>
 </resources>

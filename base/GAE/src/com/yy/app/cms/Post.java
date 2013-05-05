@@ -453,7 +453,7 @@ public class Post extends AModel {
 			post.title = title;
 			post.setContent(content);
 			store.save().entity(post);
-			post.postPersist();
+			post.postPersist(); 
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + post.ID + ".shtml"))
 					.build();

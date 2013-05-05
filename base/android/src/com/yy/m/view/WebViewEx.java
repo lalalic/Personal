@@ -14,9 +14,13 @@ import org.apache.http.cookie.Cookie;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -25,13 +29,18 @@ import android.webkit.CookieSyncManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
+import com.yy.m.R;
 import com.yy.m.data.Configuration;
 
 public class WebViewEx extends WebView{
 	private String home;
 	private ValueCallback<Uri> uploadMsg;
 	private String offlineRoot=null;
+	protected boolean cache4Offline=true;
+	protected boolean isOnline=false;
+	protected WebViewClient offlineClient, onlineClient;
 
 	public WebViewEx(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -39,41 +48,45 @@ public class WebViewEx extends WebView{
 	}
 
 	public WebViewEx(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		init();
+		this(context, attrs,0);
 	}
 
 	public WebViewEx(Context context) {
-		super(context);
-		init();
+		this(context, null);
 	}
 
 	@SuppressLint("SetJavaScriptEnabled")
 	private void init() {
 		WebView browser = this;
 		WebSettings settings = browser.getSettings();
+		settings.setUserAgentString(this.getContext().getString(R.string.browserAgent)
+				+this.getContext().getString(R.string.app_name));
 		settings.setJavaScriptEnabled(true);
 		settings.setAllowFileAccess(true);
 		settings.setLoadsImagesAutomatically(true);
 		settings.setDomStorageEnabled(true);
-		settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 		settings.setDatabaseEnabled(true);
 		String appPath=Environment.getExternalStorageDirectory().getPath()+"/Android/data/"+this.getContext().getPackageName()+"/";
 		offlineRoot=appPath+"www/";
 		settings.setDatabasePath(appPath+"databases/");
 		browser.setWebChromeClient(new ChromeClient(this));
-		browser.setWebViewClient(new ViewClient(this));
+		
+		offlineClient=new OfflineWebViewClient();
+		onlineClient=new OnlineWebViewClient();
+		
+		ConnectivityManager cm = (ConnectivityManager) this.getContext().getSystemService(Activity.CONNECTIVITY_SERVICE);
+		this.isOnline(cm!=null && cm.getActiveNetworkInfo()!=null 
+				&& cm.getActiveNetworkInfo().isConnected());
 	}
 	
 	@Override
 	public void loadUrl(String url, Map<String, String> extraHeaders) {
-		super.loadUrl(url, getHeaders(extraHeaders));
+		super.loadUrl(url, this.isOnline ? getHeaders(extraHeaders) : null);
 	}
 
 	@Override
 	public void loadUrl(String url) {
-		getSettings().setCacheMode(isOnline()?WebSettings.LOAD_DEFAULT:WebSettings.LOAD_CACHE_ELSE_NETWORK);
-		this.loadUrl(url, getHeaders(null));
+		this.loadUrl(url, this.isOnline ? getHeaders(null) : null);
 	}
 	
 	protected void loadOffline(String url){
@@ -153,15 +166,16 @@ public class WebViewEx extends WebView{
 		this.uploadMsg=null;
 	}
 	
-	protected boolean isOnline(){
-		ConnectivityManager cm = (ConnectivityManager) this.getContext().getSystemService(Activity.CONNECTIVITY_SERVICE);
-		return cm!=null 
-				&& cm.getActiveNetworkInfo()!=null 
-				&& cm.getActiveNetworkInfo().isConnected();
+	protected void isOnline(boolean v){
+		if(isOnline=v){
+			this.setWebViewClient(onlineClient);
+			this.getSettings().setCacheMode(WebSettings.LOAD_NORMAL);
+		}else{
+			this.setWebViewClient(offlineClient);
+			this.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
+		}
 	}
 	
-
-
 	public void saveCache() {
 		File cacheDir=this.getContext().getCacheDir();
 		final String cacheDirPath=cacheDir.getPath()+"/";
@@ -202,8 +216,25 @@ public class WebViewEx extends WebView{
 				}
 				return false;
 			}
-			
 		});
 	}
-
+	
+	
+	
+	public class NetworkStateTrigger extends BroadcastReceiver{
+		@Override
+		public void onReceive(Context ctx, Intent intent) {
+			NetworkInfo info = intent
+					.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+			switch (info.getState()) {
+			case CONNECTED:
+				WebViewEx.this.isOnline(true);
+				break;
+			case CONNECTING:
+				break;
+			default:
+				WebViewEx.this.isOnline(false);
+			}
+		}
+	}
 }

@@ -11,14 +11,11 @@ import com.yy.m.data.Configuration;
 public class WebActivity extends BaseActivity {
 	public final static String LAST_FINAL_URL="_last_url";
 	public WebViewEx browser;
-	protected boolean cache4Offline=true;
 
-	
 	@Override
 	protected void onCreate(Bundle saved) {
 		super.onCreate(saved);
 		getWindow().requestFeature(Window.FEATURE_PROGRESS);
-		
 		setContentView(R.layout.web);
 		browser = (WebViewEx) this.findViewById(R.id.browser);
 		browser.setHome(this.getString(R.string.url_home));
@@ -64,16 +61,15 @@ public class WebActivity extends BaseActivity {
 		outState.putString(LAST_FINAL_URL, browser.getUrl());
 		super.onSaveInstanceState(outState);
 	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		if(this.cache4Offline)
-			browser.saveCache();
-	}
 	
 	public void test(){
 		this.notify("test");
+	}
+
+	@Override
+	protected void onDestroy() {
+		this.browser.saveCache();
+		super.onDestroy();
 	}
 	
 

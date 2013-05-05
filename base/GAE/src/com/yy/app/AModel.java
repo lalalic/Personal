@@ -409,7 +409,7 @@ public class AModel {
 		}
 
 		@SuppressWarnings("unchecked")
-		protected String path() {
+		public String path() { 
 			if (this.path != null)
 				return this.path;
 			@SuppressWarnings("rawtypes")

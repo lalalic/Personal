@@ -28,7 +28,6 @@ import com.yy.m.view.WebActivity;
 public class Home extends WebActivity {
 	@Override
 	public void onCreated(Bundle saved) {
-		this.cache4Offline=false;
 		if(Configuration.getInstance(this).get("installed").length()==0)
 			installNatives();
 		if(saved!=null && saved.containsKey(LAST_FINAL_URL))

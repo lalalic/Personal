@@ -8,9 +8,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 public class ChromeClient extends WebChromeClient{
-	/**
-	 * 
-	 */
 	private WebView webViewEx;
 
 	/**
