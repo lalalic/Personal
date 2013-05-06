@@ -1313,7 +1313,7 @@ Lungo.Boot.Events = (function(lng, undefined) {
         event.preventDefault();
         var link = lng.dom(this);
 
-        if (link.data("async") && lng.dom(link.href).length==0) {
+        if (link.data("async") && lng.dom(link.attr('href')).length==0) {
             _loadAsyncTarget(link);
         } else {
             _selectTarget(link);

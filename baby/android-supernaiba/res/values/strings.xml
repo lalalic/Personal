@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">SuperNaiba</string>
-    <string name="url_home">http://192.168.1.6</string>
+    <string name="url_home">http://10.0.2.2</string>
     <string name="title_activity_home">超级奶爸</string>
+    <string-array name="schema">
+    	<item>CREATE TABLE GAME(ID LONG PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, author TEXT NOT NULL, modified DATE not null, status INT DEFAULT 1)</item>
+    	<item>CREATE TABLE COMMENT(ID LONG PRIMARY KEY, entityID LONG NOT NULL, message TEXT NOT NULL, author TEXT NOT NULL)</item>
+    	<item>CREATE TABLE FAVORITE(type TEXT NOT NULL, entityID LONG NOT NULL, status INT DEFAULT 1)</item>
+    </string-array>
 </resources>

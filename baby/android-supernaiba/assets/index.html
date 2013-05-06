@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<HTML>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no"/>
+    <meta name="HandheldFriendly" content="True" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />  
+	<link rel="stylesheet" href="./lib/lungo.css"/>
+	<link rel="stylesheet" href="./lib/lungo.icon.css"/>
+	<link rel="stylesheet" href="./lib/lungo.icon.brand.css"/>
+	<link rel="stylesheet" href="./lib/theme.lungo.css"/>
+	<script src="./lib/quo.min.js"></script>
+	<script src="./lib/lungo.js"></script>	
+	<script src="./lib/tile.js"></script>
+	<script>
+		
+	</script>
+	<body class="app" onload="TileLayer.init(tiles,200,75,2,3);Lungo.init({name:'Home'});">
+		<section id="main" data-transition="slide">
+			<article id="tiles" class="active">
+				<div class="tile" id="creator" style="background-color:#00A0B1" 
+				onclick="var t=prompt('Please give a title','title');t && TileLayer.add(t)">
+					<span data-icon="plus"></span>
+				</div>
+			</article>
+		</section>
+	</body>
+</HTML>

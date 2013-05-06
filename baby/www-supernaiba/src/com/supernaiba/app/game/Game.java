@@ -26,7 +26,7 @@ public class Game extends Categorized {
 		return new Share.View();
 	}
 	
-	@Path("youxi")
+	@Path("game")
 	public static class View extends Categorized.View{		
 		
 	}
