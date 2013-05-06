@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">SuperNaiba</string>
-    <string name="url_home">http://10.0.2.2</string>
+    <string name="url_home">http://www.supernaiba.com</string>
     <string name="title_activity_home">超级奶爸</string>
     <string-array name="schema">
     	<item>CREATE TABLE GAME(ID LONG PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, author TEXT NOT NULL, modified DATE not null, status INT DEFAULT 1)</item>

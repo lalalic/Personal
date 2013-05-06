@@ -1,10 +1,7 @@
 package com.yy.m.view;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -23,9 +20,9 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -35,6 +32,7 @@ import com.yy.m.R;
 import com.yy.m.data.Configuration;
 
 public class WebViewEx extends WebView{
+	private static final String ASSET="file://android_asset/";
 	private String home;
 	private ValueCallback<Uri> uploadMsg;
 	private String offlineRoot=null;
@@ -71,8 +69,8 @@ public class WebViewEx extends WebView{
 		settings.setDatabasePath(appPath+"databases/");
 		browser.setWebChromeClient(new ChromeClient(this));
 		
-		offlineClient=new OfflineWebViewClient();
-		onlineClient=new OnlineWebViewClient();
+		offlineClient=new OfflineWebViewClient(this.getContext());
+		onlineClient=new OnlineWebViewClient(this.getContext());
 		
 		ConnectivityManager cm = (ConnectivityManager) this.getContext().getSystemService(Activity.CONNECTIVITY_SERVICE);
 		this.isOnline(cm!=null && cm.getActiveNetworkInfo()!=null 
@@ -81,7 +79,9 @@ public class WebViewEx extends WebView{
 	
 	@Override
 	public void loadUrl(String url, Map<String, String> extraHeaders) {
-		super.loadUrl(url, this.isOnline ? getHeaders(extraHeaders) : null);
+		if(URLUtil.isHttpUrl(url) || URLUtil.isHttpsUrl(url) &&
+				!(this.isOnline ? onlineClient : offlineClient).shouldOverrideUrlLoading(this, url))
+			super.loadUrl(url, this.isOnline ? getHeaders(extraHeaders) : null);
 	}
 
 	@Override
@@ -90,16 +90,27 @@ public class WebViewEx extends WebView{
 	}
 	
 	protected void loadOffline(String url){
-		if(new File(offlineRoot+url).exists()){
-			loadUrl(offlineRoot+url);
-		}else if(new File("file://android_asset/"+url).exists()){
-			loadUrl("file://android_asset/"+url);
-		}else
-			this.loadUrl("file://android_asset/offline.html");
+		for(String path: new String[]{offlineRoot+url, ASSET+url, ASSET+"offline.html"}){
+			if(new File(path).exists()){
+				loadUrl(path);
+				return;
+			}
+		}
 	}
 	
-	protected void cache(String url, byte[] data){
-		Log.d("Cache", "cache "+url);
+	protected void cache(String path, InputStream is){
+		byte[] buffer=new byte[1024];
+		int len=0;
+		try {
+			File f=new File(offlineRoot+path);
+			f.mkdirs();
+			OutputStream os=new FileOutputStream(f);
+			while((len=is.read(buffer))>0)
+				os.write(buffer, 0, len);
+			os.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private Map<String, String> getHeaders(Map<String, String> headers) {
@@ -175,51 +186,6 @@ public class WebViewEx extends WebView{
 			this.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
 		}
 	}
-	
-	public void saveCache() {
-		File cacheDir=this.getContext().getCacheDir();
-		final String cacheDirPath=cacheDir.getPath()+"/";
-		final byte[] data=new byte[1024*10];
-		cacheDir.listFiles(new FileFilter(){
-			@Override
-			public boolean accept(File file) {
-				if(file.isFile()){
-					File offline=new File(file.getAbsolutePath().replaceFirst(cacheDirPath, WebViewEx.this.offlineRoot));
-					InputStream is=null;
-					OutputStream os=null;
-					try {
-						is=new FileInputStream(file);
-						os=new FileOutputStream(offline);
-						int len=0;
-						while((len=is.read(data))>0)
-							os.write(data, 0, len);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}finally{
-						try {
-							if(is!=null)
-								is.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-						try {
-							if(os!=null)
-								os.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}else{ 
-					String dir=file.getAbsolutePath().replace(cacheDirPath, WebViewEx.this.offlineRoot);
-					new File(dir).mkdirs();
-					file.listFiles(this);
-				}
-				return false;
-			}
-		});
-	}
-	
-	
 	
 	public class NetworkStateTrigger extends BroadcastReceiver{
 		@Override

@@ -65,12 +65,4 @@ public class WebActivity extends BaseActivity {
 	public void test(){
 		this.notify("test");
 	}
-
-	@Override
-	protected void onDestroy() {
-		this.browser.saveCache();
-		super.onDestroy();
-	}
-	
-
 }

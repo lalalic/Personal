@@ -8,5 +8,11 @@
     <string name="choose_file">Select a file</string>
     <string name="error_selecting_file">Error selecting File</string>
     <string-array name="schema"></string-array>
+    <string-array name="caches">
+        <item>index.html</item>
+        <item>user/signin.html</item>
+        <item>user/signup.html</item>
+        <item>comment/list/{ID:\\d+}.html</item>
+    </string-array>
     <string name="browserAgent">android mobile </string>
 </resources>
