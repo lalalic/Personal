@@ -12,7 +12,7 @@
         <item>index.html</item>
         <item>user/signin.html</item>
         <item>user/signup.html</item>
-        <item>comment/list/{ID:\\d+}.html</item>
+        <item>comment/list/\\d+.html</item>
     </string-array>
     <string name="browserAgent">android mobile </string>
 </resources>

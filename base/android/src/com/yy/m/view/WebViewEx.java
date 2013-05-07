@@ -103,11 +103,12 @@ public class WebViewEx extends WebView{
 		int len=0;
 		try {
 			File f=new File(offlineRoot+path);
-			f.mkdirs();
+			f.getParentFile().mkdirs();
 			OutputStream os=new FileOutputStream(f);
 			while((len=is.read(buffer))>0)
 				os.write(buffer, 0, len);
 			os.flush();
+			os.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

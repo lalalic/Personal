@@ -11,16 +11,10 @@ public class OfflineWebViewClient extends OnlineWebViewClient{
 
 	@Override
 	public boolean shouldOverrideUrlLoading(WebView view, String url) {
-		
-		
 		return true;
 	}
 
-	@Override
-	public void onLoadResource(WebView view, String url) {
-
-		super.onLoadResource(view, url);
-	}
+	
 	
 	
 }
