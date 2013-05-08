@@ -61,8 +61,11 @@
 				Lungo.Router.History = (function(undefined) {//rewrite to use history API
 					var lastSection=null,backedSection=null
 					window.onpopstate=function(e,forward){
+						console.debug("onpopstate")
 						if(!e.state||!'section' in e.state) return
+						console.debug("onpopstate-"+e.state.section)
 						if((forward=!$1(e.state.section))){
+							console.debug("onpopstate-"+e.state.section+" loading from "+location.href)
 							Lungo.Resource.load(location.href)
 							Lungo.Boot.Data.init(e.state.section)
 						}
@@ -73,10 +76,13 @@
 					}
 				    return {
 				        add: function(section_id, url) {
-					       	if((url=Lungo.dom(section_id).data('url')) && url!=location.href)
+					       	if((url=Lungo.dom(section_id).data('url')) && url!=location.href){
 					       		history.pushState({section:section_id},null,url);
-					       	else
+					       		console.debug("push history "+url+", "+history.length)
+					       	}else{
 					       		history.replaceState({section:section_id},document.title,location.href);
+					       		console.debug("push history "+location.href+", "+history.length)
+					       	}
 					       	lastSection=section_id
 					     },
 				        current: function() {
@@ -89,7 +95,7 @@
 				Quo.fn.append=function(value){
 					var context=Quo.fn.__append.apply(this,arguments)
 					if(Lungo.Core.toType(value)=="string" && /^\s*\<section/i.test(value)){/*ajax section; not public API*/
-						for(var scripts=$9('script',$1('section:last-of-type')),i=scripts.length-1,sc;i>-1;i++){
+						for(var scripts=$9('script:not([type="text/tmpl"])',$1('section:last-of-type')),i=scripts.length-1,sc;i>-1;i--){
 							sc=scripts[i]
 							document.write=document.writeln=function(v){
 								sc.insertAdjacentHTML('afterEnd',v)

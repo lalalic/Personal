@@ -5,14 +5,11 @@ import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
+import android.webkit.WebStorage.QuotaUpdater;
 import android.webkit.WebView;
 
 public class ChromeClient extends WebChromeClient{
 	private WebView webViewEx;
-
-	/**
-	 * @param webViewEx
-	 */
 	public ChromeClient(WebView webViewEx) {
 		this.webViewEx = webViewEx;
 	}
@@ -24,6 +21,19 @@ public class ChromeClient extends WebChromeClient{
 		return true;
 	}
 	
+	@Override
+	public void onExceededDatabaseQuota(String url, String databaseIdentifier,
+			long currentQuota, long estimatedSize, long totalUsedQuota,
+			QuotaUpdater quotaUpdater) {
+		quotaUpdater.updateQuota(totalUsedQuota+currentQuota);
+	}
+
+	@Override
+	public void onReachedMaxAppCacheSize(long spaceNeeded, long totalUsedQuota,
+			QuotaUpdater quotaUpdater) {
+		quotaUpdater.updateQuota(totalUsedQuota+5*1024*1024);
+	}
+
 	@Override
 	public boolean onJsAlert(WebView view, String url, String message,
 			JsResult result) {

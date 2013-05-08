@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import android.content.Context;
+import android.util.Log;
 import android.webkit.CacheManager;
 import android.webkit.CacheManager.CacheResult;
 import android.webkit.URLUtil;
@@ -19,21 +20,16 @@ public class OnlineWebViewClient extends WebViewClient{
 	protected static List<Pattern> PATHS=null;
 	Context ctx;
 	public OnlineWebViewClient(Context ctx){
-		if(PATHS==null){
-			PATHS=new ArrayList<Pattern>();
-			for(String path: ctx.getResources().getStringArray(R.array.caches))
-				PATHS.add(Pattern.compile(path));
-		}
+		if(PATHS!=null)
+			return;
+		PATHS=new ArrayList<Pattern>();
+		for(String path: ctx.getResources().getStringArray(R.array.caches))
+			PATHS.add(Pattern.compile(path));
 	}
 	
 	@Override
 	public void onPageFinished(WebView view, String url){
-		
-	}
-	
-
-	@Override
-	public void onLoadResource(WebView view, String url) {
+		Log.d("web loaded",url);
 		if(!(URLUtil.isHttpUrl(url) || URLUtil.isHttpsUrl(url)))
 			return;
 		Pattern pattern=getPattern(url);
@@ -42,12 +38,22 @@ public class OnlineWebViewClient extends WebViewClient{
 		CacheResult cache=CacheManager.getCacheFile(url, null);
 		if(cache==null)
 			return;
-		String mimeType=cache.getMimeType();
-		if(mimeType.indexOf("html")!=-1){
-			((WebViewEx)view).cache(pattern.pattern(), cache.getInputStream());
-			PATHS.remove(pattern);
-		}else if(mimeType.indexOf("image")!=-1)
-			((WebViewEx)view).cache(getPath(url), cache.getInputStream());
+		((WebViewEx)view).cache(pattern.pattern(), cache.getInputStream());
+		PATHS.remove(pattern);	
+	}
+	
+	
+
+	@Override
+	public boolean shouldOverrideUrlLoading(WebView view, String url) {
+		if(url.indexOf('#')!=-1)
+			return true;
+		return false;
+	}
+
+	@Override
+	public void onLoadResource(WebView view, String url) {
+		Log.d("Online", url);
 	}
 
 	protected String getPath(String url){

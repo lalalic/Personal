@@ -98,6 +98,15 @@ public class WebViewEx extends WebView{
 		}
 	}
 	
+	protected File getOfflineFile(String url){
+		File file=null;
+		for(String path: new String[]{offlineRoot+url, ASSET+url, ASSET+"offline.html"}){
+			if((file=new File(path)).exists())
+				return file;
+		}
+		return file;
+	}
+	
 	protected void cache(String path, InputStream is){
 		byte[] buffer=new byte[1024];
 		int len=0;
@@ -109,6 +118,7 @@ public class WebViewEx extends WebView{
 				os.write(buffer, 0, len);
 			os.flush();
 			os.close();
+			is.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

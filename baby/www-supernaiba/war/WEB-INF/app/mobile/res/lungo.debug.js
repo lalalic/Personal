@@ -1318,6 +1318,7 @@ Lungo.Boot.Events = (function(lng, undefined) {
         } else {
             _selectTarget(link);
         }
+        return false
     };
 
     var _hideAsideIfNecesary = function(event) {

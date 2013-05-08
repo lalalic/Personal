@@ -484,4 +484,8 @@ public class FileUtils {
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 		return intent;
 	}
+	
+	public static byte[] getFileData(File f){
+		return null;
+	}
 }
