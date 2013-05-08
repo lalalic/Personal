@@ -28,7 +28,8 @@
 		<@script key="base" version="1.8.1">
 			<#noparse>
 			var
-			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k].innerHTML||_l[k])))(d))},
+			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k].innerHTML||_l[k])))(ontemplate(k,d)))},
+			ontemplate=function(k,d){return d},
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
 			$9=function(s,c){return(c||document).querySelectorAll(s)},
 			e/*ncode*/=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
@@ -40,8 +41,9 @@
 		<#macro head></#macro><@head/>
 	</head>
  	<body class="app ${path!'home'} ${contentMacroName}">
-		<@script key="mustache" src="/res/mustache.js"/>		
- 		<#macro content><@run contentMacroName!"_empty"/></#macro>
+		<@script key="mustache" src="/res/mustache.js"/>	
+		<script src="file:///android_asset/res/init.js"></script>
+		<#macro content><@run contentMacroName!"_empty"/></#macro>
  		<#macro header><@run headerMacroName!"_empty"/></#macro>
  		<#macro footer><@run footerMacroName!"_empty"/></#macro>
  		<#macro aside><@run asideMacroName!"_empty"/></#macro>
