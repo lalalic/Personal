@@ -18,7 +18,7 @@ post:
 	<ol class="list">
 		{{#empty}}<li><div  class="info">没有呢</div></li>{{/empty}}
 		{{#posts}}
-			<li class="arrow"><a href="#{{path}}_show1" data-router="section" data-async="/{{path}}/show/{{ID}}.shtml">{{title}}</a></li>
+			<li class="arrow"><a href="/{{path}}/show/{{ID}}.shtml">{{title}}</a></li>
 		{{/posts}}
 	</ol>
 	</#noparse></@>
@@ -49,7 +49,7 @@ post:
 </#macro>
 
 <#macro action41 post>
-	<a data-icon="pencil" class="small" data-router="section" href="#comment_show" data-async="/comment/list/${post.ID}.html"></a>
+	<a data-icon="pencil" class="small" href="/comment/list/${post.ID}.html"></a>
 	<@favoriteCMD post/>
 	<a data-icon="share" href="#"></a>
 </#macro>

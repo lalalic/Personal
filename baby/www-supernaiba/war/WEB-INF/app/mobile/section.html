@@ -1,4 +1,4 @@
-<section id="${path}_${contentMacroName}" data-url="${url}">
+<section id="${path}_${contentMacroName}" data-transition="slide">
 <@header/>
 <article id="${path}_${contentMacroName}_1" class="active">
 	<@.main[contentMacroName]/>
@@ -31,7 +31,7 @@
 	<#if footerNavMacro??><@run footerNavMacro/> <#return></#if>
 	<a href="#" data-icon="share"></a>
 	<#if !user.isLoggedIn()>
-		<a data-icon="user" href="#signin" data-async="/user/signin.html?targetURL=${url}">登录</a>
+		<a data-icon="user" href="/user/signin.html?targetURL=${url}">登录</a>
 	<#else>
 		<a data-icon="remove" href="#" onclick="x('get','/user/signout',function(){document.location.reload()})">[${user.account}]</a></li>		
 	</#if>
