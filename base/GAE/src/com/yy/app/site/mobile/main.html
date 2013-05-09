@@ -1,4 +1,4 @@
-<#global template=website.defaultTemplate debug="" ver="2.0">
+<#global template=website.defaultTemplate debug="debug." ver="2.0">
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
@@ -40,6 +40,10 @@
 
 <#macro _data key>
 	<script>$t("html.${key}",(function(data){data={};<#nested>;return data})())</script>
+</#macro>
+
+<#macro select title name options type="checkbox" values=[]>
+	<span class="select"><span>${title}</span><#list options as o><span onclick="var a=$1('input',this);a.checked=!a.checked;this.classList.toggle('selected');return false">${o.name}<input class="unvisible" type="${type}" name="${name}" value="${o.ID}"></span></#list></span>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>

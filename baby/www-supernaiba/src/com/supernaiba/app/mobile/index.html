@@ -7,32 +7,11 @@
 <#macro postFields post>
 	<@cms.postFields post>
 		<fieldset>
-			<label>年龄</label>
-			<select name="age" multiple="multiple">
-				<@optionUI website.tagger.list("ages")/>
-			</select>
-		</fieldset>
-		
-		<fieldset>
-			<label>性别</label>
-			<select name="gender" multiple="multiple">
-				<@optionUI website.tagger.list("gender")/>
-			</select>
-		</fieldset>
-		
-		<fieldset>
-			<label>时间(分)</label>
-			<select name="duration">
-				<@optionUI website.tagger.list("duration")/>
-			</select>
-		</fieldset>
-		
-		<fieldset>
-			<label>目的</label>
-			<select name="caps" multiple="multiple">
-				<@optionUI website.tagger.list("capabilities")/>
-			</select>
-		</fieldset>		
+			<@select "年龄.岁" "age" website.tagger.list("ages")/>
+			<@select "性别" "gender" website.tagger.list("gender")/>
+			<@select "时间.分" "duration" website.tagger.list("duration")/>
+			<@select "目的" "caps" website.tagger.list("capabilities")/>
+		</fieldset>	
 	</@>
 </#macro>
 
@@ -43,4 +22,27 @@
 		<div>${post.content}</div>
 	</div>
 	<@show1Extra post/>
+</#macro>
+
+<#macro postFieldContent post>
+	<fieldset>
+		<textarea placeholder="内容" name="content" required="required" onfocus="Lungo.Element.Carousel(post_content);Lungo.Router.article(Lungo.Router.History.current(),'#post_content')">${post.title!}</textarea>
+	</fieldset>
+	<a href="#post_content" data-router="article" id="switcher" class="unvisible"></a>
+	<article id="post_content" class="block" data-control="carousel">
+		<div>
+			<div align="center">
+				<img src="http://images.google.com.hk/intl/zh-CN_cn/images/logos/images_logo_lg.gif"/>
+			</div>
+			<div align="center">
+				<img src="http://t0.gstatic.com/images?q=tbn:ANd9GcTqpjrN-80C8nzIZWMW3Chjw2UnxWJXixOB1AKcPF-qX9Ysg6iH"/>
+			</div>
+		</div>
+	</article>
+	<script>
+	(function(){
+		var active=$1('article.active')
+		active.parentNode.insertBefore(post_content,active)
+	})()
+	</script>
 </#macro>

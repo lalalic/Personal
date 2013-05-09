@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import android.content.Context;
-import android.util.Log;
 import android.webkit.CacheManager;
 import android.webkit.CacheManager.CacheResult;
 import android.webkit.URLUtil;
@@ -29,7 +28,6 @@ public class OnlineWebViewClient extends WebViewClient{
 	
 	@Override
 	public void onPageFinished(WebView view, String url){
-		Log.d("web loaded",url);
 		if(!(URLUtil.isHttpUrl(url) || URLUtil.isHttpsUrl(url)))
 			return;
 		Pattern pattern=getPattern(url);
@@ -40,20 +38,6 @@ public class OnlineWebViewClient extends WebViewClient{
 			return;
 		((WebViewEx)view).cache(pattern.pattern(), cache.getInputStream());
 		PATHS.remove(pattern);	
-	}
-	
-	
-
-	@Override
-	public boolean shouldOverrideUrlLoading(WebView view, String url) {
-		if(url.indexOf('#')!=-1)
-			return true;
-		return false;
-	}
-
-	@Override
-	public void onLoadResource(WebView view, String url) {
-		Log.d("Online", url);
 	}
 
 	protected String getPath(String url){

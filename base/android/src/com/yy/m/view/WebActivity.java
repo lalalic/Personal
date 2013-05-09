@@ -19,7 +19,8 @@ public class WebActivity extends BaseActivity {
 		setContentView(R.layout.web);
 		browser = (WebViewEx) this.findViewById(R.id.browser);
 		browser.setHome(this.getString(R.string.url_home));
-		browser.addJavascriptInterface(this,"service");	
+		browser.addJavascriptInterface(this,"_backend");
+		browser.addJavascriptInterface(Configuration.getInstance(this), "_DB");
 		onCreated(saved);
 		if(saved!=null && saved.containsKey(LAST_FINAL_URL))
         	browser.loadUrl(saved.getString(LAST_FINAL_URL));

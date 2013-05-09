@@ -116,6 +116,34 @@ public class Configuration extends SQLiteOpenHelper{
 		}
 	}
 	
+	public Cursor load(String sql, String[] arguments){
+		SQLiteDatabase db=null;
+		Cursor cursor=null;
+		try {
+			db=this.getReadableDatabase();
+			cursor=db.rawQuery(sql, arguments);
+			return cursor;
+		} finally {
+			if(cursor!=null)
+				cursor.close();
+			if(db!=null)
+				db.close();
+		}
+	}
+	
+	public void save(final String sql, final Object[][] values){
+		new Thread(){
+			@Override
+			public void run() {
+				SQLiteDatabase db=null;
+				db=Configuration.this.getWritableDatabase();
+				for(Object[] one: values)
+					db.execSQL(sql, one);
+				db.close();
+			}
+		}.start();
+	}
+	
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL("CREATE TABLE CONF(KEY TEXT PRIMARY KEY,VALUE TEXT NOT NULL)");

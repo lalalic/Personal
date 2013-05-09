@@ -2090,7 +2090,7 @@ Lungo.Element.Carousel = function(element, callback) {
             var el = _instance.slides[index];
             el.style.width = _instance.width + 'px';
             el.style.display = 'table-cell';
-            el.style.verticalAlign = 'top';
+            el.style.verticalAlign = 'middle';
         }
         _slide(_instance.index, 0);
         _instance.container.style.visibility = 'visible';
