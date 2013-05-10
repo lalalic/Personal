@@ -76,9 +76,10 @@ post:
 	<fieldset>
 		<input placeholder="${this.model}标题" type="text" name="title" value="${post.title!}" required="required" style="text-align:center"/>
 	</fieldset>
+	<#nested/>
 	
 	<@postFieldContent post/>
-	<#nested/>
+	
 	<fieldset>
 		<input type="text" placeholder="标签: 11个月,身体协调" name="tag" value="${post.tag!}">
 	</fieldset>

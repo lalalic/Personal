@@ -51,7 +51,7 @@ public class Init extends com.sun.jersey.spi.container.servlet.ServletContainer 
 		String agent=request.getHeader("User-Agent");
 		if(agent==null || agent.matches(".*(m|M)obile.*"))
 			return "mobile";
-		return "web";
+		return "mobile";
 	}
 	
 	protected Profile getProfiler(){

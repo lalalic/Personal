@@ -1,4 +1,4 @@
-<#global template=website.defaultTemplate debug="debug." ver="2.0">
+<#global template=website.defaultTemplate debug="debug." ver="1.0">
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
@@ -18,7 +18,7 @@
 <#macro link key href="" version="1" rel="">
 	<#local version=ver>
 	<#local key="css."+key>
-	<#if ((cookie[key][0])!"")==version>
+	<#if debug=="" && ((cookie[key][0])!"")==version>
 		<script>_c("${key}","style")</script>
 		<#return>
 	<#else>
@@ -30,7 +30,7 @@
 <#macro _tmpl key version="1">
 	<#local version=ver>
 	<#local key="html."+key>
-	<#if ((cookie[key][0])!"")==version>
+	<#if debug=="" && ((cookie[key][0])!"")==version>
 		<#return>
 	<#else>
 		<script type="text/tmpl" id="${key}"><#nested></script>
@@ -42,8 +42,19 @@
 	<script>$t("html.${key}",(function(data){data={};<#nested>;return data})())</script>
 </#macro>
 
-<#macro select title name options type="checkbox" values=[]>
-	<span class="select"><span>${title}</span><#list options as o><span onclick="var a=$1('input',this);a.checked=!a.checked;this.classList.toggle('selected');return false">${o.name}<input class="unvisible" type="${type}" name="${name}" value="${o.ID}"></span></#list></span>
+<#macro checkbox title name options values=[]>
+	<span class="select checkbox"><span>${title}</span><#list options as o><input class="unvisible" checked="" type="checkbox" name="${name}" value="${o.ID}"><span>${o.name}</span></#list></span>
+</#macro>
+
+<#macro radio title name options value>
+	<span class="select radio"><span>${title}</span><#list options as o><input class="unvisible" type="radio" name="${name}" value="${o.ID}"><span>${o.name}</span></#list></span>
+</#macro>
+
+
+<#macro editor name content="" placeholder="Input content here" style="">
+	<div class="editor" data-name="${name}" contenteditable="true" style="${style}">${content!placeholder}</div>
+	<input type="hidden" name="${name}">
+	<br/>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
