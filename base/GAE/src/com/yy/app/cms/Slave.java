@@ -26,8 +26,7 @@ public class Slave extends Post {
 				this.weiboID = weibo.repost(master.weiboID, message);
 			else
 				this.weiboID = weibo.status(message);
-			this.resolveAttrs=false;
-			ObjectifyService.ofy().save().entity(this).now();
+			ObjectifyService.ofy().save().entity(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

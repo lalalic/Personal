@@ -20,8 +20,7 @@
 		<@link key="base" version="1.0">
 			.unvisible{position:absolute;top:-1000px}
 			section>header{border-radius:0;-webkit-border-radius:0}
-			.editor{min-height:300px;line-height:25px;border:1px lightgray solid}
-			.editor,header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
+			header nav input[type=text],footer nav input[type=text]{-webkit-user-select:auto!important;padding:10px; line-height:20px;}
 			fieldset>legend{align:center}
 			footer nav.groupbar{top:0px}
 			footer nav.groupbar a{line-height:44px;height:44px!important}
@@ -31,18 +30,28 @@
 			span.select>span:hover{color:blue}
 			span.select input:checked+span{background-color: white}
 			span.select>span:first-of-type{background-color:lightgreen;border-left:1px lightgray solid}
+			[data-control=carousel]>:first-child{display:table;height:100%}
+			[data-control=carousel]>:first-child>*{text-align:center;}
+			[data-control=carousel] img{max-width:95%}
+			[data-control=carousel]{min-height:300px;height:300px}
+			#editor span:empty:before{font-family:'lungojsicon';font-size:50px;font-weight:normal!important;content:"\0023"}
+			#editor+textarea{position:absolute;bottom:44px;margin-bottom:1px;opacity:0.7}
+			
 		</@>
 		<@script key="base" version="1.8.1">
 			<#noparse>
+			Array.prototype.each=NodeList.prototype.each=HTMLCollection.prototype.each=function(f){for(var i=0;i<this.length;i++) f(i,this[i]);return this};
+			Node.prototype.remove=function(){this.parentNode.removeChild(this)};
+			NodeList.prototype.remove=HTMLCollection.prototype.remove=function(){this.each(function(i,a){a.remove()})};
 			var
-			$t/*emplate*/=function(k/*ey*/,d/*ata*/){document.writeln((k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k].innerHTML||_l[k])))(ontemplate(k,d)))},
+			$t/*emplate*/=function(k/*ey*/,d/*ata*/, f){(f||document.writeln).call(document,(k in $t&&$t[k]||($t[k]=Mustache.compile(k in this && this[k].innerHTML||_l[k])))(ontemplate(k,d)))},
 			ontemplate=function(k,d){return d},
 			$1=function(s/*elector*/,c/*ontext*/){return(c||document).querySelector(s)},
 			$9=function(s,c){return(c||document).querySelectorAll(s)},
 			e/*ncode*/=function(a){return a.replace(/[,\/\?\:@&=+\$#]/g,function(c){return '%'+(c+"").charCodeAt(0).toString(16)})},
 			h/*tml*/=function(h/*tml*/,d,c){b=document;c=b.createElement("p");c.innerHTML=h;for(a=b.createDocumentFragment();b=c.firstChild;)a.appendChild(b);return a},
 			_x=function(a){for(a=3;a--;)try{return new(XMLHttpRequest||ActiveXObject)(["Msxml2","Msxml3","Microsoft"][a]+".XMLHTTP")}catch(e){}},
-			x=function(m/*ethod*/,u/*rl*/,c/*allback*/,d/*ata*/,x){with(x=_x())return onreadystatechange=function(){readyState^4||status^200||c(this)},open(m,u,c),send(d),x}
+			x=function(m/*ethod*/,u/*rl*/,c/*allback*/,d/*ata*/,x){with(x=_x())return (c&&(onreadystatechange=function(){readyState^4||status^200||c(this)})),open(m,u,c),send(d),x}
 			</#noparse>
 		</@>
 		<#macro head></#macro><@head/>
@@ -80,11 +89,59 @@
 					})
 				})
 				
-				Lungo.dom('.editor').each(function(i,el){
-					var input=$1("input[name='"+Lungo.dom(el).data('name')+"']")
-					Lungo.dom(input.form).on('submit',function(){input.value=el.innerHTML})
-				})
 				Lungo.init({name:"home"})
+				$9('.show1 [data-control=carousel]').each(function(i,el){
+					el.slides=Lungo.Element.Carousel(el)
+					window.addEventListener('resize',function(){el.slides.refresh()})
+				})
+				$9('#editor').each(function(i,el){
+					el.textarea=el.nextSibling
+					el.input=el.textarea.nextSibling
+					el.children[0].children.each(function(i,slide,a){
+						slide.content=slide.textContent
+						$9('p',slide).remove()
+						slide.children.length==0 && (slide.innerHTML="<span/>")
+					})
+					el.children[0].addEventListener("click",function(){
+						uploader.start(function(urls){
+							el.current.innerHTML="<img src='"+urls[0]+"'>"
+							for(var i=urls.length-1;i>0;i++)
+								el.current.insertAdjacentHTML("afterend",'<div><img src="'+urls[i]+'"></div>')
+							el.slides.refresh()
+						})
+					})
+					el.slides=Lungo.Element.Carousel(el,function(i,slide){
+						if(el.current)
+							el.current.content=el.textarea.value
+						el.current=slide
+						el.textarea.value=('content' in el.current)&&el.current.content||""
+						el.textarea.focus()
+					})
+					window.addEventListener('resize',function(){el.slides.refresh()})
+					el.slides.add=function(){
+						el.current.insertAdjacentHTML("afterend", '<div><span/></div>');
+						this.refresh()
+						this.next()
+					}
+					el.slides.remove=function(){
+						el.current.parentNode.removeChild(el.current)
+						this.refresh()
+					}
+					el.textarea.form.addEventListener('submit',function(){
+						try{
+							el.current.content=el.textarea.value
+							var value=[]
+							el.children[0].children.each(function(i,slide, a){
+								value.push("<div>"+((a=$1('img',slide))?a.outerHTML:""))
+								value.push("<p>"+(slide.content||"")+"</p>")
+								value.push("</div>")
+							})
+							el.input.value=value.join('')
+						}catch(e){
+							return false
+						}
+					},false)
+				})				
 			</#noparse></@>
 		</#macro><@body/>
 	</body>

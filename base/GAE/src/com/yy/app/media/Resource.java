@@ -126,6 +126,7 @@ public class Resource {
 
 		@GET
 		@Path("show/{key}.jpg")
+		@Produces("image/*")
 		public String show(@PathParam("key") String key,
 				@Context HttpServletResponse res) {
 			try {

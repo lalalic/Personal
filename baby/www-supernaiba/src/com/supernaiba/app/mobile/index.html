@@ -11,24 +11,9 @@
 		<@checkbox "年龄.岁" "age" website.tagger.list("ages")/>
 		<@checkbox "性别" "gender" website.tagger.list("gender")/>
 		<@checkbox "时间.分" "duration" website.tagger.list("duration")/>
-		<@checkbox "目的" "caps" website.tagger.list("capabilities")/>
+		<@checkbox "目的" "cap" website.tagger.list("capabilities")/>
 	</div>
 	</fieldset>
 	<#nested/>
 	<@postFieldContent post/>
-</#macro>
-
-<#macro show1>
-	<#assign footerNavMacro={'name':'action41','arg':post}>
-	<div>
-		<div class="right secondary"><@authorInfo post.author/></div>
-		<div>${post.content}</div>
-	</div>
-	<@show1Extra post/>
-</#macro>
-
-<#macro postFieldContent post>
-	<fieldset>
-		<@editor "content" post.content!"" />
-	</fieldset>
 </#macro>

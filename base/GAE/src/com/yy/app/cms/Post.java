@@ -1,13 +1,10 @@
 package com.yy.app.cms;
 
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -30,7 +27,6 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.OnLoad;
 import com.googlecode.objectify.condition.IfNotNull;
 import com.googlecode.objectify.condition.IfTrue;
 import com.sun.jersey.api.view.Viewable;
@@ -39,7 +35,6 @@ import com.yy.app.SearchFilter;
 import com.yy.app.auth.User;
 import com.yy.app.comment.Comment;
 import com.yy.app.site.Profile;
-import com.yy.app.tag.Tag;
 import com.yy.app.test.EnclosingModel;
 import com.yy.app.test.Runner;
 import com.yy.app.test.Test;
@@ -66,7 +61,8 @@ public class Post extends AModel {
 	private Text content;
 	public String excerpt;
 
-	@Index(IfNotNull.class)
+	@TagAttr("status")
+	@Ignore
 	public Integer status;
 	
 	public Boolean allowComment = true;
@@ -92,29 +88,16 @@ public class Post extends AModel {
 	transient public boolean ratable = true;
 
 	@Ignore
-	transient private String contentStr;
-
-	@Ignore
-	transient public boolean resolveAttrs = false;
-
-	@Ignore
 	public boolean supportWeibo = true;
 
 	public String weiboID;
 
-	@OnLoad
-	protected void resolveText() {
-		if (content != null)
-			this.contentStr = this.content.getValue();
-	}
-
 	public String getContent() {
-		return this.contentStr;
+		return content!=null ? this.content.getValue() : "";
 	}
 
 	public void setContent(String content) {
 		this.content = new Text(content);
-		this.contentStr = content;
 	}
 
 	public void removeComments(long entityID) {
@@ -124,25 +107,24 @@ public class Post extends AModel {
 
 	@Override
 	protected void prePersist() {
-		collectTagAttr();
 		super.prePersist();
 		checkContent();
 		makeExcerpt();
 	}
 
 	protected void checkContent() {
-		if (this.contentStr == null)
+		if (this.content == null)
 			return;
 		String blacklist = (String) Profile.I.blacklist;
-		if (blacklist != null && this.contentStr.matches(blacklist))
+		if (blacklist != null && this.getContent().matches(blacklist))
 			throw new RuntimeException(
 					"the content includes some restricted words.");
 	}
 
 	protected void makeExcerpt() {
-		if (this.contentStr == null)
+		if (this.content == null)
 			return;
-		this.excerpt = this.contentStr.replaceAll("<[^<>]*>", "");
+		this.excerpt = this.getContent().replaceAll("<[^<>]*>", "");
 		if (this.excerpt.length() > 100)
 			excerpt = excerpt.substring(0, 100) + "...";
 	}
@@ -165,7 +147,6 @@ public class Post extends AModel {
 					.replaceAll("title1", "#" + this.title + "#")
 					.replaceAll("id1", this.ID.toString());
 			this.weiboID = weibo.status(message);
-			this.resolveAttrs=false;
 			ObjectifyService.ofy().save().entity(this).now();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -173,62 +154,7 @@ public class Post extends AModel {
 
 	}
 
-	@SuppressWarnings("unchecked")
-	protected void collectTagAttr() {
-		try {
-			if (!resolveAttrs)
-				return;
-			Set<Long> oldAttrs = attrs;
-			attrs = new TreeSet<Long>();
-			for (Field field : getClass().getFields()) {
-				if (field.isAnnotationPresent(TagAttr.class)) {
-					if (Collection.class.isAssignableFrom(field.getType())) {
-						Collection<Long> values = (Collection<Long>) field
-								.get(this);
-						if (values != null)
-							attrs.addAll(values);
-					} else {
-						Long value = (Long) field.get(this);
-						if (value != null)
-							attrs.add(value);
-					}
-				}
-			}
-			List<Tag> tags = new ArrayList<Tag>();
-			if (oldAttrs != null && !oldAttrs.isEmpty()) {
-				Set<Long> removed = new TreeSet<Long>(oldAttrs);
-				if (attrs != null && attrs.isEmpty())
-					removed.removeAll(attrs);
-				if (!removed.isEmpty()) {
-					for (Tag t : (ObjectifyService.ofy().load().type(
-							(Class<? extends Tag>) Profile.I.tagger.getClass()
-									.getEnclosingClass()).ids(removed).values())) {
-						t.dec(this);
-						tags.add(t);
-					}
-				}
-			}
 
-			if (!attrs.isEmpty()) {
-				Set<Long> added = new TreeSet<Long>(attrs);
-				if (oldAttrs != null && oldAttrs.isEmpty())
-					added.removeAll(oldAttrs);
-				if (!added.isEmpty()) {
-					for (Tag t : (ObjectifyService.ofy().load().type(
-							(Class<? extends Tag>) Profile.I.tagger.getClass()
-									.getEnclosingClass()).ids(added).values())) {
-						t.inc(this);
-						tags.add(t);
-					}
-				}
-			}
-
-			if (!tags.isEmpty())
-				ObjectifyService.ofy().save().entities(tags).now();
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-	}
 
 	@Path("post")
 	public static class View extends AModel.View {
@@ -452,7 +378,7 @@ public class Post extends AModel {
 			post.setParent(parent);
 			post.title = title;
 			post.setContent(content);
-			store.save().entity(post);
+			store.save().entity(post).now();
 			post.postPersist(); 
 			return Response.seeOther(
 					new URI("/" + this.path() + "/show/" + post.ID + ".shtml"))

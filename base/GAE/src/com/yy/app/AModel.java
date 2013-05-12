@@ -1,5 +1,6 @@
 package com.yy.app;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,6 +37,7 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnLoad;
 import com.googlecode.objectify.annotation.OnSave;
@@ -56,7 +58,9 @@ import com.yy.rs.Uniques;
 public class AModel {
 	protected static final Logger log = Logger
 			.getLogger(AModel.class.getName());
-
+	protected static final Map<Class<?>, Map<Class<? extends Annotation>,List<Field>>> classTagAttrs=
+		new HashMap<Class<?>, Map<Class<? extends Annotation>,List<Field>>>();
+	
 	@Id
 	@Index
 	public Long ID;
@@ -81,7 +85,10 @@ public class AModel {
 
 	@Index
 	public Set<Long> attrs;
-
+	
+	@Ignore
+	public transient boolean resolveAttrs;
+	
 	@Index(IfNotNull.class)
 	public Boolean __tester;
 
@@ -112,7 +119,9 @@ public class AModel {
 		checkRequired();
 
 		checkUnique();
-
+		
+		collectTagAttr();
+		
 		if (this.ID == null || this.ID == 0) {
 			this.created = this.modified;
 		} else {
@@ -124,6 +133,26 @@ public class AModel {
 	protected void postLoad() {
 		populateTagAttr();
 	}
+	
+	protected List<Field> getTaggedFields(Class<? extends Annotation> tagClass){
+		Map<Class<? extends Annotation>, List<Field>> classInfo=classTagAttrs.get(getClass());
+		List<Field> fields=null;
+		if(classInfo!=null){
+			fields=classInfo.get(tagClass);
+			if(fields!=null)
+				return fields;
+		}else{
+			classInfo=new HashMap<Class<? extends Annotation>, List<Field>>();
+			classTagAttrs.put(getClass(), classInfo);
+		}
+		fields=new ArrayList<Field>();
+		classInfo.put(tagClass, fields);
+		
+		for (Field field : getClass().getFields()) 
+			if (field.isAnnotationPresent(tagClass))
+				fields.add(field);
+		return fields;
+	}
 
 	protected void populateTagAttr() {
 		if (attrs == null || attrs.isEmpty())
@@ -131,31 +160,83 @@ public class AModel {
 		try {
 			Tag.View tagger = Profile.I.tagger;
 			String typeName = this.entityType();
-			for (Field field : getClass().getFields()) {
-				if (field.isAnnotationPresent(TagAttr.class)) {
-					String catKey = field.getAnnotation(TagAttr.class).value();
-					if (catKey == null || catKey.isEmpty())
-						catKey = typeName + "." + field.getName();
-					Tag cat = tagger.get(catKey);
-					if (cat.included.isEmpty())
-						continue;
+			for (Field field : this.getTaggedFields(TagAttr.class)) {
+				String catKey = field.getAnnotation(TagAttr.class).value();
+				if (catKey == null || catKey.isEmpty())
+					catKey = typeName + "." + field.getName();
+				Tag cat = tagger.get(catKey);
+				if (cat.included.isEmpty())
+					continue;
 
-					List<Long> values = new ArrayList<Long>(attrs);
-					values.retainAll(cat.included);
-					if (values.isEmpty())
-						continue;
+				List<Long> values = new ArrayList<Long>(attrs);
+				values.retainAll(cat.included);
+				if (values.isEmpty())
+					continue;
 
-					if (Collection.class.isAssignableFrom(field.getType())) {
-						field.set(this, values);
-					} else {
-						field.set(this, values.get(0));
-					}
+				if (Collection.class.isAssignableFrom(field.getType())) {
+					field.set(this, values);
+				} else {
+					field.set(this, values.get(0));
 				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+	protected void collectTagAttr() {
+		try {
+			Set<Long> oldAttrs = attrs;
+			attrs = new TreeSet<Long>();
+			for (Field field : this.getTaggedFields(TagAttr.class)) {
+				if (Collection.class.isAssignableFrom(field.getType())) {
+					Collection<Long> values = (Collection<Long>) field.get(this);
+					if (values != null)
+						attrs.addAll(values);
+				} else {
+					Long value = (Long) field.get(this);
+					if (value != null)
+						attrs.add(value);
+				}
+			}
+			attrs.remove(0l);
+			
+			List<Tag> tags = new ArrayList<Tag>();
+			if (oldAttrs != null && !oldAttrs.isEmpty()) {
+				Set<Long> removed = new TreeSet<Long>(oldAttrs);
+				if (attrs != null && attrs.isEmpty())
+					removed.removeAll(attrs);
+				if (!removed.isEmpty()) {
+					for (Tag t : (ObjectifyService.ofy().load().type(
+							(Class<? extends Tag>) Profile.I.tagger.getClass()
+									.getEnclosingClass()).ids(removed).values())) {
+						t.dec(this);
+						tags.add(t);
+					}
+				}
+			}
+
+			if (!attrs.isEmpty()) {
+				Set<Long> added = new TreeSet<Long>(attrs);
+				if (oldAttrs != null && oldAttrs.isEmpty())
+					added.removeAll(oldAttrs);
+				if (!added.isEmpty()) {
+					for (Tag t : (ObjectifyService.ofy().load().type(
+							(Class<? extends Tag>) Profile.I.tagger.getClass()
+									.getEnclosingClass()).ids(added).values())) {
+						t.inc(this);
+						tags.add(t);
+					}
+				}
+			}
+
+			if (!tags.isEmpty())
+				ObjectifyService.ofy().save().entities(tags);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}	
 
 	protected void logCreate() {
 

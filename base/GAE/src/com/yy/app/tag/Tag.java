@@ -53,12 +53,11 @@ public class Tag extends AModel {
 				this.included.add(tag.ID);
 		}
 	}
-	
-	
 
 	@Path("tag")
 	public static class View extends AModel.View {
 		public static Map<String, Long> baseTags;
+
 		@GET
 		@Path("admin.html")
 		@AdminUI({ "Resource", "Tag" })
@@ -81,7 +80,8 @@ public class Tag extends AModel {
 			Objectify store = ObjectifyService.ofy();
 			Tag parent = null;
 			if (parentTag != null && parentTag.length() > 0) {
-				parent = (Tag) store.load().type(this.getClass().getEnclosingClass())
+				parent = (Tag) store.load()
+						.type(this.getClass().getEnclosingClass())
 						.filter("name", parentTag).first().get();
 				if (parent == null) {
 					parent = (Tag) newInstance();
@@ -122,16 +122,18 @@ public class Tag extends AModel {
 
 			return allTags;
 		}
-		
+
 		@GET
 		@Path("cloud")
-		public Viewable cloud(@Context UriInfo uriInfo){
-			return viewable(viewDataModel("Tag Cloud","cloud","tags",this.list(uriInfo)));
+		public Viewable cloud(@Context UriInfo uriInfo) {
+			return viewable(viewDataModel("Tag Cloud", "cloud", "tags",
+					this.list(uriInfo)));
 		}
 
 		public Tag get(String name) {
 			Objectify store = ObjectifyService.ofy();
-			Tag tag = (Tag) store.load().type(this.getClass().getEnclosingClass())
+			Tag tag = (Tag) store.load()
+					.type(this.getClass().getEnclosingClass())
 					.filter("name", name).first().get();
 			if (tag == null) {
 				tag = (Tag) newInstance();
@@ -140,9 +142,9 @@ public class Tag extends AModel {
 			}
 			return tag;
 		}
-		
-		public long getID(String tag){
-			if(baseTags.containsKey(tag))
+
+		public long getID(String tag) {
+			if (baseTags.containsKey(tag))
 				return baseTags.get(tag);
 			return this.get(tag).ID;
 		}
@@ -153,7 +155,7 @@ public class Tag extends AModel {
 			List<Tag> tags = create(null, pendings);
 			Tag category = get(cat);
 			for (Tag tag : tags)
-				if(!category.included.contains(tag.ID))
+				if (!category.included.contains(tag.ID))
 					category.included.add(tag.ID);
 			ObjectifyService.ofy().save().entity(category).now();
 			return category.included;
@@ -167,7 +169,7 @@ public class Tag extends AModel {
 			} catch (NumberFormatException e) {
 				Tag category = get(cat);
 				Tag t = get(key);
-				if(!category.included.contains(t.ID)){
+				if (!category.included.contains(t.ID)) {
 					category.included.add(t.ID);
 					ObjectifyService.ofy().save().entity(category).now();
 				}
@@ -178,25 +180,36 @@ public class Tag extends AModel {
 		@SuppressWarnings("unchecked")
 		public Collection<Tag> list(String cat) {
 			Tag category = get(cat);
-			return (Collection<Tag>)ObjectifyService
-					.ofy().load()
+			return (Collection<Tag>) ObjectifyService
+					.ofy()
+					.load()
 					.type((Class<? extends Tag>) getClass().getEnclosingClass())
 					.ids(category.included).values();
+		}
+
+		@SuppressWarnings("unchecked")
+		public Collection<Tag> list(List<Long> ids) {
+			return (Collection<Tag>) ObjectifyService
+					.ofy()
+					.load()
+					.type((Class<? extends Tag>) getClass().getEnclosingClass())
+					.ids(ids).values();
 		}
 
 		public String listName(List<Long> ids) {
 			if (ids == null || ids.isEmpty())
 				return "";
-			if(ids.size()==1){
-				if(ids.get(0)>0){
-					Tag t= ((Tag)get(ids.get(0)));
+			if (ids.size() == 1) {
+				if (ids.get(0) > 0) {
+					Tag t = ((Tag) get(ids.get(0)));
 					return t.name;
-				}else
+				} else
 					return "";
 			}
 			@SuppressWarnings("unchecked")
-			Collection<Tag> tags = (Collection<Tag>)ObjectifyService
-					.ofy().load()
+			Collection<Tag> tags = (Collection<Tag>) ObjectifyService
+					.ofy()
+					.load()
 					.type((Class<? extends Tag>) getClass().getEnclosingClass())
 					.ids(ids).values();
 
@@ -205,10 +218,11 @@ public class Tag extends AModel {
 				names.append(",").append(t.name);
 			return names.substring(1);
 		}
-		public String listName(Long id){
-			if(id==null || id<=0)
+
+		public String listName(Long id) {
+			if (id == null || id <= 0)
 				return "";
-			return ((Tag)get(id)).name;
+			return ((Tag) get(id)).name;
 		}
 
 		/**
@@ -217,8 +231,8 @@ public class Tag extends AModel {
 		 * @param data
 		 */
 		public void setInitData(Map<String, List<String>> data) {
-			if(baseTags==null)
-				baseTags=new HashMap<String,Long>();
+			if (baseTags == null)
+				baseTags = new HashMap<String, Long>();
 			Objectify store = ObjectifyService.ofy();
 			List<Tag> tags = new ArrayList<Tag>();
 			Tag cat, tag;
@@ -238,7 +252,8 @@ public class Tag extends AModel {
 				cat = null;
 			}
 		}
-		//YamlBean need this empty get function
+
+		// YamlBean need this empty get function
 		public Map<String, List<String>> getInitData() {
 			return null;
 		}
@@ -246,23 +261,23 @@ public class Tag extends AModel {
 
 	public void dec(AModel a) {
 		try {
-			Field f=this.getClass().getField(a.entityType().toLowerCase());
-			int value=(Integer)f.get(this);
-			if(value>0)
-				f.set(this, value-1);
+			Field f = this.getClass().getField(a.entityType().toLowerCase());
+			int value = (Integer) f.get(this);
+			if (value > 0)
+				f.set(this, value - 1);
 		} catch (Exception e) {
-			
-		} 
+
+		}
 	}
 
 	public void inc(AModel a) {
 		try {
-			Field f=this.getClass().getField(a.entityType().toLowerCase());
-			int value=(Integer)f.get(this);
-			if(value>0)
-				f.set(this, value+1);
+			Field f = this.getClass().getField(a.entityType().toLowerCase());
+			int value = (Integer) f.get(this);
+			if (value > 0)
+				f.set(this, value + 1);
 		} catch (Exception e) {
-			
+
 		}
 	}
 }

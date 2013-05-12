@@ -2,7 +2,7 @@ package com.supernaiba.app;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Set;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.OnSave;
 import com.yy.app.cms.SlavablePost;
 import com.yy.app.site.Profile;
@@ -26,19 +27,24 @@ import com.yy.rs.TagAttr;
 
 @Entity
 public class Categorized extends SlavablePost{
-	@TagAttr
+	@TagAttr("categories")
+	@Ignore
 	public long category;
 	
-	@TagAttr
-	public Set<Long> age;
+	@TagAttr("ages")
+	@Ignore
+	public List<Long> age;
 
-	@TagAttr
-	public Set<Long> gender;
+	@TagAttr("gender")
+	@Ignore
+	public List<Long> gender;
 	
-	@TagAttr
-	public Set<Long> cap;
+	@TagAttr("capabilities")
+	@Ignore
+	public List<Long> cap;
 	
-	@TagAttr
+	@TagAttr("duration")
+	@Ignore
 	public long duration;
 	
 	protected String getCategoryName(){
@@ -69,9 +75,9 @@ public class Categorized extends SlavablePost{
 				@DefaultValue("0") @FormParam("parent") long parent,
 				@FormParam("title")String title,
 				@FormParam("content")String content,
-				@FormParam("age") Set<Long> age,
-				@FormParam("gender")Set<Long> gender,
-				@FormParam("cap") Set<Long> cap,
+				@FormParam("age") List<Long> age,
+				@FormParam("gender")List<Long> gender,
+				@FormParam("cap") List<Long> cap,
 				@FormParam("duration") long duration)
 				throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();

@@ -38,12 +38,18 @@
 	</#if>
 </#macro>
 
-<#macro _data key>
-	<script>$t("html.${key}",(function(data){data={};<#nested>;return data})())</script>
+<#macro _data key mode=1>
+	<#if mode==1>
+		<script>$t("html.${key}",(function(data){data={};<#nested>;return data})())</script>
+	<#elseif mode==2>
+		<script>$t("html.${key}",(function(data){data={};<#nested>;return data})(),function(a){document.addEventListener('DOMContentLoaded',function(){document.body.insertAdjacentHTML("beforeend",a)})})</script>
+	<#else>
+		
+	</#if>
 </#macro>
 
 <#macro checkbox title name options values=[]>
-	<span class="select checkbox"><span>${title}</span><#list options as o><input class="unvisible" checked="" type="checkbox" name="${name}" value="${o.ID}"><span>${o.name}</span></#list></span>
+	<span class="select checkbox"><span>${title}</span><#list options as o><input class="unvisible" type="checkbox" name="${name}" value="${o.ID}"><span>${o.name}</span></#list></span>
 </#macro>
 
 <#macro radio title name options value>
@@ -52,9 +58,25 @@
 
 
 <#macro editor name content="" placeholder="Input content here" style="">
-	<div class="editor" data-name="${name}" contenteditable="true" style="${style}">${content!placeholder}</div>
-	<input type="hidden" name="${name}">
-	<br/>
+	<div id="editor" data-control="carousel">
+		<div><#if content==""><div><span/></div><#else>${content}</#if></div>
+	</div><textarea placeholder="${placeholder}"></textarea><input type="hidden" name="${name}">
+	<@uploader/>
+</#macro>
+
+<#macro uploader>
+	<@_tmpl "uploader">
+	<div id="uploader" class="unvisible">
+	<form method="post" enctype="multipart/form-data" target="uploader_frame">
+		<input type="file" name="file" multiple="true" 
+		onchange="if(this.value){this.form.action=(_a.href=x('GET','/media/want2upload/media/return').responseText,_a).pathname;this.form.submit()}">
+		<a id="_a">1</a>
+	</form>
+	<iframe id="uploader_frame" src="about:blank" 
+		onload="var me=this;uploader.start=function(f){$1('#uploader [type=file]').click();me.onload=function(){f(eval(me.contentDocument.body.textContent))}}"></iframe>
+	</div>
+	</@>
+	<@_data "uploader" 2/>
 </#macro>
 
 <#macro optionUI options value="" mode="OnlyValue" name="name" prefix="" startIndex=0>
