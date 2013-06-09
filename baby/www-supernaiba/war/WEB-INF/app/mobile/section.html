@@ -18,7 +18,7 @@
 
 <#macro headerNav>
 	<#if headerNavMacro??><@run headerNavMacro/> <#return></#if>
-	<a href="/" data-icon="home"></a>
+	<#if path!=""><a href="javascript:history.go(-1)" data-icon="left"></a></#if>
 	<a href="${url}" data-icon="refresh" class="right"></a>
 </#macro>
 
