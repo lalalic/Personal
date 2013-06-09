@@ -623,7 +623,7 @@ public class AModel {
 				if(!User.getCurrentUser().isLoggedIn())
 					throw new NotLoginException(req.getRequestURI());
 			}
-			return new Viewable(req.getRequestURI());
+			return new Viewable(req.getRequestURI(), this.viewDataModel(null, null, "template","empty_template"));
 		}
 
 		@Path("itsnotexisting")

@@ -50,6 +50,7 @@ section nav.groupbar {
   -moz-box-shadow: inset 0 3px 0 #1d1d1d;
   box-shadow: inset 0 3px 0 #1d1d1d;
 }
+section,
 section > article,
 section > [data-control="pull"] {
   background-color: #f4f5f5;

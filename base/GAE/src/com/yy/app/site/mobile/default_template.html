@@ -56,16 +56,16 @@
 		</@>
 		<#macro head></#macro><@head/>
 	</head>
- 	<body class="app ${path!'home'} ${contentMacroName}">
+ 	<body class="app ${path!'home'}">
 		<@script key="mustache" src="/res/mustache.js"/>	
 		<#macro content><@run contentMacroName!"_empty"/></#macro>
  		<#macro header><@run headerMacroName!"_empty"/></#macro>
  		<#macro footer><@run footerMacroName!"_empty"/></#macro>
  		<#macro aside><@run asideMacroName!"_empty"/></#macro>
  		<#macro body>
- 			<section id="${path}_${contentMacroName}" data-transition="slide">
+ 			<section id="${path}_${contentMacroName!}" data-transition="slide" class="scroll">
 				<@header/>
-				<article id="${path}_${contentMacroName}_1" class="active">
+				<article id="${path}_${contentMacroName!}_1" class="active">
 					<@content/>
 				</article>
 				<@footer/>

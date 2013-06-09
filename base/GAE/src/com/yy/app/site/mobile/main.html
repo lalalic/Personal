@@ -1,4 +1,4 @@
-<#global template=website.defaultTemplate debug="debug." ver="1.0">
+<#global template=website.defaultTemplate debug="debug." ver="2.0">
 <#if init??><@init/></#if>
 <#include "/"+template+".html">
 
@@ -128,10 +128,13 @@
 </#function>
 
 <#macro run macro>
-     <#if macro?is_string>
+     <#if !(macro??)>
+     	
+     <#elseif macro?is_string>
      	<@.main[macro]/>
      <#elseif macro?is_hash>
      	<@.main[macro.name] macro.arg/>
      </#if>
 </#macro>
+
 <#macro _empty></#macro>
