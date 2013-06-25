@@ -7,12 +7,10 @@
 <#macro postFields post>
 	<fieldset>
 	<input placeholder="${this.model}标题" type="text" name="title" value="${post.title!}" required="required" style="text-align:center"/>
-	<div>
-		<@checkbox "年龄.岁" "age" website.tagger.list("ages")/>
-		<@checkbox "性别" "gender" website.tagger.list("gender")/>
-		<@checkbox "时间.分" "duration" website.tagger.list("duration")/>
-		<@checkbox "目的" "cap" website.tagger.list("capabilities")/>
-	</div>
+	<div><@checkbox "年龄.岁" "age" website.tagger.list("ages")/></div>
+	<div><@checkbox "性别" "gender" website.tagger.list("gender")/></div>
+	<div><@checkbox "时间.分" "duration" website.tagger.list("duration")/></div>
+	<div><@checkbox "目的" "cap" website.tagger.list("capabilities")/></div>
 	</fieldset>
 	<#nested/>
 	<@postFieldContent post/>

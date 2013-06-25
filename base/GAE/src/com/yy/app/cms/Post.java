@@ -124,6 +124,8 @@ public class Post extends AModel {
 	protected void makeExcerpt() {
 		if (this.content == null)
 			return;
+		if(this.excerpt!=null)
+			return;
 		this.excerpt = this.getContent().replaceAll("<[^<>]*>", "");
 		if (this.excerpt.length() > 100)
 			excerpt = excerpt.substring(0, 100) + "...";
@@ -367,16 +369,16 @@ public class Post extends AModel {
 				@TestValues({
 						@TestValue,
 						@TestValue(field = "ID", value = ".ID", model = EnclosingModel.class) }) @DefaultValue("0") @FormParam("ID") long ID,
-
 				@DefaultValue("0") @FormParam("parent") long parent,
-
 				@TestValue(field = "title", value = Runner.TEST_TITLE) @FormParam("title") String title,
+				@FormParam("excerpt") String excerpt,
 				@TestValue(field = "content", value = Runner.TEST_CONTENT) @FormParam("content") String content)
 				throws URISyntaxException {
 			Objectify store = ObjectifyService.ofy();
 			Post post = (Post) this.get(store, ID);
 			post.setParent(parent);
 			post.title = title;
+			post.excerpt=excerpt;
 			post.setContent(content);
 			store.save().entity(post).now();
 			post.postPersist(); 

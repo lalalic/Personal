@@ -58,9 +58,11 @@
 
 
 <#macro editor name content="" placeholder="Input content here" style="">
-	<div id="editor" data-control="carousel">
-		<div><#if content==""><div><span/></div><#else>${content}</#if></div>
-	</div><textarea placeholder="${placeholder}"></textarea><input type="hidden" name="${name}">
+	<div id="editor">
+		${content!}
+		<a data-icon="remove" href="javascript:''" onclick="editor.remove()"></a>
+		<a data-icon="camera" href="javascript:''" onclick="editor.add()"></a>
+	</div><input type="hidden" name="${name}">
 	<@uploader/>
 </#macro>
 

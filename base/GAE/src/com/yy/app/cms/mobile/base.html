@@ -36,7 +36,8 @@ post:
 	<#assign footerNavMacro={'name':'action41','arg':post}>
 	<div>
 		<div><@checkbox "tags:" "tag" website.tagger.list(post.attrs)/> <@authorInfo post.author/></div>
-		<div data-control="carousel"><div>${post.content}</div></div>
+		<div>${post.excerpt}</div>
+		<div class="content">${post.content}</div>
 	</div>
 	<@show1Extra post/>
 </#macro>
@@ -46,8 +47,6 @@ post:
 
 <#macro action41 post>
 	<a data-icon="pencil" class="small" href="/comment/list/${post.ID}.html"></a>
-	<a data-icon="left" href="javascript:void(0)" onclick="$1('[data-control=carousel]').slides.prev()">step</a>
-	<a data-icon="right" href="javascript:void(0)" onclick="$1('[data-control=carousel]').slides.next()">step</a>
 	<@favoriteCMD post/>
 	<a data-icon="share" href="#"></a>
 </#macro>
@@ -68,10 +67,6 @@ post:
 </#macro>
 
 <#macro postFooterNav>
-	<a data-icon="left" href="javascript:void(0)" onclick="editor.slides.prev()"></a>
-	<a data-icon="right" href="javascript:void(0)" onclick="editor.slides.next()"></a>
-	<a data-icon="camera" href="javascript:void(0)" onclick="editor.slides.add()"></a>
-	<a data-icon="remove" href="javascript:void(0)" onclick="editor.slides.remove()"></a>
 	<a data-icon="upload" href="#" onclick="$1('.active form input[type=submit]').click()">保存</a>
 </#macro>
 
@@ -87,7 +82,10 @@ post:
 </#macro>
 
 <#macro postFieldContent post>
-	<@editor "content" post.content!""/>
+	<fieldset>
+		<textarea rows="3" placeholder="简介">${post.excerpt!}</textarea>
+	</fieldset>
+	<@editor "content" post.content!"" />
 </#macro>
 
 <#macro authorInfo userID>
