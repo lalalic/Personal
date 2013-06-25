@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">supernaiba</string>
+    <string name="btnBack">Back</string>
+    <string name="btnRefresh">Refresh</string>
+    <string name="btnAutoTask">Shake</string>
+    <string name="btnShare">Share</string>
+    <string name="btnUser">User</string>
+    <string name="btnMenu">Menu</string>
+    <string-array name="categories">
+        <item>Game</item>
+        <item>Reading</item>
+        <item>Drawing</item>
+    </string-array>
 </resources>
