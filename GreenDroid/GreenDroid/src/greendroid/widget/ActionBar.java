@@ -114,13 +114,13 @@ public class ActionBar extends LinearLayout {
     private CharSequence mTitle;
     private ActionBar.Type mType;
     private OnActionBarListener mOnActionBarListener;
-    private LinkedList<ActionBarItem> mItems;
+    LinkedList<ActionBarItem> mItems;
 
-    private Drawable mDividerDrawable;
+    protected Drawable mDividerDrawable;
     private Drawable mHomeDrawable;
-    private int mDividerWidth;
+    protected int mDividerWidth;
 
-    private int mMaxItemsCount;
+    protected int mMaxItemsCount;
 
     public ActionBar(Context context) {
         this(context, null);
@@ -377,7 +377,7 @@ public class ActionBar extends LinearLayout {
         }
     }
 
-    private OnClickListener mClickHandler = new OnClickListener() {
+    protected OnClickListener mClickHandler = new OnClickListener() {
 
         public void onClick(View v) {
             if (mOnActionBarListener != null) {

@@ -6,13 +6,27 @@
     android:layout_gravity="bottom"
     tools:context=".MainActivity" >
 
-	<greendroid.widget.ActionBar
+	<FrameLayout
+	    android:id="@+id/content"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content" >
+
+		<ListView
+		    android:id="@+id/catsView"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginTop="57dp"
+		    android:entries="@array/categories" />
+
+	</FrameLayout>
+	
+	<greendroid.widget.ToolBar
 	    android:id="@+id/footer"
 	    android:layout_width="fill_parent"
 	    android:layout_height="@dimen/gd_action_bar_height"
 	    android:layout_alignParentBottom="true"
 	    android:layout_alignParentLeft="true"
 	    android:background="?attr/gdActionBarBackground" >
-	</greendroid.widget.ActionBar>
+	</greendroid.widget.ToolBar>
 
 </RelativeLayout>
