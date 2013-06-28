@@ -7,13 +7,14 @@
     <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="15"/>
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:name="ParseApplication"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" android:theme="@style/Theme.GreenDroid">
         <activity
-            android:name="com.supernaiba.ui.Main"
+            android:name=".ui.Main"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,6 +22,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.ShowPosts">
+        </activity>
+        <activity android:name=".ui.ShowPost"></activity>
+        <activity android:name=".ui.ShowComments"></activity>
+        <activity android:name=".ui.ShowTasks"></activity>
+        <activity android:name=".ui.CreatePost"></activity>
+        <activity android:name=".ui.UserAccount"></activity>
     </application>
 
 </manifest>
