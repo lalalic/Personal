@@ -25,7 +25,7 @@ public class Main extends GDListActivity {
 		footer.setMaxItemCount(3);
 		footer.addItem(Type.Share);
 		footer.addItem(Type.Compass);
-		footer.addItem(Type.Eye);
+		footer.addItem(Type.AllFriends);
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
 

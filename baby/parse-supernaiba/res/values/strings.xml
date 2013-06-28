@@ -23,4 +23,7 @@
         <string name="signin">signin</string>
         <string name="email">email</string>
         <string name="sendnewpassword">Send New Password</string>
+        <string name="username">User Name</string>
+        <string name="childname">Nick Name</string>
+        <string name="children">Children</string>
 </resources>

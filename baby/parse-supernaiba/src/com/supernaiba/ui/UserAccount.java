@@ -1,12 +1,12 @@
 package com.supernaiba.ui;
 
-import android.app.Activity;
+import greendroid.app.GDActivity;
 import android.os.Bundle;
 import android.view.View;
 
 import com.supernaiba.R;
 
-public class UserAccount extends Activity {
+public class UserAccount extends GDActivity {
 	public enum Type {
 		Signin, Signup, ForgetPassword
 	}
@@ -16,6 +16,7 @@ public class UserAccount extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.setTitle(R.string.app_name);		
 
 		String theType = this.getIntent().getStringExtra("type");
 		if (theType != null)
@@ -23,13 +24,13 @@ public class UserAccount extends Activity {
 
 		switch (type) {
 		case Signin:
-			this.setContentView(R.layout.signin);
+			this.setActionBarContentView(R.layout.signin);
 			break;
 		case Signup:
-			this.setContentView(R.layout.signup);
+			this.setActionBarContentView(R.layout.signup);
 			break;
 		case ForgetPassword:
-			this.setContentView(R.layout.forget_password);
+			this.setActionBarContentView(R.layout.forget_password);
 			break;
 		}
 	}

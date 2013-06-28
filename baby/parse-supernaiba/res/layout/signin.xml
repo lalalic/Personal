@@ -3,14 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/app_name"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <EditText
         android:id="@+id/editText1"
@@ -32,36 +24,38 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
             android:layout_marginLeft="56dp"
+            android:background="@android:color/transparent"
+            android:onClick="switch2Signup"
             android:text="@string/signup"
-            android:textColor="#0000ff" 
-            android:onClick="switch2Signup"/>
-
+            android:textColor="#0000ff" />
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:layout_marginRight="63dp"
+            android:background="@android:color/transparent"
+            android:onClick="switch2ForgetPassword"
             android:text="@string/forgetpassword"
             android:textColor="#0000ff"
-            android:textColorLink="@android:color/secondary_text_light"
-            android:onClick="switch2ForgetPassword" />
+            android:textColorLink="@android:color/secondary_text_light" />
 
     </RelativeLayout>
-    
+    
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20pt"
-        android:text="@string/signin"
-        android:onClick="signin" />
-
+        android:background="@android:drawable/title_bar"
+        android:onClick="signin"
+        android:text="@string/signin" />
     
 </LinearLayout>

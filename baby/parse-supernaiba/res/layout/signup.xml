@@ -4,16 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-
-
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/app_name"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
     <EditText
         android:id="@+id/account"
         android:layout_width="match_parent"
@@ -24,7 +14,6 @@
         <requestFocus />
     </EditText>
 
-
     <EditText
         android:id="@+id/editText2"
         android:layout_width="match_parent"
@@ -33,40 +22,56 @@
         android:hint="@string/password"
         android:inputType="textPassword" />
 
-
+    <EditText
+        android:id="@+id/editText3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/email"
+        android:inputType="textEmailAddress" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
             android:layout_marginLeft="56dp"
+            android:background="@android:color/transparent"
+            android:onClick="switch2Signin"
             android:text="@string/signin"
-            android:textColor="#0000ff" 
-            android:onClick="switch2Signin"/>
-
+            android:textColor="#0000ff" />
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:layout_marginRight="63dp"
+            android:background="@android:color/transparent"
+            android:onClick="switch2ForgetPassword"
             android:text="@string/forgetpassword"
             android:textColor="#0000ff"
-            android:textColorLink="@android:color/secondary_text_light"
-            android:onClick="switch2ForgetPassword" />
+            android:textColorLink="@android:color/secondary_text_light" />
 
     </RelativeLayout>
-    
+
+    <Gallery
+        android:id="@+id/gallery1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.30"
+        android:background="@android:color/darker_gray" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20pt"
-        android:text="@string/signup" 
-        android:onClick="signup"/>
+        android:background="@android:drawable/title_bar"
+        android:onClick="signup"
+        android:text="@string/signup" />
 
 </LinearLayout>
