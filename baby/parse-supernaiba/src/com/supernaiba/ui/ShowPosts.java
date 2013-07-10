@@ -4,12 +4,14 @@ import greendroid.app.GDListActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.ToolBar;
+import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
 
 import com.parse.ParseAnalytics;
+import com.supernaiba.R;
 
 public class ShowPosts extends GDListActivity {
 	/** Called when the activity is first created. */
@@ -59,6 +61,14 @@ public class ShowPosts extends GDListActivity {
 			}
 			
 		});
+		
+		if(Intent.ACTION_SEARCH.equals(this.getIntent().getAction())){
+			this.setTitle(R.string.search);
+			String query=getIntent().getStringExtra(SearchManager.QUERY);
+			if(query!=null){
+				
+			}
+		}
 	}
 
 	@Override

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="@string/childname" >
+
+        <requestFocus />
+    </EditText>
+
+    <Spinner
+        android:id="@+id/gender"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/username"
+        android:entries="@array/gender" />
+
+    <DatePicker
+        android:id="@+id/birthday"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gender" />    <ImageView        android:id="@+id/photo"        android:layout_width="match_parent"        android:layout_height="fill_parent"        android:layout_alignParentLeft="true"        android:layout_below="@+id/birthday"        android:src="@android:drawable/ic_menu_camera" />
+</RelativeLayout>

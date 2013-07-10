@@ -21,14 +21,20 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:value=".ui.ShowPosts" android:name="android.app.default_searchable"/>
         </activity>
         <activity android:name=".ui.ShowPosts">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+            <meta-data android:resource="@xml/search" android:name="android.app.searchable"/>
         </activity>
         <activity android:name=".ui.ShowPost"></activity>
         <activity android:name=".ui.ShowComments"></activity>
         <activity android:name=".ui.ShowTasks"></activity>
         <activity android:name=".ui.CreatePost"></activity>
         <activity android:name=".ui.UserAccount"></activity>
+        <activity android:name=".ui.CreateChild"></activity>
     </application>
 
 </manifest>

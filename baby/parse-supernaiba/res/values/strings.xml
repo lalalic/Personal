@@ -25,5 +25,14 @@
         <string name="sendnewpassword">Send New Password</string>
         <string name="username">User Name</string>
         <string name="childname">Nick Name</string>
-        <string name="children">Children</string>
+        <string name="createChild">Add Child</string>
+        <string name="make_photo">Take photo or select</string>
+        <string name="passwordagain">Password Again</string>
+    <string-array name="gender">
+        <item>Boy</item>
+        <item>Girl</item>
+    </string-array>
+    <string-array name="schema"></string-array>
+        <string name="search">Search</string>
+        <string name="birthday">Birthday</string>
 </resources>
