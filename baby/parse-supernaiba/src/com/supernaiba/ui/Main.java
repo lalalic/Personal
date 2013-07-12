@@ -205,6 +205,8 @@ public class Main extends GDListActivity {
 	}
 	
 	private void popupChildren(){
+		if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser()))
+			return;
 		ParseQuery<ParseObject> query = ParseQuery.getQuery("child");
 		query.whereEqualTo("parent", ParseUser.getCurrentUser());
 		 query.findInBackground(new FindCallback<ParseObject>() {
