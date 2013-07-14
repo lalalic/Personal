@@ -5,14 +5,13 @@
     <string name="creating">Creat a new </string>
     <string name="tasks">Tasks</string>
     <string name="comments">Comments</string>
+    <string name="game">Game</string>
+    <string name="reading">Reading</string>
+    <string name="drawing">Drawing</string>
     <string-array name="categories">
         <item>Game</item>
         <item>Reading</item>
-        <item>Scratch</item>
-        <item>Ping</item>
-        <item>Exercise</item>
-        <item>Handcraft</item>
-        <item>Video</item>
+        <item>Drawing</item>
     </string-array>
         <string name="title">title</string>
         <string name="age">How old are you?</string>

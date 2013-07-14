@@ -139,7 +139,6 @@ public class GDActivity extends Activity implements ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (mDefaultConstructorUsed) {
             // HACK cyril: This should have been done in the default
             // constructor. Unfortunately, the getApplication() method returns

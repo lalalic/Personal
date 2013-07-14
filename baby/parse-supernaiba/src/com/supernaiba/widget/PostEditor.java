@@ -1,7 +1,6 @@
 package com.supernaiba.widget;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.text.Spannable;
@@ -9,8 +8,6 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.widget.EditText;
-
-import com.supernaiba.R;
 
 public class PostEditor extends EditText {
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
@@ -30,25 +27,14 @@ public class PostEditor extends EditText {
 	public void insertImage(Uri uri){
 		ImageSpan span=new ImageSpan(this.getContext(),uri);
 		Drawable d=span.getDrawable();
-		d.setBounds(0, 0, d.getIntrinsicWidth()*2, d.getIntrinsicHeight()*2);
-		int curpos = this.getSelectionStart();
-		this.getText().insert(curpos, "\uFFFC");
-		this.getText().setSpan(span,curpos,curpos+1,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		d.setBounds(0, 0, d.getIntrinsicWidth()/2, d.getIntrinsicHeight()/2);
+		insertImage(span, uri.toString());
 	}
 	
-	public void insertImage(Bitmap bm){
-		
-		ImageSpan imageSpan = new ImageSpan(this.getContext().getResources().getDrawable(R.drawable.gd_action_bar_all_friends));
-		if(bm!=null){
-			imageSpan=new ImageSpan(bm);
-			Drawable d=imageSpan.getDrawable();
-			d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-		}
+	public void insertImage(ImageSpan imageSpan, String src){
 		SpannableStringBuilder builder = new SpannableStringBuilder();
 		builder.append(getText());
-
-		// this is a string that will let you find a place, where the ImageSpan is.
-		String imgId = "[img="+R.drawable.gd_action_bar_all_friends+"]"; 
+		String imgId = "<img src='"+src+"'>"; 
 
 		int selStart = getSelectionStart();
 

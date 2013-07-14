@@ -3,6 +3,7 @@ package com.supernaiba.ui;
 import greendroid.app.GDListActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem.Type;
+import greendroid.widget.ItemAdapter;
 import greendroid.widget.QuickAction;
 import greendroid.widget.QuickActionBar;
 import greendroid.widget.QuickActionWidget;
@@ -17,7 +18,6 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.parse.FindCallback;
@@ -93,8 +93,11 @@ public class Main extends GDListActivity {
 			
 		});
 		
-		getListView()
-			.setAdapter(ArrayAdapter.createFromResource(this, R.array.categories, android.R.layout.simple_list_item_1));
+		try {
+			setListAdapter(ItemAdapter.createFromXml(this, R.xml.category));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		getQuickActionBar();
 	}
