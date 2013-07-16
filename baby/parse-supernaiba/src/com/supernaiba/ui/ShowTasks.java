@@ -10,6 +10,10 @@ import android.view.View;
 import android.widget.ListView;
 
 import com.parse.ParseAnalytics;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseQueryAdapter;
+import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
 
 public class ShowTasks extends GDListActivity {
@@ -52,6 +56,18 @@ public class ShowTasks extends GDListActivity {
 			}
 			
 		});
+		
+		ParseQueryAdapter<ParseObject> adapter=new ParseQueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+			@Override
+			public ParseQuery<ParseObject> create() {
+				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("task");
+				
+				return query;
+			}
+		});
+		adapter.setTextKey("title");
+		adapter.setObjectsPerPage(20);	
+		this.setListAdapter(adapter);
 	}
 
 	@Override

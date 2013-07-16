@@ -19,7 +19,7 @@
         <string name="forgetpassword">Forget Password</string>
         <string name="account">account</string>
         <string name="password">password</string>
-        <string name="signin">signin</string>
+        <string name="signin">Signin</string>
         <string name="email">email</string>
         <string name="sendnewpassword">Send New Password</string>
         <string name="username">User Name</string>
@@ -34,4 +34,5 @@
     <string-array name="schema"></string-array>
         <string name="search">Search</string>
         <string name="birthday">Birthday</string>
+        <string name="photo">photo</string>
 </resources>

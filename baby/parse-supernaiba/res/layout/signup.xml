@@ -1,47 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
+
     <EditText
         android:id="@+id/account"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="@string/account" >
+        android:hint="@string/account"
+        android:lines="1" >
 
         <requestFocus />
     </EditText>
-
+
     <EditText
         android:id="@+id/password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/account"
         android:ems="10"
         android:hint="@string/password"
-        android:inputType="textPassword" />
-
+        android:inputType="textPassword"
+        android:lines="1" />
+
     <EditText
         android:id="@+id/passwordAgain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/password"
         android:ems="10"
         android:hint="@string/passwordagain"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:lines="1" />
 
     <EditText
         android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/passwordAgain"
         android:ems="10"
         android:hint="@string/email"
-        android:inputType="textEmailAddress" />
+        android:inputType="textEmailAddress"
+        android:lines="1" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_centerHorizontal="true"
+        android:background="@android:drawable/title_bar"
+        android:gravity="center_horizontal|center_vertical"
+        android:onClick="signup"
+        android:text="@string/signup" />
+
+    <ImageView
+        android:id="@+id/photo"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/email"
+        android:contentDescription="@string/photo"
+        android:src="@android:drawable/ic_menu_camera" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button1"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="50dp" >
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -49,37 +81,24 @@
             android:layout_alignParentTop="true"
             android:layout_marginLeft="56dp"
             android:background="@android:color/transparent"
+            android:gravity="center_vertical|center_horizontal|left"
             android:onClick="switch2Signin"
             android:text="@string/signin"
             android:textColor="#0000ff" />
-
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:layout_marginRight="63dp"
+            android:layout_marginRight="29dp"
             android:background="@android:color/transparent"
+            android:gravity="center_vertical|center_horizontal|right|left"
             android:onClick="switch2ForgetPassword"
             android:text="@string/forgetpassword"
             android:textColor="#0000ff"
             android:textColorLink="@android:color/secondary_text_light" />
 
     </RelativeLayout>
-
-    <Gallery
-        android:id="@+id/gallery1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.30"
-        android:background="@android:color/darker_gray" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20pt"
-        android:background="@android:drawable/title_bar"
-        android:onClick="signup"
-        android:text="@string/signup" />
-
-</LinearLayout>
+</RelativeLayout>

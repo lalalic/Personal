@@ -66,18 +66,15 @@ public class CreateChild extends GDActivity {
 		footer.setMaxItemCount(1);
 		footer.addItem(Type.Trashcan);
 		
-		type=getIntent().getIntExtra("type", TYPE_ADD);
-		
-		switch(type){
-		case TYPE_ADD:
-			child=new ParseObject("child");
+		child=new ParseObject("child");
+		String id=getIntent().getStringExtra("id");
+		if(id==null){
 			child.put("parent", ParseUser.getCurrentUser());
-			break;
-		case TYPE_EDIT:
+			type=TYPE_ADD;
+		}else{
+			type=TYPE_EDIT;
 			child=getChild(getIntent().getStringExtra("id"));
-			break;
 		}
-		
 		show(child);
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){

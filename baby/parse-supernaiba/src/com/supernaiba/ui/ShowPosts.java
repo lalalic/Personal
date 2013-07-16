@@ -3,34 +3,30 @@ package com.supernaiba.ui;
 import greendroid.app.GDListActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem.Type;
-import greendroid.widget.ItemAdapter;
 import greendroid.widget.ToolBar;
-import greendroid.widget.item.ThumbnailItem;
-
-import java.util.List;
-
+import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
 
-import com.parse.FindCallback;
 import com.parse.ParseAnalytics;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseQueryAdapter;
+import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
 
 public class ShowPosts extends GDListActivity {
-	ParseQuery<ParseObject> query;
-	ItemAdapter adapter;
+	String postType;
+	String search;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
 		
-		query=ParseQuery.getQuery(getIntent().getStringExtra("type"));
-		this.setTitle(query.getClassName());
+		postType=getIntent().getStringExtra("type");
+		this.setTitle(postType);
 		
 		this.addActionBarItem(Type.Search);
 		this.addActionBarItem(Type.Refresh);
@@ -41,9 +37,6 @@ public class ShowPosts extends GDListActivity {
 		footer.addItem(Type.Add);
 		footer.addItem(Type.Star);
 		footer.addItem(Type.AllFriends);	
-		
-		adapter=new ItemAdapter(this);
-		this.setListAdapter(adapter);
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
 
@@ -78,20 +71,22 @@ public class ShowPosts extends GDListActivity {
 		
 		if(Intent.ACTION_SEARCH.equals(this.getIntent().getAction())){
 			this.setTitle(R.string.search);
-			//String condition=getIntent().getStringExtra(SearchManager.QUERY);
-			
+			search=getIntent().getStringExtra(SearchManager.QUERY);
 		}
 		
-		query.findInBackground(new FindCallback<ParseObject>(){
+		ParseQueryAdapter<ParseObject> adapter=new ParseQueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
-			public void done(List<ParseObject> posts, ParseException ex) {
-				for(ParseObject post: posts)
-					adapter.add(new ThumbnailItem(post.getString("title"), null, 
-							R.drawable.gd_action_bar_item, 
-							post.containsKey("thumbnail")?post.getParseFile("thumbnail").getUrl() : null));
+			public ParseQuery<ParseObject> create() {
+				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>(postType);
+				
+				return query;
 			}
-			
 		});
+		adapter.setPlaceholder(this.getResources().getDrawable(R.drawable.gd_action_bar_compass));
+		adapter.setTextKey("title");
+		adapter.setImageKey("thumbnail");
+		adapter.setObjectsPerPage(20);		
+		this.setListAdapter(adapter);
 	}
 
 	@Override

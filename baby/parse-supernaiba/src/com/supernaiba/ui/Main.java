@@ -14,11 +14,20 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 
 import com.parse.FindCallback;
 import com.parse.GetDataCallback;
@@ -28,6 +37,7 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseQueryAdapter;
 import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.data.DB;
@@ -43,8 +53,9 @@ public class Main extends GDListActivity {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
 		
-		this.addActionBarItem(Type.AllFriends);
 		this.addActionBarItem(Type.Search);
+		this.addActionBarItem(Type.AllFriends);
+
 		
 		ToolBar footer=ToolBar.inflate(this);
 		footer.setMaxItemCount(3);
@@ -75,17 +86,18 @@ public class Main extends GDListActivity {
 				switch(position){
 				case OnActionBarListener.HOME_ITEM:
 					break;
-				case 0:
+				case 1:
 					if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser())){
 						Intent intent=new Intent(Main.this,UserAccount.class);
 						intent.putExtra("type", UserAccount.Type.Signin.name());
 						Main.this.startActivityForResult(intent, SIGNIN);
 						break;
 					}else{
-						Main.this.getQuickActionBar().show(Main.this.getActionBar().getItem(position).getItemView());
+						//Main.this.getQuickActionBar().show(Main.this.getActionBar().getItem(position).getItemView());
+						childrenWindow.showAsDropDown(getActionBar().getItem(position).getItemView());
 					}
 					break;
-				case 1:
+				case 0:
 					Main.this.onSearchRequested();
 					break;
 				}
@@ -99,7 +111,7 @@ public class Main extends GDListActivity {
 			e.printStackTrace();
 		}
 		
-		getQuickActionBar();
+		createChildrenWindow();
 	}
 	
 	protected QuickActionBar getQuickActionBar(){
@@ -222,4 +234,59 @@ public class Main extends GDListActivity {
 		     }
 		 });
 	}	
+	
+	
+	private PopupWindow childrenWindow;
+	private PopupWindow createChildrenWindow(){
+		if(childrenWindow==null){
+			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View view=inflater.inflate(R.layout.children, null);
+			ListView vChildren=(ListView)view.findViewById(R.id.children);
+			childrenWindow=new PopupWindow(view,50,200);
+			ParseQueryAdapter<ParseObject> adapter=new ParseQueryAdapter<ParseObject>(this,"child"){
+				@Override
+				public View getItemView(ParseObject object, View v, ViewGroup parent) {
+					View view=super.getItemView(object, v, parent);
+					view.setTag(object);
+					return view;
+				}
+			};
+			adapter.setAutoload(true);
+			adapter.setImageKey("photo");
+			vChildren.setAdapter(adapter);
+			view.findViewById(R.id.createChild).setOnClickListener(new OnClickListener(){
+				@Override
+				public void onClick(View arg0) {
+					startActivityForResult(new Intent(Main.this,CreateChild.class), CHILD);
+				}
+				
+			});
+			
+			vChildren.setOnItemClickListener(new OnItemClickListener(){
+
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View view,
+						int arg2, long arg3) {
+					setDefaultChild((ParseObject)view.getTag());
+				}
+				
+			});
+			
+			vChildren.setOnLongClickListener(new OnLongClickListener(){
+
+				@Override
+				public boolean onLongClick(View view) {//edit
+					Intent intent=new Intent(Main.this,CreateChild.class);
+					intent.putExtra("id", ((ParseObject)view.getTag()).getObjectId());
+					startActivityForResult(new Intent(Main.this,CreateChild.class), CHILD);
+					return false;
+				}
+				
+			});
+		}
+		childrenWindow.setFocusable(true);
+		childrenWindow.setOutsideTouchable(true);
+		childrenWindow.setBackgroundDrawable(new BitmapDrawable()); 
+		return childrenWindow;
+	}
 }
