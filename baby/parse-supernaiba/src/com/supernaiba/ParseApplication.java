@@ -4,6 +4,8 @@ import greendroid.app.GDApplication;
 
 import com.parse.Parse;
 import com.parse.ParseACL;
+import com.parse.ParseAnonymousUtils;
+import com.parse.ParseException;
 import com.parse.ParseUser;
 
 public class ParseApplication extends GDApplication {
@@ -23,6 +25,14 @@ public class ParseApplication extends GDApplication {
 		defaultACL.setPublicReadAccess(true);
 		
 		ParseACL.setDefaultACL(defaultACL, true);
+		
+		ParseUser user=ParseUser.getCurrentUser();
+		if(!ParseAnonymousUtils.isLinked(user) && user.getObjectId()==null)
+			try {
+				user.save();
+			} catch (ParseException e) {
+				
+			}
 	}
 
 }

@@ -23,8 +23,7 @@ public class ShowPost extends GDActivity {
 		
 		ToolBar footer=ToolBar.inflate(this);
 		footer.setMaxItemCount(4);
-		footer.addItem(Type.Edit);
-		footer.addItem(Type.Trashcan);
+		footer.addItem(Type.Edit);//comment
 		footer.addItem(Type.Star);
 		footer.addItem(Type.Share);
 		
@@ -50,9 +49,9 @@ public class ShowPost extends GDActivity {
 			@Override
 			public void onActionBarItemClicked(int position) {
 				switch(position){
-				case 0:
+				case OnActionBarListener.HOME_ITEM:
 				default:
-					ShowPost.this.onBackPressed();
+					onBackPressed();
 				break;
 				}
 				

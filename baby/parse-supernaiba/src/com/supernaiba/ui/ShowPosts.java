@@ -55,7 +55,7 @@ public class ShowPosts extends GDActivity {
 				default:
 					Intent intent=new Intent(ShowPosts.this,CreatePost.class);
 					intent.putExtra("type", ShowPosts.this.getIntent().getStringExtra("type"));
-					ShowPosts.this.startActivity(intent);
+					startActivity(intent);
 				break;
 				}
 				

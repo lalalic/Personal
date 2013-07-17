@@ -74,7 +74,6 @@ public class CreatePost extends GDActivity {
 					takePhoto();
 					break;	
 				case 2:
-					tagWindow.setHeight(tagWindow.getMaxAvailableHeight(tagAction.getItemView()));
 					tagWindow.showAsDropDown(tagAction.getItemView());
 					break;
 				}
@@ -105,7 +104,7 @@ public class CreatePost extends GDActivity {
 			
 		});
 		createTagWindow();
-		
+		vEditor.setTitle(null);
 	}
 	
 	public void refresh(){
@@ -148,12 +147,12 @@ public class CreatePost extends GDActivity {
 	}
 	
 	private PopupWindow tagWindow;
+	@SuppressWarnings("static-access")
 	protected void createTagWindow(){
 		if(tagWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.tags, null);
 			ListView list=(ListView)view.findViewById(R.id.lists);
-			//int screenWidth=((WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
 			tagWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
 			QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 				@Override
