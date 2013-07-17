@@ -2,20 +2,32 @@ package com.supernaiba.ui;
 
 import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
+import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.ToolBar;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
 
 import com.parse.GetCallback;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
+import com.supernaiba.parse.QueryAdapter;
 import com.supernaiba.widget.PostEditor;
 
 public class CreatePost extends GDActivity {
@@ -25,6 +37,7 @@ public class CreatePost extends GDActivity {
 	
 	ParseObject post;
 	String type;
+	ActionBarItem tagAction;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -41,8 +54,7 @@ public class CreatePost extends GDActivity {
 		
 		this.vEditor=(PostEditor)this.findViewById(R.id.editor);
 		this.vTitle=(EditText)this.findViewById(R.id.title);
-		this.addActionBarItem(Type.Refresh);
-		this.addActionBarItem(Type.Export);
+		tagAction=this.addActionBarItem(Type.Export);
 		
 		
 		ToolBar footer=ToolBar.inflate(this);
@@ -60,7 +72,11 @@ public class CreatePost extends GDActivity {
 				switch(position){
 				case 0:
 					takePhoto();
-					break;				
+					break;	
+				case 2:
+					tagWindow.setHeight(tagWindow.getMaxAvailableHeight(tagAction.getItemView()));
+					tagWindow.showAsDropDown(tagAction.getItemView());
+					break;
 				}
 			}
 			
@@ -75,9 +91,6 @@ public class CreatePost extends GDActivity {
 					onBackPressed();
 					break;
 				case 0:
-					refresh();
-					break;
-				case 1:
 					post.put("title", vTitle.getText().toString());
 					post.put("content", vEditor.getText().toString());
 					post.saveEventually();
@@ -91,6 +104,7 @@ public class CreatePost extends GDActivity {
 			}
 			
 		});
+		createTagWindow();
 		
 	}
 	
@@ -133,7 +147,37 @@ public class CreatePost extends GDActivity {
 		}
 	}
 	
-	
+	private PopupWindow tagWindow;
+	protected void createTagWindow(){
+		if(tagWindow==null){
+			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View view=inflater.inflate(R.layout.tags, null);
+			ListView list=(ListView)view.findViewById(R.id.lists);
+			//int screenWidth=((WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
+			tagWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
+			QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+				@Override
+				public ParseQuery<ParseObject> create() {
+					ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("tag");
+
+					return query;
+				}
+				
+			}){
+				@Override
+				public View getItemView(ParseObject object, View v, ViewGroup parent) {
+					LinearLayout view=(LinearLayout)super.getItemView(object, v, parent);
+					
+					return view;
+				}
+			};
+			adapter.setTextKey("name");
+			list.setAdapter(adapter);
+		}
+		tagWindow.setFocusable(true);
+		tagWindow.setOutsideTouchable(true);
+		tagWindow.setBackgroundDrawable(new BitmapDrawable()); 
+	}
 
 }
 
