@@ -8,17 +8,18 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.Layout.Alignment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextWatcher;
 import android.text.style.AlignmentSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.EditText;
 
 public class PostEditor extends EditText {
@@ -26,14 +27,17 @@ public class PostEditor extends EditText {
 	Editable title;
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		this.addTextChangedListener(new MyTextWatcher());
 	}
 	
 	public PostEditor(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.addTextChangedListener(new MyTextWatcher());
 	}
 	
 	public PostEditor(Context context) {
 		super(context);
+		this.addTextChangedListener(new MyTextWatcher());
 	}
 	
 	public Editable setTitle(String s){
@@ -47,9 +51,9 @@ public class PostEditor extends EditText {
 		else
 			title.clear();
 		title.clearSpans();
-		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 		if(hintSpan!=null)
-			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 		this.getText().insert(0, title);
 		return title;
 	}
@@ -61,8 +65,6 @@ public class PostEditor extends EditText {
                 MediaStore.Images.Thumbnails.MICRO_KIND,
                 (BitmapFactory.Options) null );
 		ImageSpan span=new ImageSpan(this.getContext(),bitmap);
-		Drawable d=span.getDrawable();
-		d.setBounds(0, 0, d.getIntrinsicWidth()/2, d.getIntrinsicHeight()/2);
 		insertImage(span, uri.toString());
 	}
 	
@@ -74,9 +76,8 @@ public class PostEditor extends EditText {
 		int selStart = getSelectionStart();
 		int selEnd=getSelectionEnd();
 		builder.replace(selStart, selEnd, imgId);
-		builder.setSpan(imageSpan, selStart+1, selStart + imgId.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), selStart+1, selStart + imgId.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		//builder.setSpan(new BulletSpan(2), selStart + imgId.length(), selStart + imgId.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		builder.setSpan(imageSpan, selStart+1, selStart + imgId.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), selStart+1, selStart + imgId.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		setText(builder);
 		setSelection(selStart+imgId.length(), selStart+imgId.length());
 	}	
@@ -124,6 +125,27 @@ public class PostEditor extends EditText {
 			builder.append(html.subSequence(last, html.length()-1));
 		
 		this.setText(builder, BufferType.EDITABLE);
+	}
+	
+	private class MyTextWatcher implements TextWatcher{
+
+		@Override
+		public void afterTextChanged(Editable text) {
+			Log.d("Editor", "afterTextChanged");
+		}
+
+		@Override
+		public void beforeTextChanged(CharSequence text, int arg1, int arg2,
+				int arg3) {
+			Log.d("Editor", "beforeTextChanged");
+		}
+
+		@Override
+		public void onTextChanged(CharSequence text, int arg1, int arg2,
+				int arg3) {
+			Log.d("Editor", "onTextChanged");
+		}
+		
 	}
 	
 	public interface ImageSaver{

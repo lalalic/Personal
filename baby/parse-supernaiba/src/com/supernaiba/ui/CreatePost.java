@@ -62,6 +62,7 @@ public class CreatePost extends GDActivity {
 		}
 		
 		this.vEditor=(PostEditor)this.findViewById(R.id.editor);
+		vEditor.setTitle(null);
 		this.vTitle=(EditText)this.findViewById(R.id.title);
 		this.addActionBarItem(Type.Export);
 		
