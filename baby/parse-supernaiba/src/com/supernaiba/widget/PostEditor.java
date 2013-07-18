@@ -1,14 +1,20 @@
 package com.supernaiba.widget;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.Layout.Alignment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextWatcher;
 import android.text.style.AlignmentSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
@@ -16,24 +22,18 @@ import android.util.AttributeSet;
 import android.widget.EditText;
 
 public class PostEditor extends EditText {
+	Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
 	Editable title;
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		init();
 	}
 	
 	public PostEditor(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		init();
 	}
 	
 	public PostEditor(Context context) {
 		super(context);
-		init();
-	}
-	
-	protected void init(){
-		this.addTextChangedListener(new MyTextWatcher());
 	}
 	
 	public Editable setTitle(String s){
@@ -54,8 +54,13 @@ public class PostEditor extends EditText {
 		return title;
 	}
 	
+	@TargetApi(5)
 	public void insertImage(Uri uri){
-		ImageSpan span=new ImageSpan(this.getContext(),uri);
+		Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
+                getContext().getContentResolver(), Long.parseLong(uri.getLastPathSegment()),
+                MediaStore.Images.Thumbnails.MICRO_KIND,
+                (BitmapFactory.Options) null );
+		ImageSpan span=new ImageSpan(this.getContext(),bitmap);
 		Drawable d=span.getDrawable();
 		d.setBounds(0, 0, d.getIntrinsicWidth()/2, d.getIntrinsicHeight()/2);
 		insertImage(span, uri.toString());
@@ -64,39 +69,64 @@ public class PostEditor extends EditText {
 	public void insertImage(ImageSpan imageSpan, String src){
 		SpannableStringBuilder builder = new SpannableStringBuilder();
 		builder.append(getText());
-		String imgId = "<img src='"+src+"'>"; 
+		String imgId = "\n"+src+"\n"; 
 
 		int selStart = getSelectionStart();
-
-		// current selection is replaceв with imageId
-		builder.replace(getSelectionStart(), getSelectionEnd(), imgId);
-
-		// this "replaces" imageId string with image span. If you do builder.toString() - the string will contain imageIs where the imageSpan is.
-		// you can yse this later - if you want to location of imageSpan in text;
-		builder.setSpan(imageSpan, selStart, selStart + imgId.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		int selEnd=getSelectionEnd();
+		builder.replace(selStart, selEnd, imgId);
+		builder.setSpan(imageSpan, selStart+1, selStart + imgId.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), selStart+1, selStart + imgId.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		//builder.setSpan(new BulletSpan(2), selStart + imgId.length(), selStart + imgId.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		setText(builder);
+		setSelection(selStart+imgId.length(), selStart+imgId.length());
+	}	
+	
+	public String getHTML(ImageSaver saver){
+		StringBuilder html=new StringBuilder();
+		Editable text=getText();
+		int last=0, start, end;
+		String src;
+		for(ImageSpan span: text.getSpans(0, text.length(), ImageSpan.class)){
+			start=text.getSpanStart(span);
+			end=text.getSpanEnd(span);
+			html.append(text.subSequence(last, start));
+			src=text.subSequence(start,end).toString();
+			if(src.toLowerCase().startsWith("content:") && saver!=null)
+				html.append("<img src=\"").append(saver.getURL(src)).append("\">");
+			else
+				html.append("<img src=\"").append(src).append("\">");
+			last=end+1;
+		}
+		if(last<text.length())
+			html.append(text.subSequence(last, text.length()-1));
+		return html.toString();
 	}
 	
-	private class MyTextWatcher implements TextWatcher{
-
-		@Override
-		public void afterTextChanged(Editable editable) {
-			if(editable==title){
-				if(title.length()==0)
-					title.append(" ");
-			}
+	public void setText(String html){
+		SpannableStringBuilder builder = new SpannableStringBuilder();
+		Matcher matcher=IMG.matcher(html);
+		String src;
+		int last=0,start,end;
+		ImageSpan span;
+		while(matcher.find()){
+			start=matcher.start();
+			end=matcher.end();
+			src=matcher.group(1);
+			builder.append(html.subSequence(last, start));
+			span=new ImageSpan(getContext(),Uri.parse(src));
+			start=builder.length();
+			builder.append(src);
+			builder.setSpan(span, start-1, builder.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start-1, builder.length()-1,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			last=end;
 		}
-
-		@Override
-		public void beforeTextChanged(CharSequence charsequence, int i, int j,
-				int k) {
-			
-		}
-
-		@Override
-		public void onTextChanged(CharSequence charsequence, int i, int j, int k) {
-			
-		}
+		if(last<html.length())
+			builder.append(html.subSequence(last, html.length()-1));
 		
+		this.setText(builder, BufferType.EDITABLE);
+	}
+	
+	public interface ImageSaver{
+		public String getURL(String uri);
 	}
 }
