@@ -1,11 +1,13 @@
 package com.supernaiba.widget;
 
+import java.io.ByteArrayOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
@@ -14,32 +16,71 @@ import android.text.Editable;
 import android.text.Layout.Alignment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextWatcher;
+import android.text.TextPaint;
 import android.text.style.AlignmentSpan;
+import android.text.style.BulletSpan;
+import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.EditText;
 
+import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.SaveCallback;
+
 public class PostEditor extends EditText {
-	Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
-	Editable title;
+	private static Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
+	private Editable title;
+	private ImageSaver imageSaver;
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		this.addTextChangedListener(new MyTextWatcher());
+		init();
 	}
 	
 	public PostEditor(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		this.addTextChangedListener(new MyTextWatcher());
+		init();
 	}
 	
 	public PostEditor(Context context) {
 		super(context);
-		this.addTextChangedListener(new MyTextWatcher());
+		init();
 	}
 	
+	protected void init(){
+		
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		int start=getSelectionStart();
+		switch(keyCode){
+		case 67:
+			if(start!=0){
+				TitleEndSpan[] unremovables=getText().getSpans(start-1, start-1, TitleEndSpan.class);
+				if(unremovables!=null && unremovables.length>0){
+					setSelection(start-1,start-1);
+					return false;
+				}
+				if(title.length()==1){
+					title.replace(0, 1, " ");
+					return false;
+				}
+			}
+			break;
+		case 66:
+			TitleEndSpan[] unremovables=getText().getSpans(start, start, TitleEndSpan.class);
+			if(unremovables!=null && unremovables.length>0){
+				setSelection(start+1,start+1);
+				return false;
+			}
+			break;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
 	public Editable setTitle(String s){
 		ForegroundColorSpan hintSpan=null;
 		if(s==null){
@@ -51,38 +92,61 @@ public class PostEditor extends EditText {
 		else
 			title.clear();
 		title.clearSpans();
-		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		if(hintSpan!=null)
-			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		title.setSpan(new TitleEndSpan(), s.length()-1, s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		this.getText().insert(0, title);
 		return title;
 	}
-	
+
 	@TargetApi(5)
 	public void insertImage(Uri uri){
 		Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
                 getContext().getContentResolver(), Long.parseLong(uri.getLastPathSegment()),
                 MediaStore.Images.Thumbnails.MICRO_KIND,
                 (BitmapFactory.Options) null );
-		ImageSpan span=new ImageSpan(this.getContext(),bitmap);
+		final ImageSpan span=new ImageSpan(this.getContext(),bitmap);
 		insertImage(span, uri.toString());
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		bitmap.compress(CompressFormat.JPEG, 60, stream);
+		byte[] data = stream.toByteArray();  
+		final ParseFile file=new ParseFile("a.jpg",data);
+		file.saveInBackground(new SaveCallback(){
+			@Override
+			public void done(ParseException ex) {
+				if(ex==null){
+					Editable text=getText();
+					text.replace(text.getSpanStart(span), text.getSpanStart(span), file.getUrl());
+				}
+			}
+		});
+		
 	}
-	
+
 	public void insertImage(ImageSpan imageSpan, String src){
 		SpannableStringBuilder builder = new SpannableStringBuilder();
 		builder.append(getText());
-		String imgId = "\n"+src+"\n"; 
 
-		int selStart = getSelectionStart();
-		int selEnd=getSelectionEnd();
-		builder.replace(selStart, selEnd, imgId);
-		builder.setSpan(imageSpan, selStart+1, selStart + imgId.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), selStart+1, selStart + imgId.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		int start = getSelectionStart();
+		int end=getSelectionEnd();
+		builder.replace(start, end, src);
+		
+		end=start+src.length();
+		builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		builder.setSpan(new BulletSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		if(builder.charAt(start-1)!='\n')
+			builder.insert(start, "\n");
+		if(builder.length()==end || builder.charAt(end)!='\n')
+			builder.insert(end, "\n");
 		setText(builder);
-		setSelection(selStart+imgId.length(), selStart+imgId.length());
-	}	
+		setSelection(end, end);
+	}
 	
 	public String getHTML(ImageSaver saver){
+		if(saver==null)
+			saver=imageSaver;
 		StringBuilder html=new StringBuilder();
 		Editable text=getText();
 		int last=0, start, end;
@@ -117,8 +181,8 @@ public class PostEditor extends EditText {
 			span=new ImageSpan(getContext(),Uri.parse(src));
 			start=builder.length();
 			builder.append(src);
-			builder.setSpan(span, start-1, builder.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-			builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start-1, builder.length()-1,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			builder.setSpan(span, start-1, builder.length()-1, Spannable.SPAN_PARAGRAPH);
+			builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start-1, builder.length()-1,Spannable.SPAN_PARAGRAPH);
 			last=end;
 		}
 		if(last<html.length())
@@ -127,28 +191,28 @@ public class PostEditor extends EditText {
 		this.setText(builder, BufferType.EDITABLE);
 	}
 	
-	private class MyTextWatcher implements TextWatcher{
-
-		@Override
-		public void afterTextChanged(Editable text) {
-			Log.d("Editor", "afterTextChanged");
-		}
-
-		@Override
-		public void beforeTextChanged(CharSequence text, int arg1, int arg2,
-				int arg3) {
-			Log.d("Editor", "beforeTextChanged");
-		}
-
-		@Override
-		public void onTextChanged(CharSequence text, int arg1, int arg2,
-				int arg3) {
-			Log.d("Editor", "onTextChanged");
-		}
-		
+	public void setImageSaver(ImageSaver saver){
+		imageSaver=saver;
 	}
 	
 	public interface ImageSaver{
-		public String getURL(String uri);
+		public String getURL(String sourceUri);
+	}
+	
+	public String getFirstImageUrl(){
+		Editable text=getText();
+		ImageSpan[] images=text.getSpans(0, text.length(), ImageSpan.class);
+		if(images==null || images.length==0)
+			return null;
+		return text.subSequence(text.getSpanStart(images[0]), text.getSpanEnd(images[0])).toString();
+	}
+	
+	private class TitleEndSpan extends CharacterStyle{
+
+		@Override
+		public void updateDrawState(TextPaint t) {
+			
+		}
+		
 	}
 }

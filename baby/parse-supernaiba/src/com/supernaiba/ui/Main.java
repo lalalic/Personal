@@ -52,7 +52,6 @@ public class Main extends GDListActivity {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
 		
-		this.addActionBarItem(Type.Search);
 		defaultChildAction=(LoaderActionBarItem)this.getActionBar().newActionBarItem(LoaderActionBarItem.class);
 		this.addActionBarItem(defaultChildAction);
 		showDefaultChild();
@@ -86,7 +85,7 @@ public class Main extends GDListActivity {
 				switch(position){
 				case OnActionBarListener.HOME_ITEM:
 					break;
-				case 1:
+				case 0:
 					defaultChildAction.setLoading(false);
 					if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser())){
 						Intent intent=new Intent(Main.this,UserAccount.class);
@@ -95,9 +94,6 @@ public class Main extends GDListActivity {
 						break;
 					}else
 						childrenWindow.showAsDropDown(getActionBar().getItem(position).getItemView());
-					break;
-				case 0:
-					onSearchRequested();
 					break;
 				}
 			}
