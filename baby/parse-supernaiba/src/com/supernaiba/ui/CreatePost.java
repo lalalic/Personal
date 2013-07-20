@@ -15,7 +15,6 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -33,7 +32,6 @@ import com.supernaiba.widget.PostEditor;
 public class CreatePost extends GDActivity {
 	private static final int NEW_PHOTO = 0;
 	private PostEditor vEditor;
-	private EditText vTitle;
 	
 	private ParseObject post;
 	private String type;
@@ -57,7 +55,6 @@ public class CreatePost extends GDActivity {
 		this.vEditor=(PostEditor)this.findViewById(R.id.editor);
 		vEditor.setTitle(null);
 		
-		this.vTitle=(EditText)this.findViewById(R.id.title);
 		this.addActionBarItem(Type.Export);
 		
 		
@@ -94,7 +91,7 @@ public class CreatePost extends GDActivity {
 					onBackPressed();
 					break;
 				case 0:
-					post.put("title", vTitle.getText().toString());
+					post.put("title", vEditor.getTitle());
 					post.put("content", vEditor.getHTML(null));
 					post.put("thumbnail", vEditor.getFirstImageUrl());
 					post.saveEventually();
@@ -117,7 +114,7 @@ public class CreatePost extends GDActivity {
 		post.fetchInBackground(new GetCallback<ParseObject>(){
 			@Override
 			public void done(ParseObject post, ParseException ex) {
-				vTitle.setText(post.getString("title"));
+				vEditor.setTitle(post.getString("title"));
 				vEditor.setText(post.getString("content"));
 			}
 		});

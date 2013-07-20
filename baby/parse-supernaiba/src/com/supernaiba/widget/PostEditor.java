@@ -32,7 +32,6 @@ import com.parse.SaveCallback;
 
 public class PostEditor extends EditText {
 	private static Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
-	private Editable title;
 	private ImageSaver imageSaver;
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -57,20 +56,16 @@ public class PostEditor extends EditText {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		int start=getSelectionStart();
 		switch(keyCode){
-		case 67:
+		case 67://remove
 			if(start!=0){
 				TitleEndSpan[] unremovables=getText().getSpans(start-1, start-1, TitleEndSpan.class);
 				if(unremovables!=null && unremovables.length>0){
 					setSelection(start-1,start-1);
 					return false;
 				}
-				if(title.length()==1){
-					title.replace(0, 1, " ");
-					return false;
-				}
 			}
 			break;
-		case 66:
+		case 66://enter
 			TitleEndSpan[] unremovables=getText().getSpans(start, start, TitleEndSpan.class);
 			if(unremovables!=null && unremovables.length>0){
 				setSelection(start+1,start+1);
@@ -87,16 +82,17 @@ public class PostEditor extends EditText {
 			s="Title here in first line\n";
 			hintSpan=new ForegroundColorSpan(Color.GRAY);
 		}
-		if(title==null)
-			title=SpannableStringBuilder.valueOf(s);
-		else
-			title.clear();
-		title.clearSpans();
+		Editable text=getText();
+		int end=0;
+		TitleEndSpan[] spans=text.getSpans(0, text.length(), TitleEndSpan.class);
+		if(spans!=null && spans.length>0)
+			end=text.getSpanEnd(spans[0]);
+		Editable title=SpannableStringBuilder.valueOf(s);
 		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		if(hintSpan!=null)
 			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		title.setSpan(new TitleEndSpan(), s.length()-1, s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		this.getText().insert(0, title);
+		this.getText().replace(0, end,title);
 		return title;
 	}
 
@@ -117,7 +113,7 @@ public class PostEditor extends EditText {
 			public void done(ParseException ex) {
 				if(ex==null){
 					Editable text=getText();
-					text.replace(text.getSpanStart(span), text.getSpanStart(span), file.getUrl());
+					text.replace(text.getSpanStart(span), text.getSpanEnd(span), file.getUrl());
 				}
 			}
 		});
@@ -151,7 +147,7 @@ public class PostEditor extends EditText {
 		Editable text=getText();
 		int last=0, start, end;
 		String src;
-		for(ImageSpan span: text.getSpans(0, text.length(), ImageSpan.class)){
+		for(ImageSpan span: text.getSpans(last, text.length(), ImageSpan.class)){
 			start=text.getSpanStart(span);
 			end=text.getSpanEnd(span);
 			html.append(text.subSequence(last, start));
@@ -164,7 +160,7 @@ public class PostEditor extends EditText {
 		}
 		if(last<text.length())
 			html.append(text.subSequence(last, text.length()-1));
-		return html.toString();
+		return html.substring(0, html.indexOf("\n"));
 	}
 	
 	public void setText(String html){
@@ -205,6 +201,13 @@ public class PostEditor extends EditText {
 		if(images==null || images.length==0)
 			return null;
 		return text.subSequence(text.getSpanStart(images[0]), text.getSpanEnd(images[0])).toString();
+	}
+	
+	public String getTitle(){
+		Editable text=getText();
+		TitleEndSpan[] spans=text.getSpans(0, text.length(), TitleEndSpan.class);
+		int end=text.getSpanEnd(spans[0]);
+		return text.subSequence(0, end).toString();
 	}
 	
 	private class TitleEndSpan extends CharacterStyle{
