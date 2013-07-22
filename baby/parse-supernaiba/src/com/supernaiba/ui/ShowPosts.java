@@ -1,16 +1,18 @@
 package com.supernaiba.ui;
 
-import java.util.List;
-
 import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.LoaderActionBarItem;
 import greendroid.widget.ToolBar;
+
+import java.util.List;
+
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -51,8 +53,7 @@ public class ShowPosts extends GDActivity {
 			@Override
 			public void onActionBarItemClicked(int position) {
 				switch(position){
-				case 0:
-				default:
+				case 0://add
 					Intent intent=new Intent(ShowPosts.this,CreatePost.class);
 					intent.putExtra("type", ShowPosts.this.getIntent().getStringExtra("type"));
 					startActivity(intent);
@@ -73,7 +74,7 @@ public class ShowPosts extends GDActivity {
 					break;
 				case 0:
 				default:
-					onBackPressed();
+					onSearchRequested();
 				break;
 				}
 			}
@@ -91,7 +92,7 @@ public class ShowPosts extends GDActivity {
 			public void onItemClick(AdapterView<?> arg0, View view, int arg2,
 					long arg3) {
 				Intent intent=new Intent(ShowPosts.this,ShowPost.class);
-				intent.putExtra("id",((ParseObject)view.getTag()).getObjectId());
+				intent.putExtra("ID",((ParseObject)view.getTag()).getObjectId());
 				startActivity(intent);
 			}
 			
@@ -103,10 +104,20 @@ public class ShowPosts extends GDActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>(postType);
+				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("post");
+				query.whereEqualTo("category", postType);
 				return query;
 			}
-		});
+		}){
+
+			@Override
+			public View getItemView(ParseObject obj, View v, ViewGroup parent) {
+				View view=super.getItemView(obj, v, parent);
+				//show if favorite
+				return view;
+			}
+			
+		};
 		adapter.setPlaceholder(this.getResources().getDrawable(R.drawable.gd_action_bar_compass));
 		adapter.setTextKey("title");
 		adapter.setImageKey("thumbnail");

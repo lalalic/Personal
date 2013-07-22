@@ -104,16 +104,16 @@ public class DB extends SQLiteOpenHelper{
 	public Cursor load(String sql, String[] arguments){
 		SQLiteDatabase db=null;
 		Cursor cursor=null;
-		try {
-			db=this.getReadableDatabase();
-			cursor=db.rawQuery(sql, arguments);
-			return cursor;
-		} finally {
-			if(cursor!=null)
-				cursor.close();
-			if(db!=null)
-				db.close();
-		}
+		db=this.getReadableDatabase();
+		cursor=db.rawQuery(sql, arguments);
+		return cursor;
+	}
+	
+	public boolean exists(String sql, String[] arguments){
+		Cursor cursor=load(sql,arguments);
+		int count=cursor.getCount();
+		cursor.close();
+		return count>0;
 	}
 	
 	public void save(final String sql, final Object[][] values){

@@ -5,48 +5,40 @@ import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.ToolBar;
-
-import java.io.ByteArrayOutputStream;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
 import com.parse.GetCallback;
+import com.parse.Magic;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.QueryFactory;
+import com.parse.SaveCallback;
 import com.supernaiba.R;
 import com.supernaiba.parse.QueryAdapter;
 import com.supernaiba.widget.PostEditor;
-import com.supernaiba.widget.PostEditor.ImageSaver;
 
 public class CreatePost extends GDActivity {
 	private static final int NEW_PHOTO = 0;
-	PostEditor vEditor;
-	EditText vTitle;
+	private PostEditor vEditor;
 	
-	ParseObject post;
-	String type;
-	ActionBarItem tagAction;
+	private ParseObject post;
+	private String type;
+	private ActionBarItem tagAction;
+	
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -55,15 +47,16 @@ public class CreatePost extends GDActivity {
 		Intent intent=getIntent();
 		type=intent.getStringExtra("type");
 		if(intent.hasExtra("id")){
-			post=ParseObject.createWithoutData(type, intent.getStringExtra("id"));
+			post=ParseObject.createWithoutData("post", intent.getStringExtra("id"));
 		}else{
-			post=new ParseObject(type);
+			post=new ParseObject("post");
 			this.setTitle(getString(R.string.creating)+" "+type);
 		}
+		post.put("category", type);
 		
 		this.vEditor=(PostEditor)this.findViewById(R.id.editor);
 		vEditor.setTitle(null);
-		this.vTitle=(EditText)this.findViewById(R.id.title);
+		
 		this.addActionBarItem(Type.Export);
 		
 		
@@ -100,30 +93,19 @@ public class CreatePost extends GDActivity {
 					onBackPressed();
 					break;
 				case 0:
-					post.put("title", vTitle.getText().toString());
-					post.put("content", vEditor.getHTML(new ImageSaver(){
-
-						@TargetApi(5)
+					post.put("title", vEditor.getTitle());
+					post.put("content", vEditor.getHTML(null));
+					String thumbnail=vEditor.getFirstImageUrl();
+					if(thumbnail!=null)
+						post.put("thumbnail", Magic.createWithDate("a.jpg", thumbnail));
+					post.saveInBackground(new SaveCallback(){
 						@Override
-						public String getURL(String uri) {
-							Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
-					                getContentResolver(), Long.parseLong(Uri.parse(uri).getLastPathSegment()),
-					                MediaStore.Images.Thumbnails.MINI_KIND,
-					                (BitmapFactory.Options) null );
-							ByteArrayOutputStream stream = new ByteArrayOutputStream();
-							bitmap.compress(CompressFormat.JPEG, 100, stream);
-							byte[] data = stream.toByteArray();  
-							ParseFile file=new ParseFile("a.jpg",data);
-							try {
-								file.save();
-							} catch (ParseException e) {
-								return uri;
-							}
-							return file.getUrl();
+						public void done(ParseException ex) {
+							if(ex!=null)
+								post.saveEventually();
 						}
 						
-					}));
-					post.saveEventually();
+					});
 					finish();
 					break;
 				default:
@@ -143,7 +125,7 @@ public class CreatePost extends GDActivity {
 		post.fetchInBackground(new GetCallback<ParseObject>(){
 			@Override
 			public void done(ParseObject post, ParseException ex) {
-				vTitle.setText(post.getString("title"));
+				vEditor.setTitle(post.getString("title"));
 				vEditor.setText(post.getString("content"));
 			}
 		});

@@ -177,6 +177,11 @@ public class CreateChild extends GDActivity {
 	@Override
 	public void onBackPressed() {
 		child.put("name", vUserName.getText().toString());
+		if(child.getString("name").length()==0){
+			finish();
+			super.onBackPressed();
+			return;
+		}
 		child.put("gender", vGender.getSelectedItemPosition());
 		child.put("birthday", vBirthday.getYear()+"-"+(vBirthday.getMonth()+1)+"-"+(vBirthday.getDayOfMonth()+1));
 		Intent returnIntent = new Intent();
@@ -190,12 +195,10 @@ public class CreateChild extends GDActivity {
 				}
 				
 				photo.saveInBackground(new SaveCallback(){
-	
 					@Override
 					public void done(ParseException arg0) {
 						child.saveEventually();
 					}
-					
 				});
 			}
 		}
