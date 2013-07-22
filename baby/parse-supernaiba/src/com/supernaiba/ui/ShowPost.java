@@ -23,7 +23,10 @@ public class ShowPost extends GDActivity {
 	private String ID;
 	private TextView vContent;
 	private LoaderActionBarItem refreshAction;
+<<<<<<< HEAD
 	private ActionBarItem starAction;
+=======
+>>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -42,10 +45,13 @@ public class ShowPost extends GDActivity {
 					vContent.setText(Html.fromHtml("<div align=\"center\">"+post.getString("title")+"</div>"+post.getString("content")));
 				else
 					vContent.setText(ex.getMessage());
+<<<<<<< HEAD
 				if(isStared()){
 					starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
 				}
 					
+=======
+>>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 			}
 			
 		});
@@ -57,7 +63,11 @@ public class ShowPost extends GDActivity {
 		footer.addItem(Type.Edit);//comment
 		starAction=footer.addItem(Type.Star);
 		footer.addItem(Type.Share);
+<<<<<<< HEAD
 		footer.addItem(Type.List);//plan
+=======
+		footer.addItem(Type.List);
+>>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
 
@@ -70,7 +80,11 @@ public class ShowPost extends GDActivity {
 					startActivity(intent);
 				break;
 				case 1://favorite
+<<<<<<< HEAD
 					starPost();
+=======
+					
+>>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 					break;
 				case 2://share to media, wb and wc
 					
@@ -97,6 +111,8 @@ public class ShowPost extends GDActivity {
 			}
 			
 		});
+		
+		
 	}
 	
 	public void starPost(){
