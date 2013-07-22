@@ -22,7 +22,6 @@ import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.OnQueryLoadListener;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
-import com.supernaiba.data.DB;
 import com.supernaiba.parse.QueryAdapter;
 
 public class ShowPosts extends GDActivity {
@@ -54,11 +53,7 @@ public class ShowPosts extends GDActivity {
 			@Override
 			public void onActionBarItemClicked(int position) {
 				switch(position){
-<<<<<<< HEAD
 				case 0://add
-=======
-				case 0:
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 					Intent intent=new Intent(ShowPosts.this,CreatePost.class);
 					intent.putExtra("type", ShowPosts.this.getIntent().getStringExtra("type"));
 					startActivity(intent);

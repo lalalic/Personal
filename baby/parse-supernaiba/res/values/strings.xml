@@ -33,11 +33,7 @@
     </string-array>
     <string-array name="schema">
         <item>CREATE TABLE UPLOADQUEUE(objectId text,parseUrl text,localUri text);</item>
-<<<<<<< HEAD
         <item>CREATE TABLE POST(objectId text primary key, thumbnail text, title text, content text, category text, createdAt date, updatedAt date, ACL acl, status int default 0, favorite int default 0)</item>
-=======
-        <item>CREATE TABLE POST(objectId text primary key,title text not null, content text, category int not null, createdAt date, updatedAt date, ACL acl, type int default 0)</item>
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
         <item>CREATE TABLE TASK(objectId text primary key, postId text not null, status int default 0, type int default 0, planedAt date not null, finishedAt date, took int)</item>
         <item>CREATE TABLE STATISTICS(tagId int not null, finishedAt date, took long default 0)</item>
     </string-array>

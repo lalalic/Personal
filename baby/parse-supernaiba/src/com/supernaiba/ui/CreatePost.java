@@ -95,7 +95,6 @@ public class CreatePost extends GDActivity {
 				case 0:
 					post.put("title", vEditor.getTitle());
 					post.put("content", vEditor.getHTML(null));
-<<<<<<< HEAD
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
 						post.put("thumbnail", Magic.createWithDate("a.jpg", thumbnail));
@@ -107,10 +106,6 @@ public class CreatePost extends GDActivity {
 						}
 						
 					});
-=======
-					post.put("thumbnail", vEditor.getFirstImageUrl());
-					post.saveEventually();
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 					finish();
 					break;
 				default:

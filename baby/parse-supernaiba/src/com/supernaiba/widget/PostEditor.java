@@ -18,10 +18,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
 import android.text.style.AlignmentSpan;
-<<<<<<< HEAD
-=======
 import android.text.style.BulletSpan;
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
@@ -59,11 +56,7 @@ public class PostEditor extends EditText {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		int start=getSelectionStart();
 		switch(keyCode){
-<<<<<<< HEAD
 		case 67:
-=======
-		case 67://remove
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 			if(start!=0){
 				TitleEndSpan[] unremovables=getText().getSpans(start-1, start-1, TitleEndSpan.class);
 				if(unremovables!=null && unremovables.length>0){
@@ -72,11 +65,7 @@ public class PostEditor extends EditText {
 				}
 			}
 			break;
-<<<<<<< HEAD
 		case 66:
-=======
-		case 66://enter
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 			TitleEndSpan[] unremovables=getText().getSpans(start, start, TitleEndSpan.class);
 			if(unremovables!=null && unremovables.length>0){
 				setSelection(start+1,start+1);
@@ -99,17 +88,10 @@ public class PostEditor extends EditText {
 		if(spans!=null && spans.length>0)
 			end=text.getSpanEnd(spans[0]);
 		Editable title=SpannableStringBuilder.valueOf(s);
-<<<<<<< HEAD
-		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-		if(hintSpan!=null)
-			title.setSpan(hintSpan, 0, s.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-		title.setSpan(new TitleEndSpan(), s.length()-1, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-=======
 		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		if(hintSpan!=null)
 			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-		title.setSpan(new TitleEndSpan(), s.length()-1, s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
+		title.setSpan(new TitleEndSpan(), s.length()-1, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		this.getText().replace(0, end,title);
 		return title;
 	}
@@ -149,10 +131,7 @@ public class PostEditor extends EditText {
 		end=start+src.length();
 		builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-<<<<<<< HEAD
-=======
 		builder.setSpan(new BulletSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 		if(builder.charAt(start-1)!='\n')
 			builder.insert(start, "\n");
 		if(builder.length()==end || builder.charAt(end)!='\n')
@@ -180,13 +159,8 @@ public class PostEditor extends EditText {
 			last=end+1;
 		}
 		if(last<text.length())
-<<<<<<< HEAD
-			html.append(text.subSequence(last, text.length()));
-		return html.substring(html.indexOf("\n")+1);
-=======
 			html.append(text.subSequence(last, text.length()-1));
 		return html.substring(0, html.indexOf("\n"));
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 	}
 	
 	public void setText(String html){
@@ -232,15 +206,10 @@ public class PostEditor extends EditText {
 	public String getTitle(){
 		Editable text=getText();
 		TitleEndSpan[] spans=text.getSpans(0, text.length(), TitleEndSpan.class);
-<<<<<<< HEAD
 		if(spans==null || spans.length==0)
 			return "";
 		int end=text.getSpanEnd(spans[0]);
-		return text.subSequence(0, end-1).toString();
-=======
-		int end=text.getSpanEnd(spans[0]);
 		return text.subSequence(0, end).toString();
->>>>>>> c994b1446a90e5454e2be621cce66d2e52712b26
 	}
 	
 	private class TitleEndSpan extends CharacterStyle{
