@@ -6,11 +6,19 @@ import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.LoaderActionBarItem;
 import greendroid.widget.ToolBar;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.LightingColorFilter;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.PopupWindow;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import com.parse.GetCallback;
@@ -24,6 +32,7 @@ public class ShowPost extends GDActivity {
 	private TextView vContent;
 	private LoaderActionBarItem refreshAction;
 	private ActionBarItem starAction;
+	private ParseObject post;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -33,13 +42,13 @@ public class ShowPost extends GDActivity {
 		refreshAction=(LoaderActionBarItem)addActionBarItem(getActionBar().newActionBarItem(LoaderActionBarItem.class));
 		refreshAction.setDrawable(getResources().getDrawable(R.drawable.gd_action_bar_refresh));
 		refreshAction.setLoading(true);
-		ParseObject.createWithoutData("post", ID=getIntent().getStringExtra("ID"))
-			.fetchInBackground(new GetCallback<ParseObject>(){
+		post=ParseObject.createWithoutData("post", ID=getIntent().getStringExtra("ID"));
+		post.fetchInBackground(new GetCallback<ParseObject>(){
 			@Override
-			public void done(ParseObject post, ParseException ex) {
+			public void done(ParseObject p, ParseException ex) {
 				refreshAction.setLoading(false);
 				if(ex==null)
-					vContent.setText(Html.fromHtml("<div align=\"center\">"+post.getString("title")+"</div>"+post.getString("content")));
+					vContent.setText(Html.fromHtml("<div align=\"center\">"+p.getString("title")+"</div>"+p.getString("content")));
 				else
 					vContent.setText(ex.getMessage());
 				if(isStared()){
@@ -58,6 +67,7 @@ public class ShowPost extends GDActivity {
 		starAction=footer.addItem(Type.Star);
 		footer.addItem(Type.Share);
 		footer.addItem(Type.List);//plan
+		footer.addItem(Type.Gallery);//story
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
 
@@ -75,7 +85,10 @@ public class ShowPost extends GDActivity {
 				case 2://share to media, wb and wc
 					
 					break;
-				case 3://story
+				case 3://plan
+					
+					break;
+				case 4://story
 					break;
 				}
 				
@@ -115,5 +128,32 @@ public class ShowPost extends GDActivity {
 	public boolean isStared(){
 		return DB.getInstance(ShowPost.this).exists("select 1 from post where  objectID=? and favorite=1", new String[]{ID});
 	}
+	
+	private PopupWindow planWindow;
+	@SuppressWarnings("static-access")
+	protected void getPlanWindow(){
+		if(planWindow==null){
+			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View view=inflater.inflate(R.layout.plan_type, null);
+			planWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
+			RadioGroup rb = (RadioGroup) view.findViewById(R.id.planType);
+			rb.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			      public void onCheckedChanged (RadioGroup group, int checkedId) {
+			    	  RadioButton type=(RadioButton)group.findViewById(checkedId);
+			    	  if(type.isChecked()){
+			    		  int iType=(Integer)type.getTag();
+			    		  if(iType==-1)
+			    			  DB.getInstance(ShowPost.this).getWritableDatabase().delete("task", "where objectId=?", new String[]{ID});//remove
+			    		  else if(DB.getInstance(ShowPost.this).exists("select 1 from task where objectId=?", new String[]{ID}))
+			    			  DB.getInstance(ShowPost.this).save("insert into taks(objectId,)", values);
+			    	  }
+			      }
+			});
+		}
+		planWindow.setFocusable(true);
+		planWindow.setOutsideTouchable(true);
+		planWindow.setBackgroundDrawable(new BitmapDrawable()); 
+	}
+
 
 }
