@@ -1,11 +1,14 @@
 package com.supernaiba.ui;
 
+import java.util.Date;
+
 import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.LoaderActionBarItem;
 import greendroid.widget.ToolBar;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -31,7 +34,7 @@ public class ShowPost extends GDActivity {
 	private String ID;
 	private TextView vContent;
 	private LoaderActionBarItem refreshAction;
-	private ActionBarItem starAction;
+	private ActionBarItem starAction,planAction;
 	private ParseObject post;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
@@ -51,9 +54,12 @@ public class ShowPost extends GDActivity {
 					vContent.setText(Html.fromHtml("<div align=\"center\">"+p.getString("title")+"</div>"+p.getString("content")));
 				else
 					vContent.setText(ex.getMessage());
-				if(isStared()){
+				if(isStared())
 					starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
-				}
+				
+				if(isPlanned())
+					planAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+				
 					
 			}
 			
@@ -61,12 +67,12 @@ public class ShowPost extends GDActivity {
 		
 		
 		
-		ToolBar footer=ToolBar.inflate(this);
+		final ToolBar footer=ToolBar.inflate(this);
 		footer.setMaxItemCount(4);
 		footer.addItem(Type.Edit);//comment
 		starAction=footer.addItem(Type.Star);
 		footer.addItem(Type.Share);
-		footer.addItem(Type.List);//plan
+		planAction=footer.addItem(Type.List);//plan
 		footer.addItem(Type.Gallery);//story
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
@@ -86,9 +92,13 @@ public class ShowPost extends GDActivity {
 					
 					break;
 				case 3://plan
-					
+					getPlanWindow().showAsDropDown(footer.getItem(position).getItemView());
 					break;
 				case 4://story
+					Intent intent2=new Intent(ShowPost.this,CreateStory.class);
+					intent2.putExtra("ID", ID);
+					intent2.putExtra("type","story");
+					startActivity(intent2);
 					break;
 				}
 				
@@ -129,9 +139,13 @@ public class ShowPost extends GDActivity {
 		return DB.getInstance(ShowPost.this).exists("select 1 from post where  objectID=? and favorite=1", new String[]{ID});
 	}
 	
+	public boolean isPlanned(){
+		return DB.getInstance(ShowPost.this).exists("select 1 from task where  objectID=?", new String[]{ID});
+	}
+	
 	private PopupWindow planWindow;
 	@SuppressWarnings("static-access")
-	protected void getPlanWindow(){
+	protected PopupWindow getPlanWindow(){
 		if(planWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.plan_type, null);
@@ -142,10 +156,12 @@ public class ShowPost extends GDActivity {
 			    	  RadioButton type=(RadioButton)group.findViewById(checkedId);
 			    	  if(type.isChecked()){
 			    		  int iType=(Integer)type.getTag();
-			    		  if(iType==-1)
+			    		  if(iType==-1)//remove
 			    			  DB.getInstance(ShowPost.this).getWritableDatabase().delete("task", "where objectId=?", new String[]{ID});//remove
 			    		  else if(DB.getInstance(ShowPost.this).exists("select 1 from task where objectId=?", new String[]{ID}))
-			    			  DB.getInstance(ShowPost.this).save("insert into taks(objectId,)", values);
+			    			  DB.getInstance(ShowPost.this).save("update task set type=? and planedAt=? where objectId=?", new String[][]{{iType+"",ID, new Date().toString()}});
+			    		  else
+			    			  DB.getInstance(ShowPost.this).save("insert into task(objectId,type, planedAt,title)", new String[][]{{ID,iType+"",new Date().toString(), post.getString("title")}});
 			    	  }
 			      }
 			});
@@ -153,6 +169,7 @@ public class ShowPost extends GDActivity {
 		planWindow.setFocusable(true);
 		planWindow.setOutsideTouchable(true);
 		planWindow.setBackgroundDrawable(new BitmapDrawable()); 
+		return planWindow;
 	}
 
 
