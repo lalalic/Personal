@@ -14,8 +14,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
@@ -97,7 +95,7 @@ public class CreatePost extends GDActivity {
 					post.put("content", vEditor.getHTML(null));
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
-						post.put("thumbnail", Magic.createWithDate("a.jpg", thumbnail));
+						post.put("thumbnail", Magic.createWithUrl(thumbnail));
 					post.saveInBackground(new SaveCallback(){
 						@Override
 						public void done(ParseException ex) {
@@ -170,18 +168,10 @@ public class CreatePost extends GDActivity {
 				@Override
 				public ParseQuery<ParseObject> create() {
 					ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("tag");
-
 					return query;
 				}
 				
-			}){
-				@Override
-				public View getItemView(ParseObject object, View v, ViewGroup parent) {
-					LinearLayout view=(LinearLayout)super.getItemView(object, v, parent);
-					
-					return view;
-				}
-			};
+			});
 			adapter.setTextKey("name");
 			list.setAdapter(adapter);
 		}

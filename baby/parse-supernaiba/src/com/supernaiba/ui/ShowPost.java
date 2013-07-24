@@ -1,13 +1,13 @@
 package com.supernaiba.ui;
 
-import java.util.Date;
-
 import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.LoaderActionBarItem;
 import greendroid.widget.ToolBar;
+
+import java.util.Date;
 
 import android.content.Context;
 import android.content.Intent;
@@ -23,18 +23,21 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
 import com.supernaiba.R;
-import com.supernaiba.data.DB;
 
 public class ShowPost extends GDActivity {
 	private String ID;
 	private TextView vContent;
 	private LoaderActionBarItem refreshAction;
 	private ActionBarItem starAction,planAction;
+	RadioGroup planTypes;
 	private ParseObject post;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
@@ -46,25 +49,6 @@ public class ShowPost extends GDActivity {
 		refreshAction.setDrawable(getResources().getDrawable(R.drawable.gd_action_bar_refresh));
 		refreshAction.setLoading(true);
 		post=ParseObject.createWithoutData("post", ID=getIntent().getStringExtra("ID"));
-		post.fetchInBackground(new GetCallback<ParseObject>(){
-			@Override
-			public void done(ParseObject p, ParseException ex) {
-				refreshAction.setLoading(false);
-				if(ex==null)
-					vContent.setText(Html.fromHtml("<div align=\"center\">"+p.getString("title")+"</div>"+p.getString("content")));
-				else
-					vContent.setText(ex.getMessage());
-				if(isStared())
-					starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
-				
-				if(isPlanned())
-					planAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
-				
-					
-			}
-			
-		});
-		
 		
 		
 		final ToolBar footer=ToolBar.inflate(this);
@@ -86,13 +70,45 @@ public class ShowPost extends GDActivity {
 					startActivity(intent);
 				break;
 				case 1://favorite
-					starPost();
+					favorite(new GetCallback<ParseObject>(){
+						@Override
+						public void done(ParseObject favorite, ParseException ex) {
+							if(ex!=null){
+								Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+								return;
+							}
+							if(favorite==null){
+								favorite=new ParseObject("favorite");
+								favorite.put("owner", ParseUser.getCurrentUser());
+								favorite.put("post", post);
+								favorite.put("title", post.getString("title"));
+								favorite.put("thumb", post.getParseFile("thumb"));
+								favorite.saveEventually();
+								starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+							}else{
+								favorite.deleteEventually();
+							}
+						}
+						
+					});
 					break;
 				case 2://share to media, wb and wc
 					
 					break;
 				case 3://plan
 					getPlanWindow().showAsDropDown(footer.getItem(position).getItemView());
+					plan(new GetCallback<ParseObject>(){
+						@Override
+						public void done(ParseObject task, ParseException ex) {
+							if(ex!=null){
+								Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+								return;
+							}
+							if(task!=null)
+								planTypes.check(task.getInt("type"));
+						}
+						
+					} );
 					break;
 				case 4://story
 					Intent intent2=new Intent(ShowPost.this,CreateStory.class);
@@ -120,27 +136,61 @@ public class ShowPost extends GDActivity {
 			}
 			
 		});
+		
+		refresh();	
 	}
 	
-	public void starPost(){
-		DB db=DB.getInstance(ShowPost.this);
-		if(!isStared()){
-			if(db.exists("select 1 from post where objectId=?", new String[]{ID}))
-				db.save("update post set favorite=? where objectId=?", new Object[][]{{1,ID}});
-			else
-				db.save("insert into post(objectId,favorite) values(?,?)", new Object[][]{{ID,1}});
-			starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
-		}else{
-			db.save("update post set favorite=? where objectId=?", new Object[][]{{0,ID}});
-		}
+	public void refresh(){
+		post.fetchInBackground(new GetCallback<ParseObject>(){
+			@Override
+			public void done(ParseObject p, ParseException ex) {
+				refreshAction.setLoading(false);
+				if(ex==null)
+					vContent.setText(Html.fromHtml("<div align=\"center\">"+p.getString("title")+"</div>"+p.getString("content")));
+				else
+					vContent.setText(ex.getMessage());
+				
+				favorite(new GetCallback<ParseObject>(){
+					@Override
+					public void done(ParseObject f, ParseException ex) {
+						if(ex!=null){
+							Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+							return;
+						}
+						if(f!=null)
+							starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+					}
+					
+				});
+				
+				
+				plan(new GetCallback<ParseObject>(){
+					@Override
+					public void done(ParseObject task, ParseException ex) {
+						if(ex!=null){
+							Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+							return;
+						}
+						if(task!=null)
+							planAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+					}
+				});	
+			}	
+		});
 	}
 	
-	public boolean isStared(){
-		return DB.getInstance(ShowPost.this).exists("select 1 from post where  objectID=? and favorite=1", new String[]{ID});
+	public void favorite(GetCallback<ParseObject> callback){
+		ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("favorite");
+		query.whereEqualTo("owner", ParseUser.getCurrentUser());
+		query.whereEqualTo("post", post);
+		query.getFirstInBackground(callback);
 	}
 	
-	public boolean isPlanned(){
-		return DB.getInstance(ShowPost.this).exists("select 1 from task where  objectID=?", new String[]{ID});
+	public void plan(GetCallback<ParseObject> callback){
+		ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("task");
+		query.whereEqualTo("owner", ParseUser.getCurrentUser());
+		query.whereEqualTo("post", post);
+		query.getFirstInBackground(callback);
 	}
 	
 	private PopupWindow planWindow;
@@ -150,18 +200,39 @@ public class ShowPost extends GDActivity {
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.plan_type, null);
 			planWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
-			RadioGroup rb = (RadioGroup) view.findViewById(R.id.planType);
-			rb.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			      public void onCheckedChanged (RadioGroup group, int checkedId) {
+			planTypes = (RadioGroup) view.findViewById(R.id.planType);
+			planTypes.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			      public void onCheckedChanged (RadioGroup group, final int checkedId) {
 			    	  RadioButton type=(RadioButton)group.findViewById(checkedId);
 			    	  if(type.isChecked()){
-			    		  int iType=(Integer)type.getTag();
-			    		  if(iType==-1)//remove
-			    			  DB.getInstance(ShowPost.this).getWritableDatabase().delete("task", "where objectId=?", new String[]{ID});//remove
-			    		  else if(DB.getInstance(ShowPost.this).exists("select 1 from task where objectId=?", new String[]{ID}))
-			    			  DB.getInstance(ShowPost.this).save("update task set type=? and planedAt=? where objectId=?", new String[][]{{iType+"",ID, new Date().toString()}});
-			    		  else
-			    			  DB.getInstance(ShowPost.this).save("insert into task(objectId,type, planedAt,title)", new String[][]{{ID,iType+"",new Date().toString(), post.getString("title")}});
+			    		  plan(new GetCallback<ParseObject>(){
+
+							@Override
+							public void done(ParseObject task,
+									ParseException ex) {
+								if(ex!=null){
+									Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+									return;
+								}
+								if(checkedId==0){
+									if(task!=null)
+										task.deleteEventually();
+								}else{ 
+									if(task==null){
+										task=new ParseObject("task");
+										task.put("owner", ParseUser.getCurrentUser());
+										task.put("post", post);
+										task.put("thumb", post.getParseFile("thumb"));
+										task.put("title", post.getString("title"));
+									}
+									task.put("planAt", new Date());
+									task.put("type", checkedId);
+									task.saveEventually();									
+								}
+									
+							}
+			    			  
+			    		  });
 			    	  }
 			      }
 			});

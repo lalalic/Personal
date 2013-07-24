@@ -15,13 +15,14 @@ import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.parse.QueryAdapter;
 
-public class ShowTasks extends GDListActivity {
+public class ShowFavorites extends GDListActivity {
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
 		
-		this.setTitle(getString(R.string.tasks));		
+		this.setTitle(getString(R.string.tasks));
+		
 		this.getActionBar().setOnActionBarListener(new OnActionBarListener(){
 
 			@Override
@@ -29,7 +30,7 @@ public class ShowTasks extends GDListActivity {
 				switch(position){
 				case 0:
 				default:
-					ShowTasks.this.onBackPressed();
+					ShowFavorites.this.onBackPressed();
 				break;
 				}
 			}
@@ -39,7 +40,7 @@ public class ShowTasks extends GDListActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("task");
+				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("favorite");
 				query.whereEqualTo("owner", ParseUser.getCurrentUser());
 				return query;
 			}
@@ -52,7 +53,7 @@ public class ShowTasks extends GDListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		Intent intent=new Intent(this,ShowPost.class);
-		intent.putExtra("ID", intent.putExtra("ID", ((ParseObject)v.getTag()).getObjectId()));
+		intent.putExtra("ID", ((ParseObject)v.getTag()).getObjectId());
 		this.startActivity(intent);
 	}
 

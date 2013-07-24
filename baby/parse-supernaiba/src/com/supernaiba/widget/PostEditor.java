@@ -25,6 +25,7 @@ import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -88,9 +89,9 @@ public class PostEditor extends EditText {
 		if(spans!=null && spans.length>0)
 			end=text.getSpanEnd(spans[0]);
 		Editable title=SpannableStringBuilder.valueOf(s);
-		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		title.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), 0, s.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		if(hintSpan!=null)
-			title.setSpan(hintSpan, 0, s.length()-1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+			title.setSpan(hintSpan, 0, s.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		title.setSpan(new TitleEndSpan(), s.length()-1, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		this.getText().replace(0, end,title);
 		return title;
@@ -111,10 +112,12 @@ public class PostEditor extends EditText {
 		file.saveInBackground(new SaveCallback(){
 			@Override
 			public void done(ParseException ex) {
-				if(ex==null){
-					Editable text=getText();
-					text.replace(text.getSpanStart(span), text.getSpanEnd(span), file.getUrl());
+				if(ex!=null){
+					Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
+					return;
 				}
+				Editable text=getText();
+				text.replace(text.getSpanStart(span), text.getSpanEnd(span), file.getUrl());
 			}
 		});
 		

@@ -79,7 +79,7 @@ public class CreateStory extends GDActivity {
 					story.put("content", vEditor.getHTML(null));
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
-						story.put("thumbnail", Magic.createWithDate("a.jpg", thumbnail));
+						story.put("thumbnail", Magic.createWithUrl(thumbnail));
 					story.saveInBackground(new SaveCallback(){
 						@Override
 						public void done(ParseException ex) {

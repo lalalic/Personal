@@ -59,17 +59,21 @@ public class Main extends GDListActivity {
 		ToolBar footer=ToolBar.inflate(this);
 		footer.setMaxItemCount(3);
 		footer.addItem(Type.Share);
-		footer.addItem(Type.Compass);
-		footer.addItem(Type.AllFriends);
+		footer.addItem(Type.Compass);//favorites
+		footer.addItem(Type.AllFriends);//tasks
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
 
 			@Override
 			public void onActionBarItemClicked(int position) {
+				Intent intent;
 				switch(position){
+				case 1:
+					intent=new Intent(Main.this,ShowFavorites.class);
+					Main.this.startActivity(intent);
+				break;
 				case 2:
-				default:
-					Intent intent=new Intent(Main.this,ShowTasks.class);
+					intent=new Intent(Main.this,ShowTasks.class);
 					Main.this.startActivity(intent);
 				break;
 				}
@@ -206,7 +210,6 @@ public class Main extends GDListActivity {
 				query.whereEqualTo("parent", ParseUser.getCurrentUser());
 				return query;
 			}
-			
 		}){
 			@Override
 			public View getItemView(ParseObject object, View v, ViewGroup parent) {

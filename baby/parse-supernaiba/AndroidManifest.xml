@@ -35,6 +35,8 @@
         <activity android:name=".ui.CreatePost" android:windowSoftInputMode="adjustResize"></activity>
         <activity android:name=".ui.UserAccount" android:windowSoftInputMode="stateVisible|adjustResize"></activity>
         <activity android:name=".ui.CreateChild" android:windowSoftInputMode="stateVisible|adjustResize"></activity>
+        <activity android:name=".ui.CreateStory" android:windowSoftInputMode="adjustResize"></activity>
+        <activity android:name=".ui.ShowFavorites"></activity>
     </application>
 
 </manifest>

@@ -12,7 +12,6 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -108,21 +107,10 @@ public class ShowPosts extends GDActivity {
 				query.whereEqualTo("category", postType);
 				return query;
 			}
-		}){
-
-			@Override
-			public View getItemView(ParseObject obj, View v, ViewGroup parent) {
-				View view=super.getItemView(obj, v, parent);
-				//show if favorite
-				return view;
-			}
-			
-		};
+		});
 		adapter.setPlaceholder(this.getResources().getDrawable(R.drawable.gd_action_bar_compass));
 		adapter.setTextKey("title");
 		adapter.setImageKey("thumbnail");
-		adapter.setPaginationEnabled(true);
-		adapter.setObjectsPerPage(20);
 		adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
 
 			@Override
