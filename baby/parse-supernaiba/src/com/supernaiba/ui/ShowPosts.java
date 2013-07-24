@@ -21,6 +21,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.OnQueryLoadListener;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
+import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
 public class ShowPosts extends GDActivity {
@@ -103,7 +104,7 @@ public class ShowPosts extends GDActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("post");
+				Query<ParseObject> query=new Query<ParseObject>("post");
 				query.whereEqualTo("category", postType);
 				return query;
 			}

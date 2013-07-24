@@ -23,14 +23,14 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.supernaiba.R;
+import com.supernaiba.parse.OnGet;
+import com.supernaiba.parse.Query;
 
 public class ShowPost extends GDActivity {
 	private String ID;
@@ -70,19 +70,17 @@ public class ShowPost extends GDActivity {
 					startActivity(intent);
 				break;
 				case 1://favorite
-					favorite(new GetCallback<ParseObject>(){
+					favorite(new OnGet<ParseObject>(ShowPost.this){
 						@Override
 						public void done(ParseObject favorite, ParseException ex) {
-							if(ex!=null){
-								Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-								return;
-							}
+							super.done(favorite, ex);
 							if(favorite==null){
 								favorite=new ParseObject("favorite");
 								favorite.put("owner", ParseUser.getCurrentUser());
 								favorite.put("post", post);
 								favorite.put("title", post.getString("title"));
-								favorite.put("thumb", post.getParseFile("thumb"));
+								if(favorite.containsKey("thumb"))
+									favorite.put("thumb", post.getParseFile("thumb"));
 								favorite.saveEventually();
 								starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
 							}else{
@@ -97,13 +95,10 @@ public class ShowPost extends GDActivity {
 					break;
 				case 3://plan
 					getPlanWindow().showAsDropDown(footer.getItem(position).getItemView());
-					plan(new GetCallback<ParseObject>(){
+					plan(new OnGet<ParseObject>(ShowPost.this){
 						@Override
 						public void done(ParseObject task, ParseException ex) {
-							if(ex!=null){
-								Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-								return;
-							}
+							super.done(task,ex);
 							if(task!=null)
 								planTypes.check(task.getInt("type"));
 						}
@@ -128,9 +123,14 @@ public class ShowPost extends GDActivity {
 			public void onActionBarItemClicked(int position) {
 				switch(position){
 				case OnActionBarListener.HOME_ITEM:
-				default:
 					onBackPressed();
-				break;
+					break;
+				case 0:
+					refresh();
+					break;
+				default:
+					
+					break;
 				}
 				
 			}
@@ -141,38 +141,34 @@ public class ShowPost extends GDActivity {
 	}
 	
 	public void refresh(){
-		post.fetchInBackground(new GetCallback<ParseObject>(){
+		post.fetchInBackground(new OnGet<ParseObject>(this){
 			@Override
 			public void done(ParseObject p, ParseException ex) {
-				refreshAction.setLoading(false);
-				if(ex==null)
-					vContent.setText(Html.fromHtml("<div align=\"center\">"+p.getString("title")+"</div>"+p.getString("content")));
-				else
-					vContent.setText(ex.getMessage());
+				super.done(p, ex);
+				if(p==null)
+					return;
+				setTitle(p.getString("title"));
+				vContent.setText(Html.fromHtml(p.getString("content")));
 				
-				favorite(new GetCallback<ParseObject>(){
+				favorite(new OnGet<ParseObject>(ShowPost.this){
 					@Override
 					public void done(ParseObject f, ParseException ex) {
-						if(ex!=null){
-							Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-							return;
-						}
+						super.done(f, ex);
 						if(f!=null)
 							starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+						refreshAction.setLoading(false);
 					}
 					
 				});
 				
 				
-				plan(new GetCallback<ParseObject>(){
+				plan(new OnGet<ParseObject>(ShowPost.this){
 					@Override
 					public void done(ParseObject task, ParseException ex) {
-						if(ex!=null){
-							Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-							return;
-						}
+						super.done(task, ex);
 						if(task!=null)
 							planAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+						refreshAction.setLoading(false);
 					}
 				});	
 			}	
@@ -180,40 +176,36 @@ public class ShowPost extends GDActivity {
 	}
 	
 	public void favorite(GetCallback<ParseObject> callback){
-		ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("favorite");
+		Query<ParseObject> query=new Query<ParseObject>("favorite");
 		query.whereEqualTo("owner", ParseUser.getCurrentUser());
 		query.whereEqualTo("post", post);
 		query.getFirstInBackground(callback);
 	}
 	
 	public void plan(GetCallback<ParseObject> callback){
-		ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("task");
+		Query<ParseObject> query=new Query<ParseObject>("task");
 		query.whereEqualTo("owner", ParseUser.getCurrentUser());
 		query.whereEqualTo("post", post);
 		query.getFirstInBackground(callback);
 	}
 	
 	private PopupWindow planWindow;
-	@SuppressWarnings("static-access")
 	protected PopupWindow getPlanWindow(){
 		if(planWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.plan_type, null);
-			planWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
+			planWindow=new PopupWindow(view,200,600);
 			planTypes = (RadioGroup) view.findViewById(R.id.planType);
 			planTypes.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			      public void onCheckedChanged (RadioGroup group, final int checkedId) {
 			    	  RadioButton type=(RadioButton)group.findViewById(checkedId);
 			    	  if(type.isChecked()){
-			    		  plan(new GetCallback<ParseObject>(){
+			    		  plan(new OnGet<ParseObject>(ShowPost.this){
 
 							@Override
 							public void done(ParseObject task,
 									ParseException ex) {
-								if(ex!=null){
-									Toast.makeText(ShowPost.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-									return;
-								}
+								super.done(task, ex);
 								if(checkedId==0){
 									if(task!=null)
 										task.deleteEventually();
@@ -222,7 +214,8 @@ public class ShowPost extends GDActivity {
 										task=new ParseObject("task");
 										task.put("owner", ParseUser.getCurrentUser());
 										task.put("post", post);
-										task.put("thumb", post.getParseFile("thumb"));
+										if(post.containsKey("thumb"))
+											task.put("thumb", post.getParseFile("thumb"));
 										task.put("title", post.getString("title"));
 									}
 									task.put("planAt", new Date());
@@ -234,6 +227,7 @@ public class ShowPost extends GDActivity {
 			    			  
 			    		  });
 			    	  }
+			    	  planWindow.dismiss();
 			      }
 			});
 		}

@@ -25,11 +25,10 @@ import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.SaveCallback;
+import com.supernaiba.parse.OnSave;
 
 public class PostEditor extends EditText {
 	private static Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
@@ -98,7 +97,7 @@ public class PostEditor extends EditText {
 	}
 
 	@TargetApi(5)
-	public void insertImage(Uri uri){
+	public void insertImage(final Uri uri){
 		Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
                 getContext().getContentResolver(), Long.parseLong(uri.getLastPathSegment()),
                 MediaStore.Images.Thumbnails.MICRO_KIND,
@@ -109,15 +108,12 @@ public class PostEditor extends EditText {
 		bitmap.compress(CompressFormat.JPEG, 60, stream);
 		byte[] data = stream.toByteArray();  
 		final ParseFile file=new ParseFile("a.jpg",data);
-		file.saveInBackground(new SaveCallback(){
+		file.saveInBackground(new OnSave(getContext(),file){
 			@Override
 			public void done(ParseException ex) {
-				if(ex!=null){
-					Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
-					return;
-				}
+				super.done(ex);
 				Editable text=getText();
-				text.replace(text.getSpanStart(span), text.getSpanEnd(span), file.getUrl());
+				text.replace(text.getSpanStart(span), text.getSpanEnd(span), ex==null ? file.getUrl() : uri.toString());
 			}
 		});
 		

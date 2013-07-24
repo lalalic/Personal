@@ -17,6 +17,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.OnQueryLoadListener;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
+import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
 public class ShowComments extends GDListActivity {
@@ -65,7 +66,7 @@ public class ShowComments extends GDListActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("comment");
+				Query<ParseObject> query=new Query<ParseObject>("comment");
 				query.whereEqualTo("post", ID);
 				return query;
 			}

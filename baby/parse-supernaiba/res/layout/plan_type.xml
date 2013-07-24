@@ -3,6 +3,7 @@
         android:id="@+id/planType"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="?attr/gdActionBarBackground"
         android:checkedButton="@android:integer/config_longAnimTime"
         android:orientation="vertical" >
 

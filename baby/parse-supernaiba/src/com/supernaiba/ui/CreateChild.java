@@ -23,15 +23,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.parse.GetDataCallback;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 import com.supernaiba.R;
+import com.supernaiba.parse.OnGetFileData;
+import com.supernaiba.parse.OnSave;
+import com.supernaiba.parse.Query;
 
 public class CreateChild extends GDActivity {
 	private static final int NEW_PHOTO = 0;
@@ -106,7 +106,7 @@ public class CreateChild extends GDActivity {
 	}
 
 	private ParseObject getChild(String id){
-		ParseQuery<ParseObject> query = ParseQuery.getQuery("Child");
+		Query<ParseObject> query = new Query<ParseObject>("Child");
 		try {
 			return query.get(id);
 		} catch (ParseException e) {
@@ -126,10 +126,11 @@ public class CreateChild extends GDActivity {
 		}
 		if(child.containsKey("photo")){
 			ParseFile photo=(ParseFile)child.get("photo");
-			photo.getDataInBackground(new GetDataCallback(){
+			photo.getDataInBackground(new OnGetFileData(this,photo){
 				@Override
-				public void done(byte[] data, ParseException arg1) {
-					CreateChild.this.vPhoto.setImageDrawable(Drawable.createFromStream(new ByteArrayInputStream(data), ""));
+				public void done(byte[] data, ParseException ex) {
+					super.done(data, ex);
+					vPhoto.setImageDrawable(Drawable.createFromStream(new ByteArrayInputStream(data), ""));
 				}
 			});
 		}
@@ -194,9 +195,10 @@ public class CreateChild extends GDActivity {
 					
 				}
 				
-				photo.saveInBackground(new SaveCallback(){
+				photo.saveInBackground(new OnSave(this,photo){
 					@Override
-					public void done(ParseException arg0) {
+					public void done(ParseException ex) {
+						super.done(ex);
 						child.saveEventually();
 					}
 				});

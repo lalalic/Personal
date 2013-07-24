@@ -8,6 +8,7 @@
     <string name="game">Game</string>
     <string name="reading">Reading</string>
     <string name="drawing">Drawing</string>
+    <string name="favorites">Favorites</string>
     <string-array name="categories">
         <item>Game</item>
         <item>Reading</item>

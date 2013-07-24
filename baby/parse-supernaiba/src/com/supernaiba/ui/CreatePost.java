@@ -17,15 +17,16 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
-import com.parse.GetCallback;
 import com.parse.Magic;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.QueryFactory;
-import com.parse.SaveCallback;
 import com.supernaiba.R;
+import com.supernaiba.parse.OnGet;
+import com.supernaiba.parse.OnSave;
+import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 import com.supernaiba.widget.PostEditor;
 
@@ -96,9 +97,10 @@ public class CreatePost extends GDActivity {
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
 						post.put("thumbnail", Magic.createWithUrl(thumbnail));
-					post.saveInBackground(new SaveCallback(){
+					post.saveInBackground(new OnSave(CreatePost.this,post){
 						@Override
 						public void done(ParseException ex) {
+							super.done(ex);
 							if(ex!=null)
 								post.saveEventually();
 						}
@@ -120,9 +122,10 @@ public class CreatePost extends GDActivity {
 	public void refresh(){
 		if(post.getObjectId()==null)
 			return;
-		post.fetchInBackground(new GetCallback<ParseObject>(){
+		post.fetchInBackground(new OnGet<ParseObject>(this){
 			@Override
 			public void done(ParseObject post, ParseException ex) {
+				super.done(post, ex);
 				vEditor.setTitle(post.getString("title"));
 				vEditor.setText(post.getString("content"));
 			}
@@ -167,7 +170,7 @@ public class CreatePost extends GDActivity {
 			QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 				@Override
 				public ParseQuery<ParseObject> create() {
-					ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("tag");
+					Query<ParseObject> query=new Query<ParseObject>("tag");
 					return query;
 				}
 				

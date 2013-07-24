@@ -27,17 +27,19 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
-import com.parse.GetCallback;
-import com.parse.GetDataCallback;
 import com.parse.ParseAnalytics;
 import com.parse.ParseAnonymousUtils;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.data.DB;
+import com.supernaiba.parse.OnGet;
+import com.supernaiba.parse.OnGetFileData;
+import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
 public class Main extends GDListActivity {
@@ -138,30 +140,33 @@ public class Main extends GDListActivity {
 		}
 		defaultChildAction.setLoading(true);
 		String id=DB.getInstance(this).get("DefaultChild");
-		ParseQuery<ParseObject> children=new ParseQuery<ParseObject>("child");
+		Query<ParseObject> children=new Query<ParseObject>("child");
 		if(id!=null && id.length()!=0)
 			children.whereEqualTo("objectId", id);
 		else
 			children.whereEqualTo("parent", ParseUser.getCurrentUser());
-		children.getFirstInBackground(new GetCallback<ParseObject>(){
+		children.getFirstInBackground(new OnGet<ParseObject>(this){
 			@Override
 			public void done(ParseObject child, ParseException ex) {
 				defaultChildAction.setLoading(false);
+				super.done(child, ex);
 				if(ex!=null)
 					defaultChildAction.setDrawable(R.drawable.gd_action_bar_all_friends);
 				else if(child==null)
 					defaultChildAction.setDrawable(R.drawable.gd_action_bar_add);
 				else if(child.containsKey("photo")){
 					defaultChildAction.setLoading(true);
-					child.getParseFile("photo").getDataInBackground(new GetDataCallback(){
+					ParseFile photo=child.getParseFile("photo");
+					photo.getDataInBackground(new OnGetFileData(Main.this,photo){
 
 						@Override
 						public void done(byte[] data, ParseException ex) {
+							defaultChildAction.setLoading(false);
+							super.done(data, ex);
 							if(data!=null)
 								defaultChildAction.setDrawable(Drawable.createFromStream(new ByteArrayInputStream(data), null));
 							else
 								defaultChildAction.setDrawable(R.drawable.gd_action_bar_all_friends);
-							defaultChildAction.setLoading(false);
 						}
 						
 					});
@@ -206,7 +211,7 @@ public class Main extends GDListActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("child");
+				Query<ParseObject> query=new Query<ParseObject>("child");
 				query.whereEqualTo("parent", ParseUser.getCurrentUser());
 				return query;
 			}

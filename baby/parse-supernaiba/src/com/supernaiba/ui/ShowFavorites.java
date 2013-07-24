@@ -13,6 +13,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
+import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
 public class ShowFavorites extends GDListActivity {
@@ -21,7 +22,7 @@ public class ShowFavorites extends GDListActivity {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
 		
-		this.setTitle(getString(R.string.tasks));
+		this.setTitle(getString(R.string.favorites));
 		
 		this.getActionBar().setOnActionBarListener(new OnActionBarListener(){
 
@@ -40,7 +41,7 @@ public class ShowFavorites extends GDListActivity {
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
-				ParseQuery<ParseObject> query=new ParseQuery<ParseObject>("favorite");
+				Query<ParseObject> query=new Query<ParseObject>("favorite");
 				query.whereEqualTo("owner", ParseUser.getCurrentUser());
 				return query;
 			}

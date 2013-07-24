@@ -10,13 +10,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
 
-import com.parse.GetCallback;
 import com.parse.Magic;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.SaveCallback;
 import com.supernaiba.R;
+import com.supernaiba.parse.OnGet;
+import com.supernaiba.parse.OnSave;
 import com.supernaiba.widget.PostEditor;
 
 public class CreateStory extends GDActivity {
@@ -80,9 +80,10 @@ public class CreateStory extends GDActivity {
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
 						story.put("thumbnail", Magic.createWithUrl(thumbnail));
-					story.saveInBackground(new SaveCallback(){
+					story.saveInBackground(new OnSave(CreateStory.this,story){
 						@Override
 						public void done(ParseException ex) {
+							super.done(ex);
 							if(ex!=null)
 								story.saveEventually();
 						}
@@ -103,9 +104,10 @@ public class CreateStory extends GDActivity {
 	public void refresh(){
 		if(story.getObjectId()==null)
 			return;
-		story.fetchInBackground(new GetCallback<ParseObject>(){
+		story.fetchInBackground(new OnGet<ParseObject>(this){
 			@Override
 			public void done(ParseObject post, ParseException ex) {
+				super.done(post, ex);
 				vEditor.setText(post.getString("content"));
 			}
 		});
