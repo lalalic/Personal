@@ -221,11 +221,13 @@ public class Main extends GDListActivity {
 				LinearLayout view=(LinearLayout)super.getItemView(object, v, parent);
 				if(this.getCount()>1)
 					view.setSelected(isDefaultChild(object));
+			
 				return view;
 			}
 		};
 		adapter.setPlaceholder(getResources().getDrawable(android.R.drawable.ic_menu_camera));
 		adapter.setImageKey("photo");
+		adapter.setTextKey("none");//hack to set non-existence key so there's no text
 		vChildren.setAdapter(adapter);
 	}
 	
