@@ -39,9 +39,7 @@ public class ShowPosts extends GDActivity {
 		this.setTitle(postType);
 
 		this.addActionBarItem(Type.Search);
-		refreshAction=(LoaderActionBarItem)addActionBarItem(getActionBar().newActionBarItem(LoaderActionBarItem.class));
-		refreshAction.setDrawable(getResources().getDrawable(R.drawable.gd_action_bar_refresh));
-		
+		refreshAction=(LoaderActionBarItem)addActionBarItem(Type.Refresh);
 		
 		ToolBar footer=ToolBar.inflate(this);
 		footer.setMaxItemCount(2);

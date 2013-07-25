@@ -29,8 +29,7 @@ public class ShowComments extends GDListActivity {
 		
 		ID=getIntent().getStringExtra("ID");
 		this.setTitle(R.string.comments); 
-		refreshAction=(LoaderActionBarItem)addActionBarItem(getActionBar().newActionBarItem(LoaderActionBarItem.class));
-		refreshAction.setDrawable(getResources().getDrawable(R.drawable.gd_action_bar_refresh));
+		refreshAction=(LoaderActionBarItem)addActionBarItem(Type.Refresh);
 		refreshAction.setLoading(true);
 		
 		ToolBar footer=ToolBar.inflate(this);

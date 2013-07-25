@@ -45,8 +45,7 @@ public class ShowPost extends GDActivity {
 		
 		this.setActionBarContentView(R.layout.post1);
 		vContent=(TextView)findViewById(R.id.content);
-		refreshAction=(LoaderActionBarItem)addActionBarItem(getActionBar().newActionBarItem(LoaderActionBarItem.class));
-		refreshAction.setDrawable(getResources().getDrawable(R.drawable.gd_action_bar_refresh));
+		refreshAction=(LoaderActionBarItem)addActionBarItem(Type.Refresh);
 		refreshAction.setLoading(true);
 		post=ParseObject.createWithoutData("post", ID=getIntent().getStringExtra("ID"));
 		
