@@ -33,7 +33,13 @@
         <item>Girl</item>
     </string-array>
     <string-array name="schema">
-
+        <item>CREATE TABLE USER(objectId text primary key, username text not null, email text, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE CHILD(objectId text primary key, name text not null unique, birthday integer not null, gender integer default 0, photo text, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE POST(objectId text primary key, category text not null, title text not null, content text not null, thumbnail text, authorId text not null, authorName text not null, modifiedAt integer, favorite integer default 0, favoriteAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE STORY(objectId text primary key, post text not null, content text not null, thumbnail text, authorId text not null, authorName text not null, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE COMMENT(objectId text primary key, post text not null, content text not null, authorId text not null, authorName text not null, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE TASK(objectId text primary key, post text not null, title text not null, planAt integer, type integer not null, modifedAt integer, offlinstatus integer default o0)</item>
+		<item>CREATE TABLE TAG(objectId text primary key, parent text, name text not null, stat integer default 0)</item>
     </string-array>
         <string name="search">Search</string>
         <string name="birthday">Birthday</string>

@@ -196,7 +196,7 @@ public class ActionBarDrawable extends BitmapDrawable {
 
     @Override
     public boolean isStateful() {
-        return true;
+        return false;
     }
 
     @Override
