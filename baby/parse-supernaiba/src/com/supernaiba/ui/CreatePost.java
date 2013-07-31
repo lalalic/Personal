@@ -4,7 +4,15 @@ import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
+import greendroid.widget.ItemAdapter;
 import greendroid.widget.ToolBar;
+import greendroid.widget.item.Item;
+import greendroid.widget.item.SeparatorItem;
+import greendroid.widget.itemview.ItemView;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -14,20 +22,17 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ListView;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 import com.parse.Magic;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
 import com.supernaiba.parse.OnGet;
 import com.supernaiba.parse.OnSave;
-import com.supernaiba.parse.Query;
-import com.supernaiba.parse.QueryAdapter;
 import com.supernaiba.widget.PostEditor;
 
 public class CreatePost extends GDActivity {
@@ -165,23 +170,11 @@ public class CreatePost extends GDActivity {
 		if(tagWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.tags, null);
-			ListView list=(ListView)view.findViewById(R.id.lists);
 			tagWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
-			QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
-				@Override
-				public ParseQuery<ParseObject> create() {
-					Query<ParseObject> query=new Query<ParseObject>("tag");
-					return query;
-				}
-				
-			});
-			adapter.setTextKey("name");
-			list.setAdapter(adapter);
 		}
 		tagWindow.setFocusable(true);
 		tagWindow.setOutsideTouchable(true);
 		tagWindow.setBackgroundDrawable(new BitmapDrawable()); 
 	}
-
 }
 
