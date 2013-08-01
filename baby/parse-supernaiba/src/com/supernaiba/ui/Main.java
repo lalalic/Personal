@@ -33,6 +33,7 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseQuery.CachePolicy;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
@@ -213,6 +214,7 @@ public class Main extends GDListActivity {
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("child");
 				query.whereEqualTo("parent", ParseUser.getCurrentUser());
+				query.setCachePolicy(CachePolicy.CACHE_ONLY);
 				return query;
 			}
 		}){
@@ -227,7 +229,7 @@ public class Main extends GDListActivity {
 		};
 		adapter.setPlaceholder(getResources().getDrawable(android.R.drawable.ic_menu_camera));
 		adapter.setImageKey("photo");
-		adapter.setTextKey("none");//hack to set non-existence key so there's no text
+		adapter.setTextKey("__notexist");//hack to set non-existence key so there's no text
 		vChildren.setAdapter(adapter);
 	}
 	

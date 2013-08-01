@@ -10,7 +10,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
-
+	private String textKey=null;
 	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
 		super(context, queryFactory);
 		init(context);
@@ -41,6 +41,12 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 		setPaginationEnabled(true);
 		setObjectsPerPage(20);
 	}
+	
+	@Override
+	public void setTextKey(String textKey) {
+		super.setTextKey(textKey);
+		this.textKey=textKey;
+	}
 
 	@Override
 	public View getItemView(T obj, View v, ViewGroup parent) {
@@ -48,7 +54,4 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 		view.setTag(obj);
 		return view;
 	}
-	
-	
-	
 }

@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -27,10 +28,13 @@ import android.widget.TextView;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.parse.OnGet;
 import com.supernaiba.parse.Query;
+import com.supernaiba.parse.QueryAdapter;
 
 public class ShowPost extends GDActivity {
 	private String ID;
@@ -51,7 +55,7 @@ public class ShowPost extends GDActivity {
 		
 		
 		final ToolBar footer=ToolBar.inflate(this);
-		footer.setMaxItemCount(4);
+		footer.setMaxItemCount(6);
 		footer.addItem(Type.Edit);//comment
 		starAction=footer.addItem(Type.Star);
 		footer.addItem(Type.Share);
@@ -170,6 +174,18 @@ public class ShowPost extends GDActivity {
 						refreshAction.setLoading(false);
 					}
 				});	
+				
+				ListView vStories=(ListView)findViewById(R.id.stories);
+				QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(ShowPost.this, new QueryFactory<ParseObject>(){
+					@Override
+					public ParseQuery<ParseObject> create() {
+						Query<ParseObject> query=new Query<ParseObject>("story");
+						query.whereEqualTo("post", ID);
+						return query;
+					}
+				});
+				adapter.setTextKey("content");
+				vStories.setAdapter(adapter);
 			}	
 		});
 	}

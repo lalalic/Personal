@@ -2,15 +2,10 @@ package com.supernaiba.ui;
 
 import greendroid.app.GDActivity;
 import greendroid.widget.ActionBar.OnActionBarListener;
-import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
-import greendroid.widget.ItemAdapter;
 import greendroid.widget.ToolBar;
-import greendroid.widget.item.Item;
-import greendroid.widget.item.SeparatorItem;
-import greendroid.widget.itemview.ItemView;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import android.annotation.TargetApi;
@@ -22,9 +17,15 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
 
 import com.parse.Magic;
 import com.parse.ParseAnalytics;
@@ -41,7 +42,6 @@ public class CreatePost extends GDActivity {
 	
 	private ParseObject post;
 	private String type;
-	private ActionBarItem tagAction;
 	
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
@@ -64,11 +64,10 @@ public class CreatePost extends GDActivity {
 		this.addActionBarItem(Type.Export);
 		
 		
-		ToolBar footer=ToolBar.inflate(this);
-		footer.setMaxItemCount(3);
+		final ToolBar footer=ToolBar.inflate(this);
+		footer.setMaxItemCount(2);
 		footer.addItem(Type.TakePhoto);
-		footer.addItem(Type.Eye);
-		tagAction=footer.addItem(Type.Settings);
+		footer.addItem(Type.List);
 		
 		
 		
@@ -80,8 +79,8 @@ public class CreatePost extends GDActivity {
 				case 0:
 					takePhoto();
 					break;	
-				case 2:
-					tagWindow.showAsDropDown(tagAction.getItemView());
+				case 1:
+					getTagWindow().showAsDropDown(footer.getItem(position).getItemView());
 					break;
 				}
 			}
@@ -121,7 +120,6 @@ public class CreatePost extends GDActivity {
 			}
 			
 		});
-		createTagWindow();
 	}
 	
 	public void refresh(){
@@ -165,16 +163,108 @@ public class CreatePost extends GDActivity {
 	}
 	
 	private PopupWindow tagWindow;
-	@SuppressWarnings("static-access")
-	protected void createTagWindow(){
+	protected PopupWindow getTagWindow(){
 		if(tagWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.tags, null);
-			tagWindow=new PopupWindow(view,view.getLayoutParams().MATCH_PARENT,view.getLayoutParams().WRAP_CONTENT);
+			int screenWidth=((WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
+			tagWindow=new PopupWindow(view,screenWidth, LinearLayout.LayoutParams.WRAP_CONTENT,true);
+			ViewGroup vGender=(ViewGroup)view.findViewById(R.id.gender);
+			OnCheckedChangeListener listener;
+			final CheckBox vBoy=((CheckBox)vGender.getChildAt(0));
+			final CheckBox vGirl=((CheckBox)vGender.getChildAt(1));
+			vBoy.setOnCheckedChangeListener(listener=new OnCheckedChangeListener(){
+				@Override
+				public void onCheckedChanged(CompoundButton checkBox,	boolean flag) {
+					if(vBoy.isChecked())
+						post.addUnique("gender", vBoy.getText());
+					else if(vGirl.isChecked())
+						post.addUnique("gender", vGirl.getText());
+					else{
+						post.addUnique("gender", vBoy.getText());
+						post.addUnique("gender", vGirl.getText());
+					}	
+				}
+				
+			});
+			vGirl.setOnCheckedChangeListener(listener);
+			
+			final ViewGroup vDuration=(ViewGroup)view.findViewById(R.id.duration);
+			final RadioButton vD1=(RadioButton)vDuration.getChildAt(0);
+			OnClickListener durationListener;
+			vD1.setOnClickListener(durationListener=new OnClickListener(){
+
+				@Override
+				public void onClick(View view) {
+					for(int i=0,size=vDuration.getChildCount()-1;i<size;i++)
+						((RadioButton)vDuration.getChildAt(i)).setChecked(false);
+					((RadioButton)view).setChecked(true);
+					post.put("duration", ((RadioButton)view).getText());
+				}
+				
+				
+			});
+			for(int i=1,size=vDuration.getChildCount()-1;i<size;i++)
+				((RadioButton)vDuration.getChildAt(i)).setOnClickListener(durationListener);
+			
+			ViewGroup vGoal=(ViewGroup)view.findViewById(R.id.goal);
+			final CheckBox vGoal1=((CheckBox)vGoal.getChildAt(0));
+			vGoal1.setOnCheckedChangeListener(listener=new OnCheckedChangeListener(){
+
+				@Override
+				public void onCheckedChanged(CompoundButton checkbox, boolean checked) {
+					if(checked)
+						post.addUnique("goal", checkbox.getText());
+					else
+						post.removeAll("goal", Arrays.asList(checkbox.getText()));
+				}
+				
+			});
+			for(int i=1,size=vGoal.getChildCount();i<size;i++)
+				((CheckBox)vGoal.getChildAt(i)).setOnCheckedChangeListener(listener);
+			
 		}
 		tagWindow.setFocusable(true);
 		tagWindow.setOutsideTouchable(true);
 		tagWindow.setBackgroundDrawable(new BitmapDrawable()); 
+		refreshSettings();
+		return tagWindow;
+	}
+
+	private void refreshSettings() {
+		if(post.containsKey("gender")){
+			List<String> genders=post.getList("gender");
+			ViewGroup vGender=(ViewGroup)tagWindow.getContentView().findViewById(R.id.gender);
+			for(int i=0, size=vGender.getChildCount(); i<size; i++){
+				CheckBox current=(CheckBox)vGender.getChildAt(i);
+				if(genders.contains(current.getText()))
+					current.setChecked(true);
+			}
+		}
+		if(post.containsKey("duration")){
+			int duration=post.getInt("duration");
+			ViewGroup vDuration=(ViewGroup)tagWindow.getContentView().findViewById(R.id.goal);
+			for(int i=0,size=vDuration.getChildCount()-1;i<size;i++)
+				((RadioButton)vDuration.getChildAt(i)).setOnCheckedChangeListener(new OnCheckedChangeListener(){
+
+					@Override
+					public void onCheckedChanged(CompoundButton radio,
+							boolean flag) {
+						if(flag)
+							post.put("duration", radio.getText());
+					}
+				
+				});
+		}
+		if(post.containsKey("goal")){
+			List<String> genders=post.getList("goal");
+			ViewGroup vGoal=(ViewGroup)tagWindow.getContentView().findViewById(R.id.goal);
+			for(int i=0, size=vGoal.getChildCount(); i<size; i++){
+				CheckBox current=(CheckBox)vGoal.getChildAt(i);
+				if(genders.contains(current.getText()))
+					current.setChecked(true);
+			}
+		}
 	}
 }
 

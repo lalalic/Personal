@@ -14,6 +14,7 @@ import com.parse.Magic;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.parse.OnGet;
 import com.supernaiba.parse.OnSave;
@@ -45,10 +46,8 @@ public class CreateStory extends GDActivity {
 		
 		
 		ToolBar footer=ToolBar.inflate(this);
-		footer.setMaxItemCount(3);
+		footer.setMaxItemCount(1);
 		footer.addItem(Type.TakePhoto);
-		footer.addItem(Type.Eye);
-		
 		
 		
 		footer.setOnActionBarListener(new OnActionBarListener(){
@@ -59,9 +58,6 @@ public class CreateStory extends GDActivity {
 				case 0:
 					takePhoto();
 					break;	
-				case 2:
-					
-					break;
 				}
 			}
 			
@@ -76,6 +72,7 @@ public class CreateStory extends GDActivity {
 					onBackPressed();
 					break;
 				case 0:
+					story.put("author", ParseUser.getCurrentUser());
 					story.put("content", vEditor.getHTML(null));
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)

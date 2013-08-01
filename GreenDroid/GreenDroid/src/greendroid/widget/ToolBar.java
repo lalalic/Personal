@@ -76,6 +76,34 @@ public class ToolBar extends ActionBar {
         return item;
     }
 	
+	public ActionBarItem addSizedItem(ActionBarItem item, int times) {
+		 if (mItems.size() >= mMaxItemsCount) {
+	            /*
+	             * An ActionBar must contain as few items as possible. So let's keep
+	             * a limit :)
+	             */
+	            return null;
+	        }
+
+	        if (item != null) {
+
+	            if (mDividerDrawable != null && mItems.size()>0) {
+	                ImageView divider = new ImageView(getContext());
+	                final LinearLayout.LayoutParams lp = new LayoutParams(mDividerWidth, LayoutParams.FILL_PARENT);
+	                divider.setLayoutParams(lp);
+	                divider.setBackgroundDrawable(mDividerDrawable);
+	                addView(divider);
+	            }
+
+	            final View itemView = item.getItemView();
+	            addView(itemView, new LayoutParams(this.mItemWidth*times, LayoutParams.FILL_PARENT));
+
+	            mItems.add(item);
+	        }
+
+	        return item;
+	}
+	
 	public static ToolBar inflate(Activity activity,ViewGroup parent){
 		LayoutInflater.from(activity).inflate(R.layout.gd_footer, parent);
 		return (ToolBar)activity.findViewById(R.id.footer);
