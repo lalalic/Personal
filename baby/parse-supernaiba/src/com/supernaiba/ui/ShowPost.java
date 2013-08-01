@@ -110,7 +110,7 @@ public class ShowPost extends GDActivity {
 					break;
 				case 4://story
 					Intent intent2=new Intent(ShowPost.this,CreateStory.class);
-					intent2.putExtra("ID", ID);
+					intent2.putExtra("parent", ID);
 					intent2.putExtra("type","story");
 					startActivity(intent2);
 					break;
@@ -180,7 +180,7 @@ public class ShowPost extends GDActivity {
 					@Override
 					public ParseQuery<ParseObject> create() {
 						Query<ParseObject> query=new Query<ParseObject>("story");
-						query.whereEqualTo("post", ID);
+						query.whereEqualTo("parent", ID);
 						return query;
 					}
 				});
