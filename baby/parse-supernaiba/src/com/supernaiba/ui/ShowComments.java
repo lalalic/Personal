@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -28,6 +27,7 @@ public class ShowComments extends GDListActivity {
 	private String ID;
 	private LoaderActionBarItem refreshAction;
 	private EditText vComment;
+	private List<ParseObject> comments;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,9 +67,7 @@ public class ShowComments extends GDListActivity {
 					comment.put("author", user.getUsername());
 					comment.put("post", ID);
 					comment.saveEventually();
-					TextView vText=new TextView(ShowComments.this);
-					vText.setText(content);
-					ShowComments.this.getListView().addView(vText);
+					refresh();
 					vComment.setText("");
 					break;
 				}
@@ -83,6 +81,8 @@ public class ShowComments extends GDListActivity {
 			public void onActionBarItemClicked(int position) {
 				switch(position){
 				case 0:
+					refresh();
+					break;
 				default:
 					onBackPressed();
 				break;
@@ -94,40 +94,49 @@ public class ShowComments extends GDListActivity {
 	}
 	
 	private void refresh(){
-		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
-			@Override
-			public ParseQuery<ParseObject> create() {
-				Query<ParseObject> query=new Query<ParseObject>("comment");
-				query.whereEqualTo("post", ID);
-				return query;
-			}
-		}){
-
-			@Override
-			public View getItemView(ParseObject obj, View v, ViewGroup parent) {
-				View view=super.getItemView(obj, v, parent);
-				//show if favorite
-				return view;
-			}
-			
-		};
-		adapter.setTextKey("content");
-		adapter.setPaginationEnabled(true);
-		adapter.setObjectsPerPage(20);
-		adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
-
-			@Override
-			public void onLoaded(List<ParseObject> arg0, Exception arg1) {
-				refreshAction.setLoading(false);
-			}
-
-			@Override
-			public void onLoading() {
-				refreshAction.setLoading(true);
-			}
-			
-		});
-		this.setListAdapter(adapter);
+		@SuppressWarnings("unchecked")
+		QueryAdapter<ParseObject> adapter=(QueryAdapter<ParseObject>)getListAdapter();
+		if(adapter==null){
+			adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+				@Override
+				public ParseQuery<ParseObject> create() {
+					Query<ParseObject> query=new Query<ParseObject>("comment");
+					query.whereEqualTo("post", ID);
+					return query;
+				}
+			}){
+	
+				@Override
+				public View getItemView(ParseObject obj, View v, ViewGroup parent) {
+					View view=super.getItemView(obj, v, parent);
+					//show if favorite
+					return view;
+				}
+				
+			};
+			adapter.setTextKey("content");
+			adapter.setPaginationEnabled(true);
+			adapter.setObjectsPerPage(20);
+			adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
+	
+				@Override
+				public void onLoaded(List<ParseObject> objects, Exception arg1) {
+					refreshAction.setLoading(false);
+					comments=objects;
+				}
+	
+				@Override
+				public void onLoading() {
+					refreshAction.setLoading(true);
+				}
+				
+			});
+			this.setListAdapter(adapter);
+		}else{
+			adapter.clear();
+			adapter.loadObjects();
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 }

@@ -13,5 +13,4 @@ public class Query<T extends ParseObject> extends ParseQuery<T> {
 	public Query(String subclass) {
 		super(subclass);
 	}
-
 }

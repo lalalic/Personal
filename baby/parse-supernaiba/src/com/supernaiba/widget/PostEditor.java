@@ -1,6 +1,8 @@
 package com.supernaiba.widget;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,17 +107,27 @@ public class PostEditor extends EditText {
 		final ImageSpan span=new ImageSpan(this.getContext(),bitmap);
 		insertImage(span, uri.toString());
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		bitmap.compress(CompressFormat.JPEG, 60, stream);
-		byte[] data = stream.toByteArray();  
-		final ParseFile file=new ParseFile("a.jpg",data);
-		file.saveInBackground(new OnSave(getContext(),file){
-			@Override
-			public void done(ParseException ex) {
-				super.done(ex);
-				Editable text=getText();
-				text.replace(text.getSpanStart(span), text.getSpanEnd(span), ex==null ? file.getUrl() : uri.toString());
-			}
-		});
+		Bitmap pic;
+		try {
+			pic = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri);
+			pic.compress(CompressFormat.JPEG, 60, stream);
+			byte[] data = stream.toByteArray();  
+			final ParseFile file=new ParseFile("a.jpg",data);
+			file.saveInBackground(new OnSave(getContext(),file){
+				@Override
+				public void done(ParseException ex) {
+					super.done(ex);
+					Editable text=getText();
+					text.replace(text.getSpanStart(span), text.getSpanEnd(span), ex==null ? file.getUrl() : uri.toString());
+				}
+			});
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -152,14 +164,14 @@ public class PostEditor extends EditText {
 			html.append(text.subSequence(last, start));
 			src=text.subSequence(start,end).toString();
 			if(src.toLowerCase().startsWith("content:") && saver!=null)
-				html.append("<img src=\"").append(saver.getURL(src)).append("\">");
+				html.append("<p align=\"center\"><img src=\"").append(saver.getURL(src)).append("\"></p>");
 			else
-				html.append("<img src=\"").append(src).append("\">");
+				html.append("<p align=\"center\"><img src=\"").append(src).append("\"></p>");
 			last=end+1;
 		}
 		if(last<text.length())
 			html.append(text.subSequence(last, text.length()-1));
-		return html.substring(0, html.indexOf("\n"));
+		return html.substring(html.indexOf("\n"));
 	}
 	
 	public void setText(String html){

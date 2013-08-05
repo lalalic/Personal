@@ -1,5 +1,7 @@
 package com.supernaiba.parse;
 
+import java.util.List;
+
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,7 @@ import com.parse.ParseQueryAdapter;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	private String textKey=null;
+	protected List<T> objects;
 	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
 		super(context, queryFactory);
 		init(context);
