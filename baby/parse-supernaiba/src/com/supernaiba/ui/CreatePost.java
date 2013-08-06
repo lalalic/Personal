@@ -97,7 +97,7 @@ public class CreatePost extends GDActivity {
 					break;
 				case 0:
 					post.put("title", vEditor.getTitle());
-					post.put("content", vEditor.getHTML(null));
+					post.put("content", vEditor.getHTML());
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
 						post.put("thumbnail", Magic.createWithUrl(thumbnail));
@@ -177,12 +177,12 @@ public class CreatePost extends GDActivity {
 				@Override
 				public void onCheckedChanged(CompoundButton checkBox,	boolean flag) {
 					if(vBoy.isChecked())
-						post.addUnique("gender", vBoy.getText());
+						post.addUnique("gender", vBoy.getTag());
 					else if(vGirl.isChecked())
-						post.addUnique("gender", vGirl.getText());
+						post.addUnique("gender", vGirl.getTag());
 					else{
-						post.addUnique("gender", vBoy.getText());
-						post.addUnique("gender", vGirl.getText());
+						post.addUnique("gender", vBoy.getTag());
+						post.addUnique("gender", vGirl.getTag());
 					}	
 				}
 				
@@ -199,7 +199,7 @@ public class CreatePost extends GDActivity {
 					for(int i=0,size=vDuration.getChildCount()-1;i<size;i++)
 						((RadioButton)vDuration.getChildAt(i)).setChecked(false);
 					((RadioButton)view).setChecked(true);
-					post.put("duration", ((RadioButton)view).getText());
+					post.put("duration", ((RadioButton)view).getTag());
 				}
 				
 				
@@ -214,9 +214,9 @@ public class CreatePost extends GDActivity {
 				@Override
 				public void onCheckedChanged(CompoundButton checkbox, boolean checked) {
 					if(checked)
-						post.addUnique("goal", checkbox.getText());
+						post.addUnique("goal", checkbox.getTag());
 					else
-						post.removeAll("goal", Arrays.asList(checkbox.getText()));
+						post.removeAll("goal", Arrays.asList(checkbox.getTag()));
 				}
 				
 			});
@@ -237,31 +237,24 @@ public class CreatePost extends GDActivity {
 			ViewGroup vGender=(ViewGroup)tagWindow.getContentView().findViewById(R.id.gender);
 			for(int i=0, size=vGender.getChildCount(); i<size; i++){
 				CheckBox current=(CheckBox)vGender.getChildAt(i);
-				if(genders.contains(current.getText()))
+				if(genders.contains(current.getTag()))
 					current.setChecked(true);
 			}
 		}
 		if(post.containsKey("duration")){
 			int duration=post.getInt("duration");
 			ViewGroup vDuration=(ViewGroup)tagWindow.getContentView().findViewById(R.id.goal);
-			for(int i=0,size=vDuration.getChildCount()-1;i<size;i++)
-				((RadioButton)vDuration.getChildAt(i)).setOnCheckedChangeListener(new OnCheckedChangeListener(){
-
-					@Override
-					public void onCheckedChanged(CompoundButton radio,
-							boolean flag) {
-						if(flag)
-							post.put("duration", radio.getText());
-					}
-				
-				});
+			for(int i=0,size=vDuration.getChildCount()-1;i<size;i++){
+				RadioButton rb=(RadioButton)vDuration.getChildAt(i);
+				rb.setChecked(Integer.valueOf(duration).equals(rb.getTag()));
+			}
 		}
 		if(post.containsKey("goal")){
 			List<String> genders=post.getList("goal");
 			ViewGroup vGoal=(ViewGroup)tagWindow.getContentView().findViewById(R.id.goal);
 			for(int i=0, size=vGoal.getChildCount(); i<size; i++){
 				CheckBox current=(CheckBox)vGoal.getChildAt(i);
-				if(genders.contains(current.getText()))
+				if(genders.contains(current.getTag()))
 					current.setChecked(true);
 			}
 		}

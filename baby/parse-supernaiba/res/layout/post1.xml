@@ -3,11 +3,17 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-
-	<TextView
+
+	<com.supernaiba.widget.PostEditor
 	    android:id="@+id/content"
 	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content" />
+	    android:layout_height="wrap_content"
+	    android:background="@drawable/white"
+	    android:clickable="false"
+	    android:ems="10"
+	    android:focusable="false"
+	    android:focusableInTouchMode="false"
+	    android:gravity="center_vertical|top" />
 
 	<TextView
 	    android:id="@+id/textView1"

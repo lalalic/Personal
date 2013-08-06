@@ -1,10 +1,9 @@
 package com.supernaiba.widget;
 
+import greendroid.image.ImageRequest;
+import greendroid.image.ImageRequest.ImageRequestCallback;
+
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -15,13 +14,11 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.text.Html;
 import android.text.Layout.Alignment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
 import android.text.style.AlignmentSpan;
-import android.text.style.BulletSpan;
-import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
@@ -32,9 +29,7 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.supernaiba.parse.OnSave;
 
-public class PostEditor extends EditText {
-	private static Pattern IMG=Pattern.compile("<img\\s+src=\\\"(.*)\\\">", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
-	private ImageSaver imageSaver;
+public class PostEditor extends EditText implements ImageRequestCallback {
 	public PostEditor(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init();
@@ -60,10 +55,14 @@ public class PostEditor extends EditText {
 		switch(keyCode){
 		case 67:
 			if(start!=0){
-				TitleEndSpan[] unremovables=getText().getSpans(start-1, start-1, TitleEndSpan.class);
+				Editable text=getText();
+				TitleEndSpan[] unremovables=text.getSpans(0, text.length(), TitleEndSpan.class);
 				if(unremovables!=null && unremovables.length>0){
-					setSelection(start-1,start-1);
-					return false;
+					int titleEnd=text.getSpanEnd(unremovables[0]);
+					if(titleEnd>start){
+						setSelection(titleEnd,titleEnd);
+						return false;
+					}
 				}
 			}
 			break;
@@ -81,7 +80,7 @@ public class PostEditor extends EditText {
 	public Editable setTitle(String s){
 		ForegroundColorSpan hintSpan=null;
 		if(s==null){
-			s="Title here in first line\n";
+			s="Title\n";
 			hintSpan=new ForegroundColorSpan(Color.GRAY);
 		}
 		Editable text=getText();
@@ -98,120 +97,87 @@ public class PostEditor extends EditText {
 		return title;
 	}
 
-	@TargetApi(5)
 	public void insertImage(final Uri uri){
+		Bitmap bitmap = getImage(uri);
+		if(bitmap==null)
+			return;
+		final MyImageSpan span=new MyImageSpan(this.getContext(),bitmap, uri.toString());
+		insertImage(span);
+
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		bitmap.compress(CompressFormat.JPEG, 100, stream);
+		byte[] data = stream.toByteArray(); 
+		final ParseFile file=new ParseFile("a.jpg",data);
+		file.saveInBackground(new OnSave(getContext(),file){
+			@Override
+			public void done(ParseException ex) {
+				super.done(ex);
+				if(ex==null)
+					span.setSource(file.getUrl());
+			}
+		});
+	}
+	
+	@TargetApi(5)
+	private Bitmap getImage(Uri uri){
+		BitmapFactory.Options opt=new BitmapFactory.Options();
+		opt.outHeight=384;
+		opt.outWidth=512;
 		Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
                 getContext().getContentResolver(), Long.parseLong(uri.getLastPathSegment()),
-                MediaStore.Images.Thumbnails.MICRO_KIND,
-                (BitmapFactory.Options) null );
-		final ImageSpan span=new ImageSpan(this.getContext(),bitmap);
-		insertImage(span, uri.toString());
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		Bitmap pic;
-		try {
-			pic = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri);
-			pic.compress(CompressFormat.JPEG, 60, stream);
-			byte[] data = stream.toByteArray();  
-			final ParseFile file=new ParseFile("a.jpg",data);
-			file.saveInBackground(new OnSave(getContext(),file){
-				@Override
-				public void done(ParseException ex) {
-					super.done(ex);
-					Editable text=getText();
-					text.replace(text.getSpanStart(span), text.getSpanEnd(span), ex==null ? file.getUrl() : uri.toString());
-				}
-			});
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+                MediaStore.Images.Thumbnails.MINI_KIND,
+                opt );
+		return bitmap;
 	}
 
-	public void insertImage(ImageSpan imageSpan, String src){
-		SpannableStringBuilder builder = new SpannableStringBuilder();
-		builder.append(getText());
+	public void insertImage(ImageSpan imageSpan){
+		Editable text=getText();
 
 		int start = getSelectionStart();
 		int end=getSelectionEnd();
-		builder.replace(start, end, src);
+		text.replace(start, end, "\ufffc");
 		
-		end=start+src.length();
-		builder.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		builder.setSpan(new BulletSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-		if(builder.charAt(start-1)!='\n')
-			builder.insert(start, "\n");
-		if(builder.length()==end || builder.charAt(end)!='\n')
-			builder.insert(end, "\n");
-		setText(builder);
+		end=start+1;
+		text.setSpan(imageSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		styleImage(text,imageSpan);
 		setSelection(end, end);
 	}
 	
-	public String getHTML(ImageSaver saver){
-		if(saver==null)
-			saver=imageSaver;
+	public String getHTML(){
 		StringBuilder html=new StringBuilder();
 		Editable text=getText();
 		int last=0, start, end;
-		String src;
 		for(ImageSpan span: text.getSpans(last, text.length(), ImageSpan.class)){
 			start=text.getSpanStart(span);
 			end=text.getSpanEnd(span);
 			html.append(text.subSequence(last, start));
-			src=text.subSequence(start,end).toString();
-			if(src.toLowerCase().startsWith("content:") && saver!=null)
-				html.append("<p align=\"center\"><img src=\"").append(saver.getURL(src)).append("\"></p>");
-			else
-				html.append("<p align=\"center\"><img src=\"").append(src).append("\"></p>");
+			html.append("<img src=\"").append(span.getSource()).append("\">");
 			last=end+1;
 		}
 		if(last<text.length())
 			html.append(text.subSequence(last, text.length()-1));
-		return html.substring(html.indexOf("\n"));
+		return html.substring(html.indexOf("\n")+1);
 	}
 	
 	public void setText(String html){
-		SpannableStringBuilder builder = new SpannableStringBuilder();
-		Matcher matcher=IMG.matcher(html);
-		String src;
-		int last=0,start,end;
-		ImageSpan span;
-		while(matcher.find()){
-			start=matcher.start();
-			end=matcher.end();
-			src=matcher.group(1);
-			builder.append(html.subSequence(last, start));
-			span=new ImageSpan(getContext(),Uri.parse(src));
-			start=builder.length();
-			builder.append(src);
-			builder.setSpan(span, start-1, builder.length()-1, Spannable.SPAN_PARAGRAPH);
-			builder.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start-1, builder.length()-1,Spannable.SPAN_PARAGRAPH);
-			last=end;
-		}
-		if(last<html.length())
-			builder.append(html.subSequence(last, html.length()-1));
-		
-		this.setText(builder, BufferType.EDITABLE);
+		this.setText(Html.fromHtml(html));
+		Editable text=getText();
+		ImageSpan[] images=text.getSpans(0, text.length(), ImageSpan.class);
+		styleImage(text,images);
+		loadImages(text,images);
 	}
 	
-	public void setImageSaver(ImageSaver saver){
-		imageSaver=saver;
+	private void loadImages(Editable text, ImageSpan[] images) {
+		for(ImageSpan span : images)
+			new MyImageRequest(span).load(getContext());
 	}
-	
-	public interface ImageSaver{
-		public String getURL(String sourceUri);
-	}
-	
+
 	public String getFirstImageUrl(){
 		Editable text=getText();
 		ImageSpan[] images=text.getSpans(0, text.length(), ImageSpan.class);
 		if(images==null || images.length==0)
 			return null;
-		return text.subSequence(text.getSpanStart(images[0]), text.getSpanEnd(images[0])).toString();
+		return images[0].getSource();
 	}
 	
 	public String getTitle(){
@@ -223,12 +189,69 @@ public class PostEditor extends EditText {
 		return text.subSequence(0, end).toString();
 	}
 	
-	private class TitleEndSpan extends CharacterStyle{
-
-		@Override
-		public void updateDrawState(TextPaint t) {
-			
+	public void styleImage(Editable text, ImageSpan... images){
+		for(ImageSpan span: images){
+			int start=text.getSpanStart(span);
+			int end=text.getSpanEnd(span);
+			text.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			//text.setSpan(new BulletSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			if(start>0 && text.charAt(start-1)!='\n')
+				text.insert(start, "\n");
+			if(text.length()==end || text.charAt(end)!='\n')
+				text.insert(end, "\n");	
+		}
+	}
+	
+	private class TitleEndSpan{}
+	
+	private static class MyImageSpan extends ImageSpan{
+		private String source;
+		public MyImageSpan(Context context, Bitmap b, String src) {
+			super(context, b);
+			this.setSource(src);
+		}
+		public void setSource(String source) {
+			this.source = source;
+		}
+		public String getSource() {
+			return source;
 		}
 		
 	}
+	private class MyImageRequest extends ImageRequest{
+		private ImageSpan holder;
+		public MyImageRequest(ImageSpan span) {
+			super(span.getSource(), PostEditor.this);
+			holder=span;
+		}
+		
+	}
+
+	@Override
+	public void onImageRequestStarted(ImageRequest request) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onImageRequestFailed(ImageRequest request, Throwable throwable) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onImageRequestEnded(ImageRequest request, Bitmap image) {
+		ImageSpan placeholder=((MyImageRequest)request).holder;
+		Editable text=getText();
+		ImageSpan realImage=new ImageSpan(getContext(),image);
+		text.setSpan(realImage, text.getSpanStart(placeholder), 
+				text.getSpanEnd(placeholder), text.getSpanFlags(placeholder));
+		text.removeSpan(placeholder);
+	}
+
+	@Override
+	public void onImageRequestCancelled(ImageRequest request) {
+		// TODO Auto-generated method stub
+		
+	}	
 }

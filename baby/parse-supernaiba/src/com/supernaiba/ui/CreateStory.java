@@ -73,7 +73,7 @@ public class CreateStory extends GDActivity {
 					break;
 				case 0:
 					story.put("author", ParseUser.getCurrentUser());
-					story.put("content", vEditor.getHTML(null));
+					story.put("content", vEditor.getHTML());
 					String thumbnail=vEditor.getFirstImageUrl();
 					if(thumbnail!=null)
 						story.put("thumbnail", Magic.createWithUrl(thumbnail));
