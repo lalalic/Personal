@@ -1,6 +1,9 @@
 package com.supernaiba.parse;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import android.content.Context;
 import android.view.View;
@@ -13,7 +16,7 @@ import com.parse.ParseQueryAdapter;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	private String textKey=null;
-	protected List<T> objects;
+	protected Map<Integer,List<T>> appended=new LinkedHashMap<Integer,List<T>>();
 	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
 		super(context, queryFactory);
 		init(context);
@@ -56,5 +59,50 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 		View view=super.getItemView(obj, v, parent);
 		view.setTag(obj);
 		return view;
+	}
+
+	@Override
+	public void clear() {
+		appended.clear();
+		super.clear();
+	}
+
+	@Override
+	public int getCount() {
+		int count=super.getCount();
+		for(List<T> list : appended.values())
+			count+=list.size();
+		return count++;
+	}
+
+	@Override
+	public T getItem(int index) {
+		if(appended.isEmpty())
+			return super.getItem(index);
+		else{
+			int count=0;
+			int minIndex=0;
+			int maxIndex=0;
+			for(int i : appended.keySet()){
+				List<T> list=appended.get(i);
+				minIndex=i+count;
+				maxIndex=i+count+list.size()-1;
+				
+				if(index<minIndex)
+					return super.getItem(index-count);
+				else if (index>maxIndex)
+					count+=list.size();
+				else
+					return list.get(index-minIndex);
+			}
+			return super.getItem(index-count);
+		}
+	}
+	
+	public void append(T o){
+		int queryed=super.getCount();
+		if(!appended.containsKey(queryed))
+			appended.put(queryed, new ArrayList<T>());
+		appended.get(queryed).add(o);
 	}
 }

@@ -27,7 +27,6 @@ public class ShowComments extends GDListActivity {
 	private String ID;
 	private LoaderActionBarItem refreshAction;
 	private EditText vComment;
-	private List<ParseObject> comments;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,7 +66,10 @@ public class ShowComments extends GDListActivity {
 					comment.put("author", user.getUsername());
 					comment.put("post", ID);
 					comment.saveEventually();
-					refresh();
+					@SuppressWarnings("unchecked")
+					QueryAdapter<ParseObject> adapter=(QueryAdapter<ParseObject>)getListAdapter();
+					adapter.append(comment);
+					adapter.notifyDataSetChanged();
 					vComment.setText("");
 					break;
 				}
@@ -122,7 +124,6 @@ public class ShowComments extends GDListActivity {
 				@Override
 				public void onLoaded(List<ParseObject> objects, Exception arg1) {
 					refreshAction.setLoading(false);
-					comments=objects;
 				}
 	
 				@Override

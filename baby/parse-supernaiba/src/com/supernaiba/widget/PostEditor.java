@@ -194,7 +194,6 @@ public class PostEditor extends EditText implements ImageRequestCallback {
 			int start=text.getSpanStart(span);
 			int end=text.getSpanEnd(span);
 			text.setSpan(new AlignmentSpan.Standard(Alignment.ALIGN_CENTER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-			//text.setSpan(new BulletSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			if(start>0 && text.charAt(start-1)!='\n')
 				text.insert(start, "\n");
 			if(text.length()==end || text.charAt(end)!='\n')
