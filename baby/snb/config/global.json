@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "_default": {
+            "link": "supernaiba"
+        }, 
+        "supernaiba": {
+            "applicationId": "CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL", 
+            "masterKey": "r70Qcoghwl6HXLHUcuWg4KeRwEB38FXGcPudICJ4"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.8"
+    }
+}

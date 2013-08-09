@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+</head>
+<body>
+	<section id="user">
+		<header></header>
+		<article id="signin">
+			<form>
+				<fieldset>
+					<input name="userName" placeholder="">
+					<input name="password" placeholder="" type="password">
+				</fieldset>
+			</form>
+		</article>
+		<article id="forgetpassword">
+			<form>
+				<fieldset>
+					<input name="email" placeholder="">
+				</fieldset>
+			</form>
+		</article>
+		<article id="changepassword">
+			<form>
+				<fieldset>
+					<input name="oldPassword" placeholder="" type="password">
+					<input name="newNassword" placeholder="">
+				</fieldset>
+			</form>
+		</article>
+		<article id="children" class="list">
+			<ul>
+				<li class="thumb big">
+					<img src="{{thumb}}">
+					<strong><input value="{{name}}" placeholder=""></strong>
+					<span class="text tiny opacity"><input value="{{dob}}" placeholder="" type="date"></span>
+					<span class="icon {{gender}}"></span>
+				</li>
+			</ul>
+		</article>
+		<footer></footer>
+	</section>
+
+
+	<section id="post">
+		<header></header>
+		<article>
+			<strong>{{title}}<span class="on-right"><a>{{author}}</a><span>{{modifedAt}}</span></span></strong>
+			<div>{{content}}</div>
+			<ul>
+				<li id="tmplStory" class="template">
+					<img src="{{thumb}}">
+					<p>{{excerpt}}</p>
+				</li>
+			</ul>
+		</article>
+		<footer></footer>
+	</section>
+	<section id="create">
+		<header></header>
+		<article>
+			<form>
+				<fieldset>
+					<input name="title" placeholder="">
+					<textarea name="content0" placeholder=""></textarea>
+					<div class="gallery"></div>
+					<textarea name="content1" placeholder=""></textarea>
+				</fieldset>
+			</form>
+		</article>
+		<footer></footer>
+	</section>
+	<section id="comment">
+		<header></header>
+		<article class="list">
+			<ul>
+				<li>
+					<p>{{comment}}</p>
+				</li>
+			</ul>
+		</article>
+		<footer></footer>
+	</section>
+	<section id="story">
+		<header></header>
+		<article>
+			<p>{{content}}</p>
+		</article>
+		<footer></footer>
+	</section>
+	<section id="tasks">
+		<header></header>
+		<article class="list">
+			<ul>
+				
+			</ul>
+		</article>
+		<footer></footer>
+	</section>	
+</body>
+</html>
