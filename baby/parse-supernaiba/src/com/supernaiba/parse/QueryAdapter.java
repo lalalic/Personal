@@ -9,12 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.parse.Magic;
+import com.parse.ParseImageView;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
-	@SuppressWarnings("unused")
 	private String textKey=null;
 	protected Map<Integer,List<T>> appended=new LinkedHashMap<Integer,List<T>>();
 	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
@@ -55,9 +55,26 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 
 	@Override
 	public View getItemView(T obj, View v, ViewGroup parent) {
+		boolean first=false;
+		if(v==null){
+			first=true;
+			if(textKey==null)
+				v=getDefaultView(parent.getContext());
+		}
 		View view=super.getItemView(obj, v, parent);
+		if(first){
+			ParseImageView imageView=(ParseImageView)view.findViewById(android.R.id.icon);
+			if(imageView!=null)
+				imageView.setLayoutParams(new android.widget.LinearLayout.LayoutParams(150, 150));
+		}
 		view.setTag(obj);
 		return view;
+	}
+	
+	protected View getDefaultView(Context context){
+		ParseImageView imageView = new ParseImageView(context);
+		imageView.setId(android.R.id.icon);
+		return imageView;
 	}
 	
 	public void append(T o){

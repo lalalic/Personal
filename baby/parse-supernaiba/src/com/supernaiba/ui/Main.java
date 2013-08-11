@@ -23,7 +23,6 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
@@ -124,15 +123,6 @@ public class Main extends GDListActivity {
 		showDefaultChild();
 	}
 	
-	private boolean isDefaultChild(ParseObject child){
-		String defaultChildId=DB.getInstance(this).get("DefaultChild");
-		if(defaultChildId==null ||defaultChildId.length()==0){
-			defaultChildId=child.getObjectId();
-			DB.getInstance(this).set("DefaultChild",defaultChildId);
-			return true;
-		}
-		return defaultChildId.equals(child.getObjectId());
-	}
 	
 	protected void showDefaultChild(){
 		if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser())){
@@ -220,16 +210,17 @@ public class Main extends GDListActivity {
 		}){
 			@Override
 			public View getItemView(ParseObject object, View v, ViewGroup parent) {
+				/*
 				LinearLayout view=(LinearLayout)super.getItemView(object, v, parent);
 				if(this.getCount()>1)
 					view.setSelected(isDefaultChild(object));
-			
-				return view;
+			*/
+				return super.getItemView(object, v, parent);
 			}
 		};
 		adapter.setPlaceholder(getResources().getDrawable(android.R.drawable.ic_menu_camera));
 		adapter.setImageKey("photo");
-		adapter.setTextKey("__notexist");//hack to set non-existence key so there's no text
+		adapter.setTextKey(null);
 		vChildren.setAdapter(adapter);
 	}
 	
