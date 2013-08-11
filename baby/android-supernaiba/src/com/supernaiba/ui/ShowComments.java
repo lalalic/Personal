@@ -20,8 +20,8 @@ import com.parse.ParseQueryAdapter.OnQueryLoadListener;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
-import com.supernaiba.parse.Query;
-import com.supernaiba.parse.QueryAdapter;
+import com.supernaiba.baas.Query;
+import com.supernaiba.baas.QueryAdapter;
 
 public class ShowComments extends GDListActivity {
 	private String ID;
@@ -66,7 +66,10 @@ public class ShowComments extends GDListActivity {
 					comment.put("author", user.getUsername());
 					comment.put("post", ID);
 					comment.saveEventually();
-					refresh();
+					@SuppressWarnings("unchecked")
+					QueryAdapter<ParseObject> adapter=(QueryAdapter<ParseObject>)getListAdapter();
+					adapter.append(comment);
+					adapter.notifyDataSetChanged();
 					vComment.setText("");
 					break;
 				}

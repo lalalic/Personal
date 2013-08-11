@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<item-array
+    xmlns:greendroid="http://schemas.android.com/apk/res/com.supernaiba">
+    
+    <thumbnail-item
+        greendroid:text="@string/game"
+        greendroid:subtitle="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempus consequat leo, et tincidunt justo tristique in."
+        greendroid:thumbnail="@drawable/gd_action_bar_compass" />
+    
+    <thumbnail-item
+        greendroid:text="@string/reading"
+        greendroid:subtitle="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempus consequat leo, et tincidunt justo tristique in."
+        greendroid:thumbnail="@drawable/gd_action_bar_compass" />
+    
+    <thumbnail-item
+        greendroid:text="@string/drawing"
+        greendroid:subtitle="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempus consequat leo, et tincidunt justo tristique in."
+        greendroid:thumbnail="@drawable/gd_action_bar_compass" />
+    
+    </item-array>

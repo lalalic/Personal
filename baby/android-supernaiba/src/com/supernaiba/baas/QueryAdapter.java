@@ -1,4 +1,4 @@
-package com.supernaiba.parse;
+package com.supernaiba.baas;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,8 +13,7 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter;
 
-public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
-	@SuppressWarnings("unused")
+public class QueryAdapter<T> extends ParseQueryAdapter<T> {
 	private String textKey=null;
 	protected Map<Integer,List<T>> appended=new LinkedHashMap<Integer,List<T>>();
 	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
@@ -31,8 +30,8 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 		super(context,new QueryFactory<T>(){
 
 			@Override
-			public ParseQuery<T> create() {
-				Query<T> query=new Query<T>(type);
+			public ParseQuery<? extends ParseObject> create() {
+				Query<T> query=new Query(type);
 				query.orderByDescending("createdAt");
 				return query;
 			}
@@ -54,7 +53,7 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	}
 
 	@Override
-	public View getItemView(T obj, View v, ViewGroup parent) {
+	public View getItemView(ParseObject obj, View v, ViewGroup parent) {
 		View view=super.getItemView(obj, v, parent);
 		view.setTag(obj);
 		return view;

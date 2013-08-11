@@ -1,30 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yy.supernaiba"
+    package="com.supernaiba"
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk
-        android:minSdkVersion="8"
-        android:targetSdkVersion="15" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="15"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+	<uses-permission android:name="android.permission.WRITE_APN_SETTINGS"/>
+	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
     <application
+        android:name=".App"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@android:style/Theme" android:name="com.yy.m.app.Application">
+        android:label="@string/app_name" android:theme="@style/Theme.GreenDroid">
         <activity
-            android:name="Home"
-            android:label="@string/title_activity_home" >
+            android:name=".ui.Main"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:value=".ui.ShowPosts" android:name="android.app.default_searchable"/>
         </activity>
+        <!-- 
+        <activity android:name=".ui.ShowPosts"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+            <meta-data android:resource="@xml/search" android:name="android.app.searchable"/>
+        </activity>
+        <activity android:name=".ui.ShowPost"></activity>
+        <activity android:name=".ui.ShowComments"></activity>
+        <activity android:name=".ui.ShowTasks"></activity>
+        <activity android:name=".ui.CreatePost" android:windowSoftInputMode="adjustResize"></activity>
+        <activity android:name=".ui.UserAccount" android:windowSoftInputMode="stateVisible|adjustResize"></activity>
+        <activity android:name=".ui.CreateChild" android:windowSoftInputMode="stateVisible|adjustResize"></activity>
+        <activity android:name=".ui.CreateStory" android:windowSoftInputMode="adjustResize"></activity>
+        <activity android:name=".ui.ShowFavorites"></activity>
+         -->
+        <service android:name="com.kinvey.android.offline.KinveySyncService"
+            android:exported="false" 
+            android:process=":backgroundsync">
+            <intent-filter>
+	            <action android:name="com.kinvey.android.ACTION_OFFLINE_SYNC" />
+	            <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+	            <action android:name="android.net.wifi.STATE_CHANGE" />
+        </intent-filter>
+        </service>
     </application>
 
 </manifest>

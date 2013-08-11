@@ -1,10 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SuperNaiba</string>
-    <string name="url_home">http://www.supernaiba.com</string>
-    <string name="title_activity_home">超级奶爸</string>
-    <string-array name="schema">
-    	<item>CREATE TABLE GAME(ID LONG PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, author TEXT NOT NULL, modified DATE not null, status INT DEFAULT 1)</item>
-    	<item>CREATE TABLE COMMENT(ID LONG PRIMARY KEY, entityID LONG NOT NULL, message TEXT NOT NULL, author TEXT NOT NULL)</item>
-    	<item>CREATE TABLE FAVORITE(type TEXT NOT NULL, entityID LONG NOT NULL, status INT DEFAULT 1)</item>
+    <string name="app_name">supernaiba</string>
+    <string name="loading">Loading</string>
+    <string name="creating">Creat a new </string>
+    <string name="tasks">Tasks</string>
+    <string name="comments">Comments</string>
+    <string name="game">Game</string>
+    <string name="reading">Reading</string>
+    <string name="drawing">Drawing</string>
+    <string name="favorites">Favorites</string>
+    <string name="comment">Say something</string>
+    <string-array name="categories">
+        <item>Game</item>
+        <item>Reading</item>
+        <item>Drawing</item>
     </string-array>
+        <string name="title">title</string>
+        <string name="age">How old are you?</string>
+        <string name="signup">Signup</string>
+        <string name="forgetpassword">Forget Password</string>
+        <string name="account">account</string>
+        <string name="password">password</string>
+        <string name="signin">Signin</string>
+        <string name="email">email</string>
+        <string name="sendnewpassword">Send New Password</string>
+        <string name="username">User Name</string>
+        <string name="childname">Nick Name</string>
+        <string name="createChild">Add Child</string>
+        <string name="make_photo">Take photo or select</string>
+        <string name="passwordagain">Password Again</string>
+    <string-array name="gender">
+        <item>Boy</item>
+        <item>Girl</item>
+    </string-array>
+    <string-array name="schema">
+        <item>CREATE TABLE USER(objectId text primary key, username text not null, email text, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE CHILD(objectId text primary key, name text not null unique, birthday integer not null, gender integer default 0, photo text, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE POST(objectId text primary key, category text not null, title text not null, content text not null, thumbnail text, authorId text not null, authorName text not null, modifiedAt integer, favorite integer default 0, favoriteAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE STORY(objectId text primary key, post text not null, content text not null, thumbnail text, authorId text not null, authorName text not null, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE COMMENT(objectId text primary key, post text not null, content text not null, authorId text not null, authorName text not null, modifiedAt integer, offlinestatus integer default 0)</item>
+		<item>CREATE TABLE TASK(objectId text primary key, post text not null, title text not null, planAt integer, type integer not null, modifedAt integer, offlinstatus integer default o0)</item>
+		<item>CREATE TABLE TAG(objectId text primary key, parent text, name text not null, stat integer default 0)</item>
+    </string-array>
+        <string name="search">Search</string>
+        <string name="birthday">Birthday</string>
+        <string name="photo">photo</string>
+        <string name="stories">Stories</string>
 </resources>
