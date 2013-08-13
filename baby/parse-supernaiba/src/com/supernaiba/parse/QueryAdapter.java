@@ -13,6 +13,7 @@ import com.parse.ParseImageView;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter;
+import com.supernaiba.R;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	private String textKey=null;
@@ -42,7 +43,7 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	}
 	
 	protected void init(Context context){
-		setPlaceholder(context.getResources().getDrawable(android.R.drawable.gallery_thumb));
+		setPlaceholder(context.getResources().getDrawable(R.drawable.gd_action_bar_compass));
 		setPaginationEnabled(true);
 		setObjectsPerPage(20);
 	}

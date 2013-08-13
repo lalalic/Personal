@@ -29,6 +29,7 @@ public class ShowPosts extends GDActivity {
 	String search;
 	LoaderActionBarItem refreshAction;
 	ListView vPosts;
+	QueryAdapter<ParseObject> adapter;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -95,11 +96,7 @@ public class ShowPosts extends GDActivity {
 			}
 			
 		});
-		refresh();
-	}
-	
-	private void refresh(){
-		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+		adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("post");
@@ -107,7 +104,6 @@ public class ShowPosts extends GDActivity {
 				return query;
 			}
 		});
-		adapter.setPlaceholder(this.getResources().getDrawable(R.drawable.gd_action_bar_compass));
 		adapter.setTextKey("title");
 		adapter.setImageKey("thumbnail");
 		adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
@@ -124,5 +120,11 @@ public class ShowPosts extends GDActivity {
 			
 		});
 		vPosts.setAdapter(adapter);
+	}
+	
+	private void refresh(){
+		adapter.clear();
+		adapter.loadObjects();
+		adapter.notifyDataSetChanged();
 	}
 }

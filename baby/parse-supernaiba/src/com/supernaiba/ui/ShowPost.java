@@ -81,8 +81,8 @@ public class ShowPost extends GDActivity {
 								favorite.put("owner", ParseUser.getCurrentUser());
 								favorite.put("post", post);
 								favorite.put("title", post.getString("title"));
-								if(favorite.containsKey("thumb"))
-									favorite.put("thumb", post.getParseFile("thumb"));
+								if(favorite.containsKey("thumbnail"))
+									favorite.put("thumbnail", post.getParseFile("thumbnail"));
 								favorite.saveEventually();
 								starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
 							}else{
@@ -230,8 +230,8 @@ public class ShowPost extends GDActivity {
 										task=new ParseObject("task");
 										task.put("owner", ParseUser.getCurrentUser());
 										task.put("post", post);
-										if(post.containsKey("thumb"))
-											task.put("thumb", post.getParseFile("thumb"));
+										if(post.containsKey("thumbnail"))
+											task.put("thumbnail", post.getParseFile("thumbnail"));
 										task.put("title", post.getString("title"));
 									}
 									task.put("planAt", new Date());

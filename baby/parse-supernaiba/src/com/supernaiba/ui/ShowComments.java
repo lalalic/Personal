@@ -27,6 +27,7 @@ public class ShowComments extends GDListActivity {
 	private String ID;
 	private LoaderActionBarItem refreshAction;
 	private EditText vComment;
+	QueryAdapter<ParseObject> adapter;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -89,52 +90,47 @@ public class ShowComments extends GDListActivity {
 			}
 			
 		});
-		refresh();
+		adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+			@Override
+			public ParseQuery<ParseObject> create() {
+				Query<ParseObject> query=new Query<ParseObject>("comment");
+				query.whereEqualTo("post", ID);
+				return query;
+			}
+		}){
+
+			@Override
+			public View getItemView(ParseObject obj, View v, ViewGroup parent) {
+				View view=super.getItemView(obj, v, parent);
+				//show if favorite
+				return view;
+			}
+			
+		};
+		adapter.setTextKey("content");
+		adapter.setPaginationEnabled(true);
+		adapter.setObjectsPerPage(20);
+		adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
+
+			@Override
+			public void onLoaded(List<ParseObject> objects, Exception arg1) {
+				refreshAction.setLoading(false);
+			}
+
+			@Override
+			public void onLoading() {
+				refreshAction.setLoading(true);
+			}
+			
+		});
+		this.setListAdapter(adapter);
+		
 	}
 	
 	private void refresh(){
-		@SuppressWarnings("unchecked")
-		QueryAdapter<ParseObject> adapter=(QueryAdapter<ParseObject>)getListAdapter();
-		if(adapter==null){
-			adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
-				@Override
-				public ParseQuery<ParseObject> create() {
-					Query<ParseObject> query=new Query<ParseObject>("comment");
-					query.whereEqualTo("post", ID);
-					return query;
-				}
-			}){
-	
-				@Override
-				public View getItemView(ParseObject obj, View v, ViewGroup parent) {
-					View view=super.getItemView(obj, v, parent);
-					//show if favorite
-					return view;
-				}
-				
-			};
-			adapter.setTextKey("content");
-			adapter.setPaginationEnabled(true);
-			adapter.setObjectsPerPage(20);
-			adapter.addOnQueryLoadListener(new OnQueryLoadListener<ParseObject>(){
-	
-				@Override
-				public void onLoaded(List<ParseObject> objects, Exception arg1) {
-					refreshAction.setLoading(false);
-				}
-	
-				@Override
-				public void onLoading() {
-					refreshAction.setLoading(true);
-				}
-				
-			});
-			this.setListAdapter(adapter);
-		}else{
-			adapter.clear();
-			adapter.loadObjects();
-			adapter.notifyDataSetChanged();
-		}
+		adapter.clear();
+		adapter.loadObjects();
+		adapter.notifyDataSetChanged();
 	}
 
 }

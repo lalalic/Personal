@@ -68,21 +68,19 @@ public class ParseImageView extends ImageView {
 			new ImageRequest(file.getUrl(), new ImageRequestCallback() {
 				@Override
 				public void onImageRequestStarted(ImageRequest request) {
-					// TODO Auto-generated method stub
-
+					
 				}
 
 				@Override
 				public void onImageRequestFailed(ImageRequest request,
 						Throwable throwable) {
-					// TODO Auto-generated method stub
-
+					setImageDrawable(getContext().getResources().getDrawable(android.R.drawable.stat_sys_warning));
 				}
 
 				@Override
 				public void onImageRequestEnded(ImageRequest request,
 						Bitmap bitmap) {
-					if (!request.getUrl().equals(file.getUrl()))
+					if (file==null || !request.getUrl().equals(file.getUrl()))
 						return;
 					if (bitmap != null)
 						setImageBitmap(bitmap);

@@ -7,7 +7,7 @@
     <LinearLayout
         android:id="@+id/summary"
         android:layout_width="match_parent"
-        android:layout_height="75dp"
+        android:layout_height="200dp"
         android:background="@android:color/background_dark" >
 
     </LinearLayout>
