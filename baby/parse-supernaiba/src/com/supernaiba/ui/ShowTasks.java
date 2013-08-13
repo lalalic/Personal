@@ -70,7 +70,7 @@ public class ShowTasks extends GDListActivity {
 			
 		});
 		adapter.setTextKey("title");
-		adapter.setImageKey("thumb");
+		adapter.setImageKey("thumbnail");
 		this.setListAdapter(adapter);
 	}
 
