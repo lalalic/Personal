@@ -1,11 +1,9 @@
 package com.supernaiba.ui;
 
 import greendroid.app.GDActivity;
-import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
 import greendroid.widget.LoaderActionBarItem;
-import greendroid.widget.ToolBar;
 
 import java.util.Date;
 
@@ -22,8 +20,10 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.Toast;
 
 import com.parse.GetCallback;
+import com.parse.Magic;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -51,97 +51,87 @@ public class ShowPost extends GDActivity {
 		refreshAction=(LoaderActionBarItem)addActionBarItem(Type.Refresh);
 		refreshAction.setLoading(true);
 		post=ParseObject.createWithoutData("post", ID=getIntent().getStringExtra("ID"));
-		
-		
-		final ToolBar footer=ToolBar.inflate(this);
-		footer.setMaxItemCount(5);
-		footer.addItem(Type.Edit);//comment
-		footer.addItem(Type.Share);
-		footer.addItem(Type.Gallery);//story
-		starAction=footer.addItem(Type.Star);//favorite
-		planAction=footer.addItem(Type.List);//plan
-		
-		footer.setOnActionBarListener(new OnActionBarListener(){
-
-			@Override
-			public void onActionBarItemClicked(int position) {
-				switch(position){
-				case 0://comment
-					Intent intent=new Intent(ShowPost.this,ShowComments.class);
-					intent.putExtra("ID", ID);
-					startActivity(intent);
-				break;
-				case 3://favorite
-					favorite(new OnGet<ParseObject>(ShowPost.this){
-						@Override
-						public void done(ParseObject favorite, ParseException ex) {
-							super.done(favorite, ex);
-							if(favorite==null){
-								favorite=new ParseObject("favorite");
-								favorite.put("owner", ParseUser.getCurrentUser());
-								favorite.put("post", post);
-								favorite.put("title", post.getString("title"));
-								if(favorite.containsKey("thumbnail"))
-									favorite.put("thumbnail", post.getParseFile("thumbnail"));
-								favorite.saveEventually();
-								starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
-							}else{
-								favorite.deleteEventually();
-							}
-						}
-						
-					});
-					break;
-				case 1://share to media, wb and wc
-					
-					break;
-				case 4://plan
-					getPlanWindow().showAsDropDown(footer.getItem(position).getItemView());
-					plan(new OnGet<ParseObject>(ShowPost.this){
-						@Override
-						public void done(ParseObject task, ParseException ex) {
-							super.done(task,ex);
-							if(task!=null)
-								planTypes.check(task.getInt("type"));
-						}
-						
-					} );
-					break;
-				case 2://story
-					Intent intent2=new Intent(ShowPost.this,CreateStory.class);
-					intent2.putExtra("parent", ID);
-					intent2.putExtra("type","story");
-					startActivity(intent2);
-					break;
-				}
-				
-			}
-			
-		});
-		
-		this.getActionBar().setOnActionBarListener(new OnActionBarListener(){
-
-			@Override
-			public void onActionBarItemClicked(int position) {
-				switch(position){
-				case OnActionBarListener.HOME_ITEM:
-					onBackPressed();
-					break;
-				case 0:
-					refresh();
-					break;
-				default:
-					
-					break;
-				}
-				
-			}
-			
-		});
+		createFooterBar(Type.Edit, Type.Share, Type.Gallery, Type.Star, Type.List);
 		
 		refresh();	
 	}
 	
+	
+	
+	@Override
+	public boolean onHandleActionBarItemClick(ActionBarItem item, int position) {
+		switch(position){
+		case R.drawable.gd_action_bar_refresh:
+			refresh();
+			break;
+		default:
+			onBackPressed();
+			break;
+		}
+		return true;
+	}
+
+
+
+	@Override
+	public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
+		if(!Magic.isLoggedIn()){
+			Toast.makeText(this, "Need Login", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		switch(item.getItemId()){
+		case R.drawable.gd_action_bar_edit://comment
+			Intent intent=new Intent(this,ShowComments.class);
+			intent.putExtra("ID", ID);
+			startActivity(intent);
+		break;
+		case R.drawable.gd_action_bar_star://favorite
+			favorite(new OnGet<ParseObject>(this){
+				@Override
+				public void done(ParseObject favorite, ParseException ex) {
+					super.done(favorite, ex);
+					if(favorite==null){
+						favorite=new ParseObject("favorite");
+						favorite.put("owner", ParseUser.getCurrentUser());
+						favorite.put("post", post);
+						favorite.put("title", post.getString("title"));
+						if(favorite.containsKey("thumbnail"))
+							favorite.put("thumbnail", post.getParseFile("thumbnail"));
+						favorite.saveEventually();
+						starAction.getDrawable().setColorFilter(new LightingColorFilter(Color.BLACK,Color.YELLOW));
+					}else{
+						favorite.deleteEventually();
+					}
+				}
+				
+			});
+			break;
+		case R.drawable.gd_action_bar_share://share to media, wb and wc
+			
+			break;
+		case R.drawable.gd_action_bar_list://plan
+			getPlanWindow().showAsDropDown(item.getItemView());
+			plan(new OnGet<ParseObject>(this){
+				@Override
+				public void done(ParseObject task, ParseException ex) {
+					super.done(task,ex);
+					if(task!=null)
+						planTypes.check(task.getInt("type"));
+				}
+				
+			} );
+			break;
+		case R.drawable.gd_action_bar_gallery://story
+			Intent intent2=new Intent(this,CreateStory.class);
+			intent2.putExtra("parent", ID);
+			intent2.putExtra("type","story");
+			startActivity(intent2);
+			break;
+		}
+	}
+
+
+
 	public void refresh(){
 		post.fetchInBackground(new OnGet<ParseObject>(this){
 			@Override
@@ -180,10 +170,10 @@ public class ShowPost extends GDActivity {
 					@Override
 					public ParseQuery<ParseObject> create() {
 						Query<ParseObject> query=new Query<ParseObject>("story");
-						query.whereEqualTo("parent", ParseObject.createWithoutData("post", ID));
+						query.whereEqualTo("parent", post);
 						return query;
 					}
-				});
+				},null);
 				adapter.setTextKey("content");
 				adapter.setImageKey("thumbnail");
 				vStories.setAdapter(adapter);

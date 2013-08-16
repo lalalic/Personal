@@ -36,6 +36,7 @@ public class LoaderActionBarItem extends NormalActionBarItem {
 
     public LoaderActionBarItem() {
         mLoading = false;
+        this.setItemId(R.layout.gd_action_bar_item_loader);
     }
 
     @Override

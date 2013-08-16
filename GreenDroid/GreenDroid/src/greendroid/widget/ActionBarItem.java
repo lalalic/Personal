@@ -465,7 +465,9 @@ public abstract class ActionBarItem {
 
         final Drawable d = new ActionBarDrawable(actionBar.getContext(), drawableId);
 
-        return actionBar.newActionBarItem(NormalActionBarItem.class).setDrawable(d).setContentDescription(descriptionId);
+        ActionBarItem item=actionBar.newActionBarItem(NormalActionBarItem.class).setDrawable(d).setContentDescription(descriptionId);
+        item.setItemId(drawableId);
+        return item;
     }
 
 }

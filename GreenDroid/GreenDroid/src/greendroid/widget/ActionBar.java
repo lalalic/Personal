@@ -237,7 +237,8 @@ public class ActionBar extends LinearLayout {
      * @return
      */
     public ActionBarItem addItem(ActionBarItem.Type actionBarItemType) {
-        return addItem(ActionBarItem.createWithType(this, actionBarItemType), NONE);
+    	ActionBarItem item=ActionBarItem.createWithType(this, actionBarItemType);
+        return addItem(item, item.getItemId()!=NONE ? item.getItemId() : NONE);
     }
 
     /**
@@ -254,7 +255,7 @@ public class ActionBar extends LinearLayout {
      * @return
      */
     public ActionBarItem addItem(ActionBarItem item) {
-        return addItem(item, NONE);
+        return addItem(item, item.getItemId()!=NONE ? item.getItemId() : NONE);
     }
 
     /**

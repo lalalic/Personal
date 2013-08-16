@@ -1,8 +1,8 @@
 package com.supernaiba.parse;
 
-import java.util.LinkedHashMap;
+import greendroid.widget.LoaderActionBarItem;
+
 import java.util.List;
-import java.util.Map;
 
 import android.content.Context;
 import android.view.View;
@@ -17,9 +17,11 @@ import com.supernaiba.R;
 
 public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	private String textKey=null;
-	protected Map<Integer,List<T>> appended=new LinkedHashMap<Integer,List<T>>();
-	public QueryAdapter(Context context, QueryFactory<T> queryFactory) {
+	LoaderActionBarItem refreshAction;
+	protected Context context;
+	public QueryAdapter(Context context, QueryFactory<T> queryFactory,LoaderActionBarItem refreshAction) {
 		super(context, queryFactory);
+		this.refreshAction=refreshAction;
 		init(context);
 	}
 
@@ -43,9 +45,24 @@ public class QueryAdapter<T extends ParseObject> extends ParseQueryAdapter<T> {
 	}
 	
 	protected void init(Context context){
+		this.context=context;
+		if(this.refreshAction!=null){
+			addOnQueryLoadListener(new OnQueryLoadListener<T>(){
+
+				@Override
+				public void onLoaded(List<T> arg0, Exception arg1) {
+					refreshAction.setLoading(false);
+				}
+
+				@Override
+				public void onLoading() {
+					refreshAction.setLoading(true);
+				}
+				
+			});
+		}
 		setPlaceholder(context.getResources().getDrawable(R.drawable.gd_action_bar_compass));
 		setPaginationEnabled(true);
-		setObjectsPerPage(20);
 	}
 	
 	@Override

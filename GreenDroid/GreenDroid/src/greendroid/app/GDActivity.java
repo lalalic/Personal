@@ -15,14 +15,13 @@
  */
 package greendroid.app;
 
-import com.cyrilmottier.android.greendroid.R;
-
 import greendroid.util.Config;
 import greendroid.widget.ActionBar;
-import greendroid.widget.ActionBarHost;
-import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBar.OnActionBarListener;
 import greendroid.widget.ActionBar.Type;
+import greendroid.widget.ActionBarHost;
+import greendroid.widget.ActionBarItem;
+import greendroid.widget.ToolBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -33,6 +32,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+
+import com.cyrilmottier.android.greendroid.R;
 
 /**
  * <p>
@@ -97,6 +98,7 @@ public class GDActivity extends Activity implements ActionBarActivity {
 
     private Type mActionBarType;
     private ActionBarHost mActionBarHost;
+    protected ToolBar mFooterBar;
 
     /**
      * <p>
@@ -392,4 +394,26 @@ public class GDActivity extends Activity implements ActionBarActivity {
         }
     };
 
+    protected ToolBar createFooterBar(ActionBarItem.Type ...types){
+    	mFooterBar=ToolBar.inflate(this);
+    	mFooterBar.setOnActionBarListener(new OnActionBarListener(){
+
+			@Override
+			public void onActionBarItemClicked(int position) {
+				onHandleFooterBarItemClick(mFooterBar.getItem(position), position);
+			}
+    		
+    	});
+    	if(types!=null && types.length>0){
+	    	mFooterBar.setMaxItemCount(types.length);
+	    	for(ActionBarItem.Type t: types)
+	    		mFooterBar.addItem(t);
+    	}
+    	return mFooterBar;
+    }
+    
+    public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
+
+    }
+    
 }

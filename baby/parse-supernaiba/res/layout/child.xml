@@ -29,5 +29,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/gender" />    <ImageView        android:id="@+id/photo"        android:layout_width="match_parent"        android:layout_height="fill_parent"        android:layout_alignParentLeft="true"        android:layout_below="@+id/birthday"        android:src="@android:drawable/ic_menu_camera" />
+        android:layout_below="@+id/gender" />        <greendroid.widget.AsyncImageView        android:id="@+id/photo"        android:layout_width="match_parent"        android:layout_height="fill_parent"        android:layout_alignParentLeft="true"        android:layout_below="@+id/birthday"        android:src="@android:drawable/ic_menu_camera" />
 </RelativeLayout>

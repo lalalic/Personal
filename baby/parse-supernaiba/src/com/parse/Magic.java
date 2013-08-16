@@ -10,4 +10,7 @@ public class Magic {
 		return ParseObject.getClassName(clazz);
 	}
 
+	public static boolean isLoggedIn(){
+		return !ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser());
+	}
 }

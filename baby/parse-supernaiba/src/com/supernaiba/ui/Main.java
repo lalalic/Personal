@@ -1,12 +1,9 @@
 package com.supernaiba.ui;
 
-import greendroid.app.GDListActivity;
-import greendroid.widget.ActionBar.OnActionBarListener;
+import greendroid.widget.ActionBarItem;
 import greendroid.widget.ActionBarItem.Type;
-import greendroid.widget.ItemAdapter;
 import greendroid.widget.LoaderActionBarItem;
 import greendroid.widget.QuickActionBar;
-import greendroid.widget.ToolBar;
 
 import java.io.ByteArrayInputStream;
 
@@ -26,8 +23,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
-import com.parse.ParseAnalytics;
-import com.parse.ParseAnonymousUtils;
+import com.parse.Magic;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -42,7 +38,7 @@ import com.supernaiba.parse.OnGetFileData;
 import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
-public class Main extends GDListActivity {
+public class Main extends BaseQueryListActivity {
 	private final static int CHILD=0;
 	private final static int SIGNIN=1;
 	
@@ -51,71 +47,77 @@ public class Main extends GDListActivity {
 	ListView vChildren;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
+		title=R.string.app_name;
 		super.onCreate(savedInstanceState);
-		ParseAnalytics.trackAppOpened(getIntent());
-		
+	}
+	
+	@Override
+	protected QueryAdapter<ParseObject> createAdapter(){
+		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this, new QueryFactory<ParseObject>(){
+			@Override
+			public ParseQuery<ParseObject> create() {
+				Query<ParseObject> query=new Query<ParseObject>("tag");
+				query.whereEqualTo("category","category");
+				return query;
+			}
+			
+		},null);
+		adapter.setImageKey("thumbnail");
+		adapter.setTextKey("name");
+		return adapter;
+	}
+	
+	@Override
+	protected void createActionBarItem(){
 		defaultChildAction=(LoaderActionBarItem)this.getActionBar().newActionBarItem(LoaderActionBarItem.class);
-		this.addActionBarItem(defaultChildAction);
+		addActionBarItem(defaultChildAction,R.layout.gd_action_bar_item_loader);
+		
 		showDefaultChild();
-		
-		ToolBar footer=ToolBar.inflate(this);
-		footer.setMaxItemCount(3);
-		footer.addItem(Type.Share);
-		footer.addItem(Type.Compass);//favorites
-		footer.addItem(Type.AllFriends);//tasks
-		
-		footer.setOnActionBarListener(new OnActionBarListener(){
+	}
+	
+	@Override
+	protected void createFooterBarItem(){
+		createFooterBar(Type.Share, Type.Compass, Type.AllFriends);
+	}
+	
 
-			@Override
-			public void onActionBarItemClicked(int position) {
-				Intent intent;
-				switch(position){
-				case 1:
-					intent=new Intent(Main.this,ShowFavorites.class);
-					Main.this.startActivity(intent);
+	@Override
+	public boolean onHandleActionBarItemClick(ActionBarItem item, int position) {
+		switch(item.getItemId()){
+		case R.layout.gd_action_bar_item_loader:
+			defaultChildAction.setLoading(false);
+			if(!Magic.isLoggedIn()){
+				Intent intent=new Intent(Main.this,UserAccount.class);
+				intent.putExtra("type", UserAccount.Type.Signin.name());
+				startActivityForResult(intent, SIGNIN);
 				break;
-				case 2:
-					intent=new Intent(Main.this,ShowTasks.class);
-					Main.this.startActivity(intent);
-				break;
-				}
-				
-			}
-			
-		});
-		
-		this.getActionBar().setOnActionBarListener(new OnActionBarListener(){
-
-			@Override
-			public void onActionBarItemClicked(int position) {
-				switch(position){
-				case OnActionBarListener.HOME_ITEM:
-					break;
-				case 0:
-					defaultChildAction.setLoading(false);
-					if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser())){
-						Intent intent=new Intent(Main.this,UserAccount.class);
-						intent.putExtra("type", UserAccount.Type.Signin.name());
-						Main.this.startActivityForResult(intent, SIGNIN);
-						break;
-					}else
-						childrenWindow.showAsDropDown(getActionBar().getItem(position).getItemView());
-					break;
-				}
-			}
-			
-		});
-		
-		try {
-			setListAdapter(ItemAdapter.createFromXml(this, R.xml.category));
-		} catch (Exception e) {
-			e.printStackTrace();
+			}else
+				getChildrenWindow().showAsDropDown(item.getItemView());
+			break;
 		}
-		
-		createChildrenWindow();
+		return true; 
 	}
 
-	protected void setDefaultChild(ParseObject child) {
+
+
+	@Override
+	public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
+		Intent intent=null;
+		switch(item.getItemId()){
+		case R.drawable.gd_action_bar_compass:
+			intent=new Intent(this,ShowFavorites.class);
+		break;
+		case R.drawable.gd_action_bar_all_friends:
+			intent=new Intent(this,ShowTasks.class);
+		break;
+		}
+		if(intent!=null) 
+			startActivity(intent);
+	}
+
+
+
+	private void setDefaultChild(ParseObject child) {
 		String defaultChildId=DB.getInstance(this).get("DefaultChild");
 		if(child.getObjectId().equals(defaultChildId))
 			return;
@@ -124,8 +126,8 @@ public class Main extends GDListActivity {
 	}
 	
 	
-	protected void showDefaultChild(){
-		if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser())){
+	private void showDefaultChild(){
+		if(!Magic.isLoggedIn()){
 			defaultChildAction.setDrawable(android.R.drawable.ic_secure);
 			return;
 		}
@@ -172,7 +174,7 @@ public class Main extends GDListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		Intent intent=new Intent(this,ShowPosts.class);
-		intent.putExtra("type", this.getResources().getStringArray(R.array.categories)[position]);
+		intent.putExtra("type", ((ParseObject)v.getTag()).getString("name"));
 		this.startActivity(intent);
 	}
 
@@ -194,9 +196,8 @@ public class Main extends GDListActivity {
 		}
 	}	
 	
-	private PopupWindow childrenWindow;
 	private void refreshChildrenWindow(){
-		if(ParseAnonymousUtils.isLinked(ParseUser.getCurrentUser()))
+		if(!Magic.isLoggedIn())
 			return;
 		
 		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
@@ -207,7 +208,7 @@ public class Main extends GDListActivity {
 				query.setCachePolicy(CachePolicy.CACHE_ONLY);
 				return query;
 			}
-		}){
+		},null){
 			@Override
 			public View getItemView(ParseObject object, View v, ViewGroup parent) {
 				/*
@@ -224,7 +225,8 @@ public class Main extends GDListActivity {
 		vChildren.setAdapter(adapter);
 	}
 	
-	private PopupWindow createChildrenWindow(){
+	private PopupWindow childrenWindow;
+	private PopupWindow getChildrenWindow(){
 		if(childrenWindow==null){
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.children, null);

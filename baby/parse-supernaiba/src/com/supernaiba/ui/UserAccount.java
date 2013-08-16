@@ -16,7 +16,7 @@ import com.supernaiba.R;
 
 public class UserAccount extends GDActivity {
 	public enum Type {
-		Signin, Signup, ForgetPassword
+		Signin, Signup, ForgetPassword 
 	}
 
 	private Type type = Type.Signin;

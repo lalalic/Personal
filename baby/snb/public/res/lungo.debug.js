@@ -1579,9 +1579,6 @@ Handles the <sections> and <articles> to show on a tablet device
       if (!_sameSection() && section_id !== lng.Element.Cache.section.attr("id")) {
         back(false);
       }
-      if (lng.Element.Cache.article && article_id === lng.Element.Cache.article.attr("id")) {
-        return;
-      }
       target = lng.dom("article#" + article_id);
       if (target.length > 0) {
         section = target.closest(C.ELEMENT.SECTION);
@@ -1691,7 +1688,6 @@ Handles the <sections> and <articles> to show on a tablet device
       if (_isChild(current, future)) {
         _applyDirection(future, "in");
       } else {
-        _removeLast();
         hideSelector = "section." + C.CLASS.SHOW;
         parent_id = _parentId(future);
         if (parent_id) {
@@ -1705,6 +1701,7 @@ Handles the <sections> and <articles> to show on a tablet device
     };
     _showBackward = function(current, future) {
       var showSections;
+      _removeLast();
       _applyDirection(current, "back-out");
       showSections = lng.dom("section." + C.CLASS.SHOW + ":not(#" + (current.attr('id')) + ")");
       if (showSections.length === 1 && (showSections.first().data("children") != null)) {
