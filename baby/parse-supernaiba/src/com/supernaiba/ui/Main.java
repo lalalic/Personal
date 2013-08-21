@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -28,7 +27,6 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseQuery.CachePolicy;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
@@ -52,8 +50,8 @@ public class Main extends BaseQueryListActivity {
 	}
 	
 	@Override
-	protected QueryAdapter<ParseObject> createAdapter(){
-		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this, new QueryFactory<ParseObject>(){
+	protected QueryAdapter createAdapter(){
+		QueryAdapter adapter=new QueryAdapter(this, new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("tag");
@@ -196,32 +194,27 @@ public class Main extends BaseQueryListActivity {
 		}
 	}	
 	
+	protected void refresh(){
+		super.refresh();
+		refreshChildrenWindow();
+	}
+	
 	private void refreshChildrenWindow(){
 		if(!Magic.isLoggedIn())
 			return;
 		
-		QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+		QueryAdapter adapter=new QueryAdapter(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("child");
 				query.whereEqualTo("parent", ParseUser.getCurrentUser());
-				query.setCachePolicy(CachePolicy.CACHE_ONLY);
 				return query;
 			}
-		},null){
-			@Override
-			public View getItemView(ParseObject object, View v, ViewGroup parent) {
-				/*
-				LinearLayout view=(LinearLayout)super.getItemView(object, v, parent);
-				if(this.getCount()>1)
-					view.setSelected(isDefaultChild(object));
-			*/
-				return super.getItemView(object, v, parent);
-			}
-		};
+		},null);
 		adapter.setPlaceholder(getResources().getDrawable(android.R.drawable.ic_menu_camera));
 		adapter.setImageKey("photo");
 		adapter.setTextKey(null);
+		adapter.setImageSize((int)getResources().getDimension(R.dimen.gd_action_bar_height));
 		vChildren.setAdapter(adapter);
 	}
 	
@@ -231,13 +224,20 @@ public class Main extends BaseQueryListActivity {
 			LayoutInflater inflater=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			View view=inflater.inflate(R.layout.children, null);
 			vChildren=(ListView)view.findViewById(R.id.children);
-			View vCreateChild=view.findViewById(R.id.createChild);
 			int width=(int)getResources().getDimension(R.dimen.gd_action_bar_height);
-			childrenWindow=new PopupWindow(view,width,width*4);
-			vCreateChild.setOnClickListener(new OnClickListener(){
+			childrenWindow=new PopupWindow(view,width,width*5);
+			view.findViewById(R.id.createChild).setOnClickListener(new OnClickListener(){
 				@Override
 				public void onClick(View arg0) {
 					startActivityForResult(new Intent(Main.this,CreateChild.class), CHILD);
+				}
+				
+			});
+			view.findViewById(R.id.logout).setOnClickListener(new OnClickListener(){
+				@Override
+				public void onClick(View arg0) {
+					ParseUser.logOut();
+					refresh();
 				}
 				
 			});

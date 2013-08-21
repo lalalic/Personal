@@ -67,8 +67,8 @@ public class ShowPosts extends BaseQueryListActivity {
 	}
 
 	@Override
-	protected QueryAdapter<ParseObject> createAdapter(){
-		CategoryQueryAdapter<ParseObject> adapter=new CategoryQueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+	protected QueryAdapter createAdapter(){
+		CategoryQueryAdapter adapter=new CategoryQueryAdapter(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				return createQuery();

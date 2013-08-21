@@ -46,4 +46,7 @@
         <string name="birthday">Birthday</string>
         <string name="photo">photo</string>
         <string name="stories">Stories</string>
+        <string name="oldpassword">Old Password</string>
+        <string name="newpassword">New Password</string>
+        <string name="resetPassword">Reset Password</string>
 </resources>

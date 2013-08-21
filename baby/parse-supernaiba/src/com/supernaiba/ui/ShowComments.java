@@ -7,18 +7,20 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.supernaiba.R;
+import com.supernaiba.parse.OnSave;
 import com.supernaiba.parse.Query;
 
 public class ShowComments extends BaseQueryListActivity {
-	private String postID;
+	private ParseObject post;
 	private EditText vComment;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
 		title=R.string.comments;
-		postID=getIntent().getStringExtra("ID");
+		post=ParseObject.createWithoutData("post", getIntent().getStringExtra("ID"));
 		
 		super.onCreate(savedInstanceState);
 	}
@@ -51,10 +53,17 @@ public class ShowComments extends BaseQueryListActivity {
 			ParseUser user=ParseUser.getCurrentUser();
 			ParseObject comment=new ParseObject("comment");
 			comment.put("content", content);
-			comment.put("author", user.getUsername());
-			comment.put("post", postID);
-			comment.saveEventually();
-			refresh();
+			comment.put("author", user);
+			comment.put("post", post);
+			comment.saveInBackground(new OnSave(this,comment){
+				@Override
+				public void done(ParseException ex) {
+					if(ex==null){
+						refresh();
+					}
+				}
+				
+			});
 			vComment.setText("");
 			break;
 		}
@@ -64,7 +73,7 @@ public class ShowComments extends BaseQueryListActivity {
 		adapter.setTextKey("content");
 		
 		Query<ParseObject> query=new Query<ParseObject>("comment");
-		query.whereEqualTo("post", postID);
+		query.whereEqualTo("post", post);
 		return query;
 	}
 }

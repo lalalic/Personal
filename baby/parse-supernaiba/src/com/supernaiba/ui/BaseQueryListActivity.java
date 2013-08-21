@@ -21,7 +21,7 @@ import com.supernaiba.parse.QueryAdapter;
 public abstract class BaseQueryListActivity extends GDListActivity {
 	protected LoaderActionBarItem refreshAction;
 	protected Class<? extends Activity> itemActivity=ShowPost.class;
-	protected QueryAdapter<ParseObject> adapter;
+	protected QueryAdapter adapter;
 	protected int title;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
@@ -34,8 +34,8 @@ public abstract class BaseQueryListActivity extends GDListActivity {
 		setListAdapter(adapter=createAdapter());
 	}
 
-	protected QueryAdapter<ParseObject> createAdapter() {
-		return new QueryAdapter<ParseObject>(this,new QueryFactory<ParseObject>(){
+	protected QueryAdapter createAdapter() {
+		return new QueryAdapter(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				return createQuery();

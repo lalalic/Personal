@@ -1,9 +1,14 @@
 package com.supernaiba.ui;
 
 import greendroid.app.GDActivity;
+import greendroid.widget.ActionBarItem;
+import greendroid.widget.SegmentedAdapter;
+import greendroid.widget.SegmentedBar.OnSegmentChangeListener;
+import greendroid.widget.SegmentedHost;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -15,35 +20,129 @@ import com.parse.SignUpCallback;
 import com.supernaiba.R;
 
 public class UserAccount extends GDActivity {
-	public enum Type {
-		Signin, Signup, ForgetPassword 
+	public enum Type{
+		Signin, Signup, ForgetPassword;
 	}
-
-	private Type type = Type.Signin;
-
+	private static final int Signin=0, Signup=1, ForgetPassword=2, ResetPassword=3; 
+	private SegmentedHost segments;
+	private int focusSegment;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.setTitle(R.string.app_name);		
+		addActionBarItem(ActionBarItem.Type.Export);
+		setActionBarContentView(R.layout.segmented_controls);
+		segments = (SegmentedHost) findViewById(R.id.segmented_host);
+		segments.setAdapter(new SegmentedAdapter(){
 
-		String theType = this.getIntent().getStringExtra("type");
-		if (theType != null)
-			type = Type.valueOf(theType);
+			@Override
+			public int getCount() {
+				return 4;
+			}
 
-		switch (type) {
-		case Signin:
-			this.setActionBarContentView(R.layout.signin);
+			@Override
+			public View getView(int position, ViewGroup parent) {
+				switch(position){
+				case Signup:
+					return getLayoutInflater().inflate(R.layout.signup,null);
+				case ForgetPassword:
+					return getLayoutInflater().inflate(R.layout.forget_password,null);
+				case ResetPassword:
+					return getLayoutInflater().inflate(R.layout.reset_password,null);
+				case Signin:
+				default:
+					return getLayoutInflater().inflate(R.layout.signin,null);
+				}
+			}
+
+			@Override
+			public String getSegmentTitle(int position) {
+				switch(position){
+				case Signup:
+					return getString(R.string.signup);
+				case ForgetPassword:
+					return getString(R.string.forgetpassword);
+				case ResetPassword:
+					return getString(R.string.resetPassword);
+					
+				case Signin:
+				default:
+					return getString(R.string.signin);
+				}
+			}
+			
+		});
+		
+		segments.getSegmentedBar().setOnSegmentChangeListener(new OnSegmentChangeListener(){
+			@Override
+			public void onSegmentChange(int i, boolean flag) {
+				focusSegment=i;
+			}
+			
+		});
+	}
+	
+	
+
+	@Override
+	public boolean onHandleActionBarItemClick(ActionBarItem item, int position) {
+		switch(item.getItemId()){
+		case R.drawable.gd_action_bar_export:
+			switch(focusSegment){
+			case Signup:
+				signup(null);
+				break;
+			case ForgetPassword:
+				forgetPassword(null);
+				break;
+			case ResetPassword:
+				resetPassword(null);
+				break;
+				
+			case Signin:
+			default:
+				signin(null);
+			}
 			break;
-		case Signup:
-			this.setActionBarContentView(R.layout.signup);
-			break;
-		case ForgetPassword:
-			this.setActionBarContentView(R.layout.forget_password);
-			break;
+		default:
+			this.onBackPressed();
 		}
+		return true;
 	}
 
-	public void signin(View view) {
+
+
+	private void resetPassword(View view) {
+		final String oldPassword=this.getEditText(R.id.oldpassword);
+		String password=this.getEditText(R.id.password);
+		String passwordAgain=this.getEditText(R.id.passwordAgain);
+		if(password.equals(passwordAgain)){
+			msg("Reset Password doesn't match. Please fix it!");
+			return;
+		}
+		ParseUser user=ParseUser.getCurrentUser();
+		ParseUser.logInInBackground(user.getUsername(), password, new LogInCallback(){
+			@Override
+			public void done(ParseUser user, ParseException ex) {
+				if(user!=null){
+					user.setPassword(oldPassword);
+					user.saveInBackground();
+				}else if(ex!=null){
+					switch(ex.getCode()){
+					case ParseException.USERNAME_MISSING:
+					case ParseException.PASSWORD_MISSING:
+					default:
+						msg(ex.getMessage());
+						break;
+					}
+				}
+			}
+			
+		});
+	}
+
+
+
+	private void signin(View view) {
 		String username=this.getEditText(R.id.account);
 		String password=this.getEditText(R.id.password);
 		
@@ -67,12 +166,14 @@ public class UserAccount extends GDActivity {
 		});
 	}
 
-	public void signup(View view) {
+	private void signup(View view) {
 		String username=this.getEditText(R.id.account);
 		String password=this.getEditText(R.id.password);
 		String passwordAgain=this.getEditText(R.id.passwordAgain);
-		if(password.equals(passwordAgain))
-			;
+		if(password.equals(passwordAgain)){
+			msg("Password doesn't match. Please fix it!");
+			return;
+		}
 		String email=this.getEditText(R.id.email);
 		ParseUser user=new ParseUser();
 		user.setUsername(username);
@@ -100,7 +201,7 @@ public class UserAccount extends GDActivity {
 		});
 	}
 
-	public void forgetPassword(View view) {
+	private void forgetPassword(View view) {
 		ParseUser.requestPasswordResetInBackground(this.getEditText(R.id.email), new RequestPasswordResetCallback(){
 			@Override
 			public void done(ParseException ex) {
@@ -122,23 +223,11 @@ public class UserAccount extends GDActivity {
 		});
 	}
 
-	public void switch2Signin(View view) {
-		this.setActionBarContentView(R.layout.signin);
-	}
-
-	public void switch2Signup(View view) {
-		this.setActionBarContentView(R.layout.signup);
-	}
-
-	public void switch2ForgetPassword(View view) {
-		this.setActionBarContentView(R.layout.forget_password);
-	}
-
 	protected void msg(CharSequence m){
 		Toast.makeText(this, m, Toast.LENGTH_SHORT).show();
 	}
 	
 	protected String getEditText(int rid){
-		return ((EditText)this.findViewById(rid)).getText().toString();
+		return ((EditText)segments.getSegmentedBar().getChildSegmentAt(focusSegment).findViewById(rid)).getText().toString();
 	}
 }

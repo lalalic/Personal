@@ -9,12 +9,12 @@ import android.view.ViewGroup;
 import com.parse.ParseObject;
 import com.supernaiba.R;
 
-public class CategoryQueryAdapter<T extends ParseObject> extends QueryAdapter<T> {
+public class CategoryQueryAdapter extends QueryAdapter {
 	public final static int STATISTICS=2;
-	private T statistics;
+	private ParseObject statistics;
 	private View statView;
 	
-	public CategoryQueryAdapter(Context context, QueryFactory<T> queryFactory, LoaderActionBarItem refreshAction) {
+	public CategoryQueryAdapter(Context context, QueryFactory<ParseObject> queryFactory, LoaderActionBarItem refreshAction) {
 		super(context, queryFactory,refreshAction);
 		this.refreshAction=refreshAction;
 	}
@@ -30,7 +30,7 @@ public class CategoryQueryAdapter<T extends ParseObject> extends QueryAdapter<T>
 	}
 
 	@Override
-	public T getItem(int index) {
+	public ParseObject getItem(int index) {
 		if(index==0)
 			return statistics; 
 		return super.getItem(index-1);
@@ -51,7 +51,7 @@ public class CategoryQueryAdapter<T extends ParseObject> extends QueryAdapter<T>
 	}
 
 	@Override
-	public View getItemView(T obj, View v, ViewGroup parent) {
+	public View getItemView(ParseObject obj, View v, ViewGroup parent) {
 		if(obj==statistics)
 			return statView;
 		return super.getItemView(obj, v, parent);
@@ -62,7 +62,7 @@ public class CategoryQueryAdapter<T extends ParseObject> extends QueryAdapter<T>
 		return super.getViewTypeCount()+1;
 	}
 
-	public void setStatisitcs(T data){
+	public void setStatisitcs(ParseObject data){
 		this.statistics=data;
 		LayoutInflater inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		statView=inflater.inflate(R.layout.cat_statistics,null);

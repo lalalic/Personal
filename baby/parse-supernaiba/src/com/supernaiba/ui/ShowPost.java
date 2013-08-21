@@ -166,7 +166,7 @@ public class ShowPost extends GDActivity {
 				});	
 				
 				ListView vStories=(ListView)findViewById(R.id.stories);
-				QueryAdapter<ParseObject> adapter=new QueryAdapter<ParseObject>(ShowPost.this, new QueryFactory<ParseObject>(){
+				QueryAdapter adapter=new QueryAdapter(ShowPost.this, new QueryFactory<ParseObject>(){
 					@Override
 					public ParseQuery<ParseObject> create() {
 						Query<ParseObject> query=new Query<ParseObject>("story");
