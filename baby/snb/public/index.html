@@ -7,12 +7,22 @@
 	<link rel="stylesheet" href="res/lungo.icon.css">
 	<link rel="stylesheet" href="res/lungo.theme.css">
 	<style>
-		img{margin: 5px auto}
+		#show img{margin-left: auto;margin-right:auto;display:block}
 		[contenteditable=true]{background-color:white;height:100%;padding:10px}
+		.outview{position:absolute;top:-9999px;height:1px}
+		nav img{width:32px;height:32px}
+		.editor{-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto}
 	</style>
 	<script src="res/quo.js"></script>
 	<script src="res/mustache.js"></script>
 	<script src="res/parse-1.2.8.min.js"></script>
+	<script>	
+		Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}
+		$form=function(){return Lungo.dom('section.show article.active form')[0]}
+		Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
+		window.runtime={}
+		create=function(f,a){a=Parse.Object.extend(f);return new a}
+	</script>
 </head>
 <body>
 	<section id="home" data-transition="slide">
@@ -23,10 +33,11 @@
 			</nav>
 		</header>
 		<nav data-control="menu" id="users" class="icons">
+			<a href="#" data-icon="signout" onclick="signout()"></a>
 			<a href="#" data-icon="plus-sign" data-view-section="child"></a>
 			<script type="text/tmpl" id="tmplChildren">
 				{{#children}}
-				<a href="#" data-icon="user" data-view-section="child" onclick="loadChild('{{id}}')"></a>
+				<a href="#" data-icon="user" data-view-section="child" onclick="loadChild('{{id}}')"><img src="{{attributes.photo._url}}"></a>
 				{{/children}}
 			</script>
 		</nav>
@@ -34,11 +45,13 @@
 			<ul>
 				<script type="text/tmpl" id="tmplCate">
 				{{#categories}}
-				<li class="thumb arrow cat">
+				<li class="thumb cat">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
 						<strong><a data-view-section="category" onclick="loadPosts('{{attributes.name}}')" href="#">{{attributes.name}}</a></strong>
 						<small>{{attributes.desc}}</small>
+						<a class="on-right" data-view-section="creator" onclick="runtime.cat='{{attributes.name}}'" style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
+						
 					</div>
 				</li>
 				{{/categories}}
@@ -53,11 +66,54 @@
 				<a data-icon="share" data-view-section="category" href="#" class="primary"></a>
 			</nav>
 		</footer>
+		<script>
+		function checkLogin(){
+			Parse.User.current() ? loadChildren() : setTimeout(function(){Lungo.Router.section('user')},1000)
+		}
+		
+		function loadChildren(){
+			var children=new Parse.Query(Parse.Object.extend('child'))
+			children.equalTo("parent",Parse.User.current())
+			children.find({
+				success: function(children){
+					children && tmplChildren.build({children:children})
+					children && !runtime.child && (runtime.child=children[0])
+				},
+				error: function(){}
+			})
+		}
+		function loadCats(){
+			var categories=new Parse.Query(Parse.Object.extend('tag'))
+			categories.equalTo("category","category");
+			categories.find({
+				success:function(cats){
+					tmplCate.build({categories:cats})
+				},
+				error: function(){
+					Lungo.Article.clear('categories')
+				}
+			})
+			loadCats=new Function();
+		}
+		function loadPosts(cat){
+			runtime.cat=cat
+			Lungo.dom(".active .post").remove()
+			var posts=new Parse.Query(Parse.Object.extend('post'))
+			posts.equalTo("category",cat)
+			posts.find({
+				success:function(posts){
+					tmplPosts.build({posts:posts})
+				},
+				error: function(){
+					Lungo.Article.clear('posts')
+				}
+			})
+		}
+		</script>
 	</section>
 	<section id="category" data-transition="slide">
-		<header>
+		<header data-back="left-sign">
 			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
 				<a data-icon="refresh" class="on-right" onclick=""></a>
 			</nav>
 		</header>
@@ -72,7 +128,6 @@
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
 						<strong><a data-view-section="post" onclick="loadPost('{{id}}')" href="#">{{attributes.title}}</a></strong>
-						<small>{{attributes.content}}</small>
 					</div>
 				</li>
 				{{/posts}}
@@ -81,15 +136,38 @@
 		</article>
 		<footer>
 			<nav>
-				<a data-icon="plus" data-view-section="creator" class="primary"></a>
+				<a data-icon="plus" data-view-section="creator"></a>
 				<a data-icon="share" data-view-section="creator"></a>
 			</nav>
 		</footer>
+		<script>
+		function loadPost(id){
+			Lungo.dom(".active .postshow").remove()
+			new Parse.Query(Parse.Object.extend("post")).get(id,{
+				success:function(p){
+					runtime.post=p
+					tmplPost.build(p)
+					var stories=new Parse.Query(Parse.Object.extend('story'))
+					stories.equalTo('parent',p)
+					stories.find({
+						success: function(stories){
+							tmplStory.build({stories:stories},'#stories')
+						},
+						error: function(){
+							
+						}
+					})
+				},
+				error: function(p,error){
+				
+				}
+			})
+		}
+		</script>
 	</section>
 	<section id="post" data-transition="slide">
-		<header>
+		<header data-back="left-sign">
 			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
 				<a data-icon="refresh" class="on-right" onclick=""></a>
 			</nav>
 		</header>
@@ -114,7 +192,7 @@
 		</article>
 		<footer>
 			<nav>
-				<a data-icon="comment" data-view-section="comment" onclick="loadComments(status.post.id)" href="#"></a>
+				<a data-icon="comment" data-view-section="comment" onclick="loadComments(runtime.post.id)" href="#"></a>
 				<a data-icon="film" data-view-section="story" onclick="" href="#"></a>
 				<a data-icon="menu" data-view-section="comment" onclick="" href="#"></a>
 				<a data-icon="star" data-view-section="comment" onclick="" href="#"></a>
@@ -123,9 +201,8 @@
 			</footer>
 	</section>
 	<section id="comment" data-transition="slide">
-		<header data-title="Comment">
+		<header data-title="Comment" data-back="left-sign">
 			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
 				<a data-icon="refresh" class="on-right" onclick=""></a>
 			</nav>
 		</header>
@@ -142,37 +219,84 @@
 		</article>
 		<footer>
 			<nav>
-				<input style="height:44px" id="commentContent">
-				<a data-icon="save" onclick="saveComment()"></a>
+				<a><textarea style="height:46px;padding:5px;width:100%" id="commentContent"></textarea></a>
+				<button data-icon="save" onclick="saveComment()"></button>
 			</nav>
 		</footer>
+		<script>
+		function loadComments(id){
+			Lungo.dom(".active .comment").remove()
+			var comments=new Parse.Query(Parse.Object.extend('comment'))
+			comments.equalTo("post",runtime.post)
+			comments.find({
+				success:function(comments){
+					tmplComment.build({comments:comments})
+				},
+				error: function(){
+					Lungo.Article.clear('showComments')
+				}
+			})
+		}
+		
+		function saveComment(){
+			var comment=create('comment')
+			comment.set("content",commentContent.value)
+			comment.set("author", Parse.User.current())
+			comment.set("post", runtime.post)
+			comment.save().then(function(){
+				tmplComment.build({comments:[comment]})
+				commentContent.value=""
+			})
+		}
+		</script>
 	</section>
 	
-	<section id="creator" data-transition="slide">
-		<header data-title="Create Post">
+	<section id="creator" data-transition="slide" 
+		data-on-load="setTimeout(function(){Lungo.dom('#creator header h1').text('Create '+runtime.cat)},300)">
+		<header data-title="Create Post" data-back="left-sign">
 			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
-				<a class="on-right" data-icon="save" onclick="savePost()"></a>
+				<a class="on-right" data-icon="save" onclick="savePost();"></a>
 			</nav>
 		</header>
-		<article id="createPost" data-on-load="postTitle.focus()">
+		<article id="createPost">
 			<form>
-				<input placeholder="title" name="title" id="postTitle">
-				<textarea name="content" placeholder="content" id="postContent">			
-				</textarea>
+				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
+				<div name="content" class="editor" contenteditable="true">content</div>
 			</form>
+		</article>
 		</article>
 		<footer>
 			<nav>
-				<a data-icon="picture" onclick=""></a>
-				<a data-icon="minus" onclick=""></a>
+				<a data-icon="picture" onclick="insertImage()"></a>
+				<a data-icon="trash" onclick=""></a>
 			</nav>
-		</footer>		
+		</footer>
+		<script>
+		function insertImage(){
+			
+		}
+		function savePost(){
+			var newPost=create('post'),
+				p=$form()
+			newPost.set("conent",p.content.innerHTML)
+			newPost.set("title",p.title.value)
+			newPost.set("category",runtime.cat)
+			newPost.set("author",Parse.User.current())
+			newPost.save().then(Lungo.Router.back)
+		}
+		
+		function saveStory(){
+			var newStory=create('story')
+			newStory.set("conent",postContent.value)
+			newStory.set("author",Parse.User.current())
+			newStory.set("parent",runtime.post)
+			newStory.save().then(Lungo.Router.back)
+		}
+		</script>		
 	</section>
 	<section id="story" data-transition="slide">
-		<header data-title="Create Story">
+		<header data-back="left-sign" data-title="Create Story">
 			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
 				<a class="on-right" data-icon="save" onclick="saveStory()"></a>
 			</nav>
 		</header>
@@ -188,86 +312,51 @@
 			</nav>
 		</footer>		
 	</section>	
-	<section id="userSection" data-transition="slide">
-		<header>
-			<nav>
-				<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
-			</nav>
-		</header>
+	<section id="user" data-transition="slide">
+		<header data-back="left-sign" data-title="User Account"></header>
+		<nav data-control="groupbar">
+			<a href="#" data-view-article="signin" data-title="Sign In">Sign In</a>
+			<a href="#" data-view-article="signup" data-title="Sign up">Sign Up</a>
+			<a href="#" data-view-article="resetpassword" data-title="Reset Password">Reset Password</a>
+			<a href="#" data-view-article="forgetpassword" data-title="Forget Password">Forget Password</a>
+		</nav>
 		<article id="signin">
-			<form target="hideFrame" onsubmit="signin()">
-				<input name="name" type="text" placeholder="user name">
-				<input name="password" type="password" placeholder="password">
+			<form onsubmit="signin();return false">
+				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
+				<fieldset><input name="password" type="password" placeholder="password"></fieldset>
+				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>
 		<article id="signup">
-			<form target="hideFrame" onsubmit="signup()">
-				<input name="name" type="text" placeholder="user name">
-				<input name="email" type="email" placeholder="email">
-				<input name="password" type="text" placeholder="password">
+			<form onsubmit="signup();return false">
+				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
+				<fieldset><input name="email" type="email" placeholder="email where reset password will be sent"></fieldset>
+				<fieldset><input name="password" type="text" placeholder="password"></fieldset>
+				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>
-		<article id="resetpassword" onsubmit="resetpassword()">
-			<form target="hideFrame">
-				<input name="name" type="text" placeholder="user name">
-				<input name="password" type="password" placeholder="password">
+		<article id="resetpassword">
+			<form onsubmit="resetpassword();return false">
+				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
+				<fieldset><input name="password" type="password" placeholder="old password"></fieldset>
+				<fieldset><input name="password" type="password" placeholder="new password"></fieldset>
+				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>
 		<article id="forgetpassword">
-			<form target="hideFrame" onsubmit="forgetpassword()">
-				<input name="name" type="text" placeholder="user name">
-				<input name="password" type="password" placeholder="password">
+			<form onsubmit="forgetpassword();return false">
+				<fieldset><input name="email" type="text" placeholder="email where new password would send"></fieldset>
+				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>			
 		<footer>
-			<a data-icon="save" onclick="Lungo.dom('#userSection article.active form').submit()"></a>
+			<nav>
+				<a data-icon="ok-sign" onclick="$form().submit()"></a>
+			</nav>	
 		</footer>
-	</section>
-	<section id="child" data-transition="slide">
-		<header>
-			<a data-icon="left-sign" onclick="Lungo.Router.back()"></a>
-			<a class="on-right" data-icon="save" onclick="saveChild()"></a>
-		</header>
-		<article id="child1">
-			<form target="iframe" onsubmit="saveChild()">
-				<input type="text" name="name" placeholder="baby name">
-				<div>
-					<input type="radio" name="gender" value="0">boy
-					<input type="radio" name="gender" value="1">girl
-				</div>
-				<input type="date" name="birthday" placeholder="birthday">
-			</form>
-		</article>
-		<footer>
-			<a data-icon="save" onclick="Lungo.dom('#child article.active form').submit()"></a>
-		</footer>
-	</section>
-	<iframe id="hideFrame"></iframe>
-	<script src="res/lungo.debug.js"></script>	
-	<script type="text/javascript">	
-		Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}		
-		Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
-		window.status={}
-		function checkLogin(){
-			var user=Parse.User.current()
-			if(user!=null)
-				return loadChildren()
-			else
-				Lungo.Section.show('#user')
-		}
-		function loadChildren(){
-			var chilren=new Parse.Query(Parse.Object.extend('child'))
-			children.equalTo("parent",Parse.User.current())
-			children.find({
-				success: function(children){
-					tmplChildren.build({children:children})
-				},
-				error: function(){}
-			})
-		}
-		
+		<script>
 		function signin(){
-			var user=Lungo.dom('#user article.active form')[0]
+			var user=$form()
 			Parse.User.logIn(user.name.value, user.password.value,{
 				success:function(){
 					Lungo.Notification.success("signin","Success", "ok")
@@ -281,7 +370,7 @@
 		}
 		
 		function signup(){
-			var userForm=Lungo.dom('#user article.active form')[0]
+			var userForm=$form()
 			var user=new Parse.User()
 			user.set('username',userForm.name.value)
 			user.set('password',userForm.password.value)
@@ -299,39 +388,68 @@
 			return false
 		}
 		
-		function loadCats(){
-			var categories=new Parse.Query(Parse.Object.extend('tag'))
-			categories.equalTo("category","category");
-			categories.find({
-				success:function(cats){
-					tmplCate.build({categories:cats})
+		function signout(){
+			Parse.User.logOut()
+			location.reload()
+		}
+		</script>
+	</section>
+	<section id="child" data-transition="slide">
+		<header data-back="left-sign" data-title="Add baby"></header>
+		<article id="child1">
+			<form id="childForm" onsubmit="try{saveChild()}catch(error){alter(error)}return false">
+				<input type="hidden" name="id">
+				<fieldset><input type="text" name="name" placeholder="baby name"></fieldset>
+				<fieldset>
+					<select name="gender">
+						<option value=0>Boy</option>
+						<option value=1>Girl</option>
+					</select>
+				</fieldset>
+				<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
+				<fieldset>
+					<img name="photo" onclick="uploader.bind(this).click()" 
+						style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto" 
+						placeholder="photo"/>
+				</fieldset>
+				<fieldset class="outview"><input type="submit"></fieldset>
+			</form>
+		</article>
+		<footer>
+			<nav>
+				<a data-icon="certificate" onclick="makeDefaultChild()"></a>
+				<button type="submit" form="childForm" data-icon="ok-sign"></button>
+			</nav>
+		</footer>
+		<script>
+		function makeDefaultChild(){
+			runtime.child=extracChild()
+		}
+		function extractChild(){
+			var child=create('child'),
+				f=$form()
+			child.set("name",f.name.value)
+			child.set("gender",f.gender.selectedIndex)
+			child.set("birthday", f.birthday.value)
+			child.set("photo", f.photo.file)
+			child.set("parent", Parse.User.current())
+			child.id=f.id.value
+			return child
+		}
+		function saveChild(){
+			var child=extractChild()
+			child.save(null,{
+				success: function(){
+					Lungo.Router.back()
 				},
-				error: function(){
-					Lungo.Article.clear('categories')
+				error: function(error){
+					Lungo.Notification.success("Save Child",error, "canncel")
 				}
 			})
-			loadCats=new Function();
 		}
-		function loadPosts(cat){
-			status.cat=cat
-			Lungo.dom(".active .post").remove()
-			var posts=new Parse.Query(Parse.Object.extend('post'))
-			posts.equalTo("category",cat)
-			posts.find({
-				success:function(posts){
-					tmplPosts.build({posts:posts})
-				},
-				error: function(){
-					Lungo.Article.clear('posts')
-				}
-			})
-		}
-		
-		function loadPost(id){
-			Lungo.dom(".active .postshow").remove()
-			new Parse.Query(new Parse.Object.extend("post")).get(id,{
+		function loadChild(id){
+			new Parse.Query(Parse.Object.extend("child")).get(id,{
 				success:function(p){
-					status.post=p
 					tmplPost.build(p)
 					var stories=new Parse.Query(Parse.Object.extend('story'))
 					stories.equalTo('parent',p)
@@ -349,49 +467,10 @@
 				}
 			})
 		}
-		
-		function loadComments(id){
-			Lungo.dom(".active .comment").remove()
-			var posts=new Parse.Query(Parse.Object.extend('comment'))
-			posts.equalTo("post",id)
-			posts.find({
-				success:function(comments){
-					tmplComment.build({comments:comments})
-				},
-				error: function(){
-					Lungo.Article.clear('showComments')
-				}
-			})
-		}
-		
-		function saveComment(){
-			var Comment=Parse.Object.extend('comment'),
-				comment=new Comment()
-			comment.set("content",commentContent.value)
-			comment.set("author", Parse.User.current())
-			comment.set("post", status.post)
-			comment.save().then(function(){commentContent.value=""})
-		}
-		
-		function savePost(){
-			var Post=Parse.Object.extend('post'),
-				newPost=new Post()
-			newPost.set("conent",postContent.value)
-			newPost.set("title",postTitle.value)
-			newPost.set("category",status.cat)
-			newPost.set("author",Parse.User.current())
-			newPost.save().then(Lungo.Router.back)
-		}
-		
-		function saveStory(){
-			var Story=Parse.Object.extend('story'),
-				newStory=new Story()
-			newStory.set("conent",postContent.value)
-			newStory.set("author",Parse.User.current())
-			newStory.set("parent",status.post)
-			newStory.save().then(Lungo.Router.back)
-		}
-		
+		</script>
+	</section>
+	<script src="res/lungo.debug.js"></script>		
+	<script>	
 		Lungo.dom("script[type*=tmpl]").each(function(i,tmpl,b){
 			this.compiled=Mustache.compile((b=this.innerHTML))
 			Mustache.compilePartial(this.id,b)
@@ -411,5 +490,26 @@
 			history:false
 		})
 	</script>
+	<input type="file" id="uploader" class="outview" onchange="this.save()">
+	<script>
+		uploader.bind=function(a,opt){
+			this.holder=a
+			a.opt=opt
+			return this			
+		}
+		uploader.save=function(){
+			var file=new Parse.File(this.files[0].name,this.files[0]),
+				holder=this.holder
+			file.save(holder.opt||{
+				success: function(f){
+					holder.src=f.url()
+					holder.file=f
+				},
+				error: function(error){
+					Lungo.Notification.success("upload",error, "error")
+				}
+			})
+		}
+	</script>	
  </body>
 </html>
