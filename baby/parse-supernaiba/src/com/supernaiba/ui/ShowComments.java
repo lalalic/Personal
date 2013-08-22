@@ -50,10 +50,8 @@ public class ShowComments extends BaseQueryListActivity {
 			String content=vComment.getText().toString().trim();
 			if(content.length()==0)
 				return;
-			ParseUser user=ParseUser.getCurrentUser();
 			ParseObject comment=new ParseObject("comment");
 			comment.put("content", content);
-			comment.put("author", user);
 			comment.put("post", post);
 			comment.saveInBackground(new OnSave(this,comment){
 				@Override

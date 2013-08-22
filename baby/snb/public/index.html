@@ -241,7 +241,6 @@
 		function saveComment(){
 			var comment=create('comment')
 			comment.set("content",commentContent.value)
-			comment.set("author", Parse.User.current())
 			comment.set("post", runtime.post)
 			comment.save().then(function(){
 				tmplComment.build({comments:[comment]})
@@ -281,15 +280,13 @@
 			newPost.set("conent",p.content.innerHTML)
 			newPost.set("title",p.title.value)
 			newPost.set("category",runtime.cat)
-			newPost.set("author",Parse.User.current())
 			newPost.save().then(Lungo.Router.back)
 		}
 		
 		function saveStory(){
 			var newStory=create('story')
 			newStory.set("conent",postContent.value)
-			newStory.set("author",Parse.User.current())
-			newStory.set("parent",runtime.post)
+			newStory.set("post",runtime.post.id)
 			newStory.save().then(Lungo.Router.back)
 		}
 		</script>		
@@ -312,6 +309,7 @@
 			</nav>
 		</footer>		
 	</section>	
+	
 	<section id="user" data-transition="slide">
 		<header data-back="left-sign" data-title="User Account"></header>
 		<nav data-control="groupbar">

@@ -59,7 +59,7 @@ public class CreateChild extends BaseCreatorActivity {
 		obj=new ParseObject("child");
 		String id=getIntent().getStringExtra("id");
 		if(id==null){
-			obj.put("parent", ParseUser.getCurrentUser());
+			obj.put("parent", ParseUser.getCurrentUser().getObjectId());
 			type=TYPE_ADD;
 		}else{
 			obj.setObjectId(id);

@@ -1,16 +1,60 @@
+Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}
+function pad(a,len){
+	return "000000000".substring(0,len).substring(a+"".length,len)+a
+}
+Date.prototype.dayInc=function(t,base){
+	var now=parseInt(this.getFullYear()+pad(this.getMonth()+1,2)+pad(this.getDate()+1,2)+"0000")
+	return base && base>now ? base+t : now+t
+}
+Date.prototype.weekInc=function(t,base){
+	var d=new Date()
+    d.setHours(0,0,0);
+    d.setDate(d.getDate() + 4 - (d.getDay()||7));
+    var yearStart = new Date(d.getFullYear(),0,1);
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7)
+    var now=d.getFullYear()+pad(weekNo,2)+"000000";
+	return base && base>now ? base+t : now+t
+}
+Date.prototype.monthInc=function(t,base){
+	var now=this.getFullYear()+pad(this.getMonth()+1,2)+"000000"
+	return base && base>now ? base+t : now+t
+}
+Date.prototype.yearInc=function(t,base){
+	var now=this.getFullYear()+"00000000"
+	return base && base>now ? base+t : now+t
+}
+
+new Array("comment","story","post").each(function(f){
+	Parse.Cloud.beforeSave(f, function(request, response) {
+		if(request.object.isNew()){
+			var o=request.object
+			o.set("author",request.user.id)
+			o.set("authorName",request.user.getUsername())
+		}
+		response.success()
+	})
+})
+
+new Array("favorite","task").each(function(f){
+	Parse.Cloud.beforeSave(f, function(request, response) {
+		request.object.set("author",request.user.id)
+		response.success()
+	})
+})
+
+
 Parse.Cloud.afterSave("comment", function(request, response) {
 	var post=request.object.get("post"),
 		user=request.user
-	post.fetch({
-		success: function(){
-			post.increment("comments",1)
-			post.save()
-		}
-	})
+	post.increment("comments",1)
+	post.save()
+	
 	user.increment("score",1)
 	user.increment("comments",1)
 	user.save()
 });
+
+
 
 Parse.Cloud.afterSave("story", function(request, response) {
 	var story=request.object,
@@ -89,27 +133,3 @@ Parse.Cloud.afterSave("post", function(request, response) {
 	}
 });
 
-Date.prototype.dayInc=function(t,base){
-	var now=parseInt(this.getFullYear()+pad(this.getMonth()+1,2)+pad(this.getDate()+1,2)+"0000")
-	return base && base>now ? base+t : now+t
-}
-Date.prototype.weekInc=function(t,base){
-	var d=new Date()
-    d.setHours(0,0,0);
-    d.setDate(d.getDate() + 4 - (d.getDay()||7));
-    var yearStart = new Date(d.getFullYear(),0,1);
-    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7)
-    var now=d.getFullYear()+pad(weekNo,2)+"000000";
-	return base && base>now ? base+t : now+t
-}
-Date.prototype.monthInc=function(t,base){
-	var now=this.getFullYear()+pad(this.getMonth()+1,2)+"000000"
-	return base && base>now ? base+t : now+t
-}
-Date.prototype.yearInc=function(t,base){
-	var now=this.getFullYear()+"00000000"
-	return base && base>now ? base+t : now+t
-}
-function pad(a,len){
-	return "000000000".substring(0,len).substring(a+"".length,len)+a
-}

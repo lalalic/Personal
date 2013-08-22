@@ -135,7 +135,7 @@ public class Main extends BaseQueryListActivity {
 		if(id!=null && id.length()!=0)
 			children.whereEqualTo("objectId", id);
 		else
-			children.whereEqualTo("parent", ParseUser.getCurrentUser());
+			children.whereEqualTo("parent", ParseUser.getCurrentUser().getObjectId());
 		children.getFirstInBackground(new OnGet<ParseObject>(this){
 			@Override
 			public void done(ParseObject child, ParseException ex) {
@@ -207,7 +207,7 @@ public class Main extends BaseQueryListActivity {
 			@Override
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("child");
-				query.whereEqualTo("parent", ParseUser.getCurrentUser());
+				query.whereEqualTo("parent", ParseUser.getCurrentUser().getObjectId());
 				return query;
 			}
 		},null);
