@@ -6,7 +6,6 @@ import android.content.Intent;
 import com.parse.Magic;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.parse.OnGet;
 import com.supernaiba.parse.OnSave;
@@ -26,8 +25,8 @@ public class CreateStory extends CreatePost {
 		if(intent.hasExtra("ID")){
 			obj.setObjectId(intent.getStringExtra("ID"));
 			populate();
-		}else if(intent.hasExtra("parent"))
-			obj.put("parent", ParseObject.createWithoutData("post", intent.getStringExtra("parent")));
+		}else if(intent.hasExtra("post"))
+			obj.put("post", ParseObject.createWithoutData("post", intent.getStringExtra("post")));
 		return obj;
 	}
 	
@@ -46,7 +45,6 @@ public class CreateStory extends CreatePost {
 
 	@Override
 	protected Intent save() {
-		obj.put("author", ParseUser.getCurrentUser());
 		obj.put("content", vEditor.getHTML());
 		String thumbnail=vEditor.getFirstImageUrl();
 		if(thumbnail!=null)

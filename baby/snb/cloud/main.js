@@ -24,6 +24,14 @@ Date.prototype.yearInc=function(t,base){
 	return base && base>now ? base+t : now+t
 }
 
+function error(e){
+	console.error(e)
+}
+
+function isNew(o){
+	return o.createdAt.getTime()==o.updatedAt.getTime()
+}
+
 new Array("comment","story","post").each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
 		if(request.object.isNew()){
@@ -37,7 +45,8 @@ new Array("comment","story","post").each(function(f){
 
 new Array("favorite","task").each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
-		request.object.set("author",request.user.id)
+		if(request.object.isNew())
+			request.object.set("author",request.user.id)
 		response.success()
 	})
 })
@@ -46,12 +55,15 @@ new Array("favorite","task").each(function(f){
 Parse.Cloud.afterSave("comment", function(request, response) {
 	var post=request.object.get("post"),
 		user=request.user
-	post.increment("comments",1)
-	post.save()
+	post.fetch().then(
+		function(){
+			post.increment("comments",1)
+			post.save().then(null,error)
+		},error)
 	
 	user.increment("score",1)
 	user.increment("comments",1)
-	user.save()
+	user.save().then(null,error)
 });
 
 
@@ -63,38 +75,34 @@ Parse.Cloud.afterSave("story", function(request, response) {
 		user=request.user,
 		t=user.get("duration")
 		
-	post.fetch({
-		success: function(){
+	post.fetch().then(
+		function(){
 			var author=post.get("author")
-			author.fetch({
-				success: function(){
+			author.fetch().then(
+				function(){
 					author.increment("score",3)
-					author.save()
-				}
-			})
+					author.save().then(null,error)
+				},error)
 			
 			//tag beat
-			if(post.has("tags")){
-				var tags=post.get("tags"),
-					Tag=Parse.Object.extend("tag")
-				for(var i=0; i<tags.length;i++){
-					(new Tag({id:tags[i]})).fetch({
-						success: function(tag){
-							tag.increment("stories",1)
-							tag.set("dayBeat",today.dayInc(t,tag.get("dayBeat")))
-							tag.set("weekBeat",today.weekInc(t,tag.get("weekBeat")))
-							tag.set("monthBeat",today.monthInc(t,tag.get("monthBeat")))
-							tag.set("yearBeat",today.yearInc(t,tag.get("yearBeat")))
-							tag.increment("allBeat",t)
-							tag.save()
-						}
-					})
-				}
+			var tags=post.get("tags"),
+				Tag=Parse.Object.extend("tag")
+			for(var i=0; i<tags.length;i++){
+				(new Tag({id:tags[i]})).fetch().then(
+					function(tag){
+						tag.increment("stories",1)
+						tag.set("dayBeat",today.dayInc(t,tag.get("dayBeat")))
+						tag.set("weekBeat",today.weekInc(t,tag.get("weekBeat")))
+						tag.set("monthBeat",today.monthInc(t,tag.get("monthBeat")))
+						tag.set("yearBeat",today.yearInc(t,tag.get("yearBeat")))
+						tag.increment("allBeat",t)
+						tag.save().then(null,error)
+					}, error)
 			}
+
 			post.increment("stories",1)
-			post.save()
-		}
-	})
+			post.save().then(null,error)
+		},error)
 		
 	user.increment("stories",1)
 	user.increment("score",5)
@@ -103,33 +111,32 @@ Parse.Cloud.afterSave("story", function(request, response) {
 	user.set("monthBeat",today.monthInc(t,user.get("monthBeat")))
 	user.set("yearBeat",today.yearInc(t,user.get("yearBeat")))
 	user.increment("allBeat",t)
-	user.save()
+	user.save().then(null,error)
 	
 });
 
 Parse.Cloud.afterSave("post", function(request, response) {
 	var post=request.object
 		user=request.user
-	if(post.createdAt==post.updateddAt){//new
-		user.increment("post",1)
-		user.increment("score",10)
-		user.save()
-		
-		//tag count;category, duration, goal, gender, and etc
-		//tag beat
-		if(post.has("tags")){
-			var tags=post.get("tags"),
-				Tag=Parse.Object.extend("tag")
+	if(!isNew(post))
+		return
+	user.increment("post",1)
+	user.increment("score",10)
+	user.save().then(null,error)
+
+	//tag count;category, duration, goal, gender, and etc
+	post.fetch().then(//Hack: tags (array??) not in post, we have to fetch it again
+		function(p){
+			var tags=post.get("tags")
+			var Tag=Parse.Object.extend("tag")
 			for(var i=0; i<tags.length;i++){
-				(new Tag({id:tags[i]})).fetch({
-					success: function(tag){
+				(new Tag({id:tags[i]})).fetch().then(
+					function(tag){
 						tag.increment("posts",1)
-						tag.increment("time",post.get("duration"))
+						tag.increment("time",post.get("duration")||0)
 						tag.save()
-					}
-				})
+					},error)
 			}
-		}
-	}
+		},error)
 });
 

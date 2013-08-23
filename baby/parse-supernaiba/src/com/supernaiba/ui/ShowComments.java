@@ -9,7 +9,6 @@ import android.widget.EditText;
 
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.parse.OnSave;
 import com.supernaiba.parse.Query;

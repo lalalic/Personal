@@ -93,7 +93,7 @@ public class ShowPost extends GDActivity {
 					if(favorite==null){
 						favorite=new ParseObject("favorite");
 						favorite.put("owner", ParseUser.getCurrentUser());
-						favorite.put("post", post);
+						favorite.put("post", post.getObjectId());
 						favorite.put("title", post.getString("title"));
 						if(favorite.containsKey("thumbnail"))
 							favorite.put("thumbnail", post.getParseFile("thumbnail"));
@@ -123,7 +123,7 @@ public class ShowPost extends GDActivity {
 			break;
 		case R.drawable.gd_action_bar_gallery://story
 			Intent intent2=new Intent(this,CreateStory.class);
-			intent2.putExtra("parent", ID);
+			intent2.putExtra("post", ID);
 			intent2.putExtra("type","story");
 			startActivity(intent2);
 			break;
@@ -170,7 +170,7 @@ public class ShowPost extends GDActivity {
 					@Override
 					public ParseQuery<ParseObject> create() {
 						Query<ParseObject> query=new Query<ParseObject>("story");
-						query.whereEqualTo("parent", post);
+						query.whereEqualTo("parent", post.getObjectId());
 						return query;
 					}
 				},null);
@@ -184,14 +184,14 @@ public class ShowPost extends GDActivity {
 	public void favorite(GetCallback<ParseObject> callback){
 		Query<ParseObject> query=new Query<ParseObject>("favorite");
 		query.whereEqualTo("owner", ParseUser.getCurrentUser());
-		query.whereEqualTo("post", post);
+		query.whereEqualTo("post", post.getObjectId());
 		query.getFirstInBackground(callback);
 	}
 	
 	public void plan(GetCallback<ParseObject> callback){
 		Query<ParseObject> query=new Query<ParseObject>("task");
 		query.whereEqualTo("owner", ParseUser.getCurrentUser());
-		query.whereEqualTo("post", post);
+		query.whereEqualTo("post", post.getObjectId());
 		query.getFirstInBackground(callback);
 	}
 	
@@ -219,7 +219,7 @@ public class ShowPost extends GDActivity {
 									if(task==null){
 										task=new ParseObject("task");
 										task.put("owner", ParseUser.getCurrentUser());
-										task.put("post", post);
+										task.put("post", post.getObjectId());
 										if(post.containsKey("thumbnail"))
 											task.put("thumbnail", post.getParseFile("thumbnail"));
 										task.put("title", post.getString("title"));

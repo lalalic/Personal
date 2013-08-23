@@ -12,16 +12,20 @@
 		.outview{position:absolute;top:-9999px;height:1px}
 		nav img{width:32px;height:32px}
 		.editor{-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto}
+		#taskOption{z-index:99;position:absolute;bottom:46px;right:0px; display:none;background:white}
+		.show{display:auto}
 	</style>
 	<script src="res/quo.js"></script>
 	<script src="res/mustache.js"></script>
 	<script src="res/parse-1.2.8.min.js"></script>
 	<script>	
-		Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}
+		NodeList.prototype.each=Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}
 		$form=function(){return Lungo.dom('section.show article.active form')[0]}
 		Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
 		window.runtime={}
 		create=function(f,a){a=Parse.Object.extend(f);return new a}
+		HTMLSelectElement.prototype.value=function(){return this.options[this.selectedIndex].value}
+		HTMLSelectElement.prototype.text=function(){return this.options[this.selectedIndex].text}
 	</script>
 </head>
 <body>
@@ -45,12 +49,14 @@
 			<ul>
 				<script type="text/tmpl" id="tmplCate">
 				{{#categories}}
-				<li class="thumb cat">
+				<li class="thumb cat" data-count="{{attributes.posts}}">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="category" onclick="loadPosts('{{attributes.name}}')" href="#">{{attributes.name}}</a></strong>
+						<strong><a data-view-section="category" onclick="loadPosts('{{attributes.name}}','{{id}}')" href="#">{{attributes.name}}</a></strong>
 						<small>{{attributes.desc}}</small>
-						<a class="on-right" data-view-section="creator" onclick="runtime.cat='{{attributes.name}}'" style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
+						<a class="on-right" data-view-section="creator" 
+							onclick="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
+							style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
 						
 					</div>
 				</li>
@@ -60,10 +66,7 @@
 		</article>
 		<footer>
 			<nav>
-				<a data-icon="star-empty" data-view-section="category" href="#"></a>
-				<a data-icon="menu" data-view-section="category" href="#"></a>
-				<a data-icon="download" data-view-section="category" href="#"></a>
-				<a data-icon="share" data-view-section="category" href="#" class="primary"></a>
+
 			</nav>
 		</footer>
 		<script>
@@ -73,7 +76,7 @@
 		
 		function loadChildren(){
 			var children=new Parse.Query(Parse.Object.extend('child'))
-			children.equalTo("parent",Parse.User.current())
+			children.equalTo("parent",Parse.User.current().id)
 			children.find({
 				success: function(children){
 					children && tmplChildren.build({children:children})
@@ -95,8 +98,8 @@
 			})
 			loadCats=new Function();
 		}
-		function loadPosts(cat){
-			runtime.cat=cat
+		function loadPosts(cat,id){
+			runtime.cat={name:cat,id:id}
 			Lungo.dom(".active .post").remove()
 			var posts=new Parse.Query(Parse.Object.extend('post'))
 			posts.equalTo("category",cat)
@@ -148,10 +151,23 @@
 					runtime.post=p
 					tmplPost.build(p)
 					var stories=new Parse.Query(Parse.Object.extend('story'))
-					stories.equalTo('parent',p)
+					stories.equalTo('parent',id)
 					stories.find({
 						success: function(stories){
 							tmplStory.build({stories:stories},'#stories')
+							_task(function(t){
+								if(t!=null && t.get('status')){
+									Lungo.dom('#cmdtask').addClass('tasked')
+									Lungo.dom('#taskOption [value='+t.get('type')+']')[0].checked=true
+								}else
+									Lungo.dom('#cmdtask').removeClass('tasked')
+							})
+							_favorite(function(t){
+								if(t!=null && t.get('status'))
+									Lungo.dom('#cmdfavorite').addClass('favorited')
+								else
+									Lungo.dom('#cmdfavorite').removeClass('favorited')
+							})
 						},
 						error: function(){
 							
@@ -171,7 +187,7 @@
 				<a data-icon="refresh" class="on-right" onclick=""></a>
 			</nav>
 		</header>
-		<article id="show">
+		<article id="show" data-on-load="taskReady()">
 			<div style="padding:5px">
 			<script type="text/tmpl" id="tmplPost">
 				<div class="postshow" id="{{id}}">
@@ -194,11 +210,72 @@
 			<nav>
 				<a data-icon="comment" data-view-section="comment" onclick="loadComments(runtime.post.id)" href="#"></a>
 				<a data-icon="film" data-view-section="story" onclick="" href="#"></a>
-				<a data-icon="menu" data-view-section="comment" onclick="" href="#"></a>
-				<a data-icon="star" data-view-section="comment" onclick="" href="#"></a>
 				<a data-icon="share" data-view-section="comment" onclick="" href="#"></a>
+				<a data-icon="star" id="cmdfavorite" onclick="doFavorite(this)" href="#"></a>
+				<a data-icon="menu" id="cmdtask" onclick="Lungo.dom('#taskOption').toggleClass('show')" href="#"></a>
 			</nav>
-			</footer>
+		</footer>
+		<div id="taskOption">
+			<input type="radio" name="taskOption" value="0">Today			
+			<input type="radio" name="taskOption" value="1">Tomorrow
+			<input type="radio" name="taskOption" value="2">This week
+			<input type="radio" name="taskOption" value="3">This month
+			<input type="radio" name="taskOption" value="4">This year
+			<input type="radio" name="taskOption" value="0">Remove
+		</div>
+		<script>
+			function _favorite(f){
+				var q=new Parse.Query(Parse.Object.extend("favorite"))
+				q.equalTo("owner",Parse.User.current().id)
+				q.equalTo('post',runtime.post.id)
+				q.first().then(function(fav){f(fav)})
+			}
+			function doFavorite(el){
+				_favorite(function(f){
+					if(f==null){
+						f=create('favorite')
+						f.set('post',runtime.post.id)
+						f.set('title',runtime.post.get('title'))
+						f.set('thumbnail',runtime.post.get('thumbnail'))
+						f.set('status',1)
+					}else if(f.get('status')==0)
+						f.set('status',1)
+					else
+						f.set('status',0)
+					f.save().then(function(){el.classList[f.get('status')?'add':'remove']('favorited')})
+				})
+			}
+			function taskReady(){
+				Lungo.dom('#taskOption input').click(function(){
+					var me=this
+					_task(function(t){
+						if(me.value=='0'){
+							if(t!=null){
+								t.remove()
+								me.classList.remove('tasked')
+								return
+							}
+						}else if(t==null){
+							t=create('task')
+							t.set('post',runtime.post.id)
+							t.set('title',runtime.post.get('title'))
+							t.set('thumbnail',runtime.post.get('thumbnail'))
+							t.set('status',1)
+						}
+						t.set('type',parseInt(me.value))
+						t.save().then(function(){me.classList.add('tasked')})
+					})
+				})
+				taskReady=empty
+			}
+			function _task(){
+				var q=new Parse.Query(Parse.Object.extend("task"))
+				q.equalTo("owner",Parse.User.current().id)
+				q.equalTo('post',runtime.post.id)
+				q.equalTo('status',1)
+				q.first().then(function(fav){f(fav)})
+			}
+		</script>
 	</section>
 	<section id="comment" data-transition="slide">
 		<header data-title="Comment" data-back="left-sign">
@@ -251,16 +328,33 @@
 	</section>
 	
 	<section id="creator" data-transition="slide" 
-		data-on-load="setTimeout(function(){Lungo.dom('#creator header h1').text('Create '+runtime.cat)},300)">
+		data-on-load="setTimeout(function(){Lungo.dom('#creator header h1').text('Create '+runtime.cat.name)},300)">
 		<header data-title="Create Post" data-back="left-sign">
 			<nav>
-				<a class="on-right" data-icon="save" onclick="savePost();"></a>
+				<button class="on-right" type="submit" form="creatForm" data-icon="save"></button>
 			</nav>
 		</header>
 		<article id="createPost">
-			<form>
+			<form id="creatForm" onsubmit="savePost();return false">
 				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
-				<div name="content" class="editor" contenteditable="true">content</div>
+				<fieldset><textarea name="content" class="editor" contenteditable="true">content</textarea></fieldset>
+				<fieldset>
+					<div>
+						<input type="checkbox" name="gender" value="N5zSTzoczQ" checked="checked">Boy
+						<input type="checkbox" name="gender" value="DJIUvgiFpk">Girl
+					</div>
+					<div>
+						<select name="duration">
+							<option value="KknqyCi9x2">60</option>
+							<option value="ueOPMH3mSR">10</option>
+							<option value="MNWQyARcTj">30</option>
+							<option value="xWiqWf3msh">45</option>
+							<option value="4NZdgfvDpV">90</option>
+							<option value="5BqICFnfKY">120</option>
+						</select>
+					</div>
+				</fieldset>
+				<input type="submit" class="outview">
 			</form>
 		</article>
 		</article>
@@ -271,35 +365,38 @@
 			</nav>
 		</footer>
 		<script>
-		function insertImage(){
-			
-		}
 		function savePost(){
 			var newPost=create('post'),
 				p=$form()
-			newPost.set("conent",p.content.innerHTML)
+			newPost.set("content",p.content.value)
 			newPost.set("title",p.title.value)
-			newPost.set("category",runtime.cat)
+			newPost.set("category",runtime.cat.name)
+			newPost.set("duration", parseInt(p.duration.text()))
+			newPost.addUnique("tags", p.duration.value())
+			newPost.addUnique("tags",runtime.cat.id)
+			p.gender.each(function(a){a.checked && newPost.addUnique("tags",a.value)})
 			newPost.save().then(Lungo.Router.back)
-		}
-		
-		function saveStory(){
-			var newStory=create('story')
-			newStory.set("conent",postContent.value)
-			newStory.set("post",runtime.post.id)
-			newStory.save().then(Lungo.Router.back)
 		}
 		</script>		
 	</section>
 	<section id="story" data-transition="slide">
 		<header data-back="left-sign" data-title="Create Story">
 			<nav>
-				<a class="on-right" data-icon="save" onclick="saveStory()"></a>
+				<button class="on-right" type="submit" form="storyForm" data-icon="save"></button>
 			</nav>
 		</header>
-		<article id="createStory" data-on-load="storyContent.focus()">
-			<form>
-				<textarea placeholder="content" id="storyContent"></textarea>
+		<article id="createStory">
+			<form id="storyForm" onsubmit="saveStory();return false">
+				<fieldset><select name="duration">
+							<option value="KknqyCi9x2">60</option>
+							<option value="ueOPMH3mSR">10</option>
+							<option value="MNWQyARcTj">30</option>
+							<option value="xWiqWf3msh">45</option>
+							<option value="4NZdgfvDpV">90</option>
+							<option value="5BqICFnfKY">120</option>
+						</select>
+				</fieldset>
+				<fieldset><textarea placeholder="content" name="content"></textarea></fieldset>
 			</form>
 		</article>
 		<footer>
@@ -307,7 +404,16 @@
 				<a data-icon="picture" onclick=""></a>
 				<a data-icon="minus" onclick=""></a>
 			</nav>
-		</footer>		
+		</footer>	
+		<script>
+		function saveStory(){
+			var newStory=create('story')
+			newStory.set("content",postContent.value)
+			newStory.set("post",runtime.post.id)
+			newStory.set("duration", parseInt(p.duration.text()))
+			newStory.save().then(Lungo.Router.back)
+		}
+		</script>		
 	</section>	
 	
 	<section id="user" data-transition="slide">
@@ -370,9 +476,9 @@
 		function signup(){
 			var userForm=$form()
 			var user=new Parse.User()
-			user.set('username',userForm.name.value)
-			user.set('password',userForm.password.value)
-			user.set('email',userForm.email.value)
+			user.setUsername(userForm.name.value)
+			user.setPassword(userForm.password.value)
+			user.setEmail(userForm.email.value)
 			
 			user.signUp(null,{
 				success:function(){
