@@ -60,6 +60,7 @@ public class Main extends BaseQueryListActivity {
 			}
 			
 		},null);
+		//adapter.setStatisitcs(new ParseObject("User"));
 		adapter.setImageKey("thumbnail");
 		adapter.setTextKey("name");
 		return adapter;
@@ -75,7 +76,7 @@ public class Main extends BaseQueryListActivity {
 	
 	@Override
 	protected void createFooterBarItem(){
-		createFooterBar(Type.Share, Type.Compass, Type.AllFriends);
+		createFooterBar(Type.Share, Type.Compass, Type.AllFriends, Type.Group);
 	}
 	
 
@@ -102,11 +103,17 @@ public class Main extends BaseQueryListActivity {
 	public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
 		Intent intent=null;
 		switch(item.getItemId()){
+		case R.drawable.gd_action_bar_share://weibo
+			
+		break;
 		case R.drawable.gd_action_bar_compass:
 			intent=new Intent(this,ShowFavorites.class);
 		break;
 		case R.drawable.gd_action_bar_all_friends:
 			intent=new Intent(this,ShowTasks.class);
+		break;
+		case R.drawable.gd_action_bar_group://ad
+			
 		break;
 		}
 		if(intent!=null) 

@@ -27,11 +27,11 @@ public abstract class BaseQueryListActivity extends GDListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		ParseAnalytics.trackAppOpened(getIntent());
-		if(title!=0)
-			setTitle(getString(title));
 		createActionBarItem();
 		createFooterBarItem();
 		setListAdapter(adapter=createAdapter());
+		if(title!=0)
+			setTitle(getString(title));
 	}
 
 	protected QueryAdapter createAdapter() {

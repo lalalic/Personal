@@ -160,7 +160,7 @@ public class QueryAdapter extends ParseQueryAdapter<ParseObject> {
 		
 	}
 	
-	private class Holder{
+	protected class Holder{
 		ParseImageView image;
 		TextView text;
 		Holder(ParseImageView image, TextView text){

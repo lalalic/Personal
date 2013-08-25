@@ -20,7 +20,7 @@ public class ShowFavorites extends BaseQueryListActivity {
 		adapter.setImageKey("thumbnail");
 		
 		Query<ParseObject> query=new Query<ParseObject>("favorite");
-		query.whereEqualTo("owner", ParseUser.getCurrentUser());
+		query.whereEqualTo("owner", ParseUser.getCurrentUser().getObjectId());
 		return query;
 	}
 }
