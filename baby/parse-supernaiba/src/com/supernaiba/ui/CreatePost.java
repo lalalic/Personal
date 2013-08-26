@@ -54,7 +54,7 @@ public class CreatePost extends BaseCreatorActivity {
 	protected ParseObject extract(){
 		Intent intent=getIntent();
 		obj=new ParseObject("post");
-		obj.put("category", intent.getStringExtra("type"));
+		obj.put("category", intent.getStringExtra("category"));
 		if(intent.hasExtra("id"))
 			obj.setObjectId(intent.getStringExtra("id"));
 		else

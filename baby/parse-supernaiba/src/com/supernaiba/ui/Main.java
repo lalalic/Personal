@@ -21,6 +21,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import cn.waps.AppConnect;
 
 import com.parse.Magic;
 import com.parse.ParseException;
@@ -31,6 +33,7 @@ import com.parse.ParseQueryAdapter.QueryFactory;
 import com.parse.ParseUser;
 import com.supernaiba.R;
 import com.supernaiba.data.DB;
+import com.supernaiba.parse.StatQueryAdapter;
 import com.supernaiba.parse.OnGet;
 import com.supernaiba.parse.OnGetFileData;
 import com.supernaiba.parse.Query;
@@ -51,7 +54,7 @@ public class Main extends BaseQueryListActivity {
 	
 	@Override
 	protected QueryAdapter createAdapter(){
-		QueryAdapter adapter=new QueryAdapter(this, new QueryFactory<ParseObject>(){
+		StatQueryAdapter adapter=new StatQueryAdapter(this, new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				Query<ParseObject> query=new Query<ParseObject>("tag");
@@ -60,7 +63,7 @@ public class Main extends BaseQueryListActivity {
 			}
 			
 		},null);
-		//adapter.setStatisitcs(new ParseObject("User"));
+		adapter.setStatisitcs(new ParseObject("User"));
 		adapter.setImageKey("thumbnail");
 		adapter.setTextKey("name");
 		return adapter;
@@ -104,7 +107,7 @@ public class Main extends BaseQueryListActivity {
 		Intent intent=null;
 		switch(item.getItemId()){
 		case R.drawable.gd_action_bar_share://weibo
-			
+			share("text");
 		break;
 		case R.drawable.gd_action_bar_compass:
 			intent=new Intent(this,ShowFavorites.class);
@@ -113,7 +116,7 @@ public class Main extends BaseQueryListActivity {
 			intent=new Intent(this,ShowTasks.class);
 		break;
 		case R.drawable.gd_action_bar_group://ad
-			
+			AppConnect.getInstance(this).showOffers(this);
 		break;
 		}
 		if(intent!=null) 
@@ -276,5 +279,13 @@ public class Main extends BaseQueryListActivity {
 		childrenWindow.setOutsideTouchable(true);
 		childrenWindow.setBackgroundDrawable(new BitmapDrawable()); 
 		return childrenWindow;
+	}
+	
+	public void onShortcut(View view){
+		ParseObject cat=((ParseObject)((RelativeLayout)view.getParent()).getTag());
+		Intent intent=new Intent(this,CreatePost.class);
+		intent.putExtra("category", cat.getString("name"));
+		intent.putExtra("categoryId", cat.getObjectId());
+		startActivity(intent);
 	}
 }

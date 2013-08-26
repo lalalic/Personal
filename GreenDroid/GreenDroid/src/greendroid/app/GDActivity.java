@@ -413,7 +413,15 @@ public class GDActivity extends Activity implements ActionBarActivity {
     }
     
     public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
-
+    	
     }
     
+    protected void share(String text){
+    	 Intent intent=new Intent(Intent.ACTION_SEND);  
+         intent.setType("*/*");  
+         intent.putExtra(Intent.EXTRA_SUBJECT, "Share");  
+         intent.putExtra(Intent.EXTRA_TEXT, text);  
+         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
+         startActivity(Intent.createChooser(intent, getTitle()));  
+    }
 }

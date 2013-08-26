@@ -11,6 +11,10 @@
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 	<uses-permission android:name="android.permission.WRITE_APN_SETTINGS"/>
 	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+	
+	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.GET_TASKS" />
 
     <application
         android:name="ParseApplication"
@@ -40,6 +44,12 @@
         <activity android:name=".ui.CreateChild" android:windowSoftInputMode="stateVisible|adjustResize"></activity>
         <activity android:name=".ui.CreateStory" android:windowSoftInputMode="adjustResize"></activity>
         <activity android:name=".ui.ShowFavorites"></activity>
+        
+        <activity android:name="cn.waps.OffersWebView"
+            android:configChanges="keyboardHidden|orientation" />
+        <meta-data android:name="WAPS_ID" android:value="b5fbf2209f0122407daf93b3a2d5cfbf"/>
+        <meta-data android:name="WAPS_PID" android:value="google"/>
+        
     </application>
 
 </manifest>

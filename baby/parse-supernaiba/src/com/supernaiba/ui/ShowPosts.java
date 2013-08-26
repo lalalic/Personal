@@ -11,18 +11,18 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter.QueryFactory;
 import com.supernaiba.R;
-import com.supernaiba.parse.CategoryQueryAdapter;
+import com.supernaiba.parse.StatQueryAdapter;
 import com.supernaiba.parse.Query;
 import com.supernaiba.parse.QueryAdapter;
 
 public class ShowPosts extends BaseQueryListActivity {
-	private String postType;
+	private String category;
 	//private String search;
 	/** Called when the activity is first created. */
 	public void onCreate(Bundle savedInstanceState) {
-		postType=getIntent().getStringExtra("type");
+		category=getIntent().getStringExtra("type");
 		super.onCreate(savedInstanceState);
-		setTitle(postType);
+		setTitle(category);
 		
 		/*
 		if(Intent.ACTION_SEARCH.equals(this.getIntent().getAction())){
@@ -59,8 +59,8 @@ public class ShowPosts extends BaseQueryListActivity {
 	public void onHandleFooterBarItemClick(ActionBarItem item, int position) {
 		switch(item.getItemId()){
 		case R.drawable.gd_action_bar_add://add
-			Intent intent=new Intent(ShowPosts.this,CreatePost.class);
-			intent.putExtra("type", ShowPosts.this.getIntent().getStringExtra("type"));
+			Intent intent=new Intent(this,CreatePost.class);
+			intent.putExtra("category", category);
 			startActivity(intent);
 		break;
 		}
@@ -68,7 +68,7 @@ public class ShowPosts extends BaseQueryListActivity {
 
 	@Override
 	protected QueryAdapter createAdapter(){
-		CategoryQueryAdapter adapter=new CategoryQueryAdapter(this,new QueryFactory<ParseObject>(){
+		StatQueryAdapter adapter=new StatQueryAdapter(this,new QueryFactory<ParseObject>(){
 			@Override
 			public ParseQuery<ParseObject> create() {
 				return createQuery();
@@ -86,7 +86,7 @@ public class ShowPosts extends BaseQueryListActivity {
 		adapter.setImageKey("thumbnail");
 		
 		Query<ParseObject> query=new Query<ParseObject>("post");
-		query.whereEqualTo("category", postType);
+		query.whereEqualTo("category", category);
 		return query;
 	}
 	
@@ -94,7 +94,7 @@ public class ShowPosts extends BaseQueryListActivity {
 	
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		if(adapter.getItemViewType(position)==CategoryQueryAdapter.STATISTICS)
+		if(adapter.getItemViewType(position)==StatQueryAdapter.STATISTICS)
 			return;
 		super.onListItemClick(l, v, position, id);
 	}

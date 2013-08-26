@@ -12,12 +12,12 @@ import com.parse.ParseImageView;
 import com.parse.ParseObject;
 import com.supernaiba.R;
 
-public class CategoryQueryAdapter extends QueryAdapter {
+public class StatQueryAdapter extends QueryAdapter {
 	public final static int STATISTICS=2;
 	private ParseObject statistics;
 	private View statView;
 	
-	public CategoryQueryAdapter(Context context, QueryFactory<ParseObject> queryFactory, LoaderActionBarItem refreshAction) {
+	public StatQueryAdapter(Context context, QueryFactory<ParseObject> queryFactory, LoaderActionBarItem refreshAction) {
 		super(context, queryFactory,refreshAction);
 		this.refreshAction=refreshAction;
 	}

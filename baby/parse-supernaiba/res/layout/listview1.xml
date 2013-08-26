@@ -3,8 +3,9 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
     android:orientation="vertical" >
-
+
     <com.parse.ParseImageView
         android:id="@android:id/icon"
         android:layout_width="150px"
@@ -12,22 +13,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:src="@drawable/ic_launcher" />
-
-    <Button
-        android:id="@+id/shortcut"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:background="@android:drawable/ic_input_add" />
-
+
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@android:id/icon"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="5dp"
-        android:layout_toLeftOf="@+id/shortcut"
         android:layout_toRightOf="@android:id/icon"
         android:orientation="vertical" >
 
@@ -37,13 +29,21 @@
             android:layout_height="wrap_content"
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
+
         <TextView
             android:id="@+id/desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall" />
-
     </LinearLayout>
+
+    <Button
+        android:id="@+id/shortcut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:background="@android:drawable/ic_input_add"
+        android:onClick="onShortcut" />
 
 </RelativeLayout>
