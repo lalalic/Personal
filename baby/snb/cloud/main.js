@@ -2,26 +2,38 @@ Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i])}
 function pad(a,len){
 	return "000000000".substring(0,len).substring(a+"".length,len)+a
 }
+Date.prototype.toDay=function(){return parseInt(this.getFullYear()+pad(this.getMonth()+1,2)+'00'+pad(this.getDate()+1,2))}
 Date.prototype.dayInc=function(t,base){
-	var now=parseInt(this.getFullYear()+pad(this.getMonth()+1,2)+pad(this.getDate()+1,2)+"0000")
+	var now=parseInt(this.toDay()+"0000")
 	return base && base>now ? base+t : now+t
 }
-Date.prototype.weekInc=function(t,base){
+Date.prototype.toWeek=function(){
 	var d=new Date()
+	d.setTime(this.getTime())
     d.setHours(0,0,0);
     d.setDate(d.getDate() + 4 - (d.getDay()||7));
     var yearStart = new Date(d.getFullYear(),0,1);
     var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7)
-    var now=d.getFullYear()+pad(weekNo,2)+"000000";
+    return parseInt(d.getFullYear()+"00"+pad(weekNo,2)+"00")
+}
+Date.prototype.weekInc=function(t,base){
+	var now=parseInt(this.toWeek()+"0000");
 	return base && base>now ? base+t : now+t
 }
+Date.prototype.toMonth=function(){return parseInt(this.getFullYear()+pad(this.getMonth()+1,2)+"0000")}
 Date.prototype.monthInc=function(t,base){
-	var now=this.getFullYear()+pad(this.getMonth()+1,2)+"000000"
+	var now=parseInt(this.toMonth()+"0000")
 	return base && base>now ? base+t : now+t
 }
+Date.prototype.toYear=function(){return parseInt(this.getFullYear()+"000000")}
 Date.prototype.yearInc=function(t,base){
-	var now=this.getFullYear()+"00000000"
+	var now=parseInt(this.toYear()+"0000")
 	return base && base>now ? base+t : now+t
+}
+
+Date.prototype.tomorrow=function(){
+	this.setTime(this.getTime()+24*60*60*1000)
+	return this
 }
 
 function error(e){
@@ -32,7 +44,7 @@ function isNew(o){
 	return o.createdAt.getTime()==o.updatedAt.getTime()
 }
 
-new Array("comment","story","post").each(function(f){
+new Array("comment","story","post","favorite", "task").each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
 		if(request.object.isNew()){
 			var o=request.object
@@ -43,12 +55,25 @@ new Array("comment","story","post").each(function(f){
 	})
 })
 
-new Array("favorite","task").each(function(f){
-	Parse.Cloud.beforeSave(f, function(request, response) {
-		if(request.object.isNew())
-			request.object.set("author",request.user.id)
-		response.success()
-	})
+Parse.Cloud.beforeSave("task", function(request, response) {
+	switch(request.object.get('type')){
+	case 1:
+		request.object.set('time',new Date().toDay())
+		break;
+	case 2:
+		request.object.set('time',new Date().tomorrow().toDay())
+		break;
+	case 3:
+		request.object.set('time',new Date().toWeek())
+		break;
+	case 4:
+		request.object.set('time',new Date().toMonth())
+		break;
+	case 5:
+		request.object.set('time',new Date().toYear())
+		break;
+	}
+	response.success()
 })
 
 

@@ -1277,11 +1277,12 @@ Handles the <sections> and <articles> to show
 
 (function() {
   Lungo.RouterPhone = (function(lng) {
-    var C, HASHTAG, animationEnd, article, back, history, section, step, _animating, _history, _notCurrentTarget, _removeLast, _section, _setSectionDirections, _show, _updateNavigationElements, _url;
+    var C, HASHTAG, animationEnd, article, back, history, section, step, _animating, _backing, _history, _notCurrentTarget, _removeLast, _section, _setSectionDirections, _show, _updateNavigationElements, _url;
     C = lng.Constants;
     HASHTAG = "#";
     _history = [];
     _animating = false;
+    _backing = false;
     /*
     Navigate to a <section>.
     @method   section
@@ -1318,6 +1319,7 @@ Handles the <sections> and <articles> to show
       if (_animating) {
         return false;
       }
+      _backing = true;
       _removeLast();
       current = lng.Element.Cache.section;
       query = C.ELEMENT.SECTION + HASHTAG + history();
@@ -1327,8 +1329,9 @@ Handles the <sections> and <articles> to show
         if (Lungo.Config.history !== false) {
           _url();
         }
-        return _updateNavigationElements();
+        _updateNavigationElements();
       }
+      return _backing = false;
     };
     /*
     Displays the <article> in a particular <section>.
@@ -1344,7 +1347,10 @@ Handles the <sections> and <articles> to show
         target = lng.Element.Cache.section.find("#" + article_id);
         if (target.length > 0) {
           lng.Element.Cache.article.removeClass(C.CLASS.ACTIVE).trigger(C.TRIGGER.UNLOAD);
-          lng.Element.Cache.article = target.addClass(C.CLASS.ACTIVE).trigger(C.TRIGGER.LOAD);
+          lng.Element.Cache.article = target.addClass(C.CLASS.ACTIVE);
+          if (!_backing) {
+            lng.Element.Cache.article.trigger(C.TRIGGER.LOAD);
+          }
           if ((element != null ? element.data(C.ATTRIBUTE.TITLE) : void 0) != null) {
             lng.Element.Cache.section.find(C.QUERY.TITLE).text(element.data(C.ATTRIBUTE.TITLE));
           }
@@ -1480,6 +1486,9 @@ Handles the <sections> and <articles> to show
       back: back,
       article: article,
       history: history,
+      isBack: function() {
+        return _backing;
+      },
       step: step,
       animationEnd: animationEnd
     };
@@ -1499,13 +1508,14 @@ Handles the <sections> and <articles> to show on a tablet device
 
 (function() {
   Lungo.RouterTablet = (function(lng) {
-    var C, HASHTAG, animationEnd, article, back, history, section, step, _animating, _applyDirection, _callbackSection, _checkAside, _fromCallback, _history, _isChild, _notCurrentTarget, _parentId, _removeLast, _sameSection, _show, _showAside, _showBackward, _showForward, _showFuture, _updateNavigationElements, _url;
+    var C, HASHTAG, animationEnd, article, back, history, section, step, _animating, _applyDirection, _backing, _callbackSection, _checkAside, _fromCallback, _history, _isChild, _notCurrentTarget, _parentId, _removeLast, _sameSection, _show, _showAside, _showBackward, _showForward, _showFuture, _updateNavigationElements, _url;
     C = lng.Constants;
     HASHTAG = "#";
     _history = [];
     _animating = false;
     _callbackSection = void 0;
     _fromCallback = false;
+    _backing = false;
     /*
     Navigate to a <section>.
     @method   section
@@ -1544,6 +1554,7 @@ Handles the <sections> and <articles> to show on a tablet device
       if (_animating) {
         return false;
       }
+      _backing = true;
       if (!_sameSection()) {
         target = lng.dom(event.target).closest(C.ELEMENT.SECTION);
         if (target.length) {
@@ -1564,8 +1575,9 @@ Handles the <sections> and <articles> to show on a tablet device
         if (Lungo.Config.history !== false) {
           _url();
         }
-        return _updateNavigationElements();
+        _updateNavigationElements();
       }
+      return _backing = false;
     };
     /*
     Displays the <article> in a particular <section>.
@@ -1586,7 +1598,10 @@ Handles the <sections> and <articles> to show on a tablet device
         section = lng.Element.Cache.section;
         section.children("" + C.ELEMENT.ARTICLE + "." + C.CLASS.ACTIVE).removeClass(C.CLASS.ACTIVE).trigger(C.TRIGGER.UNLOAD);
         lng.Element.Cache.article.removeClass(C.CLASS.ACTIVE).trigger(C.TRIGGER.UNLOAD);
-        lng.Element.Cache.article = target.addClass(C.CLASS.ACTIVE).trigger(C.TRIGGER.LOAD);
+        lng.Element.Cache.article = target.addClass(C.CLASS.ACTIVE);
+        if (!_backing) {
+          lng.Element.Cache.article.trigger(C.TRIGGER.LOAD);
+        }
         if ((element != null ? element.data(C.ATTRIBUTE.TITLE) : void 0) != null) {
           section.find(C.QUERY.TITLE).text(element.data(C.ATTRIBUTE.TITLE));
         }
@@ -1824,6 +1839,9 @@ Handles the <sections> and <articles> to show on a tablet device
       article: article,
       history: history,
       step: step,
+      isBack: function() {
+        return _backing;
+      },
       animationEnd: animationEnd,
       historys: function() {
         return _history;
@@ -2121,7 +2139,9 @@ Initialize the <articles> layout of a certain <section>
       if (lng.Element.Cache.lastArticle) {
         lng.Element.Cache.lastArticle.trigger(C.TRIGGER.UNLOAD);
       }
-      return lng.Element.Cache.article.trigger(C.TRIGGER.LOAD);
+      if (!Lungo.Router.isBack()) {
+        return lng.Element.Cache.article.trigger(C.TRIGGER.LOAD);
+      }
     };
     /*
     Private methods
