@@ -17,14 +17,13 @@
 		.stat{position:relative;height:300px;background-color:black}
 		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}
 	</style>
-	<script src="res/quo.js"></script>
+	<script src="res/quo.debug.js"></script>
 	<script src="res/mustache.js"></script>
 	<script src="res/parse-1.2.8.min.js"></script>
 	<script>
 		window.$=$$
 		window.runtime={}
 		empty=new Function()
-		NodeList.prototype.each=Array.prototype.each=function(f){for(var i=0,l=this.length;i<l;i++) f(this[i],i)}
 		article=function(){return Lungo.Element.Cache.article[0]}
 		form=function(){return $(article(),'form')[0]}
 		Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
@@ -32,7 +31,7 @@
 			var me=this
 			if(v==undefined)
 				return this.options[this.selectedIndex].value
-			this.options.each(function(o,i){v==o.value && me.selectedIndex=i})
+			this.options.each(function(i,o){v==o.value && (me.selectedIndex=i)})
 		}
 		HTMLSelectElement.prototype.text=function(){return this.options[this.selectedIndex].text}
 		HTMLFormElement.prototype.get=function(){
@@ -47,7 +46,7 @@
 				a.set(as[i],as[i+1])
 			return a
 		}
-		new Array('find','first').each(function(n){
+		$.each(['find','first'],function(index,n){
 			Parse[n]=function(a){
 				doing()
 				var f=new Parse.Query(Parse.Object.extend(a)).ascending('createdAt'),h,t,
@@ -73,13 +72,15 @@
 		doing=function(){$('section.show [data-icon="refresh"]').addClass('doing')}
 		done=function(){$('.doing').removeClass('doing')}
 		Parse.Object.prototype.ago=function(){
-			var delta=parseInt((new Date().getTime()-this.createdAt.getTime())/1000/60),
-				aday=24*60*60*1000
+			var delta=parseInt((new Date().getTime()-this.createdAt.getTime())/1000),
+				aday=24*60*60
 			if(delta<aday){
 				if(delta<60)
-					return delta+'分前'
+					return delta+'秒前'
+				else if(delta<60*60)
+					return parseInt(delta/60)+'分前'
 				else
-					return parseInt(delta/60)+"小时前"
+					return parseInt(delta/60/60)+"小时前"
 			}else if (delta<aday*2)
 				return '昨天'
 			else if (delta<aday*3)
@@ -115,7 +116,7 @@
 				</li>			
 				<script type="text/tmpl" id="tmplCate">
 				{{#loop}}
-				<li class="thumb cat tmpled" data-count="{{attributes.posts}}">
+				<li class="thumb cat tmpled">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
 						<strong><a data-view-section="category" onclick="postsInCat('{{attributes.name}}','{{id}}')" href="#">{{attributes.name}}</a></strong>
@@ -173,9 +174,11 @@
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
 						<strong><a data-view-section="post" onclick="loadPost('{{id}}')" href="#">{{attributes.title}}</a></strong>
-						
+						<a href="#" data-icon="comment" class="on-right" data-count="{{attributes.comments}}"></a>
+						<a href="#" data-icon="star" class="on-right" data-count="{{attributes.comments}}"></a>
+						<a href="#" data-icon="list" class="on-right" data-count="{{attributes.comments}}"></a>
 					</div>
-					<a href="#" class="on-right"data-icon="comment" data-count="{{attributes.comments}}"></a>
+					
 				</li>
 				{{/loop}}
 				</script>
@@ -365,7 +368,11 @@
 				<script type="text/tmpl" id="tmplComment">
 				{{#loop}}
 					<li class="comment tmpled">
-						<p>{{{attributes.content}}} <span class="on-right">{{attributes.authorName}} - {{ago}}</span></p>
+						<a href="#" class="on-left" style="align:center">
+						<span class="icon user"></span>
+						<div>{{attributes.authorName}}</div>
+						</a>
+						<div>{{{attributes.content}}} <span class="on-right">{{ago}}</span></div>
 					</li>
 				{{/loop}}
 				</script>
@@ -438,7 +445,7 @@
 			newPost.set("duration", parseInt(p.duration.text()))
 			newPost.addUnique("tags", p.duration.value())
 			newPost.addUnique("tags",runtime.cat.id)
-			p.gender.each(function(a){a.checked && newPost.addUnique("tags",a.value)})
+			p.gender.each(function(i,a){a.checked && newPost.addUnique("tags",a.value)})
 			newPost.save().then(function(){Lungo.Router.back();done()})
 		}
 		</script>		
@@ -598,7 +605,7 @@
 					f.name.value=p.get('name')
 					f.gender.value(p.get('gender'))
 					f.birthday.value=p.get('birthday')
-					(f.photo.value=p.getFile('photo')) && f.photo.src=f.photo.value.url()
+					(f.photo.value=p.getFile('photo')) && (f.photo.src=f.photo.value.url())
 					f.id.value=p.id	
 					done()
 				},Parse.error)
@@ -612,18 +619,20 @@
 			Mustache.compilePartial(this.id,b)
 			this.innerHTML=""
 			this.build=function(a,container){
-				return $(container||this.parentNode).append(this.compiled(a))
+				var el=$($.fragment(this.compiled(a)).filter(function(el){return el.nodeType!=3}))
+				$(container||this.parentNode).append(el)
+				Lungo.Boot.Data.init(el)
 			}
 		})
 		
-		new Array("load","unload").each(function(e){//support data-on-(un)load	
+		$.each(["load","unload"],function(index,e){//support data-on-(un)load	
 			$("[data-on-"+e+"]").each(function(i,el){
 				(el=$(this)).on(e,new Function('e,a,b,c',el.data('on-'+e)))
 			})
 		})
 		Lungo.init({
 			name:"SNB",
-			history:true
+			history:false
 		})
 		
 		checkLogin()
