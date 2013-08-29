@@ -56,6 +56,7 @@
 				if(typeof(t=h=as[len-1])=='function')
 					len--
 				else if('nodeName' in h && 'SCRIPT'==h.nodeName){
+					h.clean()
 					h=function(o){t.build({loop:o});done()}
 				}else
 					h=null
@@ -96,7 +97,7 @@
 		<header data-title="SNB">
 			<nav>
 				<a href="#" class="on-left" data-icon="home"></a>
-				<a data-icon="refresh" class="on-right" onclick="$(article()).trigger('load')"></a>
+				<a data-icon="refresh" class="on-right"></a>
 				<a href="#" class="on-right" data-icon="user" data-view-menu="users"></a>
 			</nav>
 		</header>
@@ -105,26 +106,25 @@
 			<a href="#" data-icon="plus-sign" data-view-section="child"></a>
 			<script type="text/tmpl" id="tmplChildren">
 				{{#loop}}
-				<a href="#" data-icon="user" data-view-section="child" onclick="loadChild('{{id}}')"><img src="{{attributes.photo._url}}"></a>
+				<a href="#" data-icon="user" data-view-section="child" onmouseup="runtime.child={id:'{{id}}'}"><img src="{{attributes.photo._url}}"></a>
 				{{/loop}}
 			</script>
 		</nav>
-		<article id="categories" class="list scroll indented" data-on-load="$(this,'.tmpled').remove();Parse.find('tag','category','category',tmplCate)">
+		<article id="categories" class="list scroll indented" data-on-load="Parse.find('tag','category','category',tmplCate)">
 			<ul>
 				<li>
 					<div class="stat"></div>
 				</li>			
 				<script type="text/tmpl" id="tmplCate">
 				{{#loop}}
-				<li class="thumb cat tmpled">
+				<li class="thumb">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="category" onclick="postsInCat('{{attributes.name}}','{{id}}')" href="#">{{attributes.name}}</a></strong>
+						<strong><a data-view-section="category" onmouseup="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
 						<small>{{attributes.desc}}</small>
 						<a class="on-right" data-view-section="creator" 
-							onclick="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
+							onmouseup="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
 							style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
-						
 					</div>
 				</li>
 				{{/loop}}
@@ -147,33 +147,25 @@
 					o && tmplChildren.build({loop:o}) && !runtime.child && (runtime.child=o[0])
 				})
 		}
-		
-		function postsInCat(cat,id){
-			arguments.length && 
-				(runtime.cat={name:cat,id:id})
-			$(article(), ".tmpled").remove()
-			Parse.find('post','category',runtime.cat.name,tmplPosts)
-			setTitle(runtime.cat.name)
-		}
 		</script>
 	</section>
 	<section id="category" data-transition="slide">
 		<header data-back="left-sign">
 			<nav>
-				<a data-icon="refresh" class="on-right" onclick="postsInCat()"></a>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="posts" class="list scroll">
+		<article id="posts" class="list scroll" data-on-load="Parse.find('post','category',runtime.cat.name,tmplPosts)">
 			<ul>
 				<li>
 					<div style="position:relative;height:300px;background-color:black"></div>
 				</li>
 				<script type="text/tmpl" id="tmplPosts">
 				{{#loop}}
-				<li class="thumb post tmpled">
+				<li class="thumb">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onclick="loadPost('{{id}}')" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="runtime.post={id:'{{id}}'}" href="#">{{attributes.title}}</a></strong>
 						<a href="#" data-icon="comment" class="on-right" data-count="{{attributes.comments}}"></a>
 						<a href="#" data-icon="star" class="on-right" data-count="{{attributes.comments}}"></a>
 						<a href="#" data-icon="list" class="on-right" data-count="{{attributes.comments}}"></a>
@@ -190,55 +182,35 @@
 				<a data-icon="share" data-view-section="creator"></a>
 			</nav>
 		</footer>
-		<script>
-		function loadPost(id){
-			doing()
-			$(article(),".tmpled").remove()
-			Parse.get('post',id).then(
-				function(p){
-					runtime.post=p
-					tmplPost.build(p)
-					_task(function(t){
-						if(t!=null && t.get('status')){
-							$(cmdtask).addClass('tasked')
-							$('#taskOption [value="'+t.get('type')+'"]')[0].checked=true
-						}else
-							$(cmdtask).removeClass('tasked')
-					})
-					_favorite(function(t){
-						if(t!=null && t.get('status'))
-							$(cmdfavorite).addClass('favorited')
-						else
-							$(cmdfavorite).removeClass('favorited')
-					})
-					Parse.find('story','post',id,function(o){tmplStory.build({loop:o},stories);done()})
-				},Parse.error)
-		}
-		</script>
 	</section>
 	<section id="post" data-transition="slide">
 		<header data-back="left-sign">
 			<nav>
-				<a data-icon="refresh" class="on-right" onclick="loadPost(runtime.post.id)"></a>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="show" data-on-load="taskReady()">
+		<article id="show" class="scroll" data-on-load="taskReady();Parse.get('post',runtime.post.id).then(showPost,Parse.error)">
 			<div style="padding:5px">
-			<script type="text/tmpl" id="tmplPost">
-				<div class="postshow tmpled" id="{{id}}">
-					<strong>{{title}}<span class="on-right"><a>{{author}}</a><span>{{modifedAt}}</span></span></strong>
-					<div>{{{attributes.content}}}</div>
-					<ul class="list scroll" id="stories"></ul>
-				</div>
-			</script>
-			<script type="text/tmpl" id="tmplStory">
-				{{#loop}}
-				<li class="thumb story tmpled">
-					<img src="{{attributes.thumbnail._url}}">
-					<p>{{{attributes.content}}}</p>
-				</li>
-				{{/loop}}
-			</script>
+				<script type="text/tmpl" id="tmplPost">
+					<div>
+						<strong>{{attributes.title}}<span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span></strong>
+						<p>{{{attributes.content}}}</p>
+						<ul class="list" id="stories"/>
+					</div>
+				</script>
+				<script type="text/tmpl" id="tmplStory" data-target="#stories">
+					{{#loop}}
+					<li class="thumb">
+						<img src="{{attributes.thumbnail._url}}">
+						<p>{{{attributes.content}}}</p>
+					</li>
+					{{/loop}}
+					{{^loop}}
+					<li>
+						create first story!
+					</li>
+					{{/loop}}
+				</script>
 			</div>
 		</article>
 		<footer>
@@ -259,6 +231,23 @@
 			<li><input type="radio" name="taskOption" value="0">Remove</li>
 		</ul>
 		<script>
+			function showPost(p){
+				tmplPost.build(runtime.post=p)
+				_task(function(t){
+					if(t!=null && t.get('status')){
+						$(cmdtask).addClass('tasked')
+						$('#taskOption [value="'+t.get('type')+'"]')[0].checked=true
+					}else
+						$(cmdtask).removeClass('tasked')
+				})
+				_favorite(function(t){
+					if(t!=null && t.get('status'))
+						$(cmdfavorite).addClass('favorited')
+					else
+						$(cmdfavorite).removeClass('favorited')
+				})
+				Parse.find('story','post',p.id,tmplStory)
+			}
 			function onTask(e){
 				$(taskOption).show()
 				e.cancelBubble = true
@@ -318,17 +307,17 @@
 	<section id="favorite" data-transition="slide">
 		<header data-title="Favorite" data-back="left-sign">
 			<nav>
-				<a data-icon="refresh" class="on-right" onclick=""></a>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="favorite1" class="list scroll" data-on-load="$(this,'.tmpled').remove();Parse.find('favorite','author',Parse.user().id,tmplFavorite)">
+		<article id="favorite1" class="list scroll" data-on-load="Parse.find('favorite','author',Parse.user().id,tmplFavorite)">
 			<ul>
 				<script type="text/tmpl" id="tmplFavorite">
 				{{#loop}}
-				<li class="thumb arrow post tmpled">
+				<li class="thumb arrow">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onclick="loadPost('{{post}}')" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="runtime.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
 					</div>
 				</li>
 				{{/loop}}
@@ -339,17 +328,17 @@
 	<section id="task" data-transition="slide">
 		<header data-title="Task" data-back="left-sign">
 			<nav>
-				<a data-icon="refresh" class="on-right" onclick=""></a>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="task1" class="list scroll" data-on-load="$(this,'.tmpled').remove();Parse.find('favorite','author',Parse.user().id,tmplTask)">
+		<article id="task1" class="list scroll" data-on-load="Parse.find('favorite','author',Parse.user().id,tmplTask)">
 			<ul>
 				<script type="text/tmpl" id="tmplTask">
 				{{#loop}}
-				<li class="thumb arrow post tmpled">
+				<li class="thumb arrow">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onclick="loadPost('{{post}}')" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="runtime.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
 					</div>
 				</li>
 				{{/loop}}
@@ -360,19 +349,19 @@
 	<section id="comment" data-transition="slide">
 		<header data-title="Comment" data-back="left-sign">
 			<nav>
-				<a data-icon="refresh" class="on-right" onclick="$(article()).trigger('load')"></a>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article class="list" id="showComments" data-on-load="$(this,'.tmpled').remove(); Parse.find('comment','post',runtime.post,tmplComment); commentContent.focus()">
+		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',runtime.post,tmplComment); commentContent.focus()">
 			<ul>
 				<script type="text/tmpl" id="tmplComment">
 				{{#loop}}
-					<li class="comment tmpled">
-						<a href="#" class="on-left" style="align:center">
-						<span class="icon user"></span>
-						<div>{{attributes.authorName}}</div>
-						</a>
-						<div>{{{attributes.content}}} <span class="on-right">{{ago}}</span></div>
+					<li class="thumb">
+						<a href="#" data-icon="user"><br>{{attributes.authorName}}</a>
+						<div>
+							<p>{{{attributes.content}}}</p>
+							<span class="on-right">{{ago}}</span>
+						</div>
 					</li>
 				{{/loop}}
 				</script>
@@ -403,7 +392,7 @@
 				<button class="on-right" type="submit" form="creatForm" data-icon="save"></button>
 			</nav>
 		</header>
-		<article id="createPost" 
+		<article id="createPost"
 			data-on-load="setTimeout(function(){$('#creator header h1').text('Create '+runtime.cat.name)},300)">
 			<form id="creatForm" onsubmit="savePost();return false">
 				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
@@ -614,15 +603,24 @@
 	</section>
 	<script src="res/lungo.debug.js"></script>		
 	<script>	
-		$("script[type*=tmpl]").each(function(i,tmpl,b){
+		$("script[type*=tmpl]").each(function(i,tmpl,b,e){
 			this.compiled=Mustache.compile((b=this.innerHTML))
 			Mustache.compilePartial(this.id,b)
 			this.innerHTML=""
 			this.build=function(a,container){
-				var el=$($.fragment(this.compiled(a)).filter(function(el){return el.nodeType!=3}))
-				$(container||this.parentNode).append(el)
+				var el=$($.fragment(this.compiled(a))
+					.filter(function(el){return el.nodeType!=3}))
+					.addClass('tmpled')
+				$(container||$(this).data('target')||this.parentNode).append(el)
 				Lungo.Boot.Data.init(el)
 			}
+			this.clean=function(container){
+				$(container||$(this).data('target')||this.parentNode,'.tmpled').remove()
+			}
+		})
+		
+		$("a[data-icon='refresh']").each(function(i,a){
+			$(a).on('click',function(){$(article()).trigger('load')})
 		})
 		
 		$.each(["load","unload"],function(index,e){//support data-on-(un)load	

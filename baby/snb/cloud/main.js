@@ -43,8 +43,9 @@ function error(e){
 function isNew(o){
 	return o.createdAt.getTime()==o.updatedAt.getTime()
 }
+Parse.get=function(t,id){doing();return (new Parse.Query(Parse.Object.extend(t))).get(id)}
 
-new Array("comment","story","post","favorite", "task").each(function(f){
+new Array("comment","story","post","favorite","task").each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
 		if(request.object.isNew()){
 			var o=request.object
@@ -76,6 +77,13 @@ Parse.Cloud.beforeSave("task", function(request, response) {
 	response.success()
 })
 
+Parse.Cloud.afterSave("favorite", function(request, response) {
+	Parse.get('post',request.object.get('post')).then(
+		function(post){
+			post.increment('favorites',1)
+			post.save().then(null,error)
+		},error)
+});
 
 Parse.Cloud.afterSave("comment", function(request, response) {
 	var post=request.object.get("post"),
@@ -95,13 +103,11 @@ Parse.Cloud.afterSave("comment", function(request, response) {
 
 Parse.Cloud.afterSave("story", function(request, response) {
 	var story=request.object,
-		post=story.get("post"),
 		today=new Date(),
 		user=request.user,
 		t=user.get("duration")
-		
-	post.fetch().then(
-		function(){
+	Parse.get('post',story.get("post")).then(
+		function(post){
 			var author=post.get("author")
 			author.fetch().then(
 				function(){
