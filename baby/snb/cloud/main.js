@@ -43,20 +43,26 @@ function error(e){
 function isNew(o){
 	return o.createdAt.getTime()==o.updatedAt.getTime()
 }
+
+function setAuthor(request){
+	if(request.object.isNew()){
+		var o=request.object
+		o.set("author",request.user.id)
+		o.set("authorName",request.user.getUsername())
+	}
+}
+
 Parse.get=function(t,id){doing();return (new Parse.Query(Parse.Object.extend(t))).get(id)}
 
-new Array("comment","story","post","favorite","task").each(function(f){
+new Array("comment","story","post","favorite").each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
-		if(request.object.isNew()){
-			var o=request.object
-			o.set("author",request.user.id)
-			o.set("authorName",request.user.getUsername())
-		}
+		setAuthor(request)
 		response.success()
 	})
 })
 
 Parse.Cloud.beforeSave("task", function(request, response) {
+	setAuthor(request)
 	switch(request.object.get('type')){
 	case 1:
 		request.object.set('time',new Date().toDay())

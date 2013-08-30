@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Super Nai Ba</title>
 	<link rel="stylesheet" href="res/lungo.css">
 	<link rel="stylesheet" href="res/lungo.icon.css">
@@ -34,10 +35,17 @@
 			this.options.each(function(i,o){v==o.value && (me.selectedIndex=i)})
 		}
 		HTMLSelectElement.prototype.text=function(){return this.options[this.selectedIndex].text}
-		HTMLFormElement.prototype.get=function(){
-			var o=Parse.object(this.name)
-			$(this,'[name]').each(function(){o.set(this.name,this.value||this.value())})
+		HTMLFormElement.prototype.object=function(o){
+			o=typeof(o)=='string'?Parse.object(o):o,
+			$(this,':not([type=checkbox]):not([type=radio])[name]').each(function(i,el){el.name=='id'?(o.id=el.value):o.set(el.name,typeof(el.value)=='function'&&el.value()||el.value)})
+			$(this,'[type=radio][name]:checked').each(function(i,el){o.set(el.name,el.value)})
+			$(this,'[type=checkbox][name]:checked').each(function(i,el){o.addUnique(el.name,el.value)})
+			for(var i=1,as=arguments,len=as.length;i<as.length;i+=2)
+				a.set(as[i],as[i+1])
 			return o
+		}
+		HTMLFormElement.prototype.set=function(o){
+			$(this,':not([type=checkbox]):not([type=radio])[name]').each(function(i,el){el.name=='id'?(el.value=o.id) : o.has(el.name)&&typeof(el.value)=='function'&&el.value(o.get(el.name))||(el.value=o.get(el.name))})
 		}
 		$.fn.once=function(e,cb,a,b){a=this,b=function(){cb.apply(this,arguments);a.unbind(e,b)};a.bind(e,b)}
 		Parse.object=function(f){
@@ -69,7 +77,7 @@
 		Parse.get=function(t,id){doing();return (new Parse.Query(Parse.Object.extend(t))).get(id)}
 		Parse.error=function(e){done();Lungo.Notification.error("Warn", e, 'cancel', 4)}
 		Parse.user=function(){return Parse.User.current()}
-		setTitle=function(t){$('section.show header h1').text(t)}
+		setTitle=function(t){setTimeout(function(){$('section.show>header h1').text(t)},300)}
 		doing=function(){$('section.show [data-icon="refresh"]').addClass('doing')}
 		done=function(){$('.doing').removeClass('doing')}
 		Parse.Object.prototype.ago=function(){
@@ -102,7 +110,7 @@
 			</nav>
 		</header>
 		<nav data-control="menu" id="users" class="icons">
-			<a href="#" data-icon="signout" onclick="signout()"></a>
+			<a href="#" data-icon="signout" onclick="Parse.User.logOut();location.reload()"></a>
 			<a href="#" data-icon="plus-sign" data-view-section="child"></a>
 			<script type="text/tmpl" id="tmplChildren">
 				{{#loop}}
@@ -142,20 +150,19 @@
 		function checkLogin(){
 			if(!Parse.user())
 				return setTimeout(function(){Lungo.Router.section('user')},1000)
-			Parse.find('child','parent',Parse.user().id,
-				function(o){
+			Parse.find('child','parent',Parse.user().id,function(o){
 					o && tmplChildren.build({loop:o}) && !runtime.child && (runtime.child=o[0])
 				})
 		}
 		</script>
 	</section>
 	<section id="category" data-transition="slide">
-		<header data-back="left-sign">
+		<header data-back="left-sign" data-title="Posts In Category">
 			<nav>
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="posts" class="list scroll" data-on-load="Parse.find('post','category',runtime.cat.name,tmplPosts)">
+		<article id="posts" class="list scroll" data-on-load="setTitle(runtime.cat.name);Parse.find('post','category',runtime.cat.name,tmplPosts)">
 			<ul>
 				<li>
 					<div style="position:relative;height:300px;background-color:black"></div>
@@ -184,17 +191,19 @@
 		</footer>
 	</section>
 	<section id="post" data-transition="slide">
-		<header data-back="left-sign">
+		<header data-back="left-sign" data-title="loading">
 			<nav>
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="show" class="scroll" data-on-load="taskReady();Parse.get('post',runtime.post.id).then(showPost,Parse.error)">
+		<article id="show" class="scroll" data-on-load="$(taskOption).hide();Parse.get('post',runtime.post.id).then(showPost,Parse.error)">
 			<div style="padding:5px">
 				<script type="text/tmpl" id="tmplPost">
 					<div>
-						<strong>{{attributes.title}}<span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span></strong>
-						<p>{{{attributes.content}}}</p>
+						<div style="min-height:50%">
+							<div><span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span></div>
+							<p>{{{attributes.content}}}</p>
+						</div>
 						<ul class="list" id="stories"/>
 					</div>
 				</script>
@@ -206,7 +215,7 @@
 					</li>
 					{{/loop}}
 					{{^loop}}
-					<li>
+					<li class="empty">
 						create first story!
 					</li>
 					{{/loop}}
@@ -218,94 +227,62 @@
 				<a data-icon="comment" data-view-section="comment" href="#"></a>
 				<a data-icon="film" data-view-section="story" href="#"></a>
 				<a data-icon="share" data-view-section="comment" href="#"></a>
-				<a data-icon="star" id="cmdfavorite" onclick="doFavorite(this)" href="#"></a>
-				<a data-icon="menu" id="cmdtask" onclick="onTask(event)" href="#"></a>
+				<a data-icon="star" id="cmdfavorite" onclick="toggleFavorite()" href="#"></a>
+				<a data-icon="menu" id="cmdtask" onclick="showTaskOption(event)" href="#"></a>
 			</nav>
 		</footer>
 		<ul id="taskOption">
-			<li><input type="radio" name="taskOption" value="1">Today</li>	
-			<li><input type="radio" name="taskOption" value="2">Tomorrow</li>
-			<li><input type="radio" name="taskOption" value="3">This week</li>
-			<li><input type="radio" name="taskOption" value="4">This month</li>
-			<li><input type="radio" name="taskOption" value="5">This year</li>
-			<li><input type="radio" name="taskOption" value="0">Remove</li>
+			<li><input type="radio" name="taskOption" value=1 onclick="addTask(event,1)">Today</li>	
+			<li><input type="radio" name="taskOption" value=2 onclick="addTask(event,2)">Tomorrow</li>
+			<li><input type="radio" name="taskOption" value=3 onclick="addTask(event,3)">This week</li>
+			<li><input type="radio" name="taskOption" value=4 onclick="addTask(event,4)">This month</li>
+			<li><input type="radio" name="taskOption" value=5 onclick="addTask(event,5)">This year</li>
+			<li><input type="radio" name="taskOption" value=0 checked onclick="this.checked&&_task(function(t){t&&$(cmdtask).removeClass('tasked')&&t.destroy();done()})">No Plan</li>
 		</ul>
 		<script>
-			function showPost(p){
-				tmplPost.build(runtime.post=p)
-				_task(function(t){
-					if(t!=null && t.get('status')){
-						$(cmdtask).addClass('tasked')
-						$('#taskOption [value="'+t.get('type')+'"]')[0].checked=true
-					}else
-						$(cmdtask).removeClass('tasked')
-				})
-				_favorite(function(t){
-					if(t!=null && t.get('status'))
-						$(cmdfavorite).addClass('favorited')
-					else
-						$(cmdfavorite).removeClass('favorited')
-				})
-				Parse.find('story','post',p.id,tmplStory)
-			}
-			function onTask(e){
-				$(taskOption).show()
-				e.cancelBubble = true
-				e.stopPropagation && e.stopPropagation()
-				$(document).once('click',function(){$(taskOption).hide()})
-			}
 			function _favorite(f){
 				Parse.first('favorite','author',Parse.user().id,'post',runtime.post.id,f)
 			}
 			function _task(f){
 				Parse.first('task','author',Parse.user().id,'post',runtime.post.id,'status',1,f)
 			}
-			function doFavorite(el){
-				_favorite(function(f){
-					if(f==null){
-						f=Parse.object('favorite')
-						f.set('post',runtime.post.id)
-						f.set('title',runtime.post.get('title'))
-						f.set('thumbnail',runtime.post.get('thumbnail'))
-						f.set('status',1)
-					}else if(f.get('status')==0)
-						f.set('status',1)
-					else
-						f.set('status',0)
-					f.save().then(function(){$(el)[f.get('status')?'addClass':'removeClass']('favorited')},Parse.error)
-					done()
+			function showPost(p){
+				setTitle(p.get('title'))
+				tmplPost.clean().build(runtime.post=p)
+				Parse.find('story','post',p.id,tmplStory)
+				_task(function(t,b){
+					$(cmdtask)[((b=t&&t.get('status'))?'add':'remove')+'Class']('tasked')
+					b&&($('#taskOption [value="'+t.get('type')+'"]')[0].checked=true)
+				})
+				_favorite(function(t){
+					$(cmdfavorite)[(t&&t.get('status')?'add':'remove')+'Class']('favorited')
 				})
 			}
-			function taskReady(){
-				$(taskOption).hide()
-				$('#taskOption input').on('click',function(){
-					var me=this
-					_task(function(t){
-						if(me.value=='0'){
-							if(t!=null){
-								t.destroy()
-								$(cmdtask).removeClass('tasked')
-								return
-							}
-						}else if(t==null){
-							t=Parse.object('task')
-							t.set('post',runtime.post.id)
-							t.set('title',runtime.post.get('title'))
-							t.set('thumbnail',runtime.post.get('thumbnail'))
-							t.set('status',1)
-						}
-						t.set('type',parseInt(me.value))
-						t.save().then(function(){$(cmdtask).addClass('tasked')})
-						done()
-					})
+			function showTaskOption(e){
+				$(taskOption).show()
+				e.cancelBubble = true
+				e.stopPropagation && e.stopPropagation()
+				$(document).once('click',function(){$(taskOption).hide()})
+			}
+			function toggleFavorite(){
+				_favorite(function(f,a){
+					(f=f||Parse.object('favorite','post',(a=runtime.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail')))
+						.set('status',f.get('status')?0:1)
+					f.save().then(function(){$(cmdfavorite)[(f.get('status')?'add':'remove')+'Class']('favorited');done()},Parse.error)
 				})
-				taskReady=empty
+			}			
+			function addTask(e,v){
+				this.checked && _task(function(t,a){
+					(t=t||Parse.object('task','post',(a=runtime.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail'),'status',1))
+						.set('type',v)
+					t.save().then(function(){$(cmdtask).addClass('tasked');done()},Parse.error)
+				})				
 			}
 			
 		</script>
 	</section>
 	<section id="favorite" data-transition="slide">
-		<header data-title="Favorite" data-back="left-sign">
+		<header data-title="My Favorites" data-back="left-sign">
 			<nav>
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
@@ -326,7 +303,7 @@
 		</article>
 	</section>
 	<section id="task" data-transition="slide">
-		<header data-title="Task" data-back="left-sign">
+		<header data-title="My Tasks" data-back="left-sign">
 			<nav>
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
@@ -352,7 +329,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',runtime.post,tmplComment); commentContent.focus()">
+		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',runtime.post,tmplComment)">
 			<ul>
 				<script type="text/tmpl" id="tmplComment">
 				{{#loop}}
@@ -369,38 +346,30 @@
 		</article>
 		<footer>
 			<nav>
-				<a><textarea style="height:46px;padding:5px;width:100%" id="commentContent"></textarea></a>
-				<button data-icon="save" onclick="saveComment()"></button>
+				<a><form id="commentCreator"
+					onsubmit="this.object('comment','post',runtime.post).save().then(function(c){tmplComment.build({loop:[c]});commentCreator.content.value='';done()},Parse.error);return false;">
+					<textarea style="height:46px;padding:5px;width:100%;margin:0" name="content"></textarea>
+				</form></a>
+				<button data-icon="save" type="submit" form="comemntCreator"></button>
 			</nav>
 		</footer>
-		<script>
-		function saveComment(){
-			doing()
-			Parse.object('comment',"content",commentContent.value,"post", runtime.post)
-				.save().then(function(c){
-					tmplComment.build({loop:[c]})
-					commentContent.value=""
-					done()
-				},Parse.error)
-		}
-		</script>
 	</section>
 	
 	<section id="creator" data-transition="slide">
 		<header data-title="Create Post" data-back="left-sign">
 			<nav>
-				<button class="on-right" type="submit" form="creatForm" data-icon="save"></button>
+				<button class="on-right" type="submit" form="postCreator" data-icon="save"></button>
 			</nav>
 		</header>
 		<article id="createPost"
-			data-on-load="setTimeout(function(){$('#creator header h1').text('Create '+runtime.cat.name)},300)">
-			<form id="creatForm" onsubmit="savePost();return false">
+			data-on-load="setTitle('Create A '+runtime.cat.name)">
+			<form id="postCreator" onsubmit="savePost(this);return false">
 				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
 				<fieldset><textarea name="content" class="editor" contenteditable="true">content</textarea></fieldset>
 				<fieldset>
 					<div>
-						<input type="checkbox" name="gender" value="N5zSTzoczQ" checked="checked">Boy
-						<input type="checkbox" name="gender" value="DJIUvgiFpk">Girl
+						<input type="checkbox" name="tags" value="N5zSTzoczQ" checked="checked">Boy
+						<input type="checkbox" name="tags" value="DJIUvgiFpk">Girl
 					</div>
 					<div>
 						<select name="duration">
@@ -424,18 +393,12 @@
 			</nav>
 		</footer>
 		<script>
-		function savePost(){
+		function savePost(p,newPost){
 			doing()
-			var newPost=Parse.object('post'),
-				p=form()
-			newPost.set("content",p.content.value)
-			newPost.set("title",p.title.value)
-			newPost.set("category",runtime.cat.name)
-			newPost.set("duration", parseInt(p.duration.text()))
+			newPost=p.object('post',"category",runtime.cat.name,"duration", parseInt(p.duration.text()))
 			newPost.addUnique("tags", p.duration.value())
 			newPost.addUnique("tags",runtime.cat.id)
-			p.gender.each(function(i,a){a.checked && newPost.addUnique("tags",a.value)})
-			newPost.save().then(function(){Lungo.Router.back();done()})
+			newPost.save().then(function(){Lungo.Router.back();done()},Parse.error)
 		}
 		</script>		
 	</section>
@@ -446,7 +409,7 @@
 			</nav>
 		</header>
 		<article id="createStory">
-			<form id="storyForm" onsubmit="saveStory();return false">
+			<form id="storyForm" onsubmit="this.object('story','post',runtime.post.id,'duration', parseInt(p.duration.text())).save().then(Lungo.Rounter.back,Parse.error);return false">
 				<fieldset><select name="duration">
 							<option value="KknqyCi9x2">60</option>
 							<option value="ueOPMH3mSR">10</option>
@@ -465,15 +428,6 @@
 				<a data-icon="minus" onclick=""></a>
 			</nav>
 		</footer>	
-		<script>
-		function saveStory(){
-			var newStory=Parse.object('story')
-			newStory.set("content",postContent.value)
-			newStory.set("post",runtime.post.id)
-			newStory.set("duration", parseInt(p.duration.text()))
-			newStory.save().then(Lungo.Router.back)
-		}
-		</script>		
 	</section>	
 	
 	<section id="user" data-transition="slide">
@@ -481,34 +435,25 @@
 		<nav data-control="groupbar">
 			<a href="#" data-view-article="signin" data-title="Sign In">Sign In</a>
 			<a href="#" data-view-article="signup" data-title="Sign up">Sign Up</a>
-			<a href="#" data-view-article="resetpassword" data-title="Reset Password">Reset Password</a>
 			<a href="#" data-view-article="forgetpassword" data-title="Forget Password">Forget Password</a>
 		</nav>
 		<article id="signin">
-			<form onsubmit="signin();return false">
-				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
+			<form onsubmit="this.object(new Parse.User()).logIn().then(Lungo.Router.back,Parse.error);return false">
+				<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
 				<fieldset><input name="password" type="password" placeholder="password"></fieldset>
 				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>
 		<article id="signup">
-			<form onsubmit="signup();return false">
-				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
+			<form onsubmit="this.object(new Parse.User()).signUp().then(Lungo.Router.back,Parse.error);return false">
+				<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
 				<fieldset><input name="email" type="email" placeholder="email where reset password will be sent"></fieldset>
 				<fieldset><input name="password" type="text" placeholder="password"></fieldset>
 				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
 		</article>
-		<article id="resetpassword">
-			<form onsubmit="resetpassword();return false">
-				<fieldset><input name="name" type="text" placeholder="user name"></fieldset>
-				<fieldset><input name="password" type="password" placeholder="old password"></fieldset>
-				<fieldset><input name="password" type="password" placeholder="new password"></fieldset>
-				<fieldset class="outview"><input type="submit"></fieldset>
-			</form>
-		</article>
 		<article id="forgetpassword">
-			<form onsubmit="forgetpassword();return false">
+			<form onsubmit="Parse.User.requestPasswordReset(this.email.value);return false">
 				<fieldset><input name="email" type="text" placeholder="email where new password would send"></fieldset>
 				<fieldset class="outview"><input type="submit"></fieldset>
 			</form>
@@ -518,40 +463,12 @@
 				<a data-icon="ok-sign" onclick="form().submit()"></a>
 			</nav>	
 		</footer>
-		<script>
-		function signin(){
-			var user=form()
-			Parse.User.logIn(user.name.value, user.password.value,{
-				success:Lungo.Router.back, 
-				error: Parse.error
-			})
-			return false
-		}
-		
-		function signup(){
-			var userForm=form()
-			var user=new Parse.User()
-			user.setUsername(userForm.name.value)
-			user.setPassword(userForm.password.value)
-			user.setEmail(userForm.email.value)
-			
-			user.signUp(null,{
-				success: Lungo.Router.back(),
-				error: Parse.error
-			})
-			return false
-		}
-		
-		function signout(){
-			Parse.User.logOut()
-			location.reload()
-		}
-		</script>
 	</section>
 	<section id="child" data-transition="slide">
 		<header data-back="left-sign" data-title="Add baby"></header>
-		<article id="child1">
-			<form id="childForm" onsubmit="extractChild().save().then(Lungo.Router.back,Parse.error);return false">
+		<article id="child1" data-on-load="Parse.get('child',runtime.child.id).then(function(c){childForm.set(c)},Parse.error)" data-on-unload="runtime.child=null">
+			<form id="childForm" 
+				onsubmit="this.object('child','parent',Parse.user().id).save().then(Lungo.Router.back,Parse.error);return false">
 				<input type="hidden" name="id">
 				<fieldset><input type="text" name="name" placeholder="baby name"></fieldset>
 				<fieldset>
@@ -576,22 +493,9 @@
 			</nav>
 		</footer>
 		<script>
-		function extractChild(){
-			var child=Parse.object('child'),
-				f=form()
-			child.set("name",f.name.value)
-			child.set("gender",f.gender.value())
-			child.set("birthday", f.birthday.value)
-			child.set("photo", f.photo.value)
-			child.set("parent", Parse.user().id)
-			child.id=f.id.value
-			return child
-		}
 		function loadChild(id){
-			Parse.get(id).then(
-				function(p,f){
-					f=form()
-					f.name.value=p.get('name')
+			Parse.get('child',id).then(function(p,f){
+					(f=form()).name.value=p.get('name')
 					f.gender.value(p.get('gender'))
 					f.birthday.value=p.get('birthday')
 					(f.photo.value=p.getFile('photo')) && (f.photo.src=f.photo.value.url())
@@ -604,6 +508,7 @@
 	<script src="res/lungo.debug.js"></script>		
 	<script>	
 		$("script[type*=tmpl]").each(function(i,tmpl,b,e){
+			this.target=$(this).data('target')||this.parentNode
 			this.compiled=Mustache.compile((b=this.innerHTML))
 			Mustache.compilePartial(this.id,b)
 			this.innerHTML=""
@@ -611,11 +516,12 @@
 				var el=$($.fragment(this.compiled(a))
 					.filter(function(el){return el.nodeType!=3}))
 					.addClass('tmpled')
-				$(container||$(this).data('target')||this.parentNode).append(el)
+				$(container||this.target).append(el)
 				Lungo.Boot.Data.init(el)
 			}
 			this.clean=function(container){
-				$(container||$(this).data('target')||this.parentNode,'.tmpled').remove()
+				$(container||this.target,'.tmpled').remove()
+				return this
 			}
 		})
 		
