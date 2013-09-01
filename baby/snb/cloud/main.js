@@ -54,7 +54,7 @@ function setAuthor(request){
 
 Parse.get=function(t,id){doing();return (new Parse.Query(Parse.Object.extend(t))).get(id)}
 
-new Array("comment","story","post","favorite").each(function(f){
+new Array("comment","story","post","favorite",'child').each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
 		setAuthor(request)
 		response.success()
