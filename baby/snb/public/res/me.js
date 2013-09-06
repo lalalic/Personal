@@ -57,7 +57,7 @@ $.each(['find','first'],function(index,n){
 Parse.get=function(t,id){doing();return new Parse.Query(Parse.Object.extend(t)).get(id)}
 Parse.error=function(e){done();Lungo.Notification.error("Warn", e.message, 'cancel', 2)}
 Parse.user=function(){return Parse.User.current()}
-setTitle=function(t){setTimeout(function(){$('section.show>header h1').text(t)},300)}
+setTitle=function(t){$(Lungo.Element.Cache.section,'header h1').text(t)}
 doing=function(){$('section.show [data-icon="refresh"]').addClass('doing')}
 done=function(){$('.doing').removeClass('doing')}
 Parse.Object.prototype.ago=function(){
@@ -111,12 +111,13 @@ function showPost(p){
 	})
 	Parse.find('story','post',p.id,tmplStory)
 }
-function showTaskOption(e){
-	$(taskOption).show()
-	e.cancelBubble = true
-	e.stopPropagation && e.stopPropagation()
-	$(document).once('click',function(){$(taskOption).hide()})
+
+function popup(el,e){
+	$(el).show()
+	e.stopPropagation()
+	$(document).once('click',function(){$(el).hide()})
 }
+
 function toggleFavorite(){
 	_favorite(function(f,a){
 		(f=f||Parse.object('favorite','post',(a=runtime.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail')))

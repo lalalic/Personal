@@ -34,7 +34,7 @@ var CanvasTextEditor = function(doc, options) {
   window.addEventListener('focus', this.clearKeyModifiers.bind(this), true);
   window.addEventListener('focus', this.render.bind(this), true);
 };
-
+{
 /**
  * Top offset in lines
  * @type {Number}
@@ -442,7 +442,7 @@ CanvasTextEditor.prototype.blur = function() {
 CanvasTextEditor.prototype.focus = function() {
   this.inputEl.focus();
 };
-
+}
 /**
  * Creates new document from provided text.
  * @param {string} text Full document text.
@@ -453,7 +453,7 @@ var Document = function(text) {
   this.storage = Document.prepareText(text);
 };
 
-
+{
 /**
  * Splits text into array of lines. Can't use .split('\n') because
  * we want to keep trailing \n at the ends of lines.
@@ -620,7 +620,7 @@ Document.prototype.deleteChar = function(forward, startColumn, startRow) {
 
   return this.deleteRange(startColumn, startRow, endColumn, endRow);
 }
-
+}
 /**
  * A simple wrapper for system fonts to provide
  * @param {String} family Font Family (same as in CSS)
@@ -659,7 +659,7 @@ var FontMetrics = function(family, size) {
 
   document.body.removeChild(line);
 };
-
+{
 /**
  * Returns font family
  * @return {String}
@@ -699,7 +699,7 @@ FontMetrics.prototype.getWidth = function() {
 FontMetrics.prototype.getBaseline = function() {
   return this._baseline;
 };
-
+}
 /**
  * Creates new selection for the editor.
  * @param {Editor} editor.
@@ -729,6 +729,7 @@ var Selection = function(editor, color) {
   this.setPosition(0, 0);
 };
 
+{
 /**
  * Hold blink interval for the cursor
  * @type {Number}
@@ -1003,3 +1004,4 @@ Selection.prototype.setVisible = function(visible) {
 Selection.prototype.isVisible = function() {
   return this.visible;
 };
+}

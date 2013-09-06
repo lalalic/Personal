@@ -412,6 +412,15 @@ body > section[data-pull] > article.active {
   -o-box-shadow: 0 -1px 0 rgba(0,0,0,0.05);
   box-shadow: 0 -1px 0 rgba(0,0,0,0.05);
 }
+body > section > .popup {
+  background-color: #2f2f2f;
+  z-index: 99;
+  position: absolute;
+  bottom: 46px;
+  right: 0px;
+  color: #fff;
+  display: none;
+}
 body > aside {
   background-color: #232323;
   color: WHITE;

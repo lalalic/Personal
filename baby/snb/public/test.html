@@ -2,8 +2,87 @@
 <html>
 <head>
 	<meta charset="utf-8">
+
 </head>
 <body>
-<div style="height:400px;border:1px solid blue" contenteditable="true">hello</div>
+<div id="editor" style="height:400px;border:1px solid blue" contenteditable="true">
+
+</div>
+<button type="button" onclick="editor.focus()">recover selection</button>
+<script type="text/javascript">
+var Editor=function(el){
+	var savedRange,isInFocus;
+	function saveSelection()
+	{
+		if(window.getSelection)//non IE Browsers
+		{
+			savedRange = window.getSelection().getRangeAt(0);
+		}
+		else if(document.selection)//IE
+		{ 
+			savedRange = document.selection.createRange();  
+		} 
+	}
+
+	function restoreSelection()
+	{
+		isInFocus = true;
+
+		if (savedRange != null) {
+			if (window.getSelection)//non IE and there is already a selection
+			{
+				var s = window.getSelection();
+				if (s.rangeCount > 0) 
+					s.removeAllRanges();
+				s.addRange(savedRange);
+			}
+			else if (document.createRange)//non IE and no selection
+			{
+				window.getSelection().addRange(savedRange);
+			}
+			else if (document.selection)//IE
+			{
+				savedRange.select();
+			}
+		}
+	}
+	//this part onwards is only needed if you want to restore selection onclick
+	var isInFocus = false;
+	function onDivBlur()
+	{
+		isInFocus = false;
+	}
+
+	function cancelEvent(e)
+	{
+		if (isInFocus == false && savedRange != null) {
+			if (e && e.preventDefault) {
+				//alert("FF");
+				e.stopPropagation(); // DOM style (return false doesn't always work in FF)
+				e.preventDefault();
+			}
+			else {
+				window.event.cancelBubble = true;//IE stopPropagation
+			}
+			restoreSelection();
+			return false; // false = IE style
+		}
+	}
+	
+	el.addEventListener('blur',onDivBlur)
+	//el.addEventListener('mousedown',cancelEvent)
+	//el.addEventListener('click',cancelEvent)
+	el.addEventListener('mouseup',saveSelection)
+	el.addEventListener('keyup',saveSelection)
+	el.addEventListener('focus',restoreSelection)
+	return el
+}
+
+function insertImage(){
+	
+}
+
+new Editor(editor)
+</script>
 </body>
 </html>

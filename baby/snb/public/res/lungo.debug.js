@@ -2123,6 +2123,9 @@ Initialize the <articles> layout of a certain <section>
     C = lng.Constants;
     show = function(current, target) {
       var active_article;
+      if (!current && lng.Element.Cache.section) {
+        return;
+      }
       lng.Element.Cache.lastSection = current;
       lng.Element.Cache.lastArticle = lng.Element.Cache.article;
       if (lng.DEVICE === C.DEVICE.PHONE) {
