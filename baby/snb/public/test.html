@@ -5,10 +5,13 @@
 
 </head>
 <body>
-<div id="editor" style="height:400px;border:1px solid blue" contenteditable="true">
+<div id="editor" style="height:400px;border:1px solid blue;padding:10px" contenteditable="true">
 
 </div>
-<button type="button" onclick="editor.focus()">recover selection</button>
+<button type="button" onclick="insertImage()">recover selection</button>
+<input type="file" id="uploader" onchange="this.files && showImage(this.files[0])">
+<canvas style="width:400px;height:300px;border:2px solid red" id="drawer"></canvas>
+<img id="placeholder" style="width:500px;"/>
 <script type="text/javascript">
 var Editor=function(el){
 	var savedRange,isInFocus;
@@ -79,6 +82,34 @@ var Editor=function(el){
 }
 
 function insertImage(){
+	uploader.click()
+}
+
+function showImage(f){
+	var reader = new FileReader();  
+	reader.onload = function(e) {
+		placeholder.src = e.target.result;
+		var MAX_WIDTH = 400;
+		var MAX_HEIGHT = 300;
+		var width = placeholder.width;
+		var height = placeholder.height;
+
+		if (width > height) {
+		  if (width > MAX_WIDTH) {
+			height *= MAX_WIDTH / width;
+			width = MAX_WIDTH;
+		  }
+		} else {
+		  if (height > MAX_HEIGHT) {
+			width *= MAX_HEIGHT / height;
+			height = MAX_HEIGHT;
+		  }
+		}
+		drawer.style.width=width;
+		drawer.style.height=height;
+		drawer.getContext('2d').drawImage(placeholder,0,0,width,height)
+	}
+	reader.readAsDataURL(f);
 	
 }
 
