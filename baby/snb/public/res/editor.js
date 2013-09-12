@@ -1005,3 +1005,12 @@ Selection.prototype.isVisible = function() {
   return this.visible;
 };
 }
+
+var Layout=function(){}
+var DynamicLayout, StaticLayout
+var Paint, TextPaint, ImagePaint
+
+/**
+document
+editor->layout->[paint]
+*/
