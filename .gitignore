@@ -61,3 +61,7 @@ wb_*.txt
 *.apk
 
 example/
+gwt-unitCache/
+deploy/
+war/sample/
+war/editor/
