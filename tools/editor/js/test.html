@@ -2,18 +2,25 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Insert title here</title>
+<title>Editor</title>
 <style>
 .editor{width:80%;height:80%;border:1px solid lightgray;padding:0px}
 .editor canvas{padding:10px}
 </style>
-<script src="./core.js"></script>
+<script src="./require.js"></script>
+<script>
+	require.config({
+		baseUrl:'./hua',
+		urlArgs: "bust="+(new Date()),
+		deps:['util/prototype']
+	})
+	require(['widget/Editor'],function(Editor){
+		var editor=new Editor(editor1)
+	})
+</script>
 </head>
 <body>
 	<div style="font:12px 'Courier New', Courier, monospace">mmmmmmmmm</div>
 	<div class="editor"><canvas id="editor1">hello</canvas></div>
-	<script>
-		var editor=new ui.Editor(editor1)
-	</script>
 </body>
 </html>

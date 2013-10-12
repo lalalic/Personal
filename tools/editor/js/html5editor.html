@@ -5,7 +5,6 @@
 	<style>
 		#editor img{clear:both;width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
 		#editor img:hover{border-color:blue}
-		#imgTool{display:none}
 	</style>
 </head>
 <body>
@@ -14,28 +13,49 @@
 <button type="button" onclick="alert(editor.getContent())">get content</button>
 <button type="button" onclick="alert(editor.getThumb())">get thumb</button>
 
-<div id="imgTool">
-	<input type="file" name="_file" onchange="this.files && imgTool.editor.insertImage(this.files)" multiple>
-	<canvas name="_canvas" width="1024" height="1024" style="width:1024px;height:1024px"></canvas>
-	<textarea></textarea>
-</div>
+
 <script type="text/javascript">
-var Editor=function(el,saver){
-	if(!HTMLImageElement.prototype.isData)
+function createTools(){
+	if(!window['imgTool']){
+		var t=document.createElement('div');
+		t.id='imgTool';
+		t.innerHTML='<input type="file" name="_file" onchange="this.files && imgTool.editor.insertImage(this.files)" multiple>'
+			+'<canvas name="_canvas" width="1024" height="1024" style="width:1024px;height:1024px"></canvas>'
+			+'<textarea></textarea>';
+		t.style.display="none";
+		document.body.appendChild(t)
+	}
+}
+function getImageData(image,size){
+	var tool=imgTool.querySelector('canvas'),
+		ctx=tool.getContext('2d'),
+		img=new Image();
+	img.src=image.src;
+	var wh=img.width/img.height;
+	tool.width = wh>=1 ? (size<img.width ? size : img.width) : (size<img.height ? Math.floor(size*wh) : img.width);
+	tool.height = wh<1 ? (size<img.height ? size : img.height) : (size<img.width ? Math.floor(size/wh) : img.height);
+	tool.style.width=tool.width+"px"
+	tool.style.height=tool.height+"px"
+	ctx.drawImage(img,0,0,img.width,img.height,0,0,tool.width, tool.height);
+	return tool.toDataURL("image/jpeg")
+}
+if(!HTMLImageElement.prototype.isData)
 	HTMLImageElement.prototype.isData=function(){
 		return this.src.substr(0,4)=='data'
 	}
 	
-	if(!HTMLImageElement.prototype.isDataJpeg)
+if(!HTMLImageElement.prototype.isDataJpeg)
 	HTMLImageElement.prototype.isDataJpeg=function(){
 		return this.src.substr(0,15)=='data:image/jpeg'
 	}
 	
+	
+var Editor=function(el,saver){
+	createTools();
+	
 	if(!saver){
 		saver=function(img,data){
-			alert(data.length)
-			alert(atob(data).length)
-			return data;
+			return "ok";
 		}
 	}
 	
@@ -73,6 +93,11 @@ var Editor=function(el,saver){
 	el.addEventListener('mouseup',saveSelection)
 	el.addEventListener('keyup',saveSelection)
 	el.addEventListener('focus',restoreSelection)
+	el.addEventListener('paste',function(e){
+		document.execCommand('insertText',false,e.clipboardData.getData('text/plain').replace(/\r/g,''))
+		e.preventDefault()
+		return false
+	})
 	
 	el.insertImage=function(f,reader){
 		if(arguments.length==0){
@@ -84,7 +109,7 @@ var Editor=function(el,saver){
 				el.focus()
 				restoreSelection();
 				document.execCommand('insertText',false,"\n")
-				document.execCommand('insertImage',true,e.target.result)
+				document.execCommand('insertImage',false,e.target.result)
 				document.execCommand('insertText',false,"\n")
 				if(i<len)
 					reader.readAsDataURL(f[i++]);
@@ -120,25 +145,12 @@ var Editor=function(el,saver){
 	}
 	el.getContent=function(imageSaver){
 		this.saveImageData(imageSaver||saver);
-		return this.innerHTML;
+		return this.innerHTML.replace(Editor.TRIM_TAG,"\n").replace(Editor.TRIM_LINE,'\n\n');
 	}
-
-	function getImageData(image,size){
-		var tool=imgTool.querySelector('canvas'),
-			ctx=tool.getContext('2d'),
-			img=new Image();
-		img.src=image.src;
-		var wh=img.width/img.height;
-		tool.width = wh>=1 ? (size<img.width ? size : img.width) : (size<img.height ? Math.floor(size*wh) : img.width);
-		tool.height = wh<1 ? (size<img.height ? size : img.height) : (size<img.width ? Math.floor(size/wh) : img.height);
-		tool.style.width=tool.width+"px"
-		tool.style.height=tool.height+"px"
-		ctx.drawImage(img,0,0,img.width,img.height,0,0,tool.width, tool.height);
-		return tool.toDataURL("image/jpeg")
-	}
-	
 	return el
 }
+Editor.TRIM_TAG=/<\/?\s*(\w*?)\s*\/?>/g
+Editor.TRIM_LINE=/\n{3,}/gm
 
 new Editor(editor)
 </script>

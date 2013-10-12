@@ -87,7 +87,7 @@ function checkLogin(){
 }
 function savePost(p,newPost){
 	doing()
-	newPost=p.object('post',"category",runtime.cat.name,"duration", parseInt(p.duration.text()))
+	newPost=p.object('post',"category",runtime.cat.name,"duration", parseInt(p.duration.text()),'content',postEditor.getContent())
 	newPost.addUnique("tags", p.duration.value)
 	newPost.addUnique("tags",runtime.cat.id)
 	newPost.save().then(function(){p.reset();Lungo.Router.back();done()},Parse.error)
@@ -131,6 +131,20 @@ function addTask(e,v){
 			.set('type',v)
 		t.save().then(function(){$(cmdtask).addClass('tasked');done()},Parse.error)
 	})				
+}
+
+function getImageData(url,size){
+	var tool=_imgSizer,
+		ctx=tool.getContext('2d'),
+		img=new Image();
+	img.src=url;
+	var wh=img.width/img.height;
+	tool.width = wh>=1 ? (size<img.width ? size : img.width) : (size<img.height ? Math.floor(size*wh) : img.width);
+	tool.height = wh<1 ? (size<img.height ? size : img.height) : (size<img.width ? Math.floor(size/wh) : img.height);
+	tool.style.width=tool.width+"px"
+	tool.style.height=tool.height+"px"
+	ctx.drawImage(img,0,0,img.width,img.height,0,0,tool.width, tool.height);
+	return tool.toDataURL("image/jpeg")
 }
 
 function init(){
@@ -181,21 +195,160 @@ function init(){
 	
 	uploader.bind=function(a,opt){
 		this.holder=a
-		a.opt=opt
+		this.opt=opt||{}
 		return this			
 	}
 	uploader.save=function(){
 		doing()
-		var file=new Parse.File(this.files[0].name,this.files[0]),
-			holder=this.holder
-		file.save(holder.opt||{
-			success: function(f){
-				holder.src=f.url()
-				holder.file=holder.value=f
-				done()
-			},
-			error: Parse.error
-		})
+		var reader=new FileReader()
+		reader.onload=function(e){
+			var holder=uploader.holder,
+				data=getImageData(e.target.result,uploader.opt['size']||1024),
+				file=new Parse.File("a.jpg",{base64:data})
+			file.save(uploader.opt||{
+				success: function(f){
+					holder.src=f.url()
+					holder.file=holder.value=f
+					done()
+				},
+				error: Parse.error
+			})
+		}
+		reader.readAsDataURL(this.files[0])
 	}
 }
+
+
+//editor
+(function(){
+	function createTools(){
+		if(!window['imgTool']){
+			var t=document.createElement('div');
+			t.id='imgTool';
+			t.innerHTML='<input type="file" name="_file" onchange="this.files && imgTool.editor.insertImage(this.files)" multiple>'
+				+'<canvas name="_canvas" width="1024" height="1024" style="width:1024px;height:1024px"></canvas>'
+				+'<textarea></textarea>';
+			t.style.display="none";
+			document.body.appendChild(t)
+		}
+	}
+	
+	if(!HTMLImageElement.prototype.isData)
+		HTMLImageElement.prototype.isData=function(){
+			return this.src.substr(0,4)=='data'
+		}
+		
+	if(!HTMLImageElement.prototype.isDataJpeg)
+		HTMLImageElement.prototype.isDataJpeg=function(){
+			return this.src.substr(0,15)=='data:image/jpeg'
+		}
+		
+		
+	this.Editor=function(el,saver){
+		if(el['insertImage'])
+			return;
+			
+		createTools();
+		
+		if(!saver){
+			saver=function(img,data){
+				file
+				return "ok";
+			}
+		}
+		
+		var savedRange,isInFocus=false;
+		function saveSelection(){
+			savedRange=getSelection ? getSelection().getRangeAt(0) : document.selection.createRange()
+		}
+
+		function restoreSelection(){
+			isInFocus = true;
+			if (savedRange != null) {
+				if (window.getSelection){//non IE and there is already a selection
+					var s = window.getSelection();
+					if (s.rangeCount > 0) 
+						s.removeAllRanges();
+					s.addRange(savedRange);
+				} else if (document.selection)//IE
+					savedRange.select();
+			}
+		}
+		
+		function cancelEvent(e){
+			if (isInFocus == false && savedRange != null) {
+				if (e && e.preventDefault) {
+					e.stopPropagation(); // DOM style (return false doesn't always work in FF)
+					e.preventDefault();
+				}else 
+					window.event.cancelBubble = true;//IE stopPropagation
+				restoreSelection();
+				return false; // false = IE style
+			}
+		}
+		
+		el.addEventListener('blur',function(){isInFocus=false})
+		el.addEventListener('mouseup',saveSelection)
+		el.addEventListener('keyup',saveSelection)
+		el.addEventListener('focus',restoreSelection)
+		el.addEventListener('paste',function(e){
+			document.execCommand('insertText',false,e.clipboardData.getData('text/plain').replace(/\r/g,''))
+			e.preventDefault()
+			return false
+		})
+		
+		el.insertImage=function(f,reader){
+			if(arguments.length==0){
+				imgTool.editor=this
+				imgTool.querySelector('input').click()
+			}else{
+				var i=0,len=f.length;
+				(reader = new FileReader()).onload=function(e){
+					el.focus()
+					restoreSelection();
+					document.execCommand('insertText',false,"\n")
+					document.execCommand('insertImage',false,e.target.result)
+					document.execCommand('insertText',false,"\n")
+					if(i<len)
+						reader.readAsDataURL(f[i++]);
+				}
+				reader.readAsDataURL(f[i++]);
+			}
+		}
+		el.addEventListener('click',function(e){
+			if(e.srcElement.nodeName=='IMG'){
+				if (window.getSelection){//non IE and there is already a selection
+					var s = window.getSelection();
+					if (s.rangeCount > 0) 
+						s.removeAllRanges();
+					var r=document.createRange();
+					r.setStartBefore(e.srcElement);
+					r.setEndAfter(e.srcElement);
+					s.addRange(r);
+				} else if (document.selection)//IE
+					savedRange.select();
+			}
+		})
+		el.getThumb=function(){
+			var thumb=this.querySelector('img');
+			if(!thumb || !thumb.isData())
+				return null;
+			return getImageData(thumb.src,96);
+		}
+		el.saveImageData=function(imageSaver){
+			for(var images=this.querySelectorAll('img[src^="data:image"]'),img,len=images.length,i=0;i<len;i++){
+				img=images[i]
+				img.src=imageSaver(img,getImageData(img.src,1024));
+			}
+		}
+		el.getContent=function(imageSaver){
+			this.saveImageData(imageSaver||saver);
+			return this.innerHTML.replace(Editor.TRIM_TAG,"\n").replace(Editor.TRIM_LINE,'\n\n');
+		}
+		return el
+	}
+	Editor.TRIM_TAG=/<\/?\s*(\w*?)\s*\/?>/g
+	Editor.TRIM_LINE=/\n{3,}/gm
+})(this)
+
 debugi=0

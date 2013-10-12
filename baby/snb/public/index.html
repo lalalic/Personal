@@ -13,6 +13,8 @@
 		.outview{position:absolute;top:-9999px;height:1px}
 		nav img{width:32px;height:32px}
 		.editor{-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto}
+		.editor img{clear:both;width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
+		.editor img:hover{border-color:blue}
 		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
 		.favorited, .tasked{color:yellow}
 		.stat{position:relative;height:300px;background-color:black}
@@ -253,10 +255,10 @@
 			</nav>
 		</header>
 		<article id="createPost"
-			data-on-load="setTitle('Create A '+runtime.cat.name);Parse.find('tag','category','goal',function(o){tmplCheckable.build({loop:o},'#tags')})">
+			data-on-load="setTitle('Create A '+runtime.cat.name);new Editor(postEditor);Parse.find('tag','category','goal',function(o){tmplCheckable.build({loop:o},'#tags')})">
 			<form id="postCreator" onsubmit="savePost(this);return false">
 				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
-				<fieldset><textarea name="content" class="editor" contenteditable="true">content</textarea></fieldset>
+				<fieldset><div name="content" id="postEditor" class="editor" contenteditable="true">content</div></fieldset>
 				<fieldset>
 					<label>Gender</label>
 					<select name="tags" multiple="multiple">
@@ -277,10 +279,9 @@
 				<input type="submit" class="outview">
 			</form>
 		</article>
-		</article>
 		<footer>
 			<nav>
-				<a data-icon="picture" onclick="insertImage()"></a>
+				<a data-icon="picture" onclick="postEditor.insertImage()"></a>
 				<a data-icon="trash" onclick=""></a>
 				<a data-icon="dashboard" onclick="popup(tags,event)"></a>
 			</nav>
@@ -364,7 +365,7 @@
 				</fieldset>
 				<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
 				<fieldset>
-					<img name="photo" onclick="uploader.bind(this).ck()" 
+					<img name="photo" onclick="uploader.bind(this).click()" 
 						style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto" 
 						placeholder="photo"/>
 				</fieldset>
@@ -379,6 +380,7 @@
 		</footer>
 	</section>
 	<input type="file" id="uploader" class="outview" onchange="this.save()">
+	<canvas id="_imgSizer" class="outview"></canvas>
 	<script type="text/tmpl" id="tmplCheckable">
 		<div class="checkable">
 			<span>{{title}}</span>
