@@ -22,7 +22,7 @@
 	</style>
 	<script src="res/quo.debug.js"></script>
 	<script src="res/mustache.js"></script>
-	<script src="res/parse-1.2.8.min.js"></script>
+	<script src="res/parse-1.2.12.js"></script>
 	<script src="res/me.js"></script>
 </head>
 <body>
@@ -34,13 +34,13 @@
 					<li class="thumb" id="tmplChildren_{{id}}">
 						<img src="{{attributes.photo._url}}">
 						<div>
-							<a href="#" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.child={id:'{{id}}'}">{{attributes.name}}</a>
+							<a href="#" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child={id:'{{id}}'}">{{attributes.name}}</a>
 						</div>
 					</li>
 					{{/loop}}
 					{{^loop}}
 					<li class="empty">
-						<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.child=null">快快加入你的宝宝和TA一起玩</a>
+						<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child=null">快快加入你的宝宝和TA一起玩</a>
 					</li>
 					{{/loop}}
 				</script>
@@ -49,7 +49,7 @@
 		<footer>
 			<nav>
 				<a href="#" data-icon="signout" onclick="Parse.User.logOut();location.reload()"></a>
-				<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.child=null"></a>
+				<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child=null"></a>
 			</nav>
 		</footer>
 	</aside>
@@ -70,11 +70,11 @@
 				<li class="thumb">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="category" onmouseup="$(this).trigger('touchend')" ontouchend="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
+						<strong><a data-view-section="category" onmouseup="$(this).trigger('touchend')" ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
 						<small>{{attributes.desc}}</small>
 						<a class="on-right" data-view-section="creator" 
 							onmouseup="$(this).trigger('touchend')" 
-							ontouchend="runtime.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
+							ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
 							style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
 					</div>
 				</li>
@@ -96,7 +96,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="posts" class="list scroll" data-on-load="setTitle(runtime.cat.name);Parse.find('post','category',runtime.cat.name,tmplPosts)">
+		<article id="posts" class="list scroll" data-on-load="setTitle(__.cat.name);Parse.find('post','category',__.cat.name,tmplPosts)">
 			<ul>
 				<li>
 					<div style="position:relative;height:300px;background-color:black"></div>
@@ -106,7 +106,7 @@
 				<li class="thumb">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.post={id:'{{id}}'}" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{id}}'}" href="#">{{attributes.title}}</a></strong>
 						<a href="#" data-icon="comment" class="on-right" data-count="{{attributes.comments}}"></a>
 						<a href="#" data-icon="star" class="on-right" data-count="{{attributes.comments}}"></a>
 						<a href="#" data-icon="list" class="on-right" data-count="{{attributes.comments}}"></a>
@@ -130,7 +130,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="show" class="scroll" data-on-load="Parse.get('post',runtime.post.id).then(showPost,Parse.error)">
+		<article id="show" class="scroll" data-on-load="Parse.get('post',__.post.id).then(showPost,Parse.error)">
 			<div style="padding:5px">
 				<script type="text/tmpl" id="tmplPost">
 					<div>
@@ -187,7 +187,7 @@
 				<li class="thumb arrow">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
 					</div>
 				</li>
 				{{/loop}}
@@ -208,7 +208,7 @@
 				<li class="thumb arrow">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="runtime.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
+						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
 					</div>
 				</li>
 				{{/loop}}
@@ -222,7 +222,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',runtime.post,tmplComment)">
+		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',__.post,tmplComment)">
 			<ul>
 				<script type="text/tmpl" id="tmplComment">
 				{{#loop}}
@@ -240,7 +240,7 @@
 		<footer>
 			<nav>
 				<a><form id="commentCreator"
-					onsubmit="this.object('comment','post',runtime.post).save().then(function(c){tmplComment.build({loop:[c]});commentCreator.content.value='';done()},Parse.error);return false;">
+					onsubmit="this.object('comment','post',__.post).save().then(function(c){tmplComment.build({loop:[c]});commentCreator.content.value='';done()},Parse.error);return false;">
 					<textarea style="height:46px;padding:5px;width:100%;margin:0" name="content"></textarea>
 				</form></a>
 				<button data-icon="save" type="submit" form="commentCreator"></button>
@@ -254,8 +254,8 @@
 				<button class="on-right" type="submit" form="postCreator" data-icon="save"></button>
 			</nav>
 		</header>
-		<article id="createPost"
-			data-on-load="setTitle('Create A '+runtime.cat.name);new Editor(postEditor);Parse.find('tag','category','goal',function(o){tmplCheckable.build({loop:o},'#tags')})">
+		<article id="createPost" class="scroll"
+			data-on-load="setTitle('Create A '+__.cat.name);new Editor(postEditor);Parse.find('tag','category','goal',function(o){tmplCheckable.build({loop:o},'#tags')})">
 			<form id="postCreator" onsubmit="savePost(this);return false">
 				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
 				<fieldset><div name="content" id="postEditor" class="editor" contenteditable="true">content</div></fieldset>
@@ -294,8 +294,8 @@
 				<button class="on-right" type="submit" form="storyForm" data-icon="save"></button>
 			</nav>
 		</header>
-		<article id="createStory">
-			<form id="storyForm" onsubmit="this.object('story','post',runtime.post.id,'duration', parseInt(p.duration.text())).save().then(Lungo.Rounter.back,Parse.error);return false">
+		<article id="createStory" class="scroll">
+			<form id="storyForm" onsubmit="this.object('story','post',__.post.id,'duration', parseInt(p.duration.text())).save().then(Lungo.Rounter.back,Parse.error);return false">
 				<fieldset><select name="duration">
 							<option value="KknqyCi9x2">60</option>
 							<option value="ueOPMH3mSR">10</option>
@@ -352,7 +352,7 @@
 	</section>
 	<section id="child" data-transition="slide">
 		<header data-back="left-sign" data-title="baby"></header>
-		<article id="child1" data-on-load="runtime.child&&Parse.get('child',runtime.child.id).then(function(c,d){(d=childForm).set(c);d.photo.value&&(d.photo.src=d.photo.value.url())},Parse.error)||this.set()">
+		<article id="child1" data-on-load="__.child&&Parse.get('child',__.child.id).then(function(c,d){(d=childForm).set(c);d.photo.value&&(d.photo.src=d.photo.value.url())},Parse.error)||childForm.set()">
 			<form id="childForm" 
 				onsubmit="this.object('child','gender',parseInt(this.gender.value)).save().then(function(c){tmplChildren.build({loop:[c]});Lungo.Router.back();},Parse.error);return false">
 				<input type="hidden" name="id">
@@ -365,7 +365,7 @@
 				</fieldset>
 				<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
 				<fieldset>
-					<img name="photo" onclick="uploader.bind(this).click()" 
+					<img name="photo" onclick="uploader.bind(this,{size:150}).click()" 
 						style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto" 
 						placeholder="photo"/>
 				</fieldset>
@@ -374,7 +374,7 @@
 		</article>
 		<footer>
 			<nav>
-				<a data-icon="certificate" onclick="runtime.child=extracChild()"></a>
+				<a data-icon="certificate" onclick="__.child=extracChild()"></a>
 				<a><button type="submit" form="childForm" data-icon="ok-sign"></button></a>
 			</nav>
 		</footer>

@@ -1,5 +1,5 @@
 ﻿window.$=$$
-window.runtime={}
+window.__={}
 empty=new Function()
 article=function(){return Lungo.Element.Cache.article[0]}
 form=function(){return $(article(),'form')[0]}
@@ -26,6 +26,13 @@ HTMLFormElement.prototype.set=function(o){
 	$(this,'[type=checkbox][name]').each(function(i,el,v){el.checked=(v=o.get(el.name))&&v.indexOf&&v.indexOf(el.value)!=-1})
 	$(this,'[name=id]').each(function(i,el){el.value=o.id})
 }
+function inherit(o,ex){
+	if(ex){
+		for(var i in ex)
+			ex.hasOwnProperty(i)&&(o[i]=ex[i])
+	}
+	return o
+}
 
 $.fn.once=function(e,cb,a,b){a=this,b=function(){cb.apply(this,arguments);a.unbind(e,b)};a.bind(e,b)}
 Parse.object=function(f){
@@ -46,6 +53,7 @@ $.each(['find','first'],function(index,n){
 		else if('SCRIPT'==h.nodeName){
 			h.clean()
 			h=function(o){t.build({loop:o});done()}
+			len--
 		}else
 			h=null
 		for(var i=1;i<len;i+=2)
@@ -82,26 +90,26 @@ function checkLogin(){
 	if(!Parse.user())
 		return setTimeout(function(){Lungo.Router.section('user')},1000)
 	Parse.find('child','author',Parse.user().id,function(o){
-			o && tmplChildren.build({loop:o}) && !runtime.currentChild && (runtime.currentChild=o[0])
+			o && tmplChildren.build({loop:o}) && !__.currentChild && (__.currentChild=o[0])
 		})
 }
 function savePost(p,newPost){
 	doing()
-	newPost=p.object('post',"category",runtime.cat.name,"duration", parseInt(p.duration.text()),'content',postEditor.getContent())
+	newPost=p.object('post',"category",__.cat.name,"duration", parseInt(p.duration.text()),'content',postEditor.getContent())
 	newPost.addUnique("tags", p.duration.value)
-	newPost.addUnique("tags",runtime.cat.id)
+	newPost.addUnique("tags",__.cat.id)
 	newPost.save().then(function(){p.reset();Lungo.Router.back();done()},Parse.error)
 }
 
 function _favorite(f){
-	Parse.first('favorite','author',Parse.user().id,'post',runtime.post.id,f)
+	Parse.first('favorite','author',Parse.user().id,'post',__.post.id,f)
 }
 function _task(f){
-	Parse.first('task','author',Parse.user().id,'post',runtime.post.id,'status',1,f)
+	Parse.first('task','author',Parse.user().id,'post',__.post.id,'status',1,f)
 }
 function showPost(p){
 	setTitle(p.get('title'))
-	tmplPost.clean().build(runtime.post=p)
+	tmplPost.clean().build(__.post=p)
 	_task(function(t,b){
 		$(cmdtask)[((b=t&&t.get('status'))?'add':'remove')+'Class']('tasked')
 		b&&($('#taskOption [value="'+t.get('type')+'"]')[0].checked=true)
@@ -120,24 +128,24 @@ function popup(el,e){
 
 function toggleFavorite(){
 	_favorite(function(f,a){
-		(f=f||Parse.object('favorite','post',(a=runtime.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail')))
+		(f=f||Parse.object('favorite','post',(a=__.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail')))
 			.set('status',f.get('status')?0:1)
 		f.save().then(function(){$(cmdfavorite)[(f.get('status')?'add':'remove')+'Class']('favorited');done()},Parse.error)
 	})
 }			
 function addTask(e,v){
 	e.checked && _task(function(t,a){
-		(t=t||Parse.object('task','post',(a=runtime.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail'),'status',1))
+		(t=t||Parse.object('task','post',(a=__.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail'),'status',1))
 			.set('type',v)
 		t.save().then(function(){$(cmdtask).addClass('tasked');done()},Parse.error)
 	})				
 }
 
-function getImageData(url,size){
+String.prototype.toImageDataURL=function(size){
 	var tool=_imgSizer,
 		ctx=tool.getContext('2d'),
 		img=new Image();
-	img.src=url;
+	img.src=this;
 	var wh=img.width/img.height;
 	tool.width = wh>=1 ? (size<img.width ? size : img.width) : (size<img.height ? Math.floor(size*wh) : img.width);
 	tool.height = wh<1 ? (size<img.height ? size : img.height) : (size<img.width ? Math.floor(size/wh) : img.height);
@@ -145,6 +153,10 @@ function getImageData(url,size){
 	tool.style.height=tool.height+"px"
 	ctx.drawImage(img,0,0,img.width,img.height,0,0,tool.width, tool.height);
 	return tool.toDataURL("image/jpeg")
+}
+String.prototype.IMAGE_DATA_INDEX="data:image/png;base64,".length+1
+String.prototype.toImageData=function(size){
+	return this.toImageDataURL(size).substr(this.IMAGE_DATA_INDEX)
 }
 
 function init(){
@@ -194,45 +206,35 @@ function init(){
 	checkLogin()
 	
 	uploader.bind=function(a,opt){
-		this.holder=a
-		this.opt=opt||{}
-		return this			
-	}
-	uploader.save=function(){
-		doing()
-		var reader=new FileReader()
-		reader.onload=function(e){
-			var holder=uploader.holder,
-				data=getImageData(e.target.result,uploader.opt['size']||1024),
-				file=new Parse.File("a.jpg",{base64:data})
-			file.save(uploader.opt||{
+		this.opt=inherit({
 				success: function(f){
-					holder.src=f.url()
-					holder.file=holder.value=f
+					a && 'IMG'==a.nodeName && (a.src=(a.file=a.value=f).url())
 					done()
 				},
-				error: Parse.error
-			})
+				error:Parse.error,
+				size:1024
+			},opt)
+		return this			
+	}
+	
+	uploader.save=function(){
+		doing()
+		var me=this,
+			reader=new FileReader(), 
+			i=0,len=this.files.length
+		reader.onload=function(e){
+			var f=new Parse.File("a.jpg",{base64:e.target.result.toImageData(me.opt.size)})
+			me.opt['onSave'] && me.opt.onSave.call(me,f, e.target.result)
+			f.save(me.opt)
+			i<len && reader.readAsDataURL(me.files[i++])
 		}
-		reader.readAsDataURL(this.files[0])
+		reader.readAsDataURL(this.files[i++])
 	}
 }
 
 
 //editor
 (function(){
-	function createTools(){
-		if(!window['imgTool']){
-			var t=document.createElement('div');
-			t.id='imgTool';
-			t.innerHTML='<input type="file" name="_file" onchange="this.files && imgTool.editor.insertImage(this.files)" multiple>'
-				+'<canvas name="_canvas" width="1024" height="1024" style="width:1024px;height:1024px"></canvas>'
-				+'<textarea></textarea>';
-			t.style.display="none";
-			document.body.appendChild(t)
-		}
-	}
-	
 	if(!HTMLImageElement.prototype.isData)
 		HTMLImageElement.prototype.isData=function(){
 			return this.src.substr(0,4)=='data'
@@ -243,20 +245,9 @@ function init(){
 			return this.src.substr(0,15)=='data:image/jpeg'
 		}
 		
-		
-	this.Editor=function(el,saver){
+	this.Editor=function(el){
 		if(el['insertImage'])
 			return;
-			
-		createTools();
-		
-		if(!saver){
-			saver=function(img,data){
-				file
-				return "ok";
-			}
-		}
-		
 		var savedRange,isInFocus=false;
 		function saveSelection(){
 			savedRange=getSelection ? getSelection().getRangeAt(0) : document.selection.createRange()
@@ -298,51 +289,32 @@ function init(){
 		})
 		
 		el.insertImage=function(f,reader){
-			if(arguments.length==0){
-				imgTool.editor=this
-				imgTool.querySelector('input').click()
-			}else{
-				var i=0,len=f.length;
-				(reader = new FileReader()).onload=function(e){
-					el.focus()
-					restoreSelection();
-					document.execCommand('insertText',false,"\n")
-					document.execCommand('insertImage',false,e.target.result)
-					document.execCommand('insertText',false,"\n")
-					if(i<len)
-						reader.readAsDataURL(f[i++]);
-				}
-				reader.readAsDataURL(f[i++]);
-			}
+			uploader.bind(el,{
+					success:function(f){
+							f._img.src=f.url()
+							done()
+						},
+					error:Parse.error,
+					size:1024,
+					onSave: function(f,data){
+							el.focus()
+							restoreSelection();
+							document.execCommand("insertHTML", false, "<br><img id='_editorImg'><br>");
+							(f._img=_editorImg).src=data
+							_editorImg.removeAttribute('id')
+							saveSelection();
+						}
+				}).click()
 		}
-		el.addEventListener('click',function(e){
-			if(e.srcElement.nodeName=='IMG'){
-				if (window.getSelection){//non IE and there is already a selection
-					var s = window.getSelection();
-					if (s.rangeCount > 0) 
-						s.removeAllRanges();
-					var r=document.createRange();
-					r.setStartBefore(e.srcElement);
-					r.setEndAfter(e.srcElement);
-					s.addRange(r);
-				} else if (document.selection)//IE
-					savedRange.select();
-			}
-		})
+		
 		el.getThumb=function(){
 			var thumb=this.querySelector('img');
 			if(!thumb || !thumb.isData())
 				return null;
-			return getImageData(thumb.src,96);
+			return thumb.src.toImageData(96);
 		}
-		el.saveImageData=function(imageSaver){
-			for(var images=this.querySelectorAll('img[src^="data:image"]'),img,len=images.length,i=0;i<len;i++){
-				img=images[i]
-				img.src=imageSaver(img,getImageData(img.src,1024));
-			}
-		}
+
 		el.getContent=function(imageSaver){
-			this.saveImageData(imageSaver||saver);
 			return this.innerHTML.replace(Editor.TRIM_TAG,"\n").replace(Editor.TRIM_LINE,'\n\n');
 		}
 		return el
