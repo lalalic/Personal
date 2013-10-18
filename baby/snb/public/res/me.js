@@ -1,5 +1,5 @@
 ﻿window.$=$$
-window.__={}
+window.__={}//runtime information
 empty=new Function()
 article=function(){return Lungo.Element.Cache.article[0]}
 form=function(){return $(article(),'form')[0]}
@@ -8,7 +8,7 @@ HTMLSelectElement.prototype.text=function(){return this.options[this.selectedInd
 HTMLFormElement.prototype.object=function(o){
 	o=this._object||(typeof(o)=='string'?Parse.object(o):o),
 	$(this,':not([type=checkbox]):not([type=radio]):not(select):not([name=id])[name],[type=radio][name]:checked').each(function(i,el){o.set(el.name,el.value)})
-	$(this,'select[name]').each(function(i,el){o.set(el.name,el.options[el.selectedIndex].value)})
+	$(this,'select[name]').each(function(i,el){o[el.hasAttribute('multiple') ? 'addUnique':'set'](el.name,el.options[el.selectedIndex].value)})
 	$(this,'[type=checkbox][name]:checked').each(function(i,el){o.addUnique(el.name,el.value)})
 	for(var i=1,as=arguments,len=as.length;i<as.length;i+=2)
 		o.set(as[i],as[i+1])
@@ -26,6 +26,7 @@ HTMLFormElement.prototype.set=function(o){
 	$(this,'[type=checkbox][name]').each(function(i,el,v){el.checked=(v=o.get(el.name))&&v.indexOf&&v.indexOf(el.value)!=-1})
 	$(this,'[name=id]').each(function(i,el){el.value=o.id})
 }
+
 function inherit(o,ex){
 	if(ex){
 		for(var i in ex)
@@ -41,6 +42,35 @@ Parse.object=function(f){
 		as[i]=='id'?(a.id=as[i+1]):a.set(as[i],as[i+1])
 	return a
 }
+;(function(){
+	var _get=Parse.Object.prototype.get
+	Parse.Object.prototype.get=function(a){
+		if(['id','createdAt','updatedAt'].indexOf(a)!=-1)
+			return this[a];
+		else if(a=='objectId')
+			return this.id;
+		return _get.call(this,a)
+	}
+
+	Parse.Object.prototype.cache=function(){
+		var o=this,
+			table=this.className,
+			schema=Parse.Data.schema[table],
+			sql=["insert into "+table+"("],
+			fields=['objectId','createdAt','updatedAt'],
+			values=['?','?','?']			
+		for(var i in schema){
+			fields.push(i)
+			values.push('?')
+		}
+		sql.push(fields.join(','))
+		sql.push(')values('+values.join(',')+')')
+		values.length=0
+		$.each(fields,function(i,field){values.push(o.get(field))})
+		Parse.Data.websql.run(sql.join(''),values)
+	}
+})();
+
 $.each(['find','first'],function(index,n){
 	Parse[n]=function(a){
 		doing()
@@ -86,6 +116,7 @@ Parse.Object.prototype.ago=function(){
 		return this.createdAt.getMonth()+1+"-"+this.createdAt.getDay()+1;
 		
 }
+
 function checkLogin(){
 	if(!Parse.user())
 		return setTimeout(function(){Lungo.Router.section('user')},1000)
@@ -95,8 +126,13 @@ function checkLogin(){
 }
 function savePost(p,newPost){
 	doing()
-	newPost=p.object('post',"category",__.cat.name,"duration", parseInt(p.duration.text()),'content',postEditor.getContent())
-	newPost.addUnique("tags", p.duration.value)
+	var dura=p.querySelector(':checked[name=duration]'),
+		thumb=postEditor.getThumbnail()
+	newPost=p.object('post',"category",__.cat.name,
+		"duration", parseInt(dura.nextSibling.innerHTML),
+		'content',postEditor.getContent())
+	thumb && newPost.set('thumbnail',thumb)
+	newPost.addUnique("tags", dura.value)
 	newPost.addUnique("tags",__.cat.id)
 	newPost.save().then(function(){p.reset();Lungo.Router.back();done()},Parse.error)
 }
@@ -109,6 +145,12 @@ function _task(f){
 }
 function showPost(p){
 	setTitle(p.get('title'))
+	p._tags=[]
+	var tags=p.get('tags')
+	tags && $.each(tags, function(i,tag){
+		p._tags.push(window.tags[tag])
+	})
+	
 	tmplPost.clean().build(__.post=p)
 	_task(function(t,b){
 		$(cmdtask)[((b=t&&t.get('status'))?'add':'remove')+'Class']('tasked')
@@ -141,6 +183,7 @@ function addTask(e,v){
 	})				
 }
 
+{//extend string for image resizer, need _imgSizer canvas element
 String.prototype.toImageDataURL=function(size){
 	var tool=_imgSizer,
 		ctx=tool.getContext('2d'),
@@ -158,6 +201,117 @@ String.prototype.IMAGE_DATA_INDEX="data:image/png;base64,".length+1
 String.prototype.toImageData=function(size){
 	return this.toImageDataURL(size).substr(this.IMAGE_DATA_INDEX)
 }
+}
+
+;
+(function(x){
+	x.Data={//interface
+		classes:{
+			GET:function(o){
+				var sql=["select * from "+o.className], 
+					where=[],values=[],
+					promise = new Parse.Promise();
+				for(var i in o.data.where){
+					where.push(i+"=?")
+					values.push(o.data.where[i])
+				}
+				
+				if(where.length){
+					sql.push('where')
+					sql.push(where.join(' and '))
+				}
+				
+				if('order' in o.data)
+					sql.push('orderby '+o.data.order)
+					
+				if('limit' in o.data)
+					sql.push('limit '+o.data.limit)
+				
+				sql=sql.join(' ')
+				x.Data.websql.run(sql,values,function(tx,results){
+					var data=[]
+					for(var i=0,len=results.rows.length,a;i<len;i++){
+						data.push(results.rows.item[i])
+					}
+					promise.resolve({results:data})
+				}, function(error){
+					promise.reject(error.message)
+				})
+			}
+		},
+		files:{
+		},
+		users:{
+		} 
+	}
+	
+	;(function(storage){//schema with sample data to know type
+		var _t='',_i=1,_date=new Date(),_array=[_t]
+		storage.schema={
+			pendings:{table:_t,entity:_t,type:_i},
+			tag:{category:_t,name:_t,posts:_i,time:_i},
+			User:{username:_t,comments:_i,post:_i,score:_i},
+			child:{birday:_t,gender:_i,name:_t,photo:_t},
+			post:{author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
+			story:{post:_t,author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
+			task:{author:_t,authorName:_t,post:_t,title:_t,planAt:_date,status:_i,time:_i,type:_i},
+			favorite:{post:_t,title:_t,status:_i},
+			comments:{author:_t,authorName:_t,post:_t,content:_t}
+		}
+	})(x.Data);
+	
+	;(function(storage){//websql storage implementation
+		storage.websql=openDatabase('parse.supernaiba.1', '1.0', 'supernaiba database', 100 * 1024 * 1024,function(db){
+			db.transaction(function(tx){
+				for(var table in storage.schema){
+					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer,'],
+						fields=[],
+						schema=storage.schema[table]
+					for(var field in  schema){
+						var sample=schema[field]
+						switch(typeof(sample)){
+						case 'string':
+							fields.push(field+" text")
+						break;
+						case 'number':
+							fields.push(field+" integer")
+						break;
+						case 'object':
+							if('getTime' in sample)
+								fields.push(field+" integer")
+							else 
+								fields.push(field+" text")
+						break;
+						}
+					}
+					sql.push(fields.join(','))
+					sql.push(')')
+					tx.executeSql(sql.join(' '))
+				}
+			})
+		});
+		storage.websql.run=function(sql,values){
+			var promise = new Parse.Promise();
+			this.transaction(function(tx){
+				tx.executeSql(sql,values,function(tx,results){
+						promise.resolve(tx,results)
+					},function(tx,error){
+						promise.reject(error)
+					})
+			})
+			return promise
+		}
+	})(x.Data);
+	
+	var _request=x._request
+	x._request=function(o){
+		x.Data[o.route][o.method](o);
+		if($.isOnline())
+			return _request.apply(null,arguments) 
+	}
+})(Parse);
+
+
 
 function init(){
 	$("script[type*=tmpl]").each(function(i,tmpl,b,e){
@@ -229,6 +383,22 @@ function init(){
 			i<len && reader.readAsDataURL(me.files[i++])
 		}
 		reader.readAsDataURL(this.files[i++])
+	}
+	Parse.find('tag',function(o){
+		window.tags={}
+		$.each(o,function(i,tag){
+			window.tags[tag.id]=tag.get('name')
+			var cat=tag.get('category')
+			if(! (cat in window.tags))
+				window.tags[cat]=[]
+			window.tags[cat].push(tag.id)
+		})
+	})
+	
+	if($.isOnline()){
+		Parse.find('tag',function(o){
+			$.each(o,function(i,tag){tag.cache()})
+		})
 	}
 }
 
@@ -308,10 +478,12 @@ function init(){
 		}
 		
 		el.getThumb=function(){
+			if(el['thumb'])
+				return el.thumb;
 			var thumb=this.querySelector('img');
 			if(!thumb || !thumb.isData())
 				return null;
-			return thumb.src.toImageData(96);
+			return new Parse.File('thumb',thumb.src.toImageData(96));
 		}
 
 		el.getContent=function(imageSaver){

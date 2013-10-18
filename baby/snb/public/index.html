@@ -8,17 +8,31 @@
 	<link rel="stylesheet" href="res/lungo.icon.css">
 	<link rel="stylesheet" href="res/lungo.theme.css">
 	<style>
-		#show img{margin-left: auto;margin-right:auto;display:block}
-		[contenteditable=true]{background-color:white;height:100%;padding:10px}
+		#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}
+		#show pre{background-color:white}
 		.outview{position:absolute;top:-9999px;height:1px}
 		nav img{width:32px;height:32px}
-		.editor{-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto}
-		.editor img{clear:both;width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
+		.editor{background-color:white;height:100%;padding:10px;-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto;padding-left:0;padding-right:0}
+		.editor img{clear:both;max-width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
 		.editor img:hover{border-color:blue}
+		.editor:empty:before{content:attr(placeholder); color:lightgray}
 		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
 		.favorited, .tasked{color:yellow}
 		.stat{position:relative;height:300px;background-color:black}
 		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}
+		
+		span.checkable{line-height:35px;}
+		span.checkable>span{padding:5px;cursor:default}
+		span.checkable>span:not(:first-of-type){color:lightgray}
+		span.checkable>span:hover{color:blue}
+		span.checkable input:checked+span{color:black}
+		span.checkable>span:first-of-type{background-color:lightgreen;color:white}
+		span.checkable input{position:absolute;top:-9999px;height:1px}
+		span.checkable input:not(:checked)+span{display:none}
+		span.checkable.open input:not(:checked)+span{display:initial}
+		span.checkable:not(.open)>span:first-of-type:after{content:'...'}
+		.tags{text-align:center}
+		.tags:before{content:"\f02b";font-family:'lungojsicon';font-weight:normal !important}
 	</style>
 	<script src="res/quo.debug.js"></script>
 	<script src="res/mustache.js"></script>
@@ -135,8 +149,11 @@
 				<script type="text/tmpl" id="tmplPost">
 					<div>
 						<div style="min-height:50%">
-							<div><span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span></div>
-							<p>{{{attributes.content}}}</p>
+							<center>
+								<span class="tags">{{_tags}}</span>
+								<span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span>
+							</center>
+							<pre>{{{attributes.content}}}</pre>
 						</div>
 						<ul class="list" id="stories"/>
 					</div>
@@ -145,7 +162,7 @@
 					{{#loop}}
 					<li class="thumb">
 						<img src="{{attributes.thumbnail._url}}">
-						<p>{{{attributes.content}}}</p>
+						<pre>{{{attributes.content}}}</pre>
 					</li>
 					{{/loop}}
 					{{^loop}}
@@ -251,42 +268,32 @@
 	<section id="creator" data-transition="slide">
 		<header data-title="Create Post" data-back="left-sign">
 			<nav>
-				<button class="on-right" type="submit" form="postCreator" data-icon="save"></button>
+				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
 		<article id="createPost" class="scroll"
-			data-on-load="setTitle('Create A '+__.cat.name);new Editor(postEditor);Parse.find('tag','category','goal',function(o){tmplCheckable.build({loop:o},'#tags')})">
+			data-on-load="setTitle('Create A '+__.cat.name);new Editor(postEditor)">
 			<form id="postCreator" onsubmit="savePost(this);return false">
-				<fieldset><input type="text" placeholder="title" name="title"></fieldset>
-				<fieldset><div name="content" id="postEditor" class="editor" contenteditable="true">content</div></fieldset>
 				<fieldset>
-					<label>Gender</label>
-					<select name="tags" multiple="multiple">
-						<option value="N5zSTzoczQ">Boy</option>
-						<option value="DJIUvgiFpk">Girl</option>
-					</select>
+					<input type="text" placeholder="title" name="title" style="text-align:center">
+					<div class="tags">
+					<script>
+						Parse.find('tag','category','gender',function(o){tmplCheckable.build({title:'gender',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
+						Parse.find('tag','category','duration',function(o){tmplCheckable.build({title:'duration',name:'duration',type:'radio',loop:o},'#postCreator .tags')})
+						Parse.find('tag','category','goal',function(o){tmplCheckable.build({title:'goal',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
+					</script>
+					</div>
 				</fieldset>
-				<fieldset>
-					<select name="duration">
-						<option value="KknqyCi9x2">60</option>
-						<option value="ueOPMH3mSR">10</option>
-						<option value="MNWQyARcTj">30</option>
-						<option value="xWiqWf3msh">45</option>
-						<option value="4NZdgfvDpV">90</option>
-						<option value="5BqICFnfKY">120</option>
-					</select>
-				</fieldset>
+				<fieldset><div name="content" id="postEditor" style="min-height:1000px" class="editor" contenteditable="true" placeholder="content"></div></fieldset>
 				<input type="submit" class="outview">
 			</form>
 		</article>
 		<footer>
 			<nav>
 				<a data-icon="picture" onclick="postEditor.insertImage()"></a>
-				<a data-icon="trash" onclick=""></a>
-				<a data-icon="dashboard" onclick="popup(tags,event)"></a>
+				<a data-icon="save" onclick="postCreator.submit()"></a>
 			</nav>
 		</footer>
-		<div class="popup" id="tags" onclick="event.stopPropagation()"></div>
 	</section>
 	<section id="story" data-transition="slide">
 		<header data-back="left-sign" data-title="Create Story">
@@ -382,13 +389,13 @@
 	<input type="file" id="uploader" class="outview" onchange="this.save()">
 	<canvas id="_imgSizer" class="outview"></canvas>
 	<script type="text/tmpl" id="tmplCheckable">
-		<div class="checkable">
+		<span class="checkable" onclick="this.classList.toggle('open')">
 			<span>{{title}}</span>
 			{{#loop}}
-			<span><input type="{{type}}" name="{{name}}" value="{{id}}"class="outview">{{attributes.name}}</span>
+			<input type="{{type}}" name="{{name}}" value="{{id}}" class="outview" title="{{attributes.desc}}"><span onclick="this.previousSibling.click()">{{attributes.name}}</span>
 			{{/loop}}
-		</div>
-	</script>	
+		</span>
+	</script>
 	<script src="res/lungo.debug.js"></script>		
 	<script>init()</script>
 

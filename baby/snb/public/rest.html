@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script>
+	(function(){
+		Array.prototype.each=NodeList.prototype.each=HTMLCollection.prototype.each=function(f){for(var i=0;i<this.length;i++) f(i,this[i]);return this};
+		Node.prototype.remove=function(){this.parentNode.removeChild(this)};
+		NodeList.prototype.remove=HTMLCollection.prototype.remove=function(){this.each(function(i,a){a.remove()})};
+		NodeList.prototype.last=HTMLCollection.prototype.last=function(){return this[this.length-1]}
+		var _x=function(a){for(a=3;a--;)try{return new(XMLHttpRequest||ActiveXObject)(["Msxml2","Msxml3","Microsoft"][a]+".XMLHTTP")}catch(e){}},
+			Promise=this.Promise=function(a,b){a=[];return{resolve:function(c){b=c;while(a.length)a.shift()(b);a=0},then:function(c){a?a.push(c):c(b)}}}
+		var XHR=this.XHR=function(){
+			this.xhr=_x()
+			this.promise=Promise()
+			var oldthen=this.promise.then
+			this.promise.then=function(done,failed){
+				oldthen.call(this,function(x){
+					x.status!=200 ? failed&&failed(x) : done&&done(x)
+					return this
+				})
+			}
+			this.request=function(url,method){
+				var me=this,
+					xhr=this.xhr
+				this.async && 
+				(xhr.onreadystatechange=function(){
+					this.readyState==4&&me.promise.resolve(this)
+				})
+				xhr.open(method||'get',url,this.async)
+				this.onsend && this.onsend()
+				xhr.send()
+				!this.async&&this.promise.resolve(xhr)
+				return this.promise
+			}
+		}
+		
+		XHR.prototype={
+			onsend:null,
+			async:true,
+			get: function(url){
+				return this.request(url)
+			},
+			post:function(url,data){
+				return this.request(url,'post',data)
+			},
+			put:function(url,data){
+				return this.request(url,'put',data)
+			},
+			del:function(url,data){
+				return this.request(url,'delete',data)
+			}
+		}
+		
+		
+		
+		
+		var Parse=this.Parse=function(){
+		}
+		Parse.url="https://api.parse.com/1/"
+		Parse.XHR=function(){
+			XHR.call(this)
+			var oldthen=this.promise.then
+			this.promise.then=function(done,failed){
+				oldthen.call(this,function(x){done(JSON.parse(x.response))},function(x){failed(x.status,x.statusText)})
+			}
+		}
+		Parse.XHR.prototype=new XHR()
+		Parse.XHR.prototype.onsend=function(){
+			var xhr=this.xhr
+			xhr.setRequestHeader("X-Parse-Application-Id", "CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL");
+			xhr.setRequestHeader("X-Parse-REST-API-Key", "Rv5BONwihYqmH144bG6vbC9tBxxRaxrxNv8Ci27h");
+			xhr.setRequestHeader("Content-Type", "application/json");
+		}
+		
+		
+		Parse.Object=function(type){
+			this.clazz=type;
+		}
+		
+		Parse.Object.extend=function(type){
+			var clazz=function(){
+				Parse.Object.call(this)
+			}
+			clazz.prototype.clazz=type;
+			return clazz;
+		}
+		
+		Parse.Query=function(type){
+			this.type=type;
+		}
+		Parse.Query.prototype={
+			get:function(id){
+				return new Parse.XHR().get(Parse.url+"classes/"+this.type.clazz+"/"+id)
+			},
+			
+		}
+		
+		Parse.DB=function(){
+		}
+	}).call(this)
+	function change(a){
+		alert(a.toString())
+	}
+	</script>
+</head>
+<body>
+	<textarea id="data" onchange="new Parse.Query(new Parse.Object('post')).get('YfWgsCM9ee').then(change)">
+		
+	</textarea>
+</body>
+</html>

@@ -2,118 +2,32 @@
 <html>
 <head>
 	<meta charset="utf-8">
-
+	<style>
+		span.tag{line-height:35px;}
+		span.tag>span{border:1px lightgray solid;border-left:none;background-color:lightyellow;padding:5px;cursor:default}
+		span.tag>span:not(:first-of-type){margin-left:-4px}
+		span.tag>span:hover{color:blue}
+		span.tag input:checked+span{background-color: blue}
+		span.tag>span:first-of-type{background-color:lightgreen;border-left:1px lightgray solid}
+		span.tag input{position:absolute;top:-9999px;height:1px}
+		span.tag input:not(:checked)+span{display:none}
+		span.tag.open input:not(:checked)+span{display:initial}
+	</style>
 </head>
 <body>
-<div id="editor" style="height:400px;border:1px solid blue;padding:10px" contenteditable="true">
-
-</div>
-<button type="button" onclick="insertImage()">recover selection</button>
-<input type="file" id="uploader" onchange="this.files && showImage(this.files[0])">
-<canvas style="width:400px;height:300px;border:2px solid red" id="drawer"></canvas>
-<img id="placeholder" style="width:500px;"/>
+<span class="tag" onclick="this.classList.toggle('open')"><span>Gender</span>
+<input type="checkbox" name="gender" value="1"><span onclick="this.previousSibling.click()">boy</span>
+<input type="checkbox" name="gender" value="0"><span onclick="this.previousSibling.click()">girl</span>
+</span>
+<span class="tag" onclick="this.classList.toggle('open')"><span>duration</span>
+<input type="radio" name="duration" value="10"><span onclick="this.previousSibling.click()">10</span>
+<input type="radio" name="duration" value="20"><span onclick="this.previousSibling.click()">20</span>
+<input type="radio" name="duration" value="30"><span onclick="this.previousSibling.click()">30</span>
+<input type="radio" name="duration" value="60"><span onclick="this.previousSibling.click()">60</span>
+<input type="radio" name="duration" value="90"><span onclick="this.previousSibling.click()">90</span>
+<input type="radio" name="duration" value="120"><span onclick="this.previousSibling.click()">120</span>
+</span>
 <script type="text/javascript">
-var Editor=function(el){
-	var savedRange,isInFocus;
-	function saveSelection()
-	{
-		if(window.getSelection)//non IE Browsers
-		{
-			savedRange = window.getSelection().getRangeAt(0);
-		}
-		else if(document.selection)//IE
-		{ 
-			savedRange = document.selection.createRange();  
-		} 
-	}
-
-	function restoreSelection()
-	{
-		isInFocus = true;
-
-		if (savedRange != null) {
-			if (window.getSelection)//non IE and there is already a selection
-			{
-				var s = window.getSelection();
-				if (s.rangeCount > 0) 
-					s.removeAllRanges();
-				s.addRange(savedRange);
-			}
-			else if (document.createRange)//non IE and no selection
-			{
-				window.getSelection().addRange(savedRange);
-			}
-			else if (document.selection)//IE
-			{
-				savedRange.select();
-			}
-		}
-	}
-	//this part onwards is only needed if you want to restore selection onclick
-	var isInFocus = false;
-	function onDivBlur()
-	{
-		isInFocus = false;
-	}
-
-	function cancelEvent(e)
-	{
-		if (isInFocus == false && savedRange != null) {
-			if (e && e.preventDefault) {
-				//alert("FF");
-				e.stopPropagation(); // DOM style (return false doesn't always work in FF)
-				e.preventDefault();
-			}
-			else {
-				window.event.cancelBubble = true;//IE stopPropagation
-			}
-			restoreSelection();
-			return false; // false = IE style
-		}
-	}
-	
-	el.addEventListener('blur',onDivBlur)
-	//el.addEventListener('mousedown',cancelEvent)
-	//el.addEventListener('click',cancelEvent)
-	el.addEventListener('mouseup',saveSelection)
-	el.addEventListener('keyup',saveSelection)
-	el.addEventListener('focus',restoreSelection)
-	return el
-}
-
-function insertImage(){
-	uploader.click()
-}
-
-function showImage(f){
-	var reader = new FileReader();  
-	reader.onload = function(e) {
-		placeholder.src = e.target.result;
-		var MAX_WIDTH = 400;
-		var MAX_HEIGHT = 300;
-		var width = placeholder.width;
-		var height = placeholder.height;
-
-		if (width > height) {
-		  if (width > MAX_WIDTH) {
-			height *= MAX_WIDTH / width;
-			width = MAX_WIDTH;
-		  }
-		} else {
-		  if (height > MAX_HEIGHT) {
-			width *= MAX_HEIGHT / height;
-			height = MAX_HEIGHT;
-		  }
-		}
-		drawer.style.width=width;
-		drawer.style.height=height;
-		drawer.getContext('2d').drawImage(placeholder,0,0,width,height)
-	}
-	reader.readAsDataURL(f);
-	
-}
-
-new Editor(editor)
 </script>
 </body>
 </html>
