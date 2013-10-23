@@ -42,34 +42,6 @@ Parse.object=function(f){
 		as[i]=='id'?(a.id=as[i+1]):a.set(as[i],as[i+1])
 	return a
 }
-;(function(){
-	var _get=Parse.Object.prototype.get
-	Parse.Object.prototype.get=function(a){
-		if(['id','createdAt','updatedAt'].indexOf(a)!=-1)
-			return this[a];
-		else if(a=='objectId')
-			return this.id;
-		return _get.call(this,a)
-	}
-
-	Parse.Object.prototype.cache=function(){
-		var o=this,
-			table=this.className,
-			schema=Parse.Data.schema[table],
-			sql=["insert into "+table+"("],
-			fields=['objectId','createdAt','updatedAt'],
-			values=['?','?','?']			
-		for(var i in schema){
-			fields.push(i)
-			values.push('?')
-		}
-		sql.push(fields.join(','))
-		sql.push(')values('+values.join(',')+')')
-		values.length=0
-		$.each(fields,function(i,field){values.push(o.get(field))})
-		Parse.Data.websql.run(sql.join(''),values)
-	}
-})();
 
 $.each(['find','first'],function(index,n){
 	Parse[n]=function(a){
@@ -222,23 +194,21 @@ String.prototype.toImageData=function(size){
 				}
 				
 				if('order' in o.data)
-					sql.push('orderby '+o.data.order)
+					sql.push('order by '+o.data.order)
 					
 				if('limit' in o.data)
 					sql.push('limit '+o.data.limit)
 				
 				sql=sql.join(' ')
-				x.Data.websql.run(sql,values,function(tx,results){
-					var data=[]
-					for(var i=0,len=results.rows.length,a;i<len;i++){
-						data.push(results.rows.item[i])
-					}
-					promise.resolve({results:data})
-				}, function(error){
-					promise.reject(error.message)
-				})
+				x.Data.websql.run(sql,values)
+					.then(function(tx,results){
+							var data=[]
+							for(var i=0,len=results.rows.length,a;i<len;i++)
+								data.push(results.rows.item[i])
+							promise.resolve({results:data})
+						})
 			}
-		},
+		}, 
 		files:{
 		},
 		users:{
@@ -248,15 +218,62 @@ String.prototype.toImageData=function(size){
 	;(function(storage){//schema with sample data to know type
 		var _t='',_i=1,_date=new Date(),_array=[_t]
 		storage.schema={
-			pendings:{table:_t,entity:_t,type:_i},
-			tag:{category:_t,name:_t,posts:_i,time:_i},
-			User:{username:_t,comments:_i,post:_i,score:_i},
-			child:{birday:_t,gender:_i,name:_t,photo:_t},
-			post:{author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
-			story:{post:_t,author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
-			task:{author:_t,authorName:_t,post:_t,title:_t,planAt:_date,status:_i,time:_i,type:_i},
-			favorite:{post:_t,title:_t,status:_i},
-			comments:{author:_t,authorName:_t,post:_t,content:_t}
+			pendings:{tablename:_t,entity:_t,type:_i},
+			tag:{
+				sample:{category:_t,name:_t,posts:_i,time:_i},
+				cachable:function(o){return o},
+				trim:function(){}
+			},
+			User:{
+				sample:{username:_t,comments:_i,post:_i,score:_i},
+				cachable:function(o){return o.objectId==Parse.user().id && o},
+				trim:function(){}
+			},
+			child:{
+				sample:{birday:_t,gender:_i,name:_t,photo:_t},
+				cachable:function(o){return o.author==Parse.user().id && o},
+				trim:function(){}
+			},
+			post:{
+				sample:{author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
+				cachable:function(o){return o},
+				trim:function(){
+					storage.run('select objectId from post where objectId not in (select distinct post from task) and objectId not (select post from favorite) order by updatedAt desc',null,function(tx,results){
+						if(results.length<50)
+							return;
+						var deleting=[]
+						for(var i=results.length-1; i>50; i--)
+							deleting.push("'"+results[i].objectId+"'")
+						storage.run('delete from post where objectId in ('+deleting.join(',')+')')
+						storage.run('delete from story where post in ('+deleting.join(',')+')')
+						storage.run('delete from comments where post in ('+deleting.join(',')+')')
+					})
+				}
+			},
+			story:{
+				sample:{post:_t,author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
+				indexes:{post:1},
+				cachable:function(o){return o},
+				trim:function(){}
+			},
+			task:{
+				sample:{author:_t,authorName:_t,post:_t,title:_t,planAt:_date,status:_i,time:_i,type:_i},
+				indexes:{post:1},
+				cachable:function(o){return o.author==Parse.user().id && o},
+				trim:function(){}
+			},
+			favorite:{
+				sample:{post:_t,title:_t,status:_i},
+				indexes:{post:1},
+				cachable:function(o){return o.author==Parse.user().id && o},
+				trim:function(){}
+			},
+			comments:{
+				sample:{author:_t,authorName:_t,post:_t,content:_t},
+				indexes:{post:1},
+				cachable: function(o){return o},
+				trim:function(){}
+			}
 		}
 	})(x.Data);
 	
@@ -264,9 +281,10 @@ String.prototype.toImageData=function(size){
 		storage.websql=openDatabase('parse.supernaiba.1', '1.0', 'supernaiba database', 100 * 1024 * 1024,function(db){
 			db.transaction(function(tx){
 				for(var table in storage.schema){
-					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer,'],
+					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer'],
 						fields=[],
-						schema=storage.schema[table]
+						schema=storage.schema[table],
+						indexes=['(updatedAt desc)']
 					for(var field in  schema){
 						var sample=schema[field]
 						switch(typeof(sample)){
@@ -286,28 +304,75 @@ String.prototype.toImageData=function(size){
 					}
 					sql.push(fields.join(','))
 					sql.push(')')
-					tx.executeSql(sql.join(' '))
+					storage.websql.run(sql.join(' '),null,tx)
+					storage.websql.run('create index '+table+'_'+field+' on '+table+'(updatedAt desc)')
+					if('indexes' in schema){
+						for(var field in schema.indexes)
+							storage.websql.run('create index '+table+'_'+field+' on '+table+'('+field+(schema.indexes[field]?'desc':'')+')')
+					}
 				}
 			})
 		});
-		storage.websql.run=function(sql,values){
-			var promise = new Parse.Promise();
-			this.transaction(function(tx){
-				tx.executeSql(sql,values,function(tx,results){
-						promise.resolve(tx,results)
-					},function(tx,error){
-						promise.reject(error)
-					})
-			})
+		storage.websql.run=function(sql,values,tx){
+			var promise = new Parse.Promise(),
+				h=function(tx){
+					tx.executeSql(sql,values,function(tx,results){
+							console.debug(sql)
+							promise.resolve(tx,results)
+						},function(tx,error){
+							console.error(sql+"\n"+error.message)
+							promise.reject(error)
+						})
+				};
+			tx ? h(tx) : this.transaction(h)
 			return promise
-		}
+		};
+		storage.websql.cache=function(table,results){
+			var schema=Parse.Data.schema[table],
+				sql=["replace into "+table+"("],
+				fields=['objectId','createdAt','updatedAt'],
+				values=['?','?','?']			
+			for(var i in schema.sample){
+				fields.push(i)
+				values.push('?')
+			}
+			sql.push(fields.join(','))
+			sql.push(')values('+values.join(',')+')')
+			sql=sql.join('')
+			this.transaction(function(tx){
+				results.forEach(function(i,o){
+					if(!(o=schema.cachable(o)))
+						return
+					values.length=0
+					$.each(fields,function(i,field){
+						if(Parse._.isDate(schema.sample[field]))
+							values.push(o[field].getTime())
+						else if(Parse._.isArray(schema.sample[field])){
+							if(Parse._.isDate(schema.sample[field][0])){
+								var ov=[]
+								o[field].forEach(function(i,v){ov.push(v.getTime())})
+								values.push(ov.join(','))
+							}else
+								values.push(o[field].join(','))
+						}else
+							values.push(o[field])
+					})
+					storage.websql.run(sql,values,tx)
+				})
+			})
+		};
 	})(x.Data);
-	
+		
 	var _request=x._request
 	x._request=function(o){
-		x.Data[o.route][o.method](o);
 		if($.isOnline())
-			return _request.apply(null,arguments) 
+			return _request.apply(null,arguments)
+				.then(function(response){
+					x.Data.websql.cache(o.className,response.results)
+					return response
+				})
+
+		return x.Data[o.route][o.method](o);
 	}
 })(Parse);
 
@@ -383,22 +448,6 @@ function init(){
 			i<len && reader.readAsDataURL(me.files[i++])
 		}
 		reader.readAsDataURL(this.files[i++])
-	}
-	Parse.find('tag',function(o){
-		window.tags={}
-		$.each(o,function(i,tag){
-			window.tags[tag.id]=tag.get('name')
-			var cat=tag.get('category')
-			if(! (cat in window.tags))
-				window.tags[cat]=[]
-			window.tags[cat].push(tag.id)
-		})
-	})
-	
-	if($.isOnline()){
-		Parse.find('tag',function(o){
-			$.each(o,function(i,tag){tag.cache()})
-		})
 	}
 }
 
