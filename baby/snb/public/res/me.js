@@ -120,7 +120,7 @@ function showPost(p){
 	p._tags=[]
 	var tags=p.get('tags')
 	tags && $.each(tags, function(i,tag){
-		p._tags.push(window.tags[tag])
+		//p._tags.push(window.tags[tag])
 	})
 	
 	tmplPost.clean().build(__.post=p)
@@ -218,7 +218,10 @@ String.prototype.toImageData=function(size){
 	;(function(storage){//schema with sample data to know type
 		var _t='',_i=1,_date=new Date(),_array=[_t]
 		storage.schema={
-			pendings:{tablename:_t,entity:_t,type:_i},
+			pendings:{
+				sample:{tablename:_t,entity:_t,type:_i},
+				trim:function(){}
+			},
 			tag:{
 				sample:{category:_t,name:_t,posts:_i,time:_i},
 				cachable:function(o){return o},
@@ -230,7 +233,7 @@ String.prototype.toImageData=function(size){
 				trim:function(){}
 			},
 			child:{
-				sample:{birday:_t,gender:_i,name:_t,photo:_t},
+				sample:{birthday:_t,gender:_i,name:_t,photo:_t},
 				cachable:function(o){return o.author==Parse.user().id && o},
 				trim:function(){}
 			},
@@ -281,12 +284,12 @@ String.prototype.toImageData=function(size){
 		storage.websql=openDatabase('parse.supernaiba.1', '1.0', 'supernaiba database', 100 * 1024 * 1024,function(db){
 			db.transaction(function(tx){
 				for(var table in storage.schema){
-					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer'],
+					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer,'],
 						fields=[],
 						schema=storage.schema[table],
 						indexes=['(updatedAt desc)']
-					for(var field in  schema){
-						var sample=schema[field]
+					for(var field in  schema.sample){
+						var sample=schema.sample[field]
 						switch(typeof(sample)){
 						case 'string':
 							fields.push(field+" text")
@@ -305,10 +308,10 @@ String.prototype.toImageData=function(size){
 					sql.push(fields.join(','))
 					sql.push(')')
 					storage.websql.run(sql.join(' '),null,tx)
-					storage.websql.run('create index '+table+'_'+field+' on '+table+'(updatedAt desc)')
+					storage.websql.run('create index '+table+'_updatedAt on '+table+'(updatedAt desc)')
 					if('indexes' in schema){
 						for(var field in schema.indexes)
-							storage.websql.run('create index '+table+'_'+field+' on '+table+'('+field+(schema.indexes[field]?'desc':'')+')')
+							storage.websql.run('create index '+table+'_'+field+' on '+table+'('+field+(schema.indexes[field]?' desc':'')+')')
 					}
 				}
 			})
@@ -339,25 +342,33 @@ String.prototype.toImageData=function(size){
 			sql.push(fields.join(','))
 			sql.push(')values('+values.join(',')+')')
 			sql=sql.join('')
-			this.transaction(function(tx){
-				results.forEach(function(i,o){
-					if(!(o=schema.cachable(o)))
-						return
-					values.length=0
-					$.each(fields,function(i,field){
-						if(Parse._.isDate(schema.sample[field]))
-							values.push(o[field].getTime())
-						else if(Parse._.isArray(schema.sample[field])){
-							if(Parse._.isDate(schema.sample[field][0])){
-								var ov=[]
-								o[field].forEach(function(i,v){ov.push(v.getTime())})
-								values.push(ov.join(','))
-							}else
-								values.push(o[field].join(','))
+			var objects=[]
+			results.forEach(function(o){
+				if(!(o=schema.cachable(o)))
+					return
+				var values=[]
+				fields.forEach(function(field){
+					if('updatedAt'==field ||
+						'createdAt'==field ||
+						Parse._.isDate(schema.sample[field]))
+						o[field]&&values.push(Parse._parseDate(o[field]).getTime())||values.push(null)
+					else if(Parse._.isArray(schema.sample[field])){
+						if(Parse._.isDate(schema.sample[field][0])){
+							var ov=[]
+							o[field].forEach(function(v){v&&ov.push(Parse._parseDate(v).getTime())})
+							values.push(ov.join(',')||null)
 						}else
-							values.push(o[field])
-					})
-					storage.websql.run(sql,values,tx)
+							values.push(o[field].join(',')||null)
+					}else if(Parse._.isObject(o[field]) && ('url' in o[field]))//file
+						values.push(o[field].url||null)
+					else
+						values.push(o[field]||null)
+				})
+				objects.push(values)
+			})			
+			this.transaction(function(tx){
+				objects.forEach(function(o){
+					storage.websql.run(sql,o,tx)
 				})
 			})
 		};
