@@ -181,32 +181,39 @@ String.prototype.toImageData=function(size){
 		classes:{
 			GET:function(o){
 				var sql=["select * from "+o.className], 
-					where=[],values=[],
-					promise = new Parse.Promise();
+					where=[],values=[]
 				for(var i in o.data.where){
 					where.push(i+"=?")
 					values.push(o.data.where[i])
 				}
 				
 				if(where.length){
-					sql.push('where')
+					sql.push(' where ')
 					sql.push(where.join(' and '))
 				}
 				
 				if('order' in o.data)
-					sql.push('order by '+o.data.order)
+					sql.push(' order by '+o.data.order)
 					
 				if('limit' in o.data)
-					sql.push('limit '+o.data.limit)
+					sql.push(' limit '+o.data.limit)
 				
 				sql=sql.join(' ')
-				x.Data.websql.run(sql,values)
+				return x.Data.websql.run(sql,values)
 					.then(function(tx,results){
-							var data=[]
+							var data=[],
+								promise = new Parse.Promise();
 							for(var i=0,len=results.rows.length,a;i<len;i++)
-								data.push(results.rows.item[i])
+								data.push(results.rows.item(i))
 							promise.resolve({results:data})
+							return promise
 						})
+			},
+			PUT: function(o){
+				
+			},
+			POST: function(o){
+			
 			}
 		}, 
 		files:{
@@ -214,7 +221,30 @@ String.prototype.toImageData=function(size){
 		users:{
 		} 
 	}
-	
+	function toSqlData(sample,value){
+		
+		if(value==undefined || value==null)
+			return null
+		else if(sample==undefined || sample==null)
+			return value
+		else if(Parse._.isDate(sample))
+			value=Parse._parseDate(value).getTime()
+		else if(Parse._.isArray(sample)){
+			if(Parse._.isDate(sample[0])){
+				var ov=[]
+				value.forEach(function(v){v&&ov.push(Parse._parseDate(v).getTime())})
+				value=ov.join(',')
+			}else
+				value=value.join(',')
+		}else if(Parse._.isObject(value) && ('url' in value))//file
+			value=value.url
+		
+		if(value==undefined)
+			value=null
+		return value
+	}
+	function toJSData(sample,value){
+	}
 	;(function(storage){//schema with sample data to know type
 		var _t='',_i=1,_date=new Date(),_array=[_t]
 		storage.schema={
@@ -233,7 +263,7 @@ String.prototype.toImageData=function(size){
 				trim:function(){}
 			},
 			child:{
-				sample:{birthday:_t,gender:_i,name:_t,photo:_t},
+				sample:{birthday:_t,gender:_i,name:_t,photo:_t,author:_t,authorName:_t},
 				cachable:function(o){return o.author==Parse.user().id && o},
 				trim:function(){}
 			},
@@ -266,7 +296,7 @@ String.prototype.toImageData=function(size){
 				trim:function(){}
 			},
 			favorite:{
-				sample:{post:_t,title:_t,status:_i},
+				sample:{post:_t,title:_t,status:_i,author:_t,authorName:_t},
 				indexes:{post:1},
 				cachable:function(o){return o.author==Parse.user().id && o},
 				trim:function(){}
@@ -278,13 +308,14 @@ String.prototype.toImageData=function(size){
 				trim:function(){}
 			}
 		}
+	
 	})(x.Data);
 	
 	;(function(storage){//websql storage implementation
 		storage.websql=openDatabase('parse.supernaiba.1', '1.0', 'supernaiba database', 100 * 1024 * 1024,function(db){
 			db.transaction(function(tx){
 				for(var table in storage.schema){
-					var sql=['create table if not exists',table,'(objectId text primary key,createdAt integer,updatedAt integer,'],
+					var sql=['create table if not exists',table,'(cachedAt integer, objectId text primary key,createdAt integer,updatedAt integer,'],
 						fields=[],
 						schema=storage.schema[table],
 						indexes=['(updatedAt desc)']
@@ -333,8 +364,8 @@ String.prototype.toImageData=function(size){
 		storage.websql.cache=function(table,results){
 			var schema=Parse.Data.schema[table],
 				sql=["replace into "+table+"("],
-				fields=['objectId','createdAt','updatedAt'],
-				values=['?','?','?']			
+				fields=['cachedAt','objectId','createdAt','updatedAt'],
+				values=['?','?','?','?']			
 			for(var i in schema.sample){
 				fields.push(i)
 				values.push('?')
@@ -342,27 +373,18 @@ String.prototype.toImageData=function(size){
 			sql.push(fields.join(','))
 			sql.push(')values('+values.join(',')+')')
 			sql=sql.join('')
-			var objects=[]
+			var objects=[], cachedAt=new Date().getTime()
 			results.forEach(function(o){
 				if(!(o=schema.cachable(o)))
 					return
 				var values=[]
 				fields.forEach(function(field){
-					if('updatedAt'==field ||
-						'createdAt'==field ||
-						Parse._.isDate(schema.sample[field]))
-						o[field]&&values.push(Parse._parseDate(o[field]).getTime())||values.push(null)
-					else if(Parse._.isArray(schema.sample[field])){
-						if(Parse._.isDate(schema.sample[field][0])){
-							var ov=[]
-							o[field].forEach(function(v){v&&ov.push(Parse._parseDate(v).getTime())})
-							values.push(ov.join(',')||null)
-						}else
-							values.push(o[field].join(',')||null)
-					}else if(Parse._.isObject(o[field]) && ('url' in o[field]))//file
-						values.push(o[field].url||null)
-					else
-						values.push(o[field]||null)
+					if('cachedAt'==field)
+						values.push(cachedAt)
+					else if(Parse._.isDate(schema.sample[field]))
+						o[field]?values.push(Parse._parseDate(o[field]).getTime()):values.push(null)
+					else 
+						values.push(toSqlData(schema.sample[field],o[field]))
 				})
 				objects.push(values)
 			})			
@@ -376,13 +398,36 @@ String.prototype.toImageData=function(size){
 		
 	var _request=x._request
 	x._request=function(o){
-		if($.isOnline())
+		if(false&&$.isOnline()){
 			return _request.apply(null,arguments)
 				.then(function(response){
-					x.Data.websql.cache(o.className,response.results)
+					if(o.route=='classes'){
+						switch(o.method){
+						case 'GET':
+							x.Data.websql.cache(o.className,response.results)
+							break
+						case 'PUT'://update
+							var fields=[],values=[],sample=x.Data.schema[o.className].sample
+							for(var i in o.data){
+								fields.push(i+'=?')
+								values.push(sample[i],o.data[i])
+							}
+							fields.push('updatedAt=?')
+							values.push(Parse._parseDate(response.updateAt).getTime())
+							values.push(o.objectId)
+							x.Data.websql.run('update '+o.className+' set '+fields.join(',')+' where objectId=?',values)
+							break
+						case 'DELETE'://delete
+							x.Data.websql.run('delete from '+o.className+' where objectId=?',[o.objectId])
+							break
+						case 'POST'://add
+							x.Data.websql.cache(o.className,[response])
+							break
+						}
+					}
 					return response
 				})
-
+		}
 		return x.Data[o.route][o.method](o);
 	}
 })(Parse);
