@@ -84,9 +84,9 @@
 				<li class="thumb">
 					<img src="{{attributes.thumbnail._url}}">
 					<div>
-						<strong><a data-view-section="category" onmouseup="$(this).trigger('touchend')" ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
+						<strong><a data-view-section="category"  onmouseup="$(this).trigger('touchend')" ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
 						<small>{{attributes.desc}}</small>
-						<a class="on-right" data-view-section="creator" 
+						<a class="on-right" data-view-section="creator"
 							onmouseup="$(this).trigger('touchend')" 
 							ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
 							style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
@@ -110,7 +110,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="posts" class="list scroll" data-on-load="setTitle(__.cat.name);Parse.find('post','category',__.cat.name,tmplPosts)">
+		<article id="posts" class="list scroll" data-on-load="alert('load');setTitle(__.cat.name);Parse.find('post','category',__.cat.name,tmplPosts)">
 			<ul>
 				<li>
 					<div style="position:relative;height:300px;background-color:black"></div>
@@ -218,7 +218,7 @@
 				<a data-icon="refresh" class="on-right"></a>
 			</nav>
 		</header>
-		<article id="task1" class="list scroll" data-on-load="Parse.find('favorite','author',Parse.user().id,tmplTask)">
+		<article id="task1" class="list scroll" data-on-load="Parse.find('task','author',Parse.user().id,tmplTask)">
 			<ul>
 				<script type="text/tmpl" id="tmplTask">
 				{{#loop}}
@@ -272,15 +272,19 @@
 			</nav>
 		</header>
 		<article id="createPost" class="scroll"
-			data-on-load="setTitle('Create A '+__.cat.name);new Editor(postEditor)">
+			data-on-load="this.promise&&this.promise.resolve();setTitle('Create A '+__.cat.name);new Editor(postEditor)">
 			<form id="postCreator" onsubmit="savePost(this);return false">
 				<fieldset>
 					<input type="text" placeholder="title" name="title" style="text-align:center">
 					<div class="tags">
 					<script>
-						Parse.find('tag','category','gender',function(o){tmplCheckable.build({title:'gender',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
-						Parse.find('tag','category','duration',function(o){tmplCheckable.build({title:'duration',name:'duration',type:'radio',loop:o},'#postCreator .tags')})
-						Parse.find('tag','category','goal',function(o){tmplCheckable.build({title:'goal',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
+						createPost.promise=new Parse.Promise()
+						createPost.promise.then(function(){
+							Parse.find('tag','category','gender',function(o){tmplCheckable.build({title:'gender',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
+							Parse.find('tag','category','duration',function(o){tmplCheckable.build({title:'duration',name:'duration',type:'radio',loop:o},'#postCreator .tags')})
+							Parse.find('tag','category','goal',function(o){tmplCheckable.build({title:'goal',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
+							delete createPost.promise
+						})
 					</script>
 					</div>
 				</fieldset>
