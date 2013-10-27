@@ -161,8 +161,17 @@ function addTask(e,v){
 })(Parse);
 
 ;(function(x){//extend Parse.offline to support offline
+	;(function(){
+		var _file=x.File.prototype.url
+		x.File.prototype.url=function(){
+			var _url=_file.apply(this,arguments)
+			if(_url.indexOf('pending://')==0){
+				x.offline.websql.run('select request from pending where rowid=?',[parseInt(_url.substr(10))])
+			}
+		}
+	})();
 	x.offline={//interface
-		debug:true,
+		debug:false,
 		classes:{
 			GET:function(o){
 				var sql=["select * from "+o.className], 
@@ -196,8 +205,7 @@ function addTask(e,v){
 						})
 			},
 			PUT: function(o){
-				return x.offline.websql.run('insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',
-					[o.className,o.objectId,Date.now(),JSON.stringify(o)],null,o)
+				return x.offline.websql.pending([o.className,o.objectId,Date.now(),JSON.stringify(o)],null,o)
 					.then(function(tx,results,o){
 						var promise=new Parse.Promise(),
 							sample=x.offline.schema[o.className].sample,
@@ -215,8 +223,7 @@ function addTask(e,v){
 					})
 			},
 			POST: function(o){
-				return x.offline.websql.run('insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',
-					[o.className,null,Date.now(),JSON.stringify(o)],null,o)
+				return x.offline.websql.pending([o.className,null,Date.now(),JSON.stringify(o)],null,o)
 					.then(function(tx,results,o){
 						var promise=new Parse.Promise(),now=Date.now(),
 							sample=x.offline.schema[o.className].sample,
@@ -240,9 +247,13 @@ function addTask(e,v){
 			}
 		}, 
 		files:{
-			POST: funciton(o){
-				return x.offline.websql.run('insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',
-					[null,null,Date.now(),JSON.stringify(o)],null,o)
+			POST: function(o){
+				return x.offline.websql.pending(['_file',null,Date.now(),JSON.stringify(o)],o)
+						.then(function(tx,query,o){
+							var promise=new Parse.promise()
+							promise.resolve({name:o.data.name,url:"pending://"+query.insertId})
+							return promise
+						})
 			}
 		},
 		users:{
@@ -376,8 +387,8 @@ function addTask(e,v){
 						for(var field in schema.indexes)
 							storage.websql.run('create index '+table+'_'+field+' on '+table+'('+field+(schema.indexes[field]?' desc':'')+')')
 					}
-					storage.websql.run('create table pending(tablename text, objectId text, createdAt integer, request text)')
 				}
+				storage.websql.run('create table if not exists pending(tablename text, objectId text, createdAt integer, request text)')
 			})
 		});
 		storage.websql.run=function(sql,values,tx, data){
@@ -394,6 +405,9 @@ function addTask(e,v){
 			tx ? h(tx) : this.transaction(h)
 			return promise
 		};
+		storage.websql.pending=function(values,data){
+			return this.run('insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',values,null,data)
+		}
 		storage.websql.cache=function(table,results){
 			var schema=Parse.offline.schema[table],
 				sql=["replace into "+table+"("],
