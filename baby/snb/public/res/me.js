@@ -160,16 +160,7 @@ function addTask(e,v){
 	}
 })(Parse);
 
-;(function(x){//extend Parse.offline to support offline
-	;(function(){
-		var _file=x.File.prototype.url
-		x.File.prototype.url=function(){
-			var _url=_file.apply(this,arguments)
-			if(_url.indexOf('pending://')==0){
-				x.offline.websql.run('select request from pending where rowid=?',[parseInt(_url.substr(10))])
-			}
-		}
-	})();
+;(function(x){//extend Parse.offline to support offline	
 	x.offline={//interface
 		debug:false,
 		classes:{
@@ -223,9 +214,10 @@ function addTask(e,v){
 					})
 			},
 			POST: function(o){
-				return x.offline.websql.pending([o.className,null,Date.now(),JSON.stringify(o)],null,o)
+				var now=Date.now()
+				return x.offline.websql.pending([o.className,'pending'+now,now,JSON.stringify(o)],null,o,now)
 					.then(function(tx,results,o){
-						var promise=new Parse.Promise(),now=Date.now(),
+						var promise=new Parse.Promise(),
 							sample=x.offline.schema[o.className].sample,
 							fields=[],values=[],marks=[], ob={}
 						for(var i in o.data){
@@ -247,14 +239,7 @@ function addTask(e,v){
 			}
 		}, 
 		files:{
-			POST: function(o){
-				return x.offline.websql.pending(['_file',null,Date.now(),JSON.stringify(o)],o)
-						.then(function(tx,query,o){
-							var promise=new Parse.promise()
-							promise.resolve({name:o.data.name,url:"pending://"+query.insertId})
-							return promise
-						})
-			}
+			
 		},
 		users:{
 		} 
@@ -264,9 +249,19 @@ function addTask(e,v){
 		if($.isOnline()){
 			this.websql.run('select * from pending')
 				.then(function(tx,query){
-					for(var i=0,len=query.rows.length;i<len;i++)
-						_request(JSON.parse(query.rows.item[i].request))
-					x.offline.websql.run('delete from pending')
+					for(var i=0,len=query.rows.length,a;i<len;i++){
+						a=query.rows.item[i]
+						switch(a.tablename){
+						case 'post':
+							
+						break
+						default:
+							_request(JSON.parse(a.request))
+								.then(function(){
+									x.offline.websql.run('delete from pending where ',[a.rowId],tx)
+								})
+						}
+					}
 				})
 		}
 	}
@@ -391,12 +386,12 @@ function addTask(e,v){
 				storage.websql.run('create table if not exists pending(tablename text, objectId text, createdAt integer, request text)')
 			})
 		});
-		storage.websql.run=function(sql,values,tx, data){
+		storage.websql.run=function(sql,values,tx, d1,d2,d3){
 			var promise = new Parse.Promise(),
 				h=function(tx){
 					tx.executeSql(sql,values,function(tx,results){
 							console.debug(sql)
-							promise.resolve(tx,results, data)
+							promise.resolve(tx,results,d1,d2,d3)
 						},function(tx,error){
 							console.error(sql+"\n"+error.message)
 							promise.reject(error)
@@ -439,34 +434,38 @@ function addTask(e,v){
 	var _request=x._request
 	x._request=function(o){
 		if(!x.offline.debug && $.isOnline()){
-			return _request.apply(null,arguments)
-				.then(function(response){
-					if(o.route=='classes'){
-						switch(o.method){
-						case 'GET':
-							x.offline.websql.cache(o.className,response.results)
-							break
-						case 'PUT'://update
-							var fields=[],values=[],sample=x.offline.schema[o.className].sample
-							for(var i in o.data){
-								fields.push(i+'=?')
-								values.push(o.data[i])
-							}
-							fields.push('updatedAt=?')
-							values.push(Parse._parseDate(response.updateAt).getTime())
-							values.push(o.objectId)
-							x.offline.websql.run('update '+o.className+' set '+fields.join(',')+' where objectId=?',values)
-							break
-						case 'DELETE'://delete
-							x.offline.websql.run('delete from '+o.className+' where objectId=?',[o.objectId])
-							break
-						case 'POST'://add
-							x.offline.websql.cache(o.className,[response])
-							break
+			var promise=_request.apply(null,arguments)
+			switch(o.route){
+			case 'classes':
+				return promise.then(function(response){
+					switch(o.method){
+					case 'GET':
+						x.offline.websql.cache(o.className,response.results)
+						break
+					case 'PUT'://update
+						var fields=[],values=[],sample=x.offline.schema[o.className].sample
+						for(var i in o.data){
+							fields.push(i+'=?')
+							values.push(o.data[i])
 						}
+						fields.push('updatedAt=?')
+						values.push(Parse._parseDate(response.updateAt).getTime())
+						values.push(o.objectId)
+						x.offline.websql.run('update '+o.className+' set '+fields.join(',')+' where objectId=?',values)
+						break
+					case 'DELETE'://delete
+						x.offline.websql.run('delete from '+o.className+' where objectId=?',[o.objectId])
+						break
+					case 'POST'://add
+						x.offline.websql.cache(o.className,[response])
+						break
 					}
 					return response
 				})
+			break;
+			default:
+				return promise;
+			}
 		}
 		return x.offline[o.route][o.method](o);
 	}
@@ -486,9 +485,9 @@ function addTask(e,v){
 		ctx.drawImage(img,0,0,img.width,img.height,0,0,tool.width, tool.height);
 		return tool.toDataURL("image/jpeg")
 	}
-	String.prototype.IMAGE_DATA_INDEX="data:image/png;base64,".length+1
+	String.prototype.IMAGE_DATA_SCHEME="data:image/jpeg;base64,"
 	String.prototype.toImageData=function(size){
-		return this.toImageDataURL(size).substr(this.IMAGE_DATA_INDEX)
+		return this.toImageDataURL(size).substr(this.IMAGE_DATA_SCHEME.length)
 	}
 })();
 
@@ -560,7 +559,7 @@ function addTask(e,v){
 							document.execCommand("insertHTML", false, "<br><img id='_editorImg'><br>");
 							(f._img=_editorImg).src=data
 							_editorImg.removeAttribute('id')
-							saveSelection();
+							saveSelection()
 						}
 				}).click()
 		}
@@ -647,9 +646,11 @@ function init(){
 			reader=new FileReader(), 
 			i=0,len=this.files.length
 		reader.onload=function(e){
-			var f=new Parse.File("a.jpg",{base64:e.target.result.toImageData(me.opt.size)})
-			me.opt['onSave'] && me.opt.onSave.call(me,f, e.target.result)
-			f.save(me.opt)
+			var data={base64:e.target.result.toImageData(me.opt.size)}
+				f=new Parse.File("a.jpg",data),
+				needSave=true
+			me.opt['onSave'] && (needSave=me.opt.onSave.call(me,f, IMAGE_DATA_SCHEME+data.base64))
+			$.isOnline() && needSave!==false && f.save(me.opt)
 			i<len && reader.readAsDataURL(me.files[i++])
 		}
 		reader.readAsDataURL(this.files[i++])

@@ -376,7 +376,7 @@
 				</fieldset>
 				<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
 				<fieldset>
-					<img name="photo" onclick="uploader.bind(this,{size:150}).click()" 
+					<img name="photo" id="_a" onclick="uploader.bind(this,{onSave:function(f,dataUri){_a.file=_a.value=f;_a.src=dataUri},size:150}).click()" 
 						style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto" 
 						placeholder="photo"/>
 				</fieldset>
