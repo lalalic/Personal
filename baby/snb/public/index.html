@@ -19,7 +19,7 @@
 		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
 		.favorited, .tasked{color:yellow}
 		.stat{position:relative;height:300px;background-color:black}
-		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}
+		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear;visibility:visible}
 		
 		span.checkable{line-height:35px;}
 		span.checkable>span{padding:5px;cursor:default}
@@ -335,7 +335,7 @@
 			<a href="#" data-view-article="forgetpassword" data-title="Forget Password">Forget Password</a>
 		</nav>
 		<article id="signin">
-			<form onsubmit="this.object(new Parse.User()).logIn().then(Lungo.Router.back,Parse.error);return false">
+			<form onsubmit="this.object(new Parse.User()).logIn().then(function(){location.reload()},Parse.error);return false">
 				<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
 				<fieldset><input name="password" type="password" placeholder="password"></fieldset>
 				<fieldset class="outview"><input type="submit"></fieldset>
@@ -390,6 +390,37 @@
 			</nav>
 		</footer>
 	</section>
+	<section id="splash" data-transition="slide">
+		<article id="splash1" class="active block" data-control="carousel" 
+			data-on-load="Lungo.Element.Carousel(this)">
+			<div>
+				<div align="center">
+					<img src="http://lorempixel.com/320/418/food/">
+				</div>
+				<div align="center">
+					<img src="http://lorempixel.com/320/418/sports/">
+				</div>
+			</div>
+		</article>
+	</section>	
+	<section id="pending" data-transition="slide">
+		<header data-back="left-sign" data-title="synchronize to server"></header>
+		<article id="pending1" class="list">
+			<ul>
+				<li class="thumb {{request.method}}" id="pending_{{id}}"><div>{{request.method}} {{request.className}} <span class="icon time on-right">{{createdAt}}</span><span class="icon refresh on-right" style="visibility:hidden"></span></div></li>
+				<script type="text/tmpl" id="tmplPending">
+					{{#loop}}
+						<li class="thumb {{request.method}}" id="pending_{{id}}">{{request.method}} {{request.className}} <span class="icon time right">{{createdAt}}</span><span class="icon refresh right" style="visibility:hidden"></span></li>
+					{{/loop}}
+				</script>
+			</ul>
+		</article>
+		<footer>
+			<nav>
+				<a data-icon="stop" onclick="Parse.offline.stopSync()" ></a>
+			</nav>
+		</footer>
+	</section>		
 	<input type="file" id="uploader" class="outview" onchange="this.save()">
 	<canvas id="_imgSizer" class="outview"></canvas>
 	<script type="text/tmpl" id="tmplCheckable">

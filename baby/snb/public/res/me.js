@@ -1,9 +1,13 @@
 ﻿window.$=$$
 window.__={}//runtime information
+window._=Parse._
 empty=new Function()
 article=function(){return Lungo.Element.Cache.article[0]}
 form=function(){return $(article(),'form')[0]}
+Array.prototype.union=function(a,from){for(var i=from||0;i<(a||[]).length;i++) this.push(a[i]);return this}
+Array.prototype.fill=function(a,times){for(var i=times-1;i>=0;i--) this.push(a);return this}
 HTMLSelectElement.prototype.text=function(){return this.options[this.selectedIndex].text}
+Node.prototype.remove=function(){this.parentNode.removeChild(this)}
 HTMLFormElement.prototype.object=function(o){
 	o=this._object||(typeof(o)=='string'?Parse.object(o):o),
 	$(this,':not([type=checkbox]):not([type=radio]):not(select):not([name=id])[name],[type=radio][name]:checked').each(function(i,el){o.set(el.name,el.value)})
@@ -27,27 +31,12 @@ HTMLFormElement.prototype.set=function(o){
 }
 Date.fromTime=function(t){var a=new Date();a.setTime(t);return a}
 
-function inherit(o,ex){
-	if(ex){
-		for(var i in ex)
-			ex.hasOwnProperty(i)&&(o[i]=ex[i])
-	}
-	return o
-}
-
 $.fn.once=function(e,cb,a,b){a=this,b=function(){cb.apply(this,arguments);a.unbind(e,b)};a.bind(e,b)}
 
 setTitle=function(t){$(Lungo.Element.Cache.section,'header h1').text(t)}
 doing=function(){$('section.show [data-icon="refresh"]').addClass('doing')}
 done=function(){$('.doing').removeClass('doing')}
 
-function checkLogin(){
-	if(!Parse.user())
-		return setTimeout(function(){Lungo.Router.section('user')},1000)
-	Parse.find('child','author',Parse.user().id,function(o){
-			o && tmplChildren.build({loop:o}) && !__.currentChild && (__.currentChild=o[0])
-		})
-}
 function savePost(p,newPost){
 	doing()
 	var dura=p.querySelector(':checked[name=duration]'),
@@ -101,7 +90,7 @@ function toggleFavorite(){
 }			
 function addTask(e,v){
 	e.checked && _task(function(t,a){
-		(t=t||Parse.object('task','post',(a=__.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail'),'status',1))
+		(t=t||Parse.object('task','post',(a=__.post).id,'title',a.get('title'),'thumbnail',a.get('thumbnail'),'status',1,'child',__.currentChild.id))
 			.set('type',v)
 		t.save().then(function(){$(cmdtask).addClass('tasked');done()},Parse.error)
 	})				
@@ -160,9 +149,9 @@ function addTask(e,v){
 	}
 })(Parse);
 
-;(function(x){//extend Parse.offline to support offline	
+;(function(x){//extend Parse.offline to support offline
 	x.offline={//interface
-		debug:false,
+		pended:{},
 		classes:{
 			GET:function(o){
 				var sql=["select * from "+o.className], 
@@ -216,58 +205,125 @@ function addTask(e,v){
 			POST: function(o){
 				var now=Date.now()
 				return x.offline.websql.pending([o.className,'pending'+now,now,JSON.stringify(o)],null,o,now)
-					.then(function(tx,results,o){
+					.then(function(tx,results,o,now){
 						var promise=new Parse.Promise(),
 							sample=x.offline.schema[o.className].sample,
-							fields=[],values=[],marks=[], ob={}
+							fields=[],values=[], ob={}
 						for(var i in o.data){
-							marks.push('?')
 							fields.push(i)
 							values.push(sample[i].toDB(ob[i]=o.data[i]))
 						}
 						fields.push('createdAt')
 						fields.push('updatedAt')
-						values.push(now)
-						values.push(now)
+						values.fill(now,2)
 						fields.push('objectId')
 						values.push(ob['objectId']=('pending'+now))
 						ob.createdAt=ob.updatedAt=Date.fromTime(now).toJSON()
-						x.offline.websql.run('insert into '+o.className+'('+fields.join(',')+')values('+marks.join(',')+')',values)
+						if('author' in sample){
+							var user=Parse.user()
+							fields.push('author'), values.push(user.id)
+							fields.push('authorName'), values.push(user.get('username'))
+						}
+						x.offline.websql.run('insert into '+o.className+'('+fields.join(',')+')values('+[].fill('?',fields.length).join(',')+')',values)
 						promise.resolve(ob)
 						return promise
 					})
+			},
+			DELETE: function(o){
+				if(o.objectId && o.objectId.startsWith('pending')){
+					x.offline.websql.run('delete from pending where objectId=?',[o.objectId])
+					x.offline.websql.run('delete from '+o.className+' where objectId=?',[o.objectId])
+				}else{
+					return x.offline.websql.pending([o.className,null,Date.now(),JSON.stringify(o)],null,o)
+						.then(function(tx,result,o){
+							x.offline.websql.run('delete from '+o.className+' where objectId=?',[o.objectId])
+						})
+				}
 			}
 		}, 
 		files:{
-			
+			POST: function(o){
+				return Parse.Promise.as({name:o.className,url:String.prototype.IMAGE_DATA_SCHEME+o.data.base64})
+			}
 		},
 		users:{
 		} 
 	}
-	
-	x.offline.update2server=function(){
+	x.offline.trim=function(){
+		var all=[]
+		for(var i in x.offline.schema)
+			all.push(x.offline.schema[i].trim())
+		return Parse.Promise.when(all)
+	}
+	x.offline.sync=function(){
 		if($.isOnline()){
-			this.websql.run('select * from pending')
+			return this.websql.run('select * from pending')
 				.then(function(tx,query){
-					for(var i=0,len=query.rows.length,a;i<len;i++){
-						a=query.rows.item[i]
-						switch(a.tablename){
-						case 'post':
-							
-						break
-						default:
-							_request(JSON.parse(a.request))
-								.then(function(){
-									x.offline.websql.run('delete from pending where ',[a.rowId],tx)
+					query.rows.length && x.offline.trigger('sync',query)
+					var pendings=[],
+						handler=function(request,a, promise){
+							x.offline.schema[request.className]
+								.sync(request,a.objectId)
+								.then(function(newObject){
+									x.offline.websql.run('delete from pending where id=?',[a.id])
+									if(request.route=='classes' && request.method=='POST')
+										x.offline.pended[a.objectId]=newObject.objectId
+									console.debug('synced '+request.method+' to '+request.className)
+									x.offline.trigger('syncedOne',a,request)
+									promise.resolve()
 								})
 						}
+					for(var i=0,len=query.rows.length;i<len;i++){
+						if(x.offline.stoppedSync){
+							promise.resolve()
+							return
+						}
+						var a=query.rows.item(i), 
+							promise=new Parse.Promise(),
+							request=a.request=JSON.parse(a.request)
+						pendings.push(promise)
+						x.offline.trigger('syncingOne',a,request)
+						switch(request.route){
+						case 'classes':
+							handler(request,a,promise)
+						}
 					}
+					return Parse.Promise.when(pendings)
 				})
-		}
+		}else
+			return Parse.Promise.as()
+	}
+	x.offline.stoppedSync=false
+	x.offline.stopSync=function(){
+		this.stoppedSync=true
+	}
+	x.offline.listPending=function(){
+		var promise=new Parse.Promise()
+		this.websql.run('select * from pending')
+			.then(function(tx,rs){
+				var o=[];
+				for(var i=0,len=rs.rows.length,a;i<len;i++){
+					o.push(a=rs.rows.item(i))
+					a.request=JSON.parse(a.request)
+				}
+				promise.resolve(o)
+			})
+		return promise
+	}
+	x.offline._events={}
+	x.offline.bind=function(type,h){
+		(this._events[type]=this._events[type]||[]).push(h)
+		return this
+	}
+	x.offline.trigger=function(type){
+		var args=arguments
+		_.each((this._events[type]||[]),function(h){
+			h.apply(this,[].union(args,1))
+		})
 	}
 	
 	;(function(storage){//schema
-		var _t={},_i={},_date={},_array=[_t], _file={}
+		var _t={},_i={},_date={},_array=[_t], _file={},
 			h=function(v){return v==undefined?null:v}
 		_t.toDB=_t.toJSON=_i.toDB=_i.toJSON=h
 		_file.type=_array.type=_t.type='text'
@@ -308,57 +364,167 @@ function addTask(e,v){
 			tag:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,category:_t,name:_t,posts:_i,time:_i},
 				cachable:function(o){return o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request){return _request(request)}
 			},
 			User:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,username:_t,comments:_i,post:_i,score:_i},
 				cachable:function(o){return o.objectId==Parse.user().id && o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request){return _request(request)}
 			},
 			child:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,birthday:_t,gender:_i,name:_t,photo:_file,author:_t,authorName:_t},
 				cachable:function(o){return o.author==Parse.user().id && o},
-				trim:function(){}
+				trim:function(){return storage.websql.run('delete from child')},
+				sync:function(request,pendingId){
+					var promise=new Parse.Promise(),
+						data=request.data,
+						photo=data.photo,
+						submitRequest=function(){
+							var p=_request(request);
+							switch(request.method){
+							case 'POST':
+								p.then(function(newChild){
+									x.offline.websql.run('update child set objectId=?, photo=? where objectId=?',[newChild.objectId,photo&&photo.url||null,pendingId])
+									x.offline.websql.run('update task set child=? where child=?',[newChild.objectId,pendingId])
+									promise.resolve(newChild)
+								});
+								break
+							default:
+								promise.resolve()
+							}
+							return p
+						}
+					if(photo && photo.url.isImageData()){
+						_request({
+							className:photo.name,
+							method:'POST',
+							route:'files',
+							useMasterKey:undefined,
+							data:{
+								_ContentType:"image/jpeg",
+								base64:photo.url.toImageData()
+							}
+						}).then(function(newFile){
+							photo.url=newFile.url
+							photo.name=newFile.name
+							submitRequest()
+						},function(error){promise.reject(error)})
+					}else
+						submitRequest()
+					return promise
+				}
 			},
 			post:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_file},
 				cachable:function(o){return o},
 				trim:function(){
-					storage.run('select objectId from post where objectId not in (select distinct post from task) and objectId not (select post from favorite) order by updatedAt desc',null,function(tx,results){
-						if(results.length<50)
-							return;
-						var deleting=[]
-						for(var i=results.length-1; i>50; i--)
-							deleting.push("'"+results[i].objectId+"'")
-						storage.run('delete from post where objectId in ('+deleting.join(',')+')')
-						storage.run('delete from story where post in ('+deleting.join(',')+')')
-						storage.run('delete from comments where post in ('+deleting.join(',')+')')
-					})
+				/*
+					storage.websql.run('select objectId from post where objectId not in (select distinct post from task) and objectId not (select post from favorite) order by updatedAt desc')
+						.then(function(tx,results){
+							if(results.rows.length<50)
+								return;
+							var deleting=[]
+							for(var i=results.rows.length-1; i>50; i--)
+								deleting.push("'"+results.rows.item(i).objectId+"'")
+							storage.websql.run('delete from post where objectId in ('+deleting.join(',')+')',null,tx)
+							storage.websql.run('delete from story where post in ('+deleting.join(',')+')',null,tx)
+							storage.websql.run('delete from comments where post in ('+deleting.join(',')+')',null,tx)
+						})*/
+				},
+				sync:function(request,pendingId){
+					var data=request.data,
+						content=data.content,
+						resultPromise=new Parse.Promise(),
+						promises=[]
+					var splitted=content.splitByImageData()
+						
+					for(var i=1,len=splitted.length;i<len;i+2){
+						promises.push(_request({
+							className:'a.jpg',
+							method:'POST',
+							route:'files',
+							useMasterKey:undefined,
+							data:{
+								_ContentType:"image/jpeg",
+								base64:splitted[i]
+							}}).then(function(newFile){
+								splitted[i]='<img src="'+newFile.url+'">'
+							}));
+					}
+					Parse.Promise.when(promises)
+						.then(function(){
+							data.content=splitted.join('')
+							var promise=_request(request);
+							switch(request.method){
+							case 'POST':
+								promise.then(function(newPost){
+									x.offline.websql.run('update post set objectId=? where objectId=?',[newPost.objectId,pendingId])
+									x.offline.websql.run('update favorite set post=? where post=?',[newPost.objectId,pendingId])
+									x.offline.websql.run('update task set post=? where post=?',[newPost.objectId,pendingId])
+									x.offline.websql.run('update story set post=? where post=?',[newPost.objectId,pendingId])
+									resultPromise.resolve(newPost)
+								});
+								break
+							default:
+								resultPromise.resolve()
+							}
+						})
+					return resultPromise
 				}
 			},
 			story:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,post:_t,author:_t,authorName:_t,category:_t,title:_t,content:_t,comments:_i,duration:_i,tags:_array,thumbnail:_t},
 				indexes:{post:1},
 				cachable:function(o){return o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request){
+					'post'.split().each(function(field){
+						if(request.data[field] && request.data[field].startsWith('pending'))
+							request.data[field]=x.offline.pended[request.data[field]]
+					})
+					return _request(request)
+				}
 			},
 			task:{
-				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,author:_t,authorName:_t,post:_t,title:_t,planAt:_date,status:_i,time:_i,type:_i},
-				indexes:{post:1},
+				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,author:_t,authorName:_t,post:_t,title:_t,planAt:_date,status:_i,time:_i,type:_i,child:_t},
+				indexes:{post:1,child:1},
 				cachable:function(o){return o.author==Parse.user().id && o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request,pendingId){
+					'child,post'.split().each(function(field){
+						if(request.data[field] && request.data[field].startsWith('pending'))
+							request.data[field]=x.offline.pended[request.data[field]]
+					})
+					return _request(request)
+				}
 			},
 			favorite:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,post:_t,title:_t,status:_i,author:_t,authorName:_t},
 				indexes:{post:1},
 				cachable:function(o){return o.author==Parse.user().id && o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request){
+					'post'.split().each(function(field){
+						if(request.data[field] && request.data[field].startsWith('pending'))
+							request.data[field]=x.offline.pended[request.data[field]]
+					})
+					return _request(request)
+				}
 			},
 			comments:{
 				sample:{cachedAt:_date,objectId:_t,createdAt:_date,updatedAt:_date,author:_t,authorName:_t,post:_t,content:_t},
 				indexes:{post:1},
 				cachable: function(o){return o},
-				trim:function(){}
+				trim:function(){},
+				sync:function(request){
+					'post'.split().each(function(field){
+						if(request.data[field] && request.data[field].startsWith('pending'))
+							request.data[field]=x.offline.pended[request.data[field]]
+					})
+					return _request(request)
+				}
 			}
 		}
 	
@@ -383,15 +549,16 @@ function addTask(e,v){
 							storage.websql.run('create index '+table+'_'+field+' on '+table+'('+field+(schema.indexes[field]?' desc':'')+')')
 					}
 				}
-				storage.websql.run('create table if not exists pending(tablename text, objectId text, createdAt integer, request text)')
+				storage.websql.run('create table if not exists pending(id integer primary key autoincrement, tablename text, objectId text, createdAt integer, request text)')
 			})
 		});
-		storage.websql.run=function(sql,values,tx, d1,d2,d3){
+		storage.websql.run=function(sql,values,tx){
 			var promise = new Parse.Promise(),
+				args=arguments,
 				h=function(tx){
 					tx.executeSql(sql,values,function(tx,results){
 							console.debug(sql)
-							promise.resolve(tx,results,d1,d2,d3)
+							promise.resolve.apply(promise,[tx,results].union(args,3))
 						},function(tx,error){
 							console.error(sql+"\n"+error.message)
 							promise.reject(error)
@@ -400,19 +567,17 @@ function addTask(e,v){
 			tx ? h(tx) : this.transaction(h)
 			return promise
 		};
-		storage.websql.pending=function(values,data){
-			return this.run('insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',values,null,data)
+		storage.websql.pending=function(values,tx){
+			return this.run.apply(this,['insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',values,tx].union(arguments,2))
 		}
 		storage.websql.cache=function(table,results){
 			var schema=Parse.offline.schema[table],
 				sql=["replace into "+table+"("],
-				fields=[],values=[]			
-			for(var i in schema.sample){
+				fields=[]		
+			for(var i in schema.sample)
 				fields.push(i)
-				values.push('?')
-			}
 			sql.push(fields.join(','))
-			sql.push(')values('+values.join(',')+')')
+			sql.push(')values('+[].fill('?',fields.length).join(',')+')')
 			sql=sql.join(' ')
 			var objects=[], cachedAt=new Date().toJSON()
 			results.forEach(function(o){
@@ -433,7 +598,7 @@ function addTask(e,v){
 		
 	var _request=x._request
 	x._request=function(o){
-		if(!x.offline.debug && $.isOnline()){
+		if($.isOnline()){
 			var promise=_request.apply(null,arguments)
 			switch(o.route){
 			case 'classes':
@@ -487,19 +652,17 @@ function addTask(e,v){
 	}
 	String.prototype.IMAGE_DATA_SCHEME="data:image/jpeg;base64,"
 	String.prototype.toImageData=function(size){
-		return this.toImageDataURL(size).substr(this.IMAGE_DATA_SCHEME.length)
+		return this.substr.call(size?this.toImageDataURL(size):this,this.IMAGE_DATA_SCHEME.length)
 	}
+	String.prototype.isImageData=function(){return this.substr(0,this.IMAGE_DATA_SCHEME.length)==this.IMAGE_DATA_SCHEME}
+	String.prototype.IMAGE_DATA_PATTERN=new RegExp('<img\s+src="data:image/jpeg;base64,(.*?)"\s*>', "gim")
+	String.prototype.splitByImageData=function(){return this.split(this.IMAGE_DATA_PATTERN)}
 })();
 
 ;(function(){//editor
 	if(!HTMLImageElement.prototype.isData)
 		HTMLImageElement.prototype.isData=function(){
-			return this.src.substr(0,4)=='data'
-		}
-		
-	if(!HTMLImageElement.prototype.isDataJpeg)
-		HTMLImageElement.prototype.isDataJpeg=function(){
-			return this.src.substr(0,15)=='data:image/jpeg'
+			return this.src.isImageData()
 		}
 		
 	this.Editor=function(el){
@@ -568,7 +731,7 @@ function addTask(e,v){
 			if(el['thumb'])
 				return el.thumb;
 			var thumb=this.querySelector('img');
-			if(!thumb || !thumb.isData())
+			if(!thumb)
 				return null;
 			return new Parse.File('thumb',thumb.src.toImageData(96));
 		}
@@ -620,16 +783,8 @@ function init(){
 		})
 	})
 	
-	Lungo.init({
-		name:"SNB",
-		history:false
-	})
-	
-	
-	checkLogin()
-	
 	uploader.bind=function(a,opt){
-		this.opt=inherit({
+		this.opt=_.extend({
 				success: function(f){
 					a && 'IMG'==a.nodeName && (a.src=(a.file=a.value=f).url())
 					done()
@@ -645,14 +800,50 @@ function init(){
 		var me=this,
 			reader=new FileReader(), 
 			i=0,len=this.files.length
-		reader.onload=function(e){
-			var data={base64:e.target.result.toImageData(me.opt.size)}
-				f=new Parse.File("a.jpg",data),
+		reader.onloadend=function(e){
+			var file=me.files[i-1],
+				data={base64:e.target.result.toImageData(me.opt.size)}
+				f=new Parse.File(file.name,data,file.type),
 				needSave=true
-			me.opt['onSave'] && (needSave=me.opt.onSave.call(me,f, IMAGE_DATA_SCHEME+data.base64))
-			$.isOnline() && needSave!==false && f.save(me.opt)
-			i<len && reader.readAsDataURL(me.files[i++])
+			me.opt['onSave'] && (needSave=me.opt.onSave.call(me,f, String.prototype.IMAGE_DATA_SCHEME+data.base64))
+			needSave!==false && f.save(me.opt)
+			i<len ? reader.readAsDataURL(me.files[i++]) : (me.value="")
 		}
 		reader.readAsDataURL(this.files[i++])
+	}
+	
+	Lungo.init({
+		name:"SNB",
+		history:false
+	})
+	
+	if(!Parse.user())
+		Lungo.Router.section('user')
+	else{
+		Parse.offline.trim().then(function(){
+			Parse.offline.bind('sync',function(rs){
+				Lungo.Router.section('pending')
+				var o=[];
+				for(var i=0,len=rs.rows.length,a;i<len;i++){
+					o.push(a=rs.rows.item(i))
+					a.request=JSON.parse(a.request)
+				}
+				tmplPending.build({loop:o})
+			}).bind('syncingOne',function(a){
+				document.querySelector('#pending_'+a.id+' .refresh').classList.add('doing')
+			}).bind('syncedOne',function(a){
+				document.querySelector('#pending_'+a.id).remove()
+			}).sync()
+				.then(function(){
+					Parse.find('child','author',Parse.user().id,function(o){
+						if(o.length){
+							tmplChildren.build({loop:o})
+							!__.currentChild && (__.currentChild=o[0])
+							Lungo.Router.section('main')
+						}else
+							Lungo.Router.section('child')
+					})
+				})
+		})
 	}
 }
