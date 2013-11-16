@@ -64,4 +64,4 @@ example/
 gwt-unitCache/
 deploy/
 war/sample/
-war/editor/
+editor\war

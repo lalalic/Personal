@@ -1,438 +1,188 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="format-detection" content="telephone=no" />
+	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
 	<title>Super Nai Ba</title>
-	<link rel="stylesheet" href="res/lungo.css">
-	<link rel="stylesheet" href="res/lungo.icon.css">
-	<link rel="stylesheet" href="res/lungo.theme.css">
+	<link rel="stylesheet" href="css/lungo.css">
+	<link rel="stylesheet" href="css/lungo.icon.css">
+	<link rel="stylesheet" href="css/lungo.theme.css">
 	<style>
-		#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}
-		#show pre{background-color:white}
-		.outview{position:absolute;top:-9999px;height:1px}
-		nav img{width:32px;height:32px}
-		.editor{background-color:white;height:100%;padding:10px;-webkit-user-select:text;-moz-user-select:text;user-select:text;overflow-y: auto;padding-left:0;padding-right:0}
-		.editor img{clear:both;max-width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
-		.editor img:hover{border-color:blue}
-		.editor:empty:before{content:attr(placeholder); color:lightgray}
-		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
-		.favorited, .tasked{color:yellow}
-		.stat{position:relative;height:300px;background-color:black}
-		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear;visibility:visible}
-		
-		span.checkable{line-height:35px;}
-		span.checkable>span{padding:5px;cursor:default}
-		span.checkable>span:not(:first-of-type){color:lightgray}
-		span.checkable>span:hover{color:blue}
-		span.checkable input:checked+span{color:black}
-		span.checkable>span:first-of-type{background-color:lightgreen;color:white}
-		span.checkable input{position:absolute;top:-9999px;height:1px}
-		span.checkable input:not(:checked)+span{display:none}
-		span.checkable.open input:not(:checked)+span{display:initial}
-		span.checkable:not(.open)>span:first-of-type:after{content:'...'}
-		.tags{text-align:center}
-		.tags:before{content:"\f02b";font-family:'lungojsicon';font-weight:normal !important}
+	body,section,aside{overflow:hidden}
+	.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}	
+	.outview{position:absolute;top:-9999px;height:1px}
+	#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}
+	nav img{width:32px;height:32px}
+	.editor{background-color:white;height:100%;padding:10px;-webkit-user-select:text;-moz-user-select:text;user-select:text}
+	.editor img{clear:both;max-width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
+	.editor img:hover{border-color:blue}
+	.editor:empty:before{content:attr(placeholder); color:lightgray}
+	#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
+	.favorited, .tasked{color:yellow}
+	.stat{position:relative;height:300px;background-color:black}
+	
+	span.checkable{line-height:35px;}
+	span.checkable>span{padding:5px;cursor:default}
+	span.checkable>span:not(:first-of-type){color:lightgray}
+	span.checkable>span:hover{color:blue}
+	span.checkable input:checked+span{color:black}
+	span.checkable>span:first-of-type{background-color:lightgreen;color:white}
+	span.checkable input{position:absolute;top:-9999px;height:1px}
+	span.checkable input:not(:checked)+span{display:none}
+	span.checkable.open input:not(:checked)+span{display:initial}
+	span.checkable:not(.open)>span:first-of-type:after{content:'...'}
+	span.checkable.vertical>span{display:block!important}
+	.tags{text-align:center}
+	.tags:before{content:"\f02b";font-family:'lungojsicon';font-weight:normal !important}
+	.slides{position:absolute;height:100%}
+	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
 	</style>
-	<script src="res/quo.debug.js"></script>
-	<script src="res/mustache.js"></script>
-	<script src="res/parse-1.2.12.js"></script>
-	<script src="res/me.js"></script>
+	<script src="http://192.168.2.5:8080/target/target-script-min.js#lalalic"></script>
+	<script src="js/lib/require.js"></script>
+	<script src="js/lib/zepto.min.js"></script>
+	<script src="js/lib/parse-1.2.12.js"></script>
 </head>
-<body>
-	<aside id="userAside">
-		<article id="userAside1" class="list active">
-			<ul>
-				<script type="text/tmpl" id="tmplChildren">
-					{{#loop}}
-					<li class="thumb" id="tmplChildren_{{id}}">
-						<img src="{{attributes.photo._url}}">
-						<div>
-							<a href="#" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child={id:'{{id}}'}">{{attributes.name}}</a>
-						</div>
-					</li>
-					{{/loop}}
-					{{^loop}}
-					<li class="empty">
-						<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child=null">快快加入你的宝宝和TA一起玩</a>
-					</li>
-					{{/loop}}
-				</script>
-			</ul>
-		</article>
-		<footer>
-			<nav>
-				<a href="#" data-icon="signout" onclick="Parse.User.logOut();location.reload()"></a>
-				<a href="#" data-icon="plus-sign" data-view-section="child" onmouseup="$(this).trigger('touchend')"  ontouchend="__.child=null"></a>
-			</nav>
-		</footer>
-	</aside>
-	<section id="home" data-transition="slide" data-aside="userAside">
-		<header data-title="SNB">
-			<nav>
-				<a href="#" data-view-aside="userAside" class="on-left" data-icon="left-sign"></a>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="categories" class="list scroll indented" data-on-load="Parse.find('tag','category','category',tmplCate)">
-			<ul>
-				<li>
-					<div class="stat"></div>
-				</li>			
-				<script type="text/tmpl" id="tmplCate">
-				{{#loop}}
-				<li class="thumb">
-					<img src="{{attributes.thumbnail._url}}">
-					<div>
-						<strong><a data-view-section="category"  onmouseup="$(this).trigger('touchend')" ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" href="#">{{attributes.name}}</a></strong>
-						<small>{{attributes.desc}}</small>
-						<a class="on-right" data-view-section="creator"
-							onmouseup="$(this).trigger('touchend')" 
-							ontouchend="__.cat={name:'{{attributes.name}}',id:'{{id}}'}" 
-							style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
-					</div>
-				</li>
-				{{/loop}}
-				</script>
-			</ul>
-		</article>
-		<footer>
-			<nav>
-				<a href="#" data-icon="share"></a>
-				<a href="#" data-icon="star" data-view-section="favorite"></a>
-				<a href="#" data-icon="list" data-view-section="task"></a>
-			</nav>
-		</footer>
-	</section>
-	<section id="category" data-transition="slide">
-		<header data-back="left-sign" data-title="Posts In Category">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="posts" class="list scroll" data-on-load="setTitle(__.cat.name);Parse.find('post','category',__.cat.name,tmplPosts)">
-			<ul>
-				<li>
-					<div style="position:relative;height:300px;background-color:black"></div>
-				</li>
-				<script type="text/tmpl" id="tmplPosts">
-				{{#loop}}
-				<li class="thumb">
-					<img src="{{attributes.thumbnail._url}}">
-					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{id}}'}" href="#">{{attributes.title}}</a></strong>
-						<a href="#" data-icon="comment" class="on-right" data-count="{{attributes.comments}}"></a>
-						<a href="#" data-icon="star" class="on-right" data-count="{{attributes.comments}}"></a>
-						<a href="#" data-icon="list" class="on-right" data-count="{{attributes.comments}}"></a>
-					</div>
-					
-				</li>
-				{{/loop}}
-				</script>
-			</ul>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="plus" data-view-section="creator"></a>
-				<a data-icon="share" data-view-section="creator"></a>
-			</nav>
-		</footer>
-	</section>
-	<section id="post" data-transition="slide">
-		<header data-back="left-sign" data-title="loading">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="show" class="scroll" data-on-load="Parse.get('post',__.post.id).then(showPost,Parse.error)">
-			<div style="padding:5px">
-				<script type="text/tmpl" id="tmplPost">
-					<div>
-						<div style="min-height:50%">
-							<center>
-								<span class="tags">{{_tags}}</span>
-								<span class="on-right"><a data-icon="user">{{attributes.authorName}}</a><span>{{age}}</span></span>
-							</center>
-							<pre>{{{attributes.content}}}</pre>
-						</div>
-						<ul class="list" id="stories"/>
-					</div>
-				</script>
-				<script type="text/tmpl" id="tmplStory" data-target="#stories">
-					{{#loop}}
-					<li class="thumb">
-						<img src="{{attributes.thumbnail._url}}">
-						<pre>{{{attributes.content}}}</pre>
-					</li>
-					{{/loop}}
-					{{^loop}}
-					<li class="empty">
-						create first story!
-					</li>
-					{{/loop}}
-				</script>
-			</div>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="comment" data-view-section="comment" href="#"></a>
-				<a data-icon="film" data-view-section="story" href="#"></a>
-				<a data-icon="share" data-view-section="comment" href="#"></a>
-				<a data-icon="star" id="cmdfavorite" onclick="toggleFavorite()" href="#"></a>
-				<a data-icon="menu" id="cmdtask" onclick="popup(taskOption,event)" href="#"></a>
-			</nav>
-		</footer>
-		<ul id="taskOption" class="popup">
-			<li><input type="radio" name="taskOption" value=1 onclick="addTask(this,1)">Today</li>	
-			<li><input type="radio" name="taskOption" value=2 onclick="addTask(this,2)">Tomorrow</li>
-			<li><input type="radio" name="taskOption" value=3 onclick="addTask(this,3)">This week</li>
-			<li><input type="radio" name="taskOption" value=4 onclick="addTask(this,4)">This month</li>
-			<li><input type="radio" name="taskOption" value=5 onclick="addTask(this,5)">This year</li>
-			<li><input type="radio" name="taskOption" value=0 checked onclick="this.checked&&_task(function(t){t&&$(cmdtask).removeClass('tasked')&&t.destroy();done()})">No Plan</li>
-		</ul>
-	</section>
-	<section id="favorite" data-transition="slide">
-		<header data-title="My Favorites" data-back="left-sign">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="favorite1" class="list scroll" data-on-load="Parse.find('favorite','author',Parse.user().id,tmplFavorite)">
-			<ul>
-				<script type="text/tmpl" id="tmplFavorite">
-				{{#loop}}
-				<li class="thumb arrow">
-					<img src="{{attributes.thumbnail._url}}">
-					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
-					</div>
-				</li>
-				{{/loop}}
-				</script>
-			</ul>
-		</article>
-	</section>
-	<section id="task" data-transition="slide">
-		<header data-title="My Tasks" data-back="left-sign">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="task1" class="list scroll" data-on-load="Parse.find('task','author',Parse.user().id,tmplTask)">
-			<ul>
-				<script type="text/tmpl" id="tmplTask">
-				{{#loop}}
-				<li class="thumb arrow">
-					<img src="{{attributes.thumbnail._url}}">
-					<div>
-						<strong><a data-view-section="post" onmouseup="$(this).trigger('touchend')"  ontouchend="__.post={id:'{{post}}'}" href="#">{{attributes.title}}</a></strong>
-					</div>
-				</li>
-				{{/loop}}
-				</script>
-			</ul>
-		</article>
-	</section>
-	<section id="comment" data-transition="slide">
-		<header data-title="Comment" data-back="left-sign">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article class="list scroll" id="showComments" data-on-load="Parse.find('comment','post',__.post,tmplComment)">
-			<ul>
-				<script type="text/tmpl" id="tmplComment">
-				{{#loop}}
-					<li class="thumb">
-						<a href="#" data-icon="user"><br>{{attributes.authorName}}</a>
-						<div>
-							<p>{{{attributes.content}}}</p>
-							<span class="on-right">{{ago}}</span>
-						</div>
-					</li>
-				{{/loop}}
-				</script>
-			</ul>
-		</article>
-		<footer>
-			<nav>
-				<a><form id="commentCreator"
-					onsubmit="this.object('comment','post',__.post).save().then(function(c){tmplComment.build({loop:[c]});commentCreator.content.value='';done()},Parse.error);return false;">
-					<textarea style="height:46px;padding:5px;width:100%;margin:0" name="content"></textarea>
-				</form></a>
-				<button data-icon="save" type="submit" form="commentCreator"></button>
-			</nav>
-		</footer>
-	</section>
-	
-	<section id="creator" data-transition="slide">
-		<header data-title="Create Post" data-back="left-sign">
-			<nav>
-				<a data-icon="refresh" class="on-right"></a>
-			</nav>
-		</header>
-		<article id="createPost" class="scroll"
-			data-on-load="this.promise&&this.promise.resolve();setTitle('Create A '+__.cat.name);new Editor(postEditor)">
-			<form id="postCreator" onsubmit="savePost(this);return false">
-				<fieldset>
-					<input type="text" placeholder="title" name="title" style="text-align:center">
-					<div class="tags">
-					<script>
-						createPost.promise=new Parse.Promise()
-						createPost.promise.then(function(){
-							Parse.find('tag','category','gender',function(o){tmplCheckable.build({title:'gender',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
-							Parse.find('tag','category','duration',function(o){tmplCheckable.build({title:'duration',name:'duration',type:'radio',loop:o},'#postCreator .tags')})
-							Parse.find('tag','category','goal',function(o){tmplCheckable.build({title:'goal',name:'tags',type:'checkbox',loop:o},'#postCreator .tags')})
-							delete createPost.promise
-						})
-					</script>
-					</div>
-				</fieldset>
-				<fieldset><div name="content" id="postEditor" style="min-height:1000px" class="editor" contenteditable="true" placeholder="content"></div></fieldset>
-				<input type="submit" class="outview">
-			</form>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="picture" onclick="postEditor.insertImage()"></a>
-				<a data-icon="save" onclick="postCreator.submit()"></a>
-			</nav>
-		</footer>
-	</section>
-	<section id="story" data-transition="slide">
-		<header data-back="left-sign" data-title="Create Story">
-			<nav>
-				<button class="on-right" type="submit" form="storyForm" data-icon="save"></button>
-			</nav>
-		</header>
-		<article id="createStory" class="scroll">
-			<form id="storyForm" onsubmit="this.object('story','post',__.post.id,'duration', parseInt(p.duration.text())).save().then(Lungo.Rounter.back,Parse.error);return false">
-				<fieldset><select name="duration">
-							<option value="KknqyCi9x2">60</option>
-							<option value="ueOPMH3mSR">10</option>
-							<option value="MNWQyARcTj">30</option>
-							<option value="xWiqWf3msh">45</option>
-							<option value="4NZdgfvDpV">90</option>
-							<option value="5BqICFnfKY">120</option>
-						</select>
-				</fieldset>
-				<fieldset><textarea placeholder="content" name="content"></textarea></fieldset>
-			</form>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="picture" onclick=""></a>
-				<a data-icon="minus" onclick=""></a>
-			</nav>
-		</footer>	
-	</section>	
-	
-	<section id="user" data-transition="slide">
-		<header data-back="left-sign" data-title="User Account"></header>
-		<nav data-control="groupbar">
-			<a href="#" data-view-article="signin" data-title="Sign In">Sign In</a>
-			<a href="#" data-view-article="signup" data-title="Sign up">Sign Up</a>
-			<a href="#" data-view-article="forgetpassword" data-title="Forget Password">Forget Password</a>
-		</nav>
-		<article id="signin">
-			<form onsubmit="this.object(new Parse.User()).logIn().then(function(){location.reload()},Parse.error);return false">
-				<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
-				<fieldset><input name="password" type="password" placeholder="password"></fieldset>
-				<fieldset class="outview"><input type="submit"></fieldset>
-			</form>
-		</article>
-		<article id="signup">
-			<form onsubmit="this.object(new Parse.User()).signUp().then(Lungo.Router.back,Parse.error);return false">
-				<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
-				<fieldset><input name="email" type="email" placeholder="email where reset password will be sent"></fieldset>
-				<fieldset><input name="password" type="text" placeholder="password"></fieldset>
-				<fieldset class="outview"><input type="submit"></fieldset>
-			</form>
-		</article>
-		<article id="forgetpassword">
-			<form onsubmit="Parse.User.requestPasswordReset(this.email.value);return false">
-				<fieldset><input name="email" type="text" placeholder="email where new password would send"></fieldset>
-				<fieldset class="outview"><input type="submit"></fieldset>
-			</form>
-		</article>			
-		<footer>
-			<nav>
-				<a data-icon="ok-sign" onclick="form().submit()"></a>
-			</nav>	
-		</footer>
-	</section>
-	<section id="child" data-transition="slide">
-		<header data-back="left-sign" data-title="baby"></header>
-		<article id="child1" data-on-load="__.child&&Parse.get('child',__.child.id).then(function(c,d){(d=childForm).set(c);d.photo.value&&(d.photo.src=d.photo.value.url())},Parse.error)||childForm.set()">
-			<form id="childForm" 
-				onsubmit="this.object('child','gender',parseInt(this.gender.value)).save().then(function(c){tmplChildren.build({loop:[c]});Lungo.Router.back();},Parse.error);return false">
-				<input type="hidden" name="id">
-				<fieldset><input type="text" name="name" placeholder="baby name"></fieldset>
-				<fieldset>
-					<select name="gender">
-						<option value=0>Boy</option>
-						<option value=1>Girl</option>
-					</select>
-				</fieldset>
-				<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
-				<fieldset>
-					<img name="photo" id="_a" onclick="uploader.bind(this,{onSave:function(f,dataUri){_a.file=_a.value=f;_a.src=dataUri},size:150}).click()" 
-						style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto" 
-						placeholder="photo"/>
-				</fieldset>
-				<fieldset class="outview"><input type="submit"></fieldset>
-			</form>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="certificate" onclick="__.child=extracChild()"></a>
-				<a><button type="submit" form="childForm" data-icon="ok-sign"></button></a>
-			</nav>
-		</footer>
-	</section>
-	<section id="splash" data-transition="slide">
-		<article id="splash1" class="active block" data-control="carousel" 
-			data-on-load="Lungo.Element.Carousel(this)">
-			<div>
-				<div align="center">
-					<img src="http://lorempixel.com/320/418/food/">
-				</div>
-				<div align="center">
-					<img src="http://lorempixel.com/320/418/sports/">
-				</div>
-			</div>
-		</article>
-	</section>	
-	<section id="pending" data-transition="slide">
-		<header data-back="left-sign" data-title="synchronize to server"></header>
-		<article id="pending1" class="list">
-			<ul>
-				<li class="thumb {{request.method}}" id="pending_{{id}}"><div>{{request.method}} {{request.className}} <span class="icon time on-right">{{createdAt}}</span><span class="icon refresh on-right" style="visibility:hidden"></span></div></li>
-				<script type="text/tmpl" id="tmplPending">
-					{{#loop}}
-						<li class="thumb {{request.method}}" id="pending_{{id}}">{{request.method}} {{request.className}} <span class="icon time right">{{createdAt}}</span><span class="icon refresh right" style="visibility:hidden"></span></li>
-					{{/loop}}
-				</script>
-			</ul>
-		</article>
-		<footer>
-			<nav>
-				<a data-icon="stop" onclick="Parse.offline.stopSync()" ></a>
-			</nav>
-		</footer>
-	</section>		
-	<input type="file" id="uploader" class="outview" onchange="this.save()">
-	<canvas id="_imgSizer" class="outview"></canvas>
-	<script type="text/tmpl" id="tmplCheckable">
-		<span class="checkable" onclick="this.classList.toggle('open')">
-			<span>{{title}}</span>
-			{{#loop}}
-			<input type="{{type}}" name="{{name}}" value="{{id}}" class="outview" title="{{attributes.desc}}"><span onclick="this.previousSibling.click()">{{attributes.name}}</span>
-			{{/loop}}
-		</span>
-	</script>
-	<script src="res/lungo.debug.js"></script>		
-	<script>init()</script>
+<body data-device="phone" data-position="fixed">
+<section id="splash">
+	<article class="active">
+		<div class="slides">
+			<div style="background-image:url(http://lorempixel.com/320/418/people/)"></div>
+			<div style="background-image:url(http://lorempixel.com/320/418/food/)"></div>
+		</div>
+	</article>
+</section>
+<script>
+	$.isOnline=function(){return false&& navigator.onLine}
+	$.os.tablet=!($.os.phone=true)
+</script>
 
- </body>
+<script>
+	Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
+	this._=Parse._;
+	require.config({
+		baseUrl:'./js',
+		urlArgs: "bust="+Date.now(),
+		deps: ['test','app','view/splash','tool/offline'],
+		callback: function(tester,app,splash,offline){
+			//tester.test(['tool/offline']).then(function(){
+				splash.show()
+				offline.init().then(function(){
+					app.init().then(function(){					
+						require(['view/children'],function(children){
+							if(!!$.os.tablet)
+								children.show()
+							else
+								children.hide()
+						})
+						Parse.history.start()
+					})
+				})
+			//})
+		}
+	})
+</script>
+<script type="text/tmpl" id="tmplCates">
+	<li class="thumb" id="id">
+		<img src="{{getUrl('thumbnail')}}">
+		<div>
+			<strong><a href="#category/{{id}}/{{get('name')}}">{{get('name')}}</a></strong>
+			<small>{{get('desc')}}</small>
+			<a class="on-right" href="#create/{{id}}/{{get('name')}}" style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
+		</div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplPosts">
+	<li class="thumb" id="{{id}}">
+		<img src="{{getUrl('thumbnail')}}">
+		<div>
+			<strong><a href="#show/{{id}}">{{get('title')}}</a></strong>
+			<a href="#" class="on-right"><span class="icon list"></span><span class="tag count">{{get('comments')}}</span></a>
+		</div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplPostRef">
+	<li class="thumb" id="{{id}}">
+		<img src="{{getUrl('thumbnail')}}">
+		<div>
+			<strong><a href="#show/{{get('post')}}">{{get('title')}}</a></strong>
+		</div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplUser">
+	<form id="signin">
+		<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
+		<fieldset><input name="password" type="password" placeholder="password"></fieldset>
+	</form>
+	<form id="signup">
+		<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
+		<fieldset><input name="email" type="email" placeholder="email address where reset password will be sent"></fieldset>
+		<fieldset><input name="password" type="text" placeholder="password"></fieldset>
+	</form>
+	<form id="password">
+		<fieldset><input name="email" type="text" placeholder="email address where new password would send"></fieldset>
+	</form>
+</script>
+<script type="text/tmpl" id="tmplChild">
+	<form> 
+		<fieldset><input type="text" name="name" placeholder="baby name"></fieldset>
+		<fieldset>
+			<select name="gender">
+				<option value=0>Boy</option>
+				<option value=1>Girl</option>
+			</select>
+		</fieldset>
+		<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
+		<fieldset>
+			<img name="photo" style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto"/>
+		</fieldset>
+	</form>
+</script>
+<script type="text/tmpl" id="tmplChildren">
+	<li class="thumb" id="{{id}}">
+		<img src="{{getUrl('photo')}}">
+		<div><a href="#child/{{id}}/{{get('name')}}">{{get('name')}}</a></div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplPost">
+	<div style="padding:10px">
+		<div style="min-height:50%">
+			<div>
+				<span class="tags"> {{getTags()}}</span>
+				<span class="on-right icon user"> {{get('authorName')}}</span><span class="on-right icon time"  style="padding-right:20px"> {{ago()}}</span>
+			</div>
+			<pre>{{get('content')}}</pre>
+		</div>
+		<ul class="list" id="stories"/>
+	</div>
+	
+</script>
+<script type="text/tmpl" id="tmplComment">
+	<li class="thumb" id="{{id}}">
+		<a><span class="icon user"/><br>{{get('authorName')}}</a>
+		<div>
+			<p>{{get('content')}}</p>
+			<span class="on-right">{{ago()}}</span>
+		</div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplCheckable">
+<span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
+	<span>{{title}}</span>
+	<%_.each(options,function(o){with(o){%>
+	<input type="{{type}}" name="{{name}}" value="{{id}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{get('name')}}</span>
+	<%}})%>
+</span>
+</script>
+<script type="text/tmpl" id="tmplSpecTest">
+<li class="spec {{getStatus()}}">
+	<%_.each(results(),function(r){with(r){%>
+	<div>{{description}}</div>
+	<%}})%>
+</li>
+</script>
+<div id="media" class="outview"></div>
+</body>
 </html>
