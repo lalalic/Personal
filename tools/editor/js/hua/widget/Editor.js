@@ -1,11 +1,10 @@
 define(['view/ViewGroup','view/FontMetrics','view/Selection','widget/Input'],
-function(ViewGroup,FontMetrics,Selection,Input){
+function(ViewGroup,FontMetrics,selection,Input){
 	var Editor=function(canvas,doc){
 		ViewGroup.call(this,arguments)
 		this.document=doc||(new Editor.Document());
 		var me=this,
-			metrics=(this.metrics=new FontMetrics("12px 'Courier New', Courier, monospace")),
-			selection=(this.selection=new Selection(this));
+			metrics=(this.metrics=new FontMetrics("12px 'Courier New', Courier, monospace"))
 		
 		this.setCanvas(canvas);
 		var paint=this.paint
@@ -16,14 +15,16 @@ function(ViewGroup,FontMetrics,Selection,Input){
 		this.size.width=canvas.width;
 		this.size.height=canvas.height;
 		
-		this.add(new Input(metrics,selection));
-		this.add(new Input(metrics,selection));
+		this.add(new Input(metrics));
+		this.add(new Input(metrics));
 		this.draw(canvas);
 		this.children[0].focus();
+		
 	};
 	
 	Editor.version="0.1";	
 	Editor.prototype=new ViewGroup();
+	Editor.prototype.clazz="Editor"
 	
 	Editor.prototype.isRoot=function(){
 		return true;

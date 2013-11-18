@@ -1,10 +1,9 @@
-define(['view/View'],function(View){
-	var Input=function(metrics,selection){
+define(['view/View','view/Selection'],function(View,selection){
+	var Input=function(metrics){
 		View.call(this,arguments);
 		var me=this;
 		this.text="";
 		this.metrics=metrics;
-		this.selection=selection;
 		this.size.height=metrics.height;
 		this.border.bottom=1;
 		
@@ -18,7 +17,7 @@ define(['view/View'],function(View){
 			this.focus();
 		})
 		
-		this.bindEvent('keyup',function(e){
+		this.bindEvent('input',function(e){
 			selection.invalidate();
 			switch(e.keyCode) {
 		    case 8: // Backspace
@@ -47,12 +46,7 @@ define(['view/View'],function(View){
 		});
 	};
 	Input.prototype=new View();
-	Input.prototype.isInBounds=function(e){
-		if(e.type.match(/key/gi)){
-			return this.selection.input==this;
-		}else
-			return View.prototype.isInBounds.call(this,arguments);
-	}
+	Input.prototype.clazz="Input"
 	
 	Input.prototype.onDraw=function(canvas){
 		if(this.text){
@@ -63,13 +57,13 @@ define(['view/View'],function(View){
 	};
 	
 	Input.prototype.focus=function(){
-		this.selection.input=this;
-		this.selection.draw(this.canvas);
+		selection.setHolder(this);
+		selection.draw(this.canvas);
 	}
 	
 	Input.prototype.insertText=function(text){
 		var _text=this.paint.measureText(text),
-			start=this.selection.start,
+			start=selection.start,
 			height=this.metrics.height;
 		this.paint.fillText(text, start.x,start.y+height);
 		start.x+=_text.width;

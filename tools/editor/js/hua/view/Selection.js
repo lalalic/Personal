@@ -1,23 +1,22 @@
 define(['view/View'],function(View){
-	var Selection=function(input){
-		if(!arguments.length) return;
-		View.call(this,arguments);
-		this.input=input;
-		this.end=this.start=null;
-		this.last={left:-1};
-	};
+	var Selection=function(){
+			View.call(this,arguments);
+		}, input;
 	Selection.prototype=new View();
 	Selection.prototype.INTERVAL=500;
+	Selection.prototype.start=Selection.prototype.end=null
+	Selection.prototype.last={left:-1}
+	View.prototype.clazz="Selection"
 	function _draw(canvas){
 		if(!this.start){
 			this.end=this.start={
-				x:this.input.position.left+this.input.getContentLeft(), 
-				y:this.input.position.top+this.input.getContentTop()
+				x:input.position.left+input.getContentLeft(), 
+				y:input.position.top+input.getContentTop()
 			};
 		}
 		var paint=canvas.getContext("2d"),
 			w=paint.lineWidth;
-			height=this.input.metrics.height;
+			height=input.metrics.height;
 		if(this.last.left==-1){
 			this.last={left:this.start.x, top:this.start.y, right:this.start.x+w, bottom:this.start.y+height};
 			paint.beginPath();
@@ -27,6 +26,16 @@ define(['view/View'],function(View){
 		}else{
 			this.clean();
 		}
+	};
+	Selection.prototype.setHolder=function(view){
+		input=view
+		this.position.left=input.position.left
+		this.position.top=input.position.top
+		this.end=this.start=null;
+	};
+	
+	Selection.prototype.getHolder=function(){
+		return input
 	};
 	
 	Selection.prototype.onDraw=function(canvas){
@@ -48,6 +57,9 @@ define(['view/View'],function(View){
 			this.clean();
 			this.timer=null;			
 		}
-	};	
-	return Selection;
+	};
+	Selection.prototype.isRoot=function(){
+		return false
+	}
+	return new Selection();
 })

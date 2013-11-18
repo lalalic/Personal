@@ -1,10 +1,11 @@
 define(['view/View'],function(View){
 	var ViewGroup=function(){
-		if(!arguments.length) return;
 		View.call(this,arguments);
 		this.children=[];
 	};
 	ViewGroup.prototype=new View();
+	ViewGroup.prototype.clazz="ViewGroup"
+	
 	ViewGroup.prototype.add=function(v,i){
 		this.children.push(v);
 		v.parent=this;
