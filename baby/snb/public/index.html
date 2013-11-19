@@ -39,12 +39,12 @@
 	.slides{position:absolute;height:100%}
 	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
 	</style>
-	<script src="http://192.168.2.5:8080/target/target-script-min.js#lalalic"></script>
 	<script src="js/lib/require.js"></script>
 	<script src="js/lib/zepto.min.js"></script>
 	<script src="js/lib/parse-1.2.12.js"></script>
 </head>
 <body data-device="phone" data-position="fixed">
+<script src="js/test.js"></script>
 <section id="splash">
 	<article class="active">
 		<div class="slides">
@@ -60,13 +60,15 @@
 
 <script>
 	Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
-	this._=Parse._;
 	require.config({
 		baseUrl:'./js',
 		urlArgs: "bust="+Date.now(),
 		deps: ['test','app','view/splash','tool/offline'],
 		callback: function(tester,app,splash,offline){
-			//tester.test(['tool/offline']).then(function(){
+			tester.test([
+				//'tool/offline',
+				'tool/uploader'
+				]).then(function(){
 				splash.show()
 				offline.init().then(function(){
 					app.init().then(function(){					
@@ -79,7 +81,7 @@
 						Parse.history.start()
 					})
 				})
-			//})
+			})
 		}
 	})
 </script>

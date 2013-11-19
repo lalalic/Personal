@@ -45,8 +45,9 @@ define(['tool/uploader'],function(uploader){
 			return false
 		})
 		
-		el.insertImage=function(f,reader){
-			uploader.bind(el,{
+		return _.extend(el,{
+			insertImage:function(f,reader){
+				uploader.bind(el,{
 					success:function(f){f._img.src=f.url()},
 					size:1024,
 					onSave: function(f,data){
@@ -58,20 +59,20 @@ define(['tool/uploader'],function(uploader){
 							saveSelection()
 						}
 				}).click()
-		}
-		
-		el.getThumb=function(){
-			if(el['thumb'])
-				return el.thumb;
-			var thumb=this.querySelector('img');
-			if(!thumb)
+			},
+			getThumb:function(){
+				if(el['thumb'])
+					return el.thumb;
+				var thumb=this.querySelector('img');
+				if(!thumb)
+					return null;
+				if(_.has(String.prototype,'toImageData'))
+					return new Parse.File('thumb.jpg',{base64:thumb.src.toImageData(96)});
 				return null;
-			return new Parse.File('thumb',{base64:thumb.src.toImageData(96)});
-		}
-
-		el.getContent=function(imageSaver){
-			return this.innerHTML.replace(TRIM_TAG,"\n").replace(TRIM_LINE,'\n\n');
-		}
-		return el
+			},
+			getContent:function(){
+				return this.innerHTML.replace(TRIM_TAG,"\n").replace(TRIM_LINE,'\n\n');
+			}
+		})
 	}
 })

@@ -1,5 +1,8 @@
 define(function(){
-	var Promise=Parse.Promise
+	window._=Parse._
+	window.Promise=Parse.Promise
+	$.os.phonegap=_.has(window,'cordova')
+	
 	var _then=Promise.prototype.then
 	Promise.prototype.then=function(passed,failed){
 		return _then.call(this,passed,failed||function(e){e&&alert(JSON.stringify(e))})

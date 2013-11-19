@@ -1,16 +1,5 @@
 define(['tool/offline'],function(offline){
-var timeout=10*1000,pending=/^pending/
-	function asyncIt(p,msgTimeout,more){
-		if(_.isFunction(msgTimeout)){
-			more=msgTimeout
-			msgTimeout=null
-		}
-		waitsFor(function(){return p._resolved || p._rejected},msgTimeout||'time out',timeout)
-		runs(function(){
-			expect(p._resolved, p._error).toBe(true)
-			more && more()
-		})
-	}
+var pending=/^pending/
 	return describe('offline',function(){
 		var schema=function(Type){
 				return {

@@ -1,4 +1,16 @@
 define('test',['view/base','lib/jasmine'],function(View){
+	window.asyncIt=function(p,msgTimeout,more){
+		if(_.isFunction(msgTimeout)){
+			more=msgTimeout
+			msgTimeout=null
+		}
+		waitsFor(function(){return p._resolved || p._rejected},msgTimeout||'time out',10*1000)
+		runs(function(){
+			expect(p._resolved, p._error).toBe(true)
+			more && more()
+		})
+	}
+	
 	var _expect=jasmine.Spec.prototype.expect
 	jasmine.Spec.prototype.expect=function(actual,msgFailed){
 		var p=_expect.apply(this,arguments)

@@ -69,7 +69,7 @@ define(['app'],function(app){
 				currentPage[this.tagName] && currentPage[this.tagName].hide()
 				this.$el.addClass('show')
 					.one('webkitAnimationEnd animationend',function(){
-						$(this).data('direction',null)
+						//$(this).data('direction','')
 					}).data('direction','in')
 					
 				currentPage[this.tagName]=this
@@ -78,6 +78,7 @@ define(['app'],function(app){
 			hide: function(){
 				this.clear()
 				this.$el.removeClass('show')
+					.data('direction','out')
 				return this
 			},
 			clear: function(){
