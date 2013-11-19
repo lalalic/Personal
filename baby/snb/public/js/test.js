@@ -1,10 +1,10 @@
 define('test',['view/base','lib/jasmine'],function(View){
-	window.asyncIt=function(p,msgTimeout,more){
+	window.asyncIt=function(p,msgTimeout,more,timeout){
 		if(_.isFunction(msgTimeout)){
 			more=msgTimeout
 			msgTimeout=null
 		}
-		waitsFor(function(){return p._resolved || p._rejected},msgTimeout||'time out',10*1000)
+		waitsFor(function(){return p._resolved || p._rejected},msgTimeout||'time out',timeout||10000)
 		runs(function(){
 			expect(p._resolved, p._error).toBe(true)
 			more && more()
@@ -99,10 +99,10 @@ define('test',['view/base','lib/jasmine'],function(View){
 	var Page=View.Page, ready=new Parse.Promise()
 	return new (Page.extend({
 		title:'Test',
-		content:'<ul/>',
+		content:'<ul><li><textarea style="width:100%;height:200px"></textarea></li></ul>',
 		navs:'<a><span class="icon home"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
-		events: {'click header nav span.home':'ready'},
+		events: {'click header nav span.home':'ready','change textarea':'debug'},
 		initialize: function(){
 			Page.prototype.initialize.apply(this,arguments)
 			var env= this.jasmin = jasmine.getEnv();
@@ -111,6 +111,10 @@ define('test',['view/base','lib/jasmine'],function(View){
 			this.$('article').addClass('list')
 			this.addStyles()
 			
+		},
+		debug: function(e){
+			new Function("",e.srcElement.value).call(this)
+			return this
 		},
 		ready: function(){
 			this.remove()

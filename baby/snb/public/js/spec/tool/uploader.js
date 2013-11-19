@@ -8,37 +8,50 @@ define(['tool/uploader'],function(uploader){
 			expect(url).toMatch(pattern)
 	}
 	describe('Uploader features',function(){
-		it('File Reader',function(){
-			expect(FileReader).toBeTruthy()
+		it('Typed Uploader',function(){
+			expect(uploader.type).toBeTruthy()
 		})
 		
-		xit('Resize Selected Image',function(){
-			var p=new Promise()
-			uploader.bind({onSave: function(f,resizedData,rawReadEvent){
-					if(rawReadEvent.target.result.match(/^data:/ 
-						&& resizedData.match(/^data:/)))
-						p.resolve()
-					else
-						p.reject()
-					return false
-				},
-				size:512
+		switch(uploader.type){
+		case 'phonegap':
+			describe('phonegap uploader features',function(){
+				it('camera setup',function(){
+					expect(navigator.camera).toBeTruthy()
 				})
-			uploader.click()
-			asyncIt(p)
-		})
-		
-		it('Resize Data Image',function(){
-			var _imgSizer=document.getElementById('_imgSizer'),
-				ctx=_imgSizer.getContext('2d'),
-				style=_imgSizer.style
-			_imgSizer.width=_imgSizer.height=150;
-			style.width=style.height="150px";
-			ctx.clearRect(0,0,150,150)
-			ctx.fillStyle="red"
-			ctx.fillRect(0,0,150,150)
-			var dataURL=_imgSizer.toDataURL()
-			expectUrl(dataURL.toImageDataURL(50),/^data:/)
-		})
+				
+				it('Picture Selection Window',function(){
+					var p=new Promise,p1=new Promise
+					uploader.bind(null,{
+						onSave:function(f,dataURL){
+							p.resolve(dataURL)
+						},
+						onSaved:function(f){
+							p1.resolve(f.url())
+						}
+					}).click()
+					asyncIt(Promise.when([p,p1]),null,null,30000)
+				})
+			})
+		break
+		default:
+			describe('web uploader features',function(){
+				it('File Reader Support',function(){
+					expect(FileReader).toBeTruthy()
+				})
+				
+				it('Resize Data Image',function(){
+					var _imgSizer=document.getElementById('_imgSizer'),
+						ctx=_imgSizer.getContext('2d'),
+						style=_imgSizer.style
+					_imgSizer.width=_imgSizer.height=150;
+					style.width=style.height="150px";
+					ctx.clearRect(0,0,150,150)
+					ctx.fillStyle="red"
+					ctx.fillRect(0,0,150,150)
+					var dataURL=_imgSizer.toDataURL()
+					expectUrl(dataURL.toImageDataURL(50),/^data:/)
+				})
+			})	
+		}
 	})
 })
