@@ -37,7 +37,7 @@ define(['view/base','app'],function(View,app){
 					user=new Parse.User({username:f.username.value,password:f.password.value})
 				user.logIn()
 					.then(function(){
-						Parse.Promise.when(app.init4User(Parse.User.current()))
+						Promise.when(app.init4User(Parse.User.current()))
 						.then(function(){
 							Parse.history.navigate('#',{trigger:true,replace:true})
 						})

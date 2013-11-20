@@ -4,7 +4,6 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 	Array.prototype.union=function(a,from){for(var i=from||0;i<(a||[]).length;i++) this.push(a[i]);return this}
 	Array.prototype.fill=function(a,times){for(var i=times-1;i>=0;i--) this.push(a);return this} 
 	Date.fromTime=function(t){var a=new Date();a.setTime(t);return a}
-	var Promise=Parse.Promise
 	var _request=Parse._request
 	Parse._request=function(o){
 		if(!$.isOnline())

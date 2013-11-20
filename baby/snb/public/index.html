@@ -36,7 +36,7 @@
 	span.checkable.vertical>span{display:block!important}
 	.tags{text-align:center}
 	.tags:before{content:"\f02b";font-family:'lungojsicon';font-weight:normal !important}
-	.slides{position:absolute;height:100%}
+	.slides{position:absolute;height:100%;background-color:black}
 	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
 	</style>
 	<script src="js/lib/require.js"></script>
@@ -44,18 +44,19 @@
 	<script src="js/lib/parse-1.2.12.js"></script>
 </head>
 <body data-device="phone" data-position="fixed">
-<script src="js/test.js"></script>
-<section id="splash">
+<section id="splash" class="show">
 	<article class="active">
 		<div class="slides">
-			<div style="background-image:url(http://lorempixel.com/320/418/people/)"></div>
-			<div style="background-image:url(http://lorempixel.com/320/418/food/)"></div>
+			<div style="text-align:center;vertical-align:middle">
+				<a  style="position:absolute" class="doing"><span class="icon refresh" style="color:white"/></a>
+			</div>
+			<!--div style="background-image:url(http://lorempixel.com/320/418/people/)"></div>
+			<div style="background-image:url(http://lorempixel.com/320/418/food/)"></div-->
 		</div>
 	</article>
 </section>
 <script>
-	$.isOnline=function(){return false&& navigator.onLine}
-	$.os.tablet=!($.os.phone=true)
+	$.isOnline=function(){return navigator.onLine}
 </script>
 
 <script>
@@ -63,23 +64,15 @@
 	require.config({
 		baseUrl:'./js',
 		urlArgs: "bust="+Date.now(),
-		deps: ['test','app','view/splash','tool/offline'],
-		callback: function(tester,app,splash,offline){
-			tester.test([
-				//'tool/offline',
-				'tool/uploader'
-				]).then(function(){
-				splash.show()
-				offline.init().then(function(){
-					app.init().then(function(){					
-						require(['view/children'],function(children){
-							if(!!$.os.tablet)
-								children.show()
-							else
-								children.hide()
-						})
-						Parse.history.start()
+		deps: ['app','view/splash','tool/offline','view/test'],
+		callback: function(app,splash,offline){
+			splash.show()
+			offline.init().then(function(){
+				app.init().then(function(){					
+					require(['view/children'],function(children){
+						children[$.media=='tablet'?'show':'hide']()
 					})
+					Parse.history.start()
 				})
 			})
 		}
@@ -178,13 +171,15 @@
 	<%}})%>
 </span>
 </script>
-<script type="text/tmpl" id="tmplSpecTest">
-<li class="spec {{getStatus()}}">
-	<%_.each(results(),function(r){with(r){%>
-	<div>{{description}}</div>
-	<%}})%>
-</li>
+<script type="text/tmpl" id="tmplSpecs">
+<span class="checkable open" onclick="$(this).toggleClass('open')">
+	<span>{{title}}</span>
+	<%_.each(specs,function(o){%>
+	<input type="checkbox" name="spec" value="{{o}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{o}}</span>
+	<%})%>
+</span>
 </script>
-<div id="media" class="outview"></div>
+
 </body>
 </html>

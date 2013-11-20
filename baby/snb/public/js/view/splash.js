@@ -17,7 +17,8 @@ define(['view/base'],function(View){
 		show: function(){
 			Page.prototype.show.apply(this,arguments)
 			var me=this
-			this.interval=setInterval(function(){me.slide()},1500)
+			if(this.length>1)
+				this.interval=setInterval(function(){me.slide()},1500)
 		},
 		hide: function(){this.remove()},
 		slide: function(index){

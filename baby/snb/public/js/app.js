@@ -14,7 +14,10 @@ define(function(){
 	  };
 	  
 	$(window).bind('resize',function(){
-		$(document.body).data('device',!!$.os.phone?'phone':'tablet')
+		if($('#media').length==0)
+			$('body').append('<div id="media" class="outview"></div>')
+		$.media=$('#media').width()==1 ? 'phone' : 'tablet'
+		$('body').data('device',$.media)
 	}).resize()	
 	
   var app=_.extend({
@@ -86,7 +89,7 @@ define(function(){
 	
 	//router
 	var router=new Parse.Router()
-	_.each([
+	_.each([//route name, url, view name
 		'home,,categories',
 		'createChild,child,child',
 		'updateChild,child/:id/:name,child',
@@ -97,7 +100,8 @@ define(function(){
 		'showpost,show/:id,post1',
 		'comments,comments/:id,comments',
 		'posts,category/:id/:name,posts',
-		'user,user/:action,user'],function(r){
+		'user,user/:action,user',
+		'test,test,test'],function(r){
 		router.route((r=r.split(','))[1],r[0],function(){
 			var args=arguments
 			require(['view/'+r[2]],function(page){page.show.apply(page,args)})

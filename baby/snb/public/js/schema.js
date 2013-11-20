@@ -16,8 +16,7 @@ define(function(){
 				fields:{birthday:TEXT,gender:INT,name:TEXT,photo:FILE,author:TEXT,authorName:TEXT},
 				cachable:MINE,
 				sync:function(request,pendingId){
-					var promise=new Parse.Promise(),
-						data=request.data,
+					var data=request.data,
 						photo=data.photo,
 						submitRequest=function(){
 							var p=parseRequest(request);
@@ -76,7 +75,7 @@ define(function(){
 				sync:function(request,pendingId){
 					var data=request.data,
 						content=data.content,
-						resultPromise=new Parse.Promise(),
+						resultPromise=new Promise(),
 						promises=[]
 					var splitted=content.splitByImageData()
 						
@@ -93,7 +92,7 @@ define(function(){
 								splitted[i]='<img src="'+newFile.url+'">'
 							}));
 					}
-					Parse.Promise.when(promises)
+					Promise.when(promises)
 						.then(function(){
 							data.content=splitted.join('')
 							var promise=parseRequest(request);

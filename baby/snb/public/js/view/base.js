@@ -36,13 +36,13 @@ define(['app'],function(app){
 			clazz:'Page',
 			tagName:'section',
 			title:'Default Page',
-			navs:'<a onclick="history.go(-1)"><span class="icon left-sign"/></a>\
+			navs:'<a><span class="icon left-sign"/></a>\
 				<a href="#"><span class="icon home"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
 			content:'empty content',
 			cmds:'',
 			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header><article class="active scroll">{{content}}</article><footer><nav>{{cmds}}</nav></footer>'),
-			events:{'click header .refresh': 'refresh'},
+			events:{'click header .refresh': 'refresh','click header nav a:first-child':'back'},
 			constructor: function(){
 				pages.push(this)
 				Parse.View.prototype.constructor.apply(this,arguments)
@@ -69,7 +69,7 @@ define(['app'],function(app){
 				currentPage[this.tagName] && currentPage[this.tagName].hide()
 				this.$el.addClass('show')
 					.one('webkitAnimationEnd animationend',function(){
-						//$(this).data('direction','')
+						$(this).data('direction','')
 					}).data('direction','in')
 					
 				currentPage[this.tagName]=this
@@ -78,11 +78,13 @@ define(['app'],function(app){
 			hide: function(){
 				this.clear()
 				this.$el.removeClass('show')
-					.data('direction','out')
 				return this
 			},
 			clear: function(){
 				return this
+			},
+			back: function(){
+				history.go(-1)
 			}
 		}),
 		ListPage=Page.extend({
