@@ -325,7 +325,7 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 			return promise
 		},
 		init:function(myschema){
-			this.websql=websql=openDatabase(dbName, '', '', 100 * 1024 * 1024)
+			this.websql=websql=openDatabase(dbName, '', '', 7 * 1024 * 1024)
 			extendWebsql()
 			schema=(myschema||_schema)(DataType,_request)
 			ready.push(this.changeVersion10())
