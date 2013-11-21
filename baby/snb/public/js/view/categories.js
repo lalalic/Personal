@@ -1,4 +1,7 @@
 define(['app','view/base'],function(app,View){
+	$('body').append('<style>\
+		.stat{position:relative;height:300px;background-color:black}\
+		</style>')
 	var ListPage=View.ListPage, Tag=app.Tag
 	return new (ListPage.extend({
 		title:'SNB',

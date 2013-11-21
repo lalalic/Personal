@@ -1,4 +1,10 @@
 define(['view/base','app'],function(View, app){
+	$('body').append('<style>\
+		#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}\
+		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}\
+		.favorited,.tasked{color:yellow}\
+		.stat{position:relative;height:300px;background-color:black}\
+		</style>')
 	var Page=View.Page, 
 		Post=app.Post, Favorite=app.Favorite, Task=app.Task, Child=app.Child
 	return new (Page.extend({
@@ -13,7 +19,7 @@ define(['view/base','app'],function(View, app){
 		}),
 		initialize: function(){
 			Page.prototype.initialize.apply(this,arguments)
-			this.content=_.template($('#tmplPost').html())
+			this.content=_.template('#tmplPost')
 			this.$('article').attr('id','show')
 			this.$el.append('<div id="taskOption" class="popup hidden"/>')
 			this.taskOption=this.$('#taskOption')

@@ -18,6 +18,7 @@ define(function(){
 				sync:function(request,pendingId){
 					var data=request.data,
 						photo=data.photo,
+						promise=new Promise,
 						submitRequest=function(){
 							var p=parseRequest(request);
 							switch(request.method){

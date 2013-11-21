@@ -8,7 +8,7 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 		initialize: function(){
 			FormPage.prototype.initialize.apply(this,arguments)
 			this.editor=makeEditor(this.$('form [contenteditable]').get(0))
-			var tagHolder=this.$('div.tags'), t=_.template($('#tmplCheckable').html())
+			var tagHolder=this.$('div.tags'), t=_.template('#tmplCheckable')
 			tagHolder.append(t({title:'gender',name:'tags',type:'checkbox',options:Tag.grouped.gender}))
 			tagHolder.append(t({title:'duration',name:'duration',type:'radio',options:Tag.grouped.duration}))
 			tagHolder.append(t({title:'goal',name:'tags',type:'checkbox',options:Tag.grouped.goal}))

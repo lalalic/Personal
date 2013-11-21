@@ -42,6 +42,8 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 		}
 	}
 
+	if(!('needSync' in localStorage))
+		localStorage['needSync']=false
 	var DataType={}
 	{//supported data types
 	var h=function(v){return v==undefined?null:v},
@@ -114,7 +116,8 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 				return promise
 			},
 			pending: function(values,tx){
-				return this.run.apply(this,['insert into pending(tablename,objectId,createdAt,request)values(?,?,?,?)',values,tx].union(arguments,2))
+				localStorage['needSync']=true
+				return this.run.apply(this,['insert into pending(tablename,objectId,createdAt,request,title)values(?,?,?,?,?)',values,tx].union(arguments,2))
 			},
 			cache:function(tableName,objects){
 				var table=schema[tableName],cachedAt=new Date().toJSON(),
@@ -145,12 +148,14 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 			}
 		})
 	}
-	var pended={},ready=[], dbName='parse.supernaiba'
+	var pended={}, dbName='parse.supernaiba',stoppedSync=false
 	var offline=_.extend({
 		websql:websql,
-		stoppedSync: false,
 		stopSync: function(){
-			this.stoppedSync=true
+			stoppedSync=true
+		},
+		needSync: function(){
+			return localStorage['needSync']
 		},
 		classes:{
 			GET:function(o){
@@ -194,7 +199,7 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 						})
 			},
 			PUT: function(o){
-				return websql.pending([o.className,o.objectId,Date.now(),JSON.stringify(o)],null,o)
+				return websql.pending([o.className,o.objectId,Date.now(),JSON.stringify(o),"update "+o.className+"="+o.objectId],null,o)
 					.then(function(tx,results,o){
 						var promise=new Promise(),
 							table=schema[o.className].fields,
@@ -213,7 +218,7 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 			},
 			POST: function(o){
 				var now=Date.now()
-				return websql.pending([o.className,'pending'+now,now,JSON.stringify(o)])
+				return websql.pending([o.className,'pending'+now,now,JSON.stringify(o),"create new "+o.className])
 					.then(function(tx,results){
 						var promise=new Promise(),
 							table=schema[o.className].fields,
@@ -250,7 +255,7 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 					return schema[o.className].destroy(o.objectId, o.className)
 				}else{
 					var p=new Promise
-					websql.pending([o.className,null,Date.now(),JSON.stringify(o)],null,o)
+					websql.pending([o.className,null,Date.now(),JSON.stringify(o), "delete "+o.className+"="+o.objectId],null,o)
 						.then(function(tx){
 							websql.run('delete from '+o.className+' where objectId=?',[o.objectId],tx)
 								.then(function(){
@@ -288,12 +293,12 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 								if(request.route=='classes' && request.method=='POST')
 									pended[a.objectId]=newObject.objectId
 								console.debug('synced '+request.method+' to '+request.className)
-								offline.trigger('syncedOne',newObject,request)
+								offline.trigger('syncedOne',a,newObject)
 								promise.resolve()
-							})
+							},function(e){promise.reject(e)})
 					}
 				for(var i=0,len=query.rows.length;i<len;i++){
-					if(offline.stoppedSync){
+					if(stoppedSync){
 						promise.resolve()
 						return
 					}
@@ -301,13 +306,15 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 						promise=new Promise(),
 						request=a.request=JSON.parse(a.request)
 					pendings.push(promise)
-					offline.trigger('syncingOne',a,request)
+					offline.trigger('syncingOne',a)
 					switch(request.route){
 					case 'classes':
 						handler(request,a,promise)
 					}
 				}
-				return Promise.when(pendings)
+				var finished=Promise.when(pendings)
+				finished.then(function(){localStorage['needSync']=false})
+				return finished
 			})
 		},
 		pendings:function(){
@@ -323,13 +330,12 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 				})
 			return promise
 		},
-		init:function(myschema){
-			this.websql=websql=openDatabase(dbName, '', '', 7 * 1024 * 1024)
+		init:function(myschema,name, size){
+			var ready=[]
+			this.websql=websql=openDatabase(name||dbName, '', '', size||(7 * 1024 * 1024))
 			extendWebsql()
 			schema=(myschema||_schema)(DataType,_request)
-			ready.push(this.changeVersion10())
-			ready.push(this.sync())
-			return Promise.when(ready)
+			return this.changeVersion10()
 		},
 		changeVersion10:function(){
 			switch(websql.version){
@@ -368,7 +374,7 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 					var v1=promises[i]
 					promises.push(v1)
 					websql.run('create table if not exists pending(id integer primary key autoincrement,\
-						tablename text, objectId text, createdAt integer, request text)',null,tx)
+						tablename text, objectId text, createdAt integer, request text, title text)',null,tx)
 						.then(function(){v1.resolve()},function(e){v1.reject(e.message)})
 				});
 				return Promise.when(promises);
@@ -376,8 +382,8 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 				return Promise.as()
 			}
 		},
-		clear: function(myschema){
-			var db=openDatabase(dbName, '', '', 1),
+		clear: function(myschema,name){
+			var db=openDatabase(name||dbName, '', '', 1),
 				schema=(myschema||_schema)(DataType,_request)
 			switch(db.version){
 			case '1.0':

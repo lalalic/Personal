@@ -1,9 +1,29 @@
 define(['app'],function(app){
+	$('body').append("<style>\
+		body,section,aside{overflow:hidden}\
+		nav img{width:32px;height:32px}\
+		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}\
+		.outview{position:absolute;top:-9999px;height:1px}\
+		span.checkable{line-height:35px;}\
+		span.checkable>span{padding:5px;cursor:default}\
+		span.checkable>span:not(:first-of-type){color:lightgray}\
+		span.checkable>span:hover{color:blue}\
+		span.checkable input:checked+span{color:black}\
+		span.checkable>span:first-of-type{background-color:lightgreen;color:white}\
+		span.checkable input{position:absolute;top:-9999px;height:1px}\
+		span.checkable input:not(:checked)+span{display:none}\
+		span.checkable.open input:not(:checked)+span{display:initial}\
+		span.checkable:not(.open)>span:first-of-type:after{content:'...'}\
+		span.checkable.vertical>span{display:block!important}\
+		.tags{text-align:center}\
+		.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
+		</style>")
+		
 	Parse.Object.prototype.getUrl=function(a){
 		return this.has(a)?this.get(a).url():null
 	}
-	Parse.Object.prototype.ago=function(){
-		var delta=parseInt((new Date().getTime()-this.createdAt.getTime())/1000),
+	Date.prototype.ago=function(){
+		var delta=parseInt((new Date().getTime()-this.getTime())/1000),
 			aday=24*60*60
 		if(delta<aday){
 			if(delta<60)
@@ -17,7 +37,7 @@ define(['app'],function(app){
 		else if (delta<aday*3)
 			return '前天'
 		else
-			return this.createdAt.getMonth()+1+"-"+this.createdAt.getDay()+1;
+			return this.getMonth()+1+"-"+this.getDay()+1;
 	}
 	var _ajax=Parse._ajax
 	Parse._ajax=function(){
@@ -95,7 +115,7 @@ define(['app'],function(app){
 				this.$list=this.$('article>ul')
 				this.$('article').addClass('list')
 				if(_.isString(this.itemTemplate))
-					this.itemTemplate=_.template($(this.itemTemplate).html())
+					this.itemTemplate=_.template(this.itemTemplate)
 				this.collection.on('reset',this.render, this)
 				this.collection.on('add', this.addOne, this)
 				this.collection.on('remove', this.removeOne, this)

@@ -9,42 +9,26 @@
 	<link rel="stylesheet" href="css/lungo.css">
 	<link rel="stylesheet" href="css/lungo.icon.css">
 	<link rel="stylesheet" href="css/lungo.theme.css">
-	<style>
-	body,section,aside{overflow:hidden}
-	.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}	
-	.outview{position:absolute;top:-9999px;height:1px}
-	#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}
-	nav img{width:32px;height:32px}
-	.editor{background-color:white;height:100%;padding:10px;-webkit-user-select:text;-moz-user-select:text;user-select:text}
-	.editor img{clear:both;max-width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}
-	.editor img:hover{border-color:blue}
-	.editor:empty:before{content:attr(placeholder); color:lightgray}
-	#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}
-	.favorited, .tasked{color:yellow}
-	.stat{position:relative;height:300px;background-color:black}
-	
-	span.checkable{line-height:35px;}
-	span.checkable>span{padding:5px;cursor:default}
-	span.checkable>span:not(:first-of-type){color:lightgray}
-	span.checkable>span:hover{color:blue}
-	span.checkable input:checked+span{color:black}
-	span.checkable>span:first-of-type{background-color:lightgreen;color:white}
-	span.checkable input{position:absolute;top:-9999px;height:1px}
-	span.checkable input:not(:checked)+span{display:none}
-	span.checkable.open input:not(:checked)+span{display:initial}
-	span.checkable:not(.open)>span:first-of-type:after{content:'...'}
-	span.checkable.vertical>span{display:block!important}
-	.tags{text-align:center}
-	.tags:before{content:"\f02b";font-family:'lungojsicon';font-weight:normal !important}
-	.slides{position:absolute;height:100%;background-color:black}
-	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
-	</style>
 	<script src="js/lib/require.js"></script>
 	<script src="js/lib/zepto.min.js"></script>
 	<script src="js/lib/parse-1.2.12.js"></script>
+	<script>
+		if('_cordovaNative' in this)
+			document.writeln("<s"+"cript src='file:///android_asset/www/cordova.js'><sc"+"ript>")
+		$.isOnline=function(){
+			if(location.protocol.match(/^file/)){
+				return true;
+			}else
+				return true;
+		}
+	</script>
 </head>
 <body data-device="phone" data-position="fixed">
 <section id="splash" class="show">
+	<style>
+	.slides{position:absolute;height:100%;background-color:black}
+	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
+	</style>
 	<article class="active">
 		<div class="slides">
 			<div style="text-align:center;vertical-align:middle">
@@ -55,25 +39,30 @@
 		</div>
 	</article>
 </section>
-<script>
-	$.isOnline=function(){return navigator.onLine}
-</script>
 
 <script>
 	Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
 	require.config({
 		baseUrl:'./js',
 		urlArgs: "bust="+Date.now(),
-		deps: ['app','view/splash','tool/offline','view/test'],
+		deps: ['app','view/splash','tool/offline'],
 		callback: function(app,splash,offline){
 			splash.show()
 			offline.init().then(function(){
-				app.init().then(function(){					
-					require(['view/children'],function(children){
-						children[$.media=='tablet'?'show':'hide']()
+				function startApp(){
+					app.init().then(function(){					
+						require(['view/children'],function(children){
+							children[$.media=='tablet'?'show':'hide']()
+						})
+						Parse.history.start()
 					})
-					Parse.history.start()
-				})
+				}
+				if(offline.needSync() && $.isOnline()){
+					require(['view/sync'],function(syncPage){
+						syncPage.show().then(startApp,startApp)
+					})
+				}else
+					startApp()				
 			})
 		}
 	})
@@ -145,7 +134,7 @@
 		<div style="min-height:50%">
 			<div>
 				<span class="tags"> {{getTags()}}</span>
-				<span class="on-right icon user"> {{get('authorName')}}</span><span class="on-right icon time"  style="padding-right:20px"> {{ago()}}</span>
+				<span class="on-right icon user"> {{get('authorName')}}</span><span class="on-right icon time"  style="padding-right:20px"> {{createdAt.ago()}}</span>
 			</div>
 			<pre>{{get('content')}}</pre>
 		</div>
@@ -180,6 +169,8 @@
 	<%})%>
 </span>
 </script>
-
+<script type="text/tmpl" id="tmplSyncItem">
+	<li id="sync_{{createdAt}}">{{title}} <span class="icon time on-right">{{Date.fromTime(createdAt).ago()}}</span></li>
+</script>
 </body>
 </html>

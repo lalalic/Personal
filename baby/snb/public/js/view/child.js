@@ -10,7 +10,7 @@ define(['view/base','app','tool/uploader'],function(View,app,uploader){
 			'click .icon.minus': 'deleteChild'
 		}),
 		initialize:function(){
-			this.content=$('#tmplChild').html()
+			this.content=_.template('#tmplChild',{})
 			FormPage.prototype.initialize.apply(this,arguments)	
 		},
 		show: function(id){

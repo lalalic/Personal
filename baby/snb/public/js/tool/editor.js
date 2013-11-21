@@ -1,6 +1,13 @@
 define(['tool/uploader'],function(uploader){
 	HTMLImageElement.prototype.isData=function(){return this.src.isImageData()}
 	var TRIM_TAG=/<\/?\s*(\w*?)\s*\/?>/g,TRIM_LINE=/\n{3,}/gm
+	
+	$('body').append('<style>\
+		.editor{background-color:white;height:100%;padding:10px;-webkit-user-select:text;-moz-user-select:text;user-select:text}\
+		.editor img{clear:both;max-width:150px;margin:5px auto;display:block;cursor:default;border:2px solid transparent}\
+		.editor img:hover{border-color:blue}\
+		.editor:empty:before{content:attr(placeholder); color:lightgray}\
+		</style>')
 		
 	return function(el){
 		if(el['insertImage'])

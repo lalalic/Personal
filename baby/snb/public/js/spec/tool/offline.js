@@ -1,5 +1,5 @@
 define(['tool/offline'],function(offline){
-var pending=/^pending/
+var pending=/^pending/, _isOnline=$.isOnline
 	return describe('offline',function(){
 		var schema=function(Type){
 				return {
@@ -8,17 +8,15 @@ var pending=/^pending/
 					})
 				}	
 			},
-			Book=Parse.Object.extend('book')
-		it('clear schema',function(){
-			asyncIt(offline.clear())
-		})
+			Book=Parse.Object.extend('book'),
+			dbName='_test'
 		
 		it('clear book schema',function(){
-			asyncIt(offline.clear(schema))
+			asyncIt(offline.clear(schema,dbName))
 		})
 		
 		it('initialize book schema',function(){
-			asyncIt(offline.init(schema))
+			asyncIt(offline.init(schema,dbName,1024))
 		})
 	
 		describe('Parse offline support',function(){
@@ -26,7 +24,7 @@ var pending=/^pending/
 				$.isOnline=function(){return false}
 			})
 			afterEach(function(){
-				$.isOnline=function(){return navigator.onLine}
+				$.isOnline=_isOnline
 			})
 
 			it('create object',function(){
@@ -84,7 +82,7 @@ var pending=/^pending/
 					book.set('owner','raymond')
 					asyncIt(book.save(),function(){
 						expect(book.id,'book should start with "pending"').toMatch(pending)
-						$.isOnline=function(){return navigator.onLine}
+						$.isOnline=_isOnline
 						function synced(pended){
 							book=pended	
 							p.resolve()
@@ -104,9 +102,7 @@ var pending=/^pending/
 		}
 		
 		it('clear book schema',function(){
-			asyncIt(offline.clear(schema))
+			asyncIt(offline.clear(schema,dbName))
 		})
 	})
-	
-		
 })

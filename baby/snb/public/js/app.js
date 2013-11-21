@@ -7,11 +7,26 @@ define(function(){
 	Promise.prototype.then=function(passed,failed){
 		return _then.call(this,passed,failed||function(e){e&&alert(JSON.stringify(e))})
 	}
+	
 	_.templateSettings = {
 		evaluate    : /<%([\s\S]+?)%>/g,
 		interpolate : /\{\{([\s\S]+?)\}\}/g,
 		escape      : /\{\{\{([\s\S]+?)\}\}\}/g
 	  };
+	var _template=_.template, templates={}
+	_.template=function(text,data,setting){
+		if(text.charAt(0)=='#'){
+			var name=text.substr(1);
+			if(!(name in templates)){
+				templates[name]=_template($(text).html())
+				$(text).remove()
+			}
+			if(data!=undefined)
+				return templates[name](data,setting)
+			return templates[name]
+		}else
+			return _template(text,data,setting)
+	}
 	  
 	$(window).bind('resize',function(){
 		if($('#media').length==0)
@@ -101,7 +116,8 @@ define(function(){
 		'comments,comments/:id,comments',
 		'posts,category/:id/:name,posts',
 		'user,user/:action,user',
-		'test,test,test'],function(r){
+		'test,test,test',
+		'syncOffline,sync,sync'],function(r){
 		router.route((r=r.split(','))[1],r[0],function(){
 			var args=arguments
 			require(['view/'+r[2]],function(page){page.show.apply(page,args)})
