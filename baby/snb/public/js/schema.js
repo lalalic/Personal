@@ -1,5 +1,5 @@
 define(function(){
-	return function(TYPE,parseRequest){
+	return function(TYPE,parseRequest, uploader){
 		var TEXT=TYPE.TEXT,INT=TYPE.INT,
 			DATE=TYPE.DATE,FILE=TYPE.FILE,
 			ARRAY=TYPE.ARRAY,TABLE=TYPE.TABLE
@@ -36,17 +36,9 @@ define(function(){
 							}
 							return p
 						}
-					if(photo && photo.url.isImageData()){
-						parseRequest({
-							className:photo.name,
-							method:'POST',
-							route:'files',
-							useMasterKey:undefined,
-							data:{
-								_ContentType:"image/jpeg",
-								base64:photo.url.toImageData()
-							}
-						}).then(function(newFile){
+					if(uploader.isLocalImage(photo)){
+						uploader.upload(photo)
+						.then(function(newFile){
 							photo.url=newFile.url
 							photo.name=newFile.name
 							submitRequest()
@@ -81,15 +73,9 @@ define(function(){
 					var splitted=content.splitByImageData()
 						
 					for(var i=1,len=splitted.length;i<len;i+2){
-						promises.push(parseRequest({
-							className:'a.jpg',
-							method:'POST',
-							route:'files',
-							useMasterKey:undefined,
-							data:{
-								_ContentType:"image/jpeg",
-								base64:splitted[i]
-							}}).then(function(newFile){
+						promises.push(
+							uploader.upload(splitted[i])
+							.then(function(newFile){
 								splitted[i]='<img src="'+newFile.url+'">'
 							}));
 					}

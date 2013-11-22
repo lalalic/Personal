@@ -1,4 +1,4 @@
-define('tool/offline',['schema','tool/uploader'],function(schema){
+define(['schema','tool/uploader'],function(schema, uploader){
 	var _schema=schema
 	var IMAGE_DATA_SCHEME="data:image/jpeg;base64,"
 	Array.prototype.union=function(a,from){for(var i=from||0;i<(a||[]).length;i++) this.push(a[i]);return this}
@@ -42,6 +42,59 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 		}
 	}
 
+	var requestFS=function(type,size){
+			var request=window.requestFileSystem || window.webkitRequestFileSystem, p=new Promise
+			request.call(null,type||PERSISTENT,size||5*1024*1024,function(fs){
+					p.resolve(fs)
+				},function(e){p.reject(e)})
+			return p
+		},
+		resolve = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL,
+		FileSystem={
+			remove: function(path){
+				var p=new Promise, error=function(e){p.reject(e)}
+				requestFS().then(function(fs){
+					fs.root.getFile(path,{create:false},function(entry){
+						entry.remove(function(){p.resolve()},error)
+					},error)
+				},error)
+				return p
+			},
+			create: function(path,content,option){
+				var p=new Promise, error=function(e){p.reject(e)}
+				requestFS().then(function(fs){
+					var opt={create: true}
+					if(option)
+						opt=_.extend({},opt,option)
+					fs.root.getFile(path,opt,function(entry){
+						entry.createWriter(function(writer){
+							writer.onwriteend=function(){
+								p.resolve(entry)
+							}
+							writer.onerror=function(e){
+								p.reject(e)
+							}
+							if(!opt.create)
+								writer.seek(writer.length)
+							writer.write(content)
+						},error)
+					},error)
+				},error)
+				return p
+			},
+			get: function(path){
+				var p=new Promise, error=function(e){p.reject(e)}
+				if(path.match(/^filesystem:/i))
+					resolve(path,function(entry){p.resolve(entry)},error)
+				else
+					requestFS().then(function(fs){
+						fs.root.get(path,{create:false},function(entry){p.resolve(entry)},error)
+					},error)
+				return p
+			}
+		}
+	
+	
 	if(!('needSync' in localStorage))
 		localStorage['needSync']=false
 	var DataType={}
@@ -418,6 +471,29 @@ define('tool/offline',['schema','tool/uploader'],function(schema){
 			}
 		}
 	},Parse.Events);
+	
+	_.extend(uploader,{
+		isLocalImage: function(photo){
+			return photo && photo.url.isImageData()
+		},
+		upload:function(photo){
+			var name="a.jpg",data=photo
+			if(_.has(photo,'url')){
+				name=photo.name
+				data=photo.url.toImageData()
+			}
+			return _request({
+				className:name,
+				method:'POST',
+				route:'files',
+				useMasterKey:undefined,
+				data:{
+					_ContentType:"image/jpeg",
+					base64: data
+				}
+			})
+		}
+	})
 	
 	return Parse.offline=offline
 })
