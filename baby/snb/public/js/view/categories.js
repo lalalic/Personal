@@ -1,4 +1,4 @@
-define(['app','view/base'],function(app,View){
+define(['app','view/base','tool/offline'],function(app,View,offline){
 	$('body').append('<style>\
 		.stat{position:relative;height:300px;background-color:black}\
 		</style>')
@@ -7,6 +7,7 @@ define(['app','view/base'],function(app,View){
 		title:'SNB',
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#tasks"><span class="icon list"/></a>\
+			<a href="#sync"><span class="icon upload"/><span class="tag count"/></a>\
 			<a href="#test"><span class="icon certificate"/></a>',
 		itemTemplate:'#tmplCates',
 		collection:new Parse.Collection,
@@ -16,6 +17,7 @@ define(['app','view/base'],function(app,View){
 			this.collection.reset(Tag.grouped.category)
 			if(!!$.os.phone)
 				this.$('header nav a:first-child').prop('onclick',null)
+			this.$sync=this.$el.find('footer span.upload').parent()
 		},
 		clear: function(){
 			return this
@@ -37,6 +39,14 @@ define(['app','view/base'],function(app,View){
 				}
 			}else
 				ListPage.prototype.back.apply(this,arguments)
+		},
+		show: function(){
+			var pendings=offline.needSync()
+			if(pendings)
+				this.$sync.show().find('.count').text(pendings)				
+			else
+				this.$sync.hide();
+			return ListPage.prototype.show.apply(this,arguments)
 		}
 	}))
 })

@@ -12,16 +12,7 @@
 	<script src="js/lib/require.js"></script>
 	<script src="js/lib/zepto.min.js"></script>
 	<script src="js/lib/parse-1.2.12.js"></script>
-	<script>
-		if('_cordovaNative' in this)
-			document.writeln("<s"+"cript src='file:///android_asset/www/cordova.js'><sc"+"ript>")
-		$.isOnline=function(){
-			if(location.protocol.match(/^file/)){
-				return true;
-			}else
-				return true;
-		}
-	</script>
+	<script src="js/app.js"></script>
 </head>
 <body data-device="phone" data-position="absolute">
 <section id="splash" class="show">
@@ -40,33 +31,8 @@
 	</article>
 </section>
 
-<script>
-	Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
-	require.config({
-		baseUrl:'./js',
-		urlArgs: "bust="+Date.now(),
-		deps: ['app','view/splash','tool/offline'],
-		callback: function(app,splash,offline){
-			splash.show()
-			offline.init().then(function(){
-				function startApp(){
-					app.init().then(function(){					
-						require(['view/children'],function(children){
-							children[$.media=='tablet'?'show':'hide']()
-						})
-						Parse.history.start()
-					})
-				}
-				if(offline.needSync() && $.isOnline()){
-					require(['view/sync'],function(syncPage){
-						syncPage.show().then(startApp,startApp)
-					})
-				}else
-					startApp()				
-			})
-		}
-	})
-</script>
+<script>require(['app'],function(app){app.start()})</script>
+
 <script type="text/tmpl" id="tmplCates">
 	<li class="thumb" id="id">
 		<img src="{{getUrl('thumbnail')}}">

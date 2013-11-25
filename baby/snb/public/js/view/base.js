@@ -41,13 +41,10 @@ define(['app'],function(app){
 	}
 	var _ajax=Parse._ajax
 	Parse._ajax=function(){
-		var a=$('section.show span.refresh').parent().addClass('doing')
-		var p=_ajax.apply(this,arguments)
-		p.then(function(){
-			a.removeClass('doing')
-		},function(){
-			a.removeClass('doing')
-		})
+		var a=$('section.show span.refresh').parent().addClass('doing'),
+			p=_ajax.apply(this,arguments), 
+			done=function(){a.removeClass('doing')}
+		p.then(done,done)
 		return p
 	}
 	

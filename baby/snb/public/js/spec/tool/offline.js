@@ -1,5 +1,5 @@
 define(['tool/offline'],function(offline){
-var pending=/^pending/, _isOnline=$.isOnline
+var pending=/^pending/, _isOffline=$.isOffline
 	return describe('offline',function(){
 		var schema=function(Type){
 				return {
@@ -21,10 +21,10 @@ var pending=/^pending/, _isOnline=$.isOnline
 	
 		describe('Parse offline support',function(){
 			beforeEach(function(){
-				$.isOnline=function(){return false}
+				$.isOffline=function(){return true}
 			})
 			afterEach(function(){
-				$.isOnline=_isOnline
+				$.isOffline=_isOffline
 			})
 
 			it('create object',function(){
@@ -73,33 +73,31 @@ var pending=/^pending/, _isOnline=$.isOnline
 			})
 		})
 		
-		if($.isOnline()){
-			it('sync to server', function(){
-				asyncIt(offline.websql.run('delete from pending'),function(){
-					$.isOnline=function(){return false}
-					var book=new Book(), p=new Parse.Promise
-					book.set('name','abook')
-					book.set('owner','raymond')
-					asyncIt(book.save(),function(){
-						expect(book.id,'book should start with "pending"').toMatch(pending)
-						$.isOnline=_isOnline
-						function synced(pended){
-							book=pended	
-							p.resolve()
-						}
-						offline.on('syncedOne',synced)
-						asyncIt(offline.sync(),function(){
-							offline.off('syncedOne',synced)
-							asyncIt(p,function(){
-								expect(book).toBeTruthy()
-								expect(book.objectId).not.toMatch(pending)
-								asyncIt(new Book(book).destroy())
-							})
+		it('sync to server', function(){
+			asyncIt(offline.websql.run('delete from pending'),function(){
+				$.isOffline=function(){return true}
+				var book=new Book(), p=new Parse.Promise
+				book.set('name','abook')
+				book.set('owner','raymond')
+				asyncIt(book.save(),function(){
+					expect(book.id,'book should start with "pending"').toMatch(pending)
+					$.isOffline=_isOffline
+					function synced(pended){
+						book=pended	
+						p.resolve()
+					}
+					offline.on('syncedOne',synced)
+					asyncIt(offline.sync(),function(){
+						offline.off('syncedOne',synced)
+						asyncIt(p,function(){
+							expect(book).toBeTruthy()
+							expect(book.objectId).not.toMatch(pending)
+							asyncIt(new Book(book).destroy())
 						})
 					})
 				})
 			})
-		}
+		})
 		
 		it('clear book schema',function(){
 			asyncIt(offline.clear(schema,dbName))

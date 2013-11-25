@@ -20,7 +20,6 @@ define(['view/base'],function(View){
 			if(this.length>1)
 				this.interval=setInterval(function(){me.slide()},1500)
 		},
-		hide: function(){this.remove()},
 		slide: function(index){
 			var i=index
 			if(i==undefined)

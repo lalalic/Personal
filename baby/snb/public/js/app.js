@@ -1,11 +1,29 @@
-define(function(){
+define('app',function(){
+	var VERSION="0.1"
 	window._=Parse._
 	window.Promise=Parse.Promise
-	$.os.phonegap=_.has(window,'cordova')
+	$.os.phonegap=_.has(window,'_cordovaNative')
 	
-	var _then=Promise.prototype.then
-	Promise.prototype.then=function(passed,failed){
-		return _then.call(this,passed,failed||function(e){e&&alert(JSON.stringify(e))})
+	if($.os.phonegap){
+		document.writeln('<s'+'cript src="file:///android_asset/www/phonegap.js"></s'+'cript>')
+		//document.writeln('<s'+'cript src="http://192.168.2.5:8080/target/target-script-min.js"></s'+'cript>')
+	}
+	
+	$.isOffline=function(){
+		if(location.protocol.match(/^file/))
+			return (Date.now()-$.isOffline.lastCheckAt)<5000
+		return false
+	}
+	$.isOffline.lastCheckAt=0
+	
+	var _ajax=Parse._ajax
+	Parse._ajax=function(){
+		var p=_ajax.apply(this,arguments)
+		p.then(null,function(e){
+			if(e.status==0)
+				$.isOffline.lastCheckAt=Date.now()
+		})
+		return p
 	}
 	
 	_.templateSettings = {
@@ -27,27 +45,56 @@ define(function(){
 		}else
 			return _template(text,data,setting)
 	}
-	  
-	$(window).bind('resize',function(){
-		if($('#media').length==0)
-			$('body').append('<div id="media" class="outview"></div>')
-		$.media=$('#media').width()==1 ? 'phone' : 'tablet'
-		$('body').data('device',$.media)
-	}).resize()	
-	
-  var app=_.extend({
+	function media(){
+		$(window).bind('resize',function(){
+			if($('#media').length==0)
+				$('body').append('<div id="media" class="outview"></div>')
+			$.media=$('#media').width()==1 ? 'phone' : 'tablet'
+			$('body').data('device',$.media)
+		}).resize()	
+	}  
+	var app=_.extend({
+		start: function(){
+			Parse.initialize("CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL","RwqvvbakVmWPhtO78QCUppfnclzfZ2SyUZ198ArG")
+			media()
+			require.config({
+				baseUrl:'./js',
+				urlArgs: "bust="+VERSION,
+				deps: ['view/splash','tool/offline'],
+				callback: function(splash,offline){
+					splash.show()
+					offline.init().then(function(){						
+						var startApp=function (){
+							splash.show()
+							var _start=function(){					
+								require(['view/children'],function(children){
+									children[$.media=='tablet'?'show':'hide']()
+								})
+								splash.remove()
+								Parse.history.start()
+							}
+							app.init().then(_start,_start)
+						};
+						if(offline.needSync()){
+							require(['view/sync'],function(syncPage){
+								syncPage.show().start(true).then(startApp,startApp)
+							})
+						}else
+							startApp()				
+					})
+				}
+			})			
+		},
 		init: function(){
 			var user=Parse.User.current(),
-				tagPromise=new Promise()
-			new Parse.Query(Tag).find()
-				.then(function(o){
-					Tag.all=o
-					Tag.grouped=_.groupBy(o,function(t){
-						Tag.all[t.id]=t 
-						return t.get('category')
+				tagPromise=new Parse.Query(Tag).find()
+					.then(function(o){
+						Tag.all=o
+						Tag.grouped=_.groupBy(o,function(t){
+							Tag.all[t.id]=t 
+							return t.get('category')
+						})
 					})
-					tagPromise.resolve()
-				})
 			
 			Child.all=new Parse.Collection
 			Child.current=null
@@ -56,33 +103,25 @@ define(function(){
 			return user?Promise.when([this.init4User(user),tagPromise]):tagPromise
 		},
 		init4User: function(user){
-			var ps=[],childPromise=new Promise
-			new Parse.Query(Child).equalTo('author',user.id).find()
+			var ps=[]
+			ps.push(new Parse.Query(Child).equalTo('author',user.id).find()
 				.then(function(o){
 					Child.all.reset(o)
 					if(o.length)
 						Child.current=localStorage['childCurrent'] ? Child.all.get(localStorage['childCurrent']) : o[0]
 					else
 						Child.current=null
-					childPromise.resolve()
-				})
-			ps.push(childPromise)
+				}))
 			
-			var favoritePromise=new Promise
-			new Parse.Query(Favorite).equalTo('author',user.id).find()
+			ps.push(new Parse.Query(Favorite).equalTo('author',user.id).find()
 				.then(function(favorites){
 					Favorite.all.reset(favorites)
-					favoritePromise.resolve()
-				})
-			ps.push(favoritePromise)
+				}))
 			
-			var taskPromise=new Promise
-			new Parse.Query(Task).equalTo('author',user.id).find()
+			ps.push(new Parse.Query(Task).equalTo('author',user.id).find()
 				.then(function(tasks){
 					Task.all.reset(tasks)
-					taskPromise.resolve()
-				})
-			ps.push(taskPromise)
+				}))
 			return Promise.when(ps)
 		},
 		clear4User: function(){
