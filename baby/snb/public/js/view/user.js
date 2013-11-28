@@ -1,5 +1,5 @@
 define(['view/base','app'],function(View,app){
-	var Page=View.Page
+	var Page=View.Page,next
 	return new (Page.extend({
 		title:'SNB Account',
 		cmds:'<a><button type="submit"><span class="icon ok-sign"/></button></a>',
@@ -23,23 +23,27 @@ define(['view/base','app'],function(View,app){
 				return false;
 			})
 		},
-		show:function(a){
+		show:function(a, then){
 			this.$('form').hide()
 				.filter('form#'+a).show()
 			this.$('nav[data-control=groupbar]>a').removeClass('active')
 				.filter('[href$='+a+']').addClass('active')
 			this.$('footer button[type=submit]').attr('form',a)
+			next=then
 			return Page.prototype.show.apply(this,arguments)
 		},
 		signin: function(){
 			try{
-				var f=this.$('form#signin').get(0),
+				var f=this.$('form#signin').get(0),me=this,
 					user=new Parse.User({username:f.username.value,password:f.password.value})
 				user.logIn()
 					.then(function(){
 						Promise.when(app.init4User(Parse.User.current()))
 						.then(function(){
-							Parse.history.navigate('#',{trigger:true,replace:true})
+							if(me.isUserURL())
+								me.reload()
+							else
+								me.back()
 						})
 					})
 			}catch(e){
@@ -49,11 +53,14 @@ define(['view/base','app'],function(View,app){
 		},
 		signup: function(){
 			try{
-				var f=this.$('form#signup').get(0),
+				var f=this.$('form#signup').get(0),me=this,
 					user=new Parse.User({username:f.username.value,password:f.password.value})
 				user.signUp()
 					.then(function(){
-						Parse.history.navigate('#child',{trigger:true,replace:true})
+						if(me.isUserURL())
+							me.navigate('#child',{trigger:true,replace:true})
+						else
+							me.reload()
 					})
 			}catch(e){
 				console.error(e)
@@ -63,6 +70,9 @@ define(['view/base','app'],function(View,app){
 		password: function(){
 			Parse.User.requestPasswordReset(this.$('form#signup').get(0).email.value)
 			return false
+		},
+		isUserURL:function(){
+			return location.hash.indexOf('#user/')===0
 		}
 	}))
 })

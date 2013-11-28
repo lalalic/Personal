@@ -53,7 +53,7 @@ define(['app'],function(app){
 			a.removeClass('doing')
 		})
 	})
-	var pages=[],currentPage={section:null,aside:null},
+	var pages=[],currentPage={section:null,aside:null}
 		Page=Parse.View.extend({
 			clazz:'Page',
 			tagName:'section',
@@ -107,6 +107,14 @@ define(['app'],function(app){
 			},
 			back: function(){
 				history.go(-1)
+			},
+			reload: function(){
+				this.navigate(location.hash,{trigger:false,replace:true})
+				return this
+			},
+			navigate: function(){
+				Parse.history.navigate.apply(Parse.history,arguments)
+				return this
 			}
 		}),
 		ListPage=Page.extend({

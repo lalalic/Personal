@@ -157,24 +157,27 @@ define('app',function(){
 	}
 	
 	//router
-	var router=new Parse.Router()
+	var router=new Parse.Router
 	_.each([//route name, url, view name
-		'home,,categories',
-		'createChild,child,child',
-		'updateChild,child/:id/:name,child',
-		'favorites,favorites,favorites',
-		'tasks,tasks,tasks',
-		'post,create/:catId/:catname,post',
-		'update,update/:id,post',
+		'home,,categories,user',
+		'createChild,child,child,user',
+		'updateChild,child/:id/:name,child,user',
+		'favorites,favorites,favorites,user',
+		'tasks,tasks,tasks,user',
+		'post,create/:catId/:catname,post,user',
+		'update,update/:id,post,user',
 		'showpost,show/:id,post1',
 		'comments,comments/:id,comments',
 		'posts,category/:id/:name,posts',
 		'user,user/:action,user',
 		'test,test,test',
-		'syncOffline,sync,sync'],function(r){
+		'syncOffline,sync,sync,user'],function(r){
 		router.route((r=r.split(','))[1],r[0],function(){
 			var args=arguments
-			require(['view/'+r[2]],function(page){page.show.apply(page,args)})
+			if(r.length==4 && r[3]=='user' && Parse.User.current()==null)//need login
+				require(['view/user'],function(page){page.show('signin')})
+			else
+				 require(['view/'+r[2]],function(page){page.show.apply(page,args)})
 		})
 	})
 	return app

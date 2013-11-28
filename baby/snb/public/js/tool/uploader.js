@@ -6,47 +6,54 @@
 
 String.prototype.toImageDataURL,toImageData
 */
-define(['tool/filesystem'],function(filesystem){
+define(function(){
+	var IMAGE_DATA_SCHEME="data:image/jpeg;base64,",
+		IMAGE_DATA_PATTERN=new RegExp('<img\s+src="data:image/jpeg;base64,(.*?)"\s*>', "gim")
+	_.extend(String.prototype,{
+		isImageData:function(){return this.substr(0,IMAGE_DATA_SCHEME.length)==IMAGE_DATA_SCHEME},
+		splitByImageData:function(){return this.split(IMAGE_DATA_PATTERN)}
+	})		
+	var _request=Parse._request
+	Parse._request=function(o){
+		if(o.route!='files')
+			return _request.apply(null,arguments)
+		var p=new Promise
+		$.ajax({
+				type: "POST",
+				beforeSend: function(request) {
+					request.setRequestHeader("X-Parse-Application-Id", 'CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL');
+					request.setRequestHeader("X-Parse-REST-API-Key", 'Rv5BONwihYqmH144bG6vbC9tBxxRaxrxNv8Ci27h');
+					request.setRequestHeader("Content-Type", o.data._ContentType);
+				},
+				url: 'https://api.parse.com/1/files/' + o.className,
+				data: base64ToBlob(o.data.base64,o.data._ContentType),
+				processData: false,
+				contentType: false,
+				success: function(data) {
+					p.resolve(data)
+				},
+				error: function(data) {
+					p.reject(data)
+				}
+			})
+		return p
+	}
 	function base64ToBlob(base64,type){
+		type=type||'image/jpeg'
 		var binary = atob(base64);
 		var array = [];
 		for(var i = 0; i < binary.length; i++)
 			array.push(binary.charCodeAt(i));
-		return new Blob([new Uint8Array(array)], {type: type||'image/jpeg'});
+		try{
+			return new Blob([new Uint8Array(array)], {type: type});
+		}catch(e){
+			var BlobBuilder=window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+			var builder=new BlobBuilder()
+			builder.append(new Uint8Array(array))
+			return builder.getBlob(type)
+		}
 	}
 	function webUploader(){
-		var IMAGE_DATA_SCHEME="data:image/jpeg;base64,",
-			IMAGE_DATA_PATTERN=new RegExp('<img\s+src="data:image/jpeg;base64,(.*?)"\s*>', "gim")
-		_.extend(String.prototype,{
-			isImageData:function(){return this.substr(0,IMAGE_DATA_SCHEME.length)==IMAGE_DATA_SCHEME},
-			splitByImageData:function(){return this.split(IMAGE_DATA_PATTERN)}
-		})		
-		var _request=Parse._request
-		Parse._request=function(o){
-			if(o.route!='files')
-				return _request.apply(null,arguments)
-			var p=new Promise
-			$.ajax({
-					type: "POST",
-					beforeSend: function(request) {
-						request.setRequestHeader("X-Parse-Application-Id", 'CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL');
-						request.setRequestHeader("X-Parse-REST-API-Key", 'Rv5BONwihYqmH144bG6vbC9tBxxRaxrxNv8Ci27h');
-						request.setRequestHeader("Content-Type", o.data._ContentType);
-					},
-					url: 'https://api.parse.com/1/files/' + o.className,
-					data: base64ToBlob(o.data.base64,o.data._ContentType),
-					processData: false,
-					contentType: false,
-					success: function(data) {
-						p.resolve(data)
-					},
-					error: function(data) {
-						p.reject(data)
-					}
-				})
-			return p
-		}
-		
 		$(document.body)
 			.append('<input type="file" id="_uploader" class="outview" onchange="this.save()">')
 			.append('<canvas id="_imgSizer" class="outview"></canvas>')
@@ -101,57 +108,9 @@ define(['tool/filesystem'],function(filesystem){
 	}
 	
 	function phonegapUploader(){
-		var IMAGE_DATA_PATTERN=new RegExp('<img\s+src="(file://.*?)"\s*>', "gim")
-		String.prototype.splitByImageData=function(){return this.split(IMAGE_DATA_PATTERN)}
-		var _File=Parse.File
-		Parse.File=function(fileUri,type){
-			if(fileUri.indexOf('://')!=-1){
-				type=type||'image/jpeg'
-				this._url=fileUri
-				this._name="a.jpg"
-				this._source=Promise.as(fileUri,type)
-				console.debug('create parse.file with '+fileUri)
-			}else
-				_File.apply(this,arguments)
-		}
-		Parse.File.prototype=_File.prototype
-		
-		var _request=Parse._request
-		Parse._request=function(o){
-			if(o.route!='files')
-				return _request.apply(null,arguments)
-			console.debug('parse request for files : '+JSON.stringify(o))
-			var p=new Promise, fileUri=o.data.base64
-			filesystem.get(fileUri)
-				.then(function(entry){
-					console.debug('get file entry: '+JSON.stringify(entry))
-					$.ajax({
-						type: "POST",
-						beforeSend: function(request) {
-							request.setRequestHeader("X-Parse-Application-Id", 'CxZhTKQklDOhDasWX9hidldoK7xtzEmtcl5VSBeL');
-							request.setRequestHeader("X-Parse-REST-API-Key", 'Rv5BONwihYqmH144bG6vbC9tBxxRaxrxNv8Ci27h');
-							request.setRequestHeader("Content-Type", o.data._ContentType);
-						},
-						url: 'https://api.parse.com/1/files/' + o.className,
-						data: entry.file(),
-						processData: false,
-						contentType: false,
-						success: function(data) {
-							console.debug('created file : '+JSON.stringify(data))
-							p.resolve(data)
-						},
-						error: function(xhr) {
-							console.debug('created file error: '+JSON.stringify(xhr))
-							p.reject(xhr)
-						}
-					})
-				},function(e){p.reject(e)})
-			return p
-		}
-		
 		var DEFAULT={ 
-				quality : 75,
-				destinationType : Camera.DestinationType.NATIVE_URI,//FILE_URI,//DATA_URL,
+				quality : 80,
+				destinationType : Camera.DestinationType.DATA_URL,
 				sourceType : Camera.PictureSourceType.PHOTOLIBRARY,
 				mediaType: Camera.MediaType.PICTURE,
 				allowEdit : false,
@@ -183,20 +142,6 @@ define(['tool/filesystem'],function(filesystem){
 				})
 				navigator.camera.getPicture(
 					function(data64){p.resolve(data64)},
-					function(msg){p.reject(msg)},
-					this.opt)
-				return p
-			},
-			click: function(){
-				var p=new Promise,onSave=this.opt['onSave'],onSaved=this.opt.onSaved
-				p.then(function(fileUri){
-					var needSave=true,f=new Parse.File(fileUri,'image/jpeg'),
-						needSave=true
-					onSave && (needSave=onSave(f, fileUri))
-					needSave!==false && f.save().then(onSaved)
-				})
-				navigator.camera.getPicture(
-					function(fileUri){p.resolve(fileUri)},
 					function(msg){p.reject(msg)},
 					this.opt)
 				return p

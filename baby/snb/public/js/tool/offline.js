@@ -471,61 +471,28 @@ define(['schema','tool/uploader'],function(schema, uploader){
 	/**modify offline for phonegap and web
 	*/
 	;(function(){//provide functions for schema to upload offline images
-		switch(uploader.type){
-		case 'phonegap':
-			_.extend(uploader,{
-				isLocalImage:function(photo){
-					return photo && photo.url && photo.url.match(/^file:/i)
-				},
-				upload: function(photo){
-					var name, data
-					if(_.has(photo,'url')){//JSON photo {name,url,_type}
-						name=photo.name
-						data=photo.data.base64
-					}else{//img in content, such as post.content, <img src="file://sdfd">
-						name=photo.substr(photo.lastIndexOf('/')+1)
-						data=photo
-					}
-					return _request({
-						className:name,
-						method:'POST',
-						route:'files',
-						useMasterKey:undefined,
-						data:{
-							_ContentType:"image/jpeg",
-							base64: data
-						}
-					})
+		_.extend(uploader,{
+			isLocalImage: function(photo){
+				return photo && photo.url && photo.url.isImageData()
+			},
+			upload:function(photo){
+				var name="a.jpg",data=photo
+				if(_.has(photo,'url')){//JSON photo {name,url,_type}
+					name=photo.name
+					data=photo.url.toImageData()
 				}
-			})
-			offline.files.POST=function(o){
-				return Promise.as({name:o.className,url:o.data.base64})
+				return _request({
+					className:name,
+					method:'POST',
+					route:'files',
+					useMasterKey:undefined,
+					data:{
+						_ContentType:"image/jpeg",
+						base64: data
+					}
+				})
 			}
-			break
-		default:
-			_.extend(uploader,{
-				isLocalImage: function(photo){
-					return photo && photo.url && photo.url.isImageData()
-				},
-				upload:function(photo){
-					var name="a.jpg",data=photo
-					if(_.has(photo,'url')){//JSON photo {name,url,_type}
-						name=photo.name
-						data=photo.url.toImageData()
-					}
-					return _request({
-						className:name,
-						method:'POST',
-						route:'files',
-						useMasterKey:undefined,
-						data:{
-							_ContentType:"image/jpeg",
-							base64: data
-						}
-					})
-				}
-			})
-		}
+		})
 	})();
 
 	return Parse.offline=offline
