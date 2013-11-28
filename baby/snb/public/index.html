@@ -12,6 +12,7 @@
 	<script src="js/lib/require.js"></script>
 	<script src="js/lib/zepto.min.js"></script>
 	<script src="js/lib/parse-1.2.12.js"></script>
+	<script src="file:///android_asset/www/phonegap.js"></script>
 	<script src="js/app.js"></script>
 </head>
 <body data-device="phone" data-position="absolute">
@@ -34,7 +35,7 @@
 <script>require(['app'],function(app){app.start()})</script>
 
 <script type="text/tmpl" id="tmplCates">
-	<li class="thumb" id="id">
+	<li class="thumb" id="_{{id}}">
 		<img src="{{getUrl('thumbnail')}}">
 		<div>
 			<strong><a href="#category/{{id}}/{{get('name')}}">{{get('name')}}</a></strong>
@@ -44,7 +45,7 @@
 	</li>
 </script>
 <script type="text/tmpl" id="tmplPosts">
-	<li class="thumb" id="{{id}}">
+	<li class="thumb" id="_{{id}}">
 		<img src="{{getUrl('thumbnail')}}">
 		<div>
 			<strong><a href="#show/{{id}}">{{get('title')}}</a></strong>
@@ -53,7 +54,7 @@
 	</li>
 </script>
 <script type="text/tmpl" id="tmplPostRef">
-	<li class="thumb" id="{{id}}">
+	<li class="thumb" id="_{{id}}">
 		<img src="{{getUrl('thumbnail')}}">
 		<div>
 			<strong><a href="#show/{{get('post')}}">{{get('title')}}</a></strong>
@@ -90,7 +91,7 @@
 	</form>
 </script>
 <script type="text/tmpl" id="tmplChildren">
-	<li class="thumb" id="{{id}}">
+	<li class="thumb" id="_{{id}}">
 		<img src="{{getUrl('photo')}}">
 		<div><a href="#child/{{id}}/{{get('name')}}">{{get('name')}}</a></div>
 	</li>
@@ -109,7 +110,7 @@
 	
 </script>
 <script type="text/tmpl" id="tmplComment">
-	<li class="thumb" id="{{id}}">
+	<li class="thumb" id="_{{id}}">
 		<a><span class="icon user"/><br>{{get('authorName')}}</a>
 		<div>
 			<p>{{get('content')}}</p>
@@ -136,7 +137,7 @@
 </span>
 </script>
 <script type="text/tmpl" id="tmplSyncItem">
-	<li id="sync_{{createdAt}}">{{title}} <span class="icon time on-right">{{Date.fromTime(createdAt).ago()}}</span></li>
+	<li id="_{{createdAt}}">{{title}} <span class="on-right">{{Date.fromTime(createdAt).ago()}}</span></li>
 </script>
 </body>
 </html>

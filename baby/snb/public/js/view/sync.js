@@ -5,24 +5,18 @@ define(['view/base','tool/offline'],function(View,offline){
 		collection: new Parse.Collection,
 		initialize: function(){
 			ListPage.prototype.initialize.apply(this,arguments)
-			offline.on('sync',function(rs){
-				for(var i=0,len=rs.rows.length;i<len;i++){
-					this.addOne(rs.rows.item(i))
-				}
-			},this)
-			
 			offline.on('syncingOne',this.syncingOne,this)
 			offline.on('syncedOne',this.syncedOne,this)
 			offline.on('syncedOneFailed', this.syncedOneFailed,this)
 		},
 		syncingOne: function(row){
-			this.$el.find('#sync_'+row.createdAt).css('background-color','yellow')
+			this.$el.find('#_'+row.createdAt).css('background-color','yellow')
 		},
 		syncedOne: function(row,object){
-			this.$el.find('#sync_'+row.createdAt).css('background-color','green')
+			this.$el.find('#_'+row.createdAt).css('background-color','green')
 		},
 		syncedOneFailed: function(row, error){
-			this.$el.find('#sync_'+row.createdAt).css('background-color','red')
+			this.$el.find('#_'+row.createdAt).css('background-color','red')
 		},
 		start: function(autoHide){
 			var me=this, promise=new Promise
@@ -39,6 +33,17 @@ define(['view/base','tool/offline'],function(View,offline){
 			ListPage.prototype.refresh.apply(this,arguments)
 			this.start()
 			return this
+		},
+		show: function(){
+			var me=this
+			offline.pendings().then(function(rs){
+				_.each(rs,function(pending){this.addOne(pending)},me)
+			})
+			return ListPage.prototype.show.apply(this,arguments)
+		},
+		clear: function(){
+			this.$list.empty()
+			return ListPage.prototype.clear.apply(this,arguments)
 		}
 	}));
 })

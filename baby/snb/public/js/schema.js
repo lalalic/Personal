@@ -10,46 +10,31 @@ define(function(){
 			}),
 			User:TABLE.extend({
 				fields:{username:TEXT,comments:INT,post:INT,score:INT},
-				cachable:function(o){return o.objectId==Parse.user().id && o}
+				cachable:MINE,
 			}),
 			child:TABLE.extend({
 				fields:{birthday:TEXT,gender:INT,name:TEXT,photo:FILE,author:TEXT,authorName:TEXT},
+				foreigns:['author'],
+				refered:{story:'child',task:'child'},
 				cachable:MINE,
 				sync:function(request,pendingId){
-					var data=request.data,
-						photo=data.photo,
-						promise=new Promise,
-						submitRequest=function(){
-							var p=parseRequest(request);
-							switch(request.method){
-							case 'POST':
-								p.then(function(newChild){
-									var websql=Parse.offline.websql
-									websql.run('update child set objectId=?, photo=? where objectId=?',
-										[newChild.objectId,photo&&photo.url||null,pendingId])
-									websql.run('update task set child=? where child=?',[newChild.objectId,pendingId])
-									promise.resolve(newChild)
-								});
-								break
-							default:
-								promise.resolve()
-							}
-							return p
-						}
-					if(uploader.isLocalImage(photo)){
-						uploader.upload(photo)
+					var data=request.data,photo=data.photo
+					if(!uploader.isLocalImage(photo))
+						return TABLE.sync(request,pendingId)
+						
+					return uploader.upload(photo)
 						.then(function(newFile){
 							photo.url=newFile.url
 							photo.name=newFile.name
-							submitRequest()
-						},function(error){promise.reject(error)})
-					}else
-						submitRequest()
-					return promise
+							TABLE.syncField(request,'photo')
+							return TABLE.sync(request,pendingId)
+						})
 				}
 			}),
 			post:TABLE.extend({
 				fields:{author:TEXT,authorName:TEXT,category:TEXT,title:TEXT,content:TEXT,comments:INT,duration:INT,tags:ARRAY,thumbnail:FILE},
+				foreigns:['author'],
+				refered:{favorite:'post',task:'post',story:'post',comment:'post'},
 				trim:function(){
 				/*
 					var websql=Parse.offline.websql
@@ -66,74 +51,51 @@ define(function(){
 						})*/
 				},
 				sync:function(request,pendingId){
-					var data=request.data,
-						content=data.content,
-						resultPromise=new Promise(),
-						promises=[]
-					var splitted=content.splitByImageData()
-						
-					for(var i=1,len=splitted.length;i<len;i+2){
-						promises.push(
-							uploader.upload(splitted[i])
+					var data=request.data, images=[]
+						splitted=data.content.splitByImageData()
+					
+					_.each(splitted,function(data,i){
+						if(i%2==0) return
+						images.push(uploader.upload(data)
 							.then(function(newFile){
 								splitted[i]='<img src="'+newFile.url+'">'
-							}));
-					}
-					Promise.when(promises)
+							}))
+					})
+					
+					if(images.length){
+						return Promise.when(images)
 						.then(function(){
 							data.content=splitted.join('')
-							var promise=parseRequest(request);
-							switch(request.method){
-							case 'POST':
-								promise.then(function(newPost){
-									var websql=Parse.offline.websql
-									websql.run('update post set objectId=? where objectId=?',[newPost.objectId,pendingId])
-									websql.run('update favorite set post=? where post=?',[newPost.objectId,pendingId])
-									websql.run('update task set post=? where post=?',[newPost.objectId,pendingId])
-									websql.run('update story set post=? where post=?',[newPost.objectId,pendingId])
-									resultPromise.resolve(newPost)
-								});
-								break
-							default:
-								resultPromise.resolve()
-							}
+							TABLE.syncField(request,'content')
+							return TABLE.sync(request,pendingId)
 						})
-					return resultPromise
+					}else
+						return TABLE.sync(request,pendingId)
+					
+					
 				}
 			}),
 			story:TABLE.extend({
 				fields:{post:TEXT,author:TEXT,authorName:TEXT,category:TEXT,title:TEXT,content:TEXT,comments:INT,duration:INT,tags:ARRAY,thumbnail:TEXT},
 				indexes:{post:1},
-				sync:function(request){
-					this.syncID(request,['post'])
-					return parseRequest(request)
-				}
+				foreigns:['author','post','child']
 			}),
 			task:TABLE.extend({
 				fields:{author:TEXT,authorName:TEXT,post:TEXT,title:TEXT,planAt:DATE,status:INT,time:INT,type:INT,child:TEXT},
 				indexes:{post:1,child:1},
 				cachable:MINE,
-				sync:function(request){
-					this.syncID(request,['child','post'])
-					return parseRequest(request)
-				}
+				foreigns:['author','post','child']
 			}),
 			favorite:TABLE.extend({
 				fields:{post:TEXT,title:TEXT,status:INT,author:TEXT,authorName:TEXT},
 				indexes:{post:1},
 				cachable:MINE,
-				sync:function(request){
-					this.syncID(request,['post'])
-					return parseRequest(request)
-				}
+				foreigns:['author','post']
 			}),
 			comment:TABLE.extend({
 				fields:{author:TEXT,authorName:TEXT,post:TEXT,content:TEXT},
 				indexes:{post:1},
-				sync:function(request){
-					this.syncID(request,['post'])
-					return parseRequest(request)
-				}
+				foreigns:['author','post']
 			})
 		}
 	}

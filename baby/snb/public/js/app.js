@@ -4,47 +4,62 @@ define('app',function(){
 	window.Promise=Parse.Promise
 	$.os.phonegap=_.has(window,'_cordovaNative')
 	
-	if($.os.phonegap){
-		document.writeln('<s'+'cript src="file:///android_asset/www/phonegap.js"></s'+'cript>')
-		//document.writeln('<s'+'cript src="http://192.168.2.5:8080/target/target-script-min.js"></s'+'cript>')
-	}
-	
-	$.isOffline=function(){
-		if(location.protocol.match(/^file/))
-			return (Date.now()-$.isOffline.lastCheckAt)<5000
-		return false
-	}
-	$.isOffline.lastCheckAt=0
-	
-	var _ajax=Parse._ajax
-	Parse._ajax=function(){
-		var p=_ajax.apply(this,arguments)
-		p.then(null,function(e){
-			if(e.status==0)
-				$.isOffline.lastCheckAt=Date.now()
-		})
-		return p
-	}
-	
-	_.templateSettings = {
-		evaluate    : /<%([\s\S]+?)%>/g,
-		interpolate : /\{\{([\s\S]+?)\}\}/g,
-		escape      : /\{\{\{([\s\S]+?)\}\}\}/g
-	  };
-	var _template=_.template, templates={}
-	_.template=function(text,data,setting){
-		if(text.charAt(0)=='#'){
-			var name=text.substr(1);
-			if(!(name in templates)){
-				templates[name]=_template($(text).html())
-				$(text).remove()
+	;(function(){//check offline status
+		$.isOffline=function(){
+			if(location.protocol.match(/^file/))
+				return (Date.now()-$.isOffline.lastCheckAt)<5000
+			return false
+		}
+		$.isOffline.lastCheckAt=0
+		
+		var _ajax=Parse._ajax,
+			fallback=function(e){
+				if(e.status==0)
+					$.isOffline.lastCheckAt=Date.now()
 			}
-			if(data!=undefined)
-				return templates[name](data,setting)
-			return templates[name]
-		}else
-			return _template(text,data,setting)
-	}
+		Parse._ajax=function(){
+			var p=_ajax.apply(this,arguments)
+			p.then(null,fallback)
+			return p
+		}
+		var _$ajax=$.ajax
+		$.ajax=function(options){
+			if(options.error){
+				var _error=options.error
+				options.error=function(xhr){
+					fallback(xhr)
+					_error.apply(this,arguments)
+				}
+			}else
+				options.error=fallback
+			return _$ajax.apply(this,arguments)
+		}
+	})();
+	
+	
+	;(function(){// extend _.template
+		_.templateSettings = {
+			evaluate    : /<%([\s\S]+?)%>/g,
+			interpolate : /\{\{([\s\S]+?)\}\}/g,
+			escape      : /\{\{\{([\s\S]+?)\}\}\}/g
+		  };
+		
+		var _template=_.template, templates={}
+		_.template=function(text,data,setting){
+			if(text.charAt(0)=='#'){
+				var name=text.substr(1);
+				if(!(name in templates)){
+					templates[name]=_template($(text).html())
+					$(text).remove()
+				}
+				if(data!=undefined)
+					return templates[name](data,setting)
+				return templates[name]
+			}else
+				return _template(text,data,setting)
+		}
+	})();
+	
 	function media(){
 		$(window).bind('resize',function(){
 			if($('#media').length==0)

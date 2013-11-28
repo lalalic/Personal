@@ -47,7 +47,12 @@ define(['app'],function(app){
 		p.then(done,done)
 		return p
 	}
-	
+	$(document).on('ajaxSend',function(){
+		var a=$('section.show span.refresh').parent().addClass('doing')
+		$(document).one('ajaxComplete',function(){
+			a.removeClass('doing')
+		})
+	})
 	var pages=[],currentPage={section:null,aside:null},
 		Page=Parse.View.extend({
 			clazz:'Page',
@@ -129,11 +134,11 @@ define(['app'],function(app){
 				return this
 			},
 			removeOne: function(item){
-				this.$list.find('#'+item.id).remove()
+				this.$list.find('#_'+item.id).remove()
 				return this
 			},
 			changeOne: function(item){
-				this.$list.find('#'+item.id).replaceWith(this.itemTemplate(item))
+				this.$list.find('#_'+item.id).replaceWith(this.itemTemplate(item))
 				return this
 			},
 			refresh: function(){

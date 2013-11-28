@@ -32,7 +32,7 @@ define(['view/base','app'],function(View,app){
 			localStorage['childCurrent']=m.id
 			Child.current=m
 			this.$('li').removeClass('active')
-				.filter('#'+Child.current.id).addClass('active')
+				.filter('#_'+Child.current.id).addClass('active')
 			return this
 		},
 		addOne: function(item){
@@ -51,7 +51,7 @@ define(['view/base','app'],function(View,app){
 			}
 		},
 		changeOne: function(item){
-			var li=this.$('#'+item.id)
+			var li=this.$('#_'+item.id)
 			if(item.hasChanged('name'))
 				li.find('a').text(item.get('name'))
 			if(item.hasChanged('photo'))
