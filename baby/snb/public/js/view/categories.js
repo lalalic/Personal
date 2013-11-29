@@ -13,7 +13,7 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 		collection:new Parse.Collection,
 		initialize: function(){
 			ListPage.prototype.initialize.apply(this,arguments)
-			this.$('article').addClass('indented')
+			this.$list.addClass('indented')
 			this.collection.reset(Tag.grouped.category)
 			if(!!$.os.phone)
 				this.$('header nav a:first-child').prop('onclick',null)

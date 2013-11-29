@@ -83,10 +83,10 @@ define('app',function(){
 							splash.show()
 							var _start=function(){					
 								require(['view/children'],function(children){
-									children[$.media=='tablet'?'show':'hide']()
+									children[$.media=='tablet' ? 'show' : 'hide']()
 								})
-								splash.remove()
 								Parse.history.start()
+								splash.remove()
 							}
 							app.init().then(_start,_start)
 						};
@@ -122,9 +122,12 @@ define('app',function(){
 			ps.push(new Parse.Query(Child).equalTo('author',user.id).find()
 				.then(function(o){
 					Child.all.reset(o)
-					if(o.length)
-						Child.current=localStorage['childCurrent'] ? Child.all.get(localStorage['childCurrent']) : o[0]
-					else
+					if(o.length){
+						var v=localStorage.getItem('childCurrent')
+						v && (v=Child.all.get(v))
+						Child.current=v||o[0]
+						localStorage.setItem('childCurrent',Child.current.id)
+					}else
 						Child.current=null
 				}))
 			
@@ -143,6 +146,9 @@ define('app',function(){
 			Child.all.reset([])
 			Favorite.all.reset([])
 			Task.all.reset([])
+		},
+		isLoggedIn: function(){
+			return Parse.User.current()!=null
 		}
 	},Parse.Events)
 	
@@ -159,7 +165,7 @@ define('app',function(){
 	//router
 	var router=new Parse.Router
 	_.each([//route name, url, view name
-		'home,,categories,user',
+		'home,,categories',
 		'createChild,child,child,user',
 		'updateChild,child/:id/:name,child,user',
 		'favorites,favorites,favorites,user',
@@ -169,7 +175,6 @@ define('app',function(){
 		'showpost,show/:id,post1',
 		'comments,comments/:id,comments',
 		'posts,category/:id/:name,posts',
-		'user,user/:action,user',
 		'test,test,test',
 		'syncOffline,sync,sync,user'],function(r){
 		router.route((r=r.split(','))[1],r[0],function(){

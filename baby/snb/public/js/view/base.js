@@ -53,29 +53,29 @@ define(['app'],function(app){
 			a.removeClass('doing')
 		})
 	})
-	var pages=[],currentPage={section:null,aside:null}
+	var currentPage={section:null,aside:null}
 		Page=Parse.View.extend({
 			clazz:'Page',
 			tagName:'section',
 			title:'Default Page',
-			navs:'<a><span class="icon left-sign"/></a>\
+			navs:'<a><span class="icon left-sign back"/></a>\
 				<a href="#"><span class="icon home"/></a>\
+				<a class="on-right"><span class="icon user"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
 			content:'empty content',
 			cmds:'',
 			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header><article class="active scroll">{{content}}</article><footer><nav>{{cmds}}</nav></footer>'),
-			events:{'click header .refresh': 'refresh','click header nav a:first-child':'back'},
-			constructor: function(){
-				pages.push(this)
-				Parse.View.prototype.constructor.apply(this,arguments)
-			},
+			events:{'click header .refresh': 'refresh',
+				'click header .back':'back', 
+				'click header .user':'user',
+				'click .signout': 'signout'},
 			initialize: function(){
 				this.$el.data('transition','slide')
-				if(!Parse.User.current())
-					this.navs+='<a class="on-right" href="#user/signin"><span class="icon user"/></a>'
 				$(document.body).append(this.$el.html(this.template(this)))
 				if(!this.cmds)
 					this.$('footer').hide()
+				if(!this.navs)
+					this.$('header').hide()
 			},
 			loading: function(a){
 				this.$('span.refresh').parent()[a===false?'removeClass':'addClass']('doing')
@@ -88,6 +88,8 @@ define(['app'],function(app){
 				return this
 			},
 			show: function(){
+				if(currentPage[this.tagName]==this)
+					return this
 				currentPage[this.tagName] && currentPage[this.tagName].hide()
 				this.$el.addClass('show')
 					.one('webkitAnimationEnd animationend',function(){
@@ -95,6 +97,9 @@ define(['app'],function(app){
 					}).data('direction','in')
 					
 				currentPage[this.tagName]=this
+				if(Parse.User.current())
+					this.$el.find('header .user').addClass('signout')
+				this.$el.find('header .home,header .back')[(location.hash==''||location.hash=='#') ? 'hide' : 'show']()
 				return this
 			},
 			hide: function(){
@@ -109,21 +114,29 @@ define(['app'],function(app){
 				history.go(-1)
 			},
 			reload: function(){
-				this.navigate(location.hash,{trigger:false,replace:true})
+				location.reload()
 				return this
+			}, 
+			user: function(){
+				if(!Parse.User.current()){
+					require(['view/user'],function(user){
+						user.show('signin')
+					})
+				}
 			},
-			navigate: function(){
-				Parse.history.navigate.apply(Parse.history,arguments)
-				return this
+			signout: function(){
+				Parse.User.logOut()
+				app.clear4User()
+				this.reload()
+				return false
 			}
 		}),
 		ListPage=Page.extend({
-			content:'<ul/>',
+			content:'<ul class="list"/>',
 			itemTemplate:false,
 			initialize: function(){
 				Page.prototype.initialize.apply(this,arguments)
-				this.$list=this.$('article>ul')
-				this.$('article').addClass('list')
+				this.$list=this.$('ul.list')
 				if(_.isString(this.itemTemplate))
 					this.itemTemplate=_.template(this.itemTemplate)
 				this.collection.on('reset',this.render, this)
