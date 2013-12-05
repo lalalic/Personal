@@ -17,6 +17,7 @@ define(['app'],function(app){
 		span.checkable.vertical>span{display:block!important}\
 		.tags{text-align:center}\
 		.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
+		.tag:empty{visibility:hidden!important}\
 		</style>")
 		
 	Parse.Object.prototype.getUrl=function(a){

@@ -40,5 +40,11 @@
 	<gap:platform name="android" />
 	<gap:plugin name="org.apache.cordova.camera"/>
 	<feature name="http://api.phonegap.com/1.0/camera"/>
-	<content src="file:///storage/sdcard0/work/snb/index.html" />
+	<gap:plugin name="org.apache.cordova.file"/>
+	<gap:plugin name="org.apache.cordova.file-transfer"/>
+	<feature name="http://api.phonegap.com/1.0/file"/>
+	<gap:plugin name="org.apache.cordova.network-information"/>
+	<feature name="http://api.phonegap.com/1.0/connection"/>
+	
+	<content src="file:///storage/sdcard0/work/snb/mobile.html" />
 </widget>

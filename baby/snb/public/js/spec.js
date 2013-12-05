@@ -1,6 +1,7 @@
 define([],function(){
 	return [
 		'tool/offline',
-		'tool/uploader'
+		'tool/uploader',
+		'tool/filesystem'
 	]
 })

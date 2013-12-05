@@ -19,7 +19,7 @@ define(['tool/uploader'],function(uploader){
 					expect(navigator.camera).toBeTruthy()
 				})
 				
-				it('Picture Selection Window',function(){
+				xit('Picture Selection Window',function(){
 					var p=new Promise,p1=new Promise
 					uploader.bind(null,{
 						onSave:function(f,dataURL){
@@ -53,5 +53,26 @@ define(['tool/uploader'],function(uploader){
 				})
 			})	
 		}
+	
+		it('atob, btoa', function(){
+			expect(atob && btoa).toBeTruthy()
+		})
+	
+		it('create blob from image', function(){
+			var array="1234", base64=btoa(array)
+			var blob=uploader.toBlob(base64)
+			expect(blob.size).toBe(array.length)
+			var p=new Promise, reader=new FileReader()
+			reader.onload=function(e){
+				var data=e.target.result
+				p.resolve(data)
+				expect(data).toBe(array)
+			}
+			reader.onerror=function(e){
+				p.reject(e)
+			}
+			reader.readAsText(blob)
+			asyncIt(p)
+		})
 	})
 })

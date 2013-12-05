@@ -3,6 +3,7 @@ define('app',function(){
 	window._=Parse._
 	window.Promise=Parse.Promise
 	$.os.phonegap=_.has(window,'_cordovaNative')
+	window.reject=function(p){return function(e){p.reject()}}
 	
 	;(function(){//check offline status
 		$.isOffline=function(){
@@ -74,7 +75,7 @@ define('app',function(){
 			media()
 			require.config({
 				baseUrl:'./js',
-				urlArgs: "bust="+VERSION,
+				urlArgs: "v="+Date.now(),//VERSION,
 				deps: ['view/splash','tool/offline'],
 				callback: function(splash,offline){
 					splash.show()

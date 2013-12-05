@@ -41,15 +41,17 @@ define(function(){
 	function base64ToBlob(base64,type){
 		type=type||'image/jpeg'
 		var binary = atob(base64);
-		var array = [];
+		var array = new ArrayBuffer(binary.length);
+		var view=new Uint8Array(array)
 		for(var i = 0; i < binary.length; i++)
-			array.push(binary.charCodeAt(i));
+			view[i]=binary.charCodeAt(i)
 		try{
-			return new Blob([new Uint8Array(array)], {type: type});
+			return new Blob([view], {type: type});
 		}catch(e){
+			return view.buffer;
 			var BlobBuilder=window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
 			var builder=new BlobBuilder()
-			builder.append(new Uint8Array(array))
+			builder.append(view.buffer)
 			return builder.getBlob(type)
 		}
 	}
@@ -102,6 +104,9 @@ define(function(){
 					needSave!==false && f.save().then(onSaved)
 				}
 				reader.readAsDataURL(file)
+			},
+			toBlob: function(){
+				return base64ToBlob.apply(this,arguments)
 			}
 		})
 		return _uploader
@@ -145,6 +150,9 @@ define(function(){
 					function(msg){p.reject(msg)},
 					this.opt)
 				return p
+			},
+			toBlob: function(){
+				return base64ToBlob.apply(this,arguments)
 			}
 		}
 	}
