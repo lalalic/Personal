@@ -105,8 +105,6 @@ Parse.Cloud.afterSave("comment", function(request, response) {
 	user.save().then(null,error)
 });
 
-
-
 Parse.Cloud.afterSave("story", function(request, response) {
 	var story=request.object,
 		today=new Date(),
@@ -176,4 +174,8 @@ Parse.Cloud.afterSave("post", function(request, response) {
 			}
 		},error)
 });
+
+Parse.Cloud.define("init",function(request, response){
+	
+})
 
