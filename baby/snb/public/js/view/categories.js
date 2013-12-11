@@ -4,7 +4,7 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 		</style>')
 	var ListPage=View.ListPage, Tag=app.Tag
 	return new (ListPage.extend({
-		title:'SNB',
+		title:text('SNB'),
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#tasks"><span class="icon list"/></a>\
 			<a href="#sync"><span class="icon upload"/><span class="tag count"/></a>\

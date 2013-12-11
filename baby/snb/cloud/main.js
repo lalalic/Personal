@@ -53,6 +53,10 @@ function setAuthor(request){
 }
 
 Parse.get=function(t,id){doing();return (new Parse.Query(Parse.Object.extend(t))).get(id)}
+var Tag=Parse.Object.extend("tag")
+Tag.get=function(name){
+	return new Parse.Query(Tag).equalTo('name',name).first()
+}
 
 new Array("comment","story","post","favorite",'child').each(function(f){
 	Parse.Cloud.beforeSave(f, function(request, response) {
@@ -120,10 +124,8 @@ Parse.Cloud.afterSave("story", function(request, response) {
 				},error)
 			
 			//tag beat
-			var tags=post.get("tags"),
-				Tag=Parse.Object.extend("tag")
-			for(var i=0; i<tags.length;i++){
-				(new Tag({id:tags[i]})).fetch().then(
+			for(var i=0,tags=post.get("tags"),len=tags.length; i<len;i++){
+				Tag.get(tags[i]).then(
 					function(tag){
 						tag.increment("stories",1)
 						tag.set("dayBeat",today.dayInc(t,tag.get("dayBeat")))
@@ -162,10 +164,8 @@ Parse.Cloud.afterSave("post", function(request, response) {
 	//tag count;category, duration, goal, gender, and etc
 	post.fetch().then(//Hack: tags (array??) not in post, we have to fetch it again
 		function(p){
-			var tags=post.get("tags")
-			var Tag=Parse.Object.extend("tag")
-			for(var i=0; i<tags.length;i++){
-				(new Tag({id:tags[i]})).fetch().then(
+			for(var i=0,tags=post.get("tags"),len=tags.length; i<len;i++){
+				Tag.get(tags[i]).then(
 					function(tag){
 						tag.increment("posts",1)
 						tag.increment("time",post.get("duration")||0)

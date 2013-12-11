@@ -38,7 +38,7 @@
 	<li class="thumb" id="_{{id}}">
 		<img src="{{getUrl('thumbnail')}}">
 		<div>
-			<strong><a href="#category/{{id}}/{{get('name')}}">{{get('name')}}</a></strong>
+			<strong><a href="#category/{{id}}/{{get('name')}}">{{text(get('name'))}}</a></strong>
 			<small>{{get('desc')}}</small>
 			<a class="on-right" href="#create/{{id}}/{{get('name')}}" style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
 		</div>
@@ -63,30 +63,30 @@
 </script>
 <script type="text/tmpl" id="tmplUser">
 	<form id="signin">
-		<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
-		<fieldset><input name="password" type="password" placeholder="password"></fieldset>
+		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
+		<fieldset><input name="password" type="password" placeholder="{{text('password')}}"></fieldset>
 	</form>
 	<form id="signup">
-		<fieldset><input name="username" type="text" placeholder="user name"></fieldset>
-		<fieldset><input name="email" type="email" placeholder="email address where reset password will be sent"></fieldset>
-		<fieldset><input name="password" type="text" placeholder="password"></fieldset>
+		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
+		<fieldset><input name="email" type="email" placeholder="{{text('email address where reset password will be sent')}}"></fieldset>
+		<fieldset><input name="password" type="text" placeholder="{{text('password')}}"></fieldset>
 	</form>
 	<form id="password">
-		<fieldset><input name="email" type="text" placeholder="email address where new password would send"></fieldset>
+		<fieldset><input name="email" type="text" placeholder="{{text('email address where new password would send')}}"></fieldset>
 	</form>
 </script>
 <script type="text/tmpl" id="tmplChild">
 	<form> 
-		<fieldset><input type="text" name="name" placeholder="baby name"></fieldset>
+		<fieldset><input type="text" name="name" placeholder="{{text('baby name')}}"></fieldset>
 		<fieldset>
 			<select name="gender">
-				<option value=0>Boy</option>
-				<option value=1>Girl</option>
+				<option value=0>{{text('Boy')}}</option>
+				<option value=1>{{text('Girl')}}</option>
 			</select>
 		</fieldset>
-		<fieldset><input type="date" name="birthday" placeholder="birthday"></fieldset>
+		<fieldset><input type="date" name="birthday" placeholder="{{text('birthday')}}"></fieldset>
 		<fieldset>
-			<img name="photo" style="width:150px;height:150px;border:1px solid;background-color:lightgray;display:block;margin:0px auto"/>
+			<div name="photo" style="width:150px;height:150px;border:1px solid;display:block;margin:0px auto;background-repeat:no-repeat;background-position:center center"/>
 		</fieldset>
 	</form>
 </script>
@@ -100,9 +100,10 @@
 	<div style="padding:10px">
 		<div style="min-height:50%">
 			<div>
-				<span class="tags"> {{getTags()}}</span>
+				<span class="tags"> {{get('tags')}}</span>
 				<span class="on-right icon user"> {{get('authorName')}}</span><span class="on-right icon time"  style="padding-right:20px"> {{createdAt.ago()}}</span>
 			</div>
+			<hr/>
 			<pre>{{get('content')}}</pre>
 		</div>
 		<ul class="list" id="stories"/>
@@ -122,8 +123,8 @@
 <span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
 	<span>{{title}}</span>
 	<%_.each(options,function(o){with(o){%>
-	<input type="{{type}}" name="{{name}}" value="{{id}}" class="outview">
-	<span onclick="$(this).prev('input').click()">{{get('name')}}</span>
+	<input type="{{type}}" name="{{name}}" value="{{get('name')}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{text(get('name'))}}</span>
 	<%}})%>
 </span>
 </script>

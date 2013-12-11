@@ -209,10 +209,15 @@ define(['app'],function(app){
 			clear: function(){
 				this.$('form').get(0).reset()
 				delete this.model
-				return Page.prototype.clear.apply(this,arguments)
+				Page.prototype.clear.apply(this,arguments)
+				this.setDefault();
+				return this
 			},
 			onAdded: function(m){},
-			onChanged: function(m){}
+			onChanged: function(m){},
+			setDefault: function(){
+				return this
+			}
 		})
 	
 	return {Page:Page,FormPage:FormPage,ListPage:ListPage}

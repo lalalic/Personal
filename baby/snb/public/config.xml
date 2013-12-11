@@ -46,5 +46,6 @@
 	<gap:plugin name="org.apache.cordova.network-information"/>
 	<feature name="http://api.phonegap.com/1.0/connection"/>
 	
-	<content src="file:///android_asset/www/mobile.html" />
+	<!--content src="file:///android_asset/www/mobile.html" /-->
+	<content src="file:///storage/sdcard0/work/snb/mobile.html" />
 </widget>

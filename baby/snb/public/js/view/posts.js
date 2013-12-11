@@ -8,7 +8,7 @@ define(['view/base','app'],function(View,app){
 			ListPage.prototype.show.apply(this,arguments)
 			this.setQuery((new Parse.Query(Post)).equalTo('category',catName).ascending('createdAt'))
 			this.$('footer .plus').parent().attr('href','#create/'+catId+"/"+catName)
-			this.setTitle(catName)
+			this.setTitle(text(catName))
 			return this
 		}
 	}))

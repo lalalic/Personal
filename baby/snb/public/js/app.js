@@ -4,7 +4,7 @@ define('app',function(){
 	window.Promise=Parse.Promise
 	$.os.phonegap=_.has(window,'_cordovaNative')
 	window.reject=function(p){return function(e){p.reject()}}
-	
+
 	;(function(){//check offline status
 		$.isOffline=function(){
 			if(location.protocol.match(/^file/))
@@ -75,9 +75,10 @@ define('app',function(){
 			media()
 			require.config({
 				baseUrl:'./js',
-				urlArgs: "v="+Date.now(),//VERSION,
-				deps: ['view/splash','tool/offline'],
-				callback: function(splash,offline){
+				urlArgs: "v=0.3",//+Date.now(),//VERSION,
+				deps: ['view/splash','tool/offline','lib/i18n!nls/all'],
+				callback: function(splash,offline,i18n){
+					window.text=function(a){return  ((a=a.toLowerCase()) in i18n) ? i18n[a] : (i18n[a]=a)}
 					splash.show()
 					offline.init().then(function(){						
 						var startApp=function (){
@@ -157,11 +158,6 @@ define('app',function(){
 	_.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','),
 		function(o){this[o]=Parse.Object.extend(o.toLowerCase())},app)
 	var Tag=app.Tag, Post=app.Post, Child=app.Child, Favorite=app.Favorite,Task=app.Task
-	Post.prototype.getTags=function(f){
-		return this.has('tags') && 
-			_.map(this.get('tags'),function(t){return Tag.all[t].get('name')})
-				.join(',') ||''
-	}
 	
 	//router
 	var router=new Parse.Router

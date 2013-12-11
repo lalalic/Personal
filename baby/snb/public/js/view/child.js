@@ -5,13 +5,13 @@ define(['view/base','app','tool/uploader'],function(View,app,uploader){
 		<a><span class="icon minus"/></a>\
 		<a><button type="submit" form="childForm"><span class="icon ok-sign"/></button></a>',
 		events:_.extend({},FormPage.prototype.events,{
-			'click form img':'selectPhoto',
+			'click form [name=photo]':'selectPhoto',
 			'click .icon.user': 'setCurrent',
 			'click .icon.minus': 'deleteChild'
 		}),
 		initialize:function(){
 			this.content=_.template('#tmplChild',{})
-			FormPage.prototype.initialize.apply(this,arguments)	
+			FormPage.prototype.initialize.apply(this,arguments)
 		},
 		show: function(id){
 			id && (this.model=Child.all.get(id))
@@ -31,7 +31,7 @@ define(['view/base','app','tool/uploader'],function(View,app,uploader){
 			return this
 		},
 		clear: function(){
-			this.$('form img').get(0).src=""
+			this.$('form [name=photo]').css('background-image',"")
 			return FormPage.prototype.clear.apply(this,arguments)
 		},
 		change: function(e){
@@ -44,13 +44,16 @@ define(['view/base','app','tool/uploader'],function(View,app,uploader){
 				this.model.set(el.name,el.value,{silent:true})
 			}
 		},
-		selectPhoto: function(){
+		selectPhoto: function(e){
 			var me=this,
-				img=this.$('form img').get(0)
-			uploader.bind(img,{
+				el=e.srcElement
+			uploader.bind(el,{
 					onSave:function(f,dataUri){
-						img.src=dataUri
+						$(el).css('background-image','url('+dataUri+')')
 						me.model.set('photo',f,{silent:true})
+					},
+					onSaved: function(f){
+						$(el).css('background-image','url('+f.url()+')')
 					},
 					size:150
 				}).click()
