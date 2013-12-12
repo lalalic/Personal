@@ -1,5 +1,5 @@
 ﻿define({
-	snb:"超级奶爸",
+	"super daddy":"超级奶爸",
 	game:"游戏",
 	drawing:"画画",
 	reading:"阅读",
@@ -21,5 +21,6 @@
 	english:"英语",
 	imagination:"想象",
 	title:"名称",
-	content:"内容"
+	content:"内容",
+	'my tasks':"宝贝的欢乐时光"
 })

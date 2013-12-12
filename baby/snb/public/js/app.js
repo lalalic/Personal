@@ -79,6 +79,7 @@ define('app',function(){
 				deps: ['view/splash','tool/offline','lib/i18n!nls/all'],
 				callback: function(splash,offline,i18n){
 					window.text=function(a){return  ((a=a.toLowerCase()) in i18n) ? i18n[a] : (i18n[a]=a)}
+					document.title=text("Super Daddy")
 					splash.show()
 					offline.init().then(function(){						
 						var startApp=function (){
@@ -162,7 +163,7 @@ define('app',function(){
 	//router
 	var router=new Parse.Router
 	_.each([//route name, url, view name
-		'home,,categories',
+		'categories,categories,categories',
 		'createChild,child,child,user',
 		'updateChild,child/:id/:name,child,user',
 		'favorites,favorites,favorites,user',
@@ -181,6 +182,9 @@ define('app',function(){
 			else
 				 require(['view/'+r[2]],function(page){page.show.apply(page,args)})
 		})
+	})
+	router.route('','home',function(){
+		router.navigate((app.isLoggedIn() ? 'tasks' : 'categories'),{trigger:true,replace:true})
 	})
 	return app
 })

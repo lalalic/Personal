@@ -18,6 +18,7 @@ define(['app'],function(app){
 		.tags{text-align:center}\
 		.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
 		.tag:empty{visibility:hidden!important}\
+		.primary{background-color:red!important}\
 		</style>")
 		
 	Parse.Object.prototype.getUrl=function(a){
@@ -85,7 +86,7 @@ define(['app'],function(app){
 				return this
 			},
 			setTitle:function(t){
-				this.$('header h1').html(t)
+				this.$('header h1').html(t).text()
 				return this
 			},
 			show: function(){

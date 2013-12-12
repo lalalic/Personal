@@ -4,7 +4,7 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 		</style>')
 	var ListPage=View.ListPage, Tag=app.Tag
 	return new (ListPage.extend({
-		title:text('SNB'),
+		title:text('Super Daddy'),
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#tasks"><span class="icon list"/></a>\
 			<a href="#sync"><span class="icon upload"/><span class="tag count"/></a>\
@@ -21,24 +21,6 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 		},
 		clear: function(){
 			return this
-		},
-		back: function(e){
-			if($.media=='phone'){
-				var aside=require('view/children'),
-					$icon=$(e.srcElement)
-				if(aside.$el.hasClass('show')){
-					this.$el
-						.one('webkitAnimationEnd animationend',function(){
-							aside.hide()
-						}).data('aside-left','hide')
-					$icon.removeClass('left-sign').addClass('right-sign')
-				}else{
-					aside.show()
-					this.$el.data('aside-left','show')
-					$icon.removeClass('right-sign').addClass('left-sign')
-				}
-			}else
-				ListPage.prototype.back.apply(this,arguments)
 		},
 		show: function(){
 			var pendings=offline.needSync()
