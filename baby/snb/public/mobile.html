@@ -46,16 +46,18 @@
 </script>
 <script type="text/tmpl" id="tmplPosts">
 	<li class="thumb" id="_{{id}}">
-		<img src="{{getUrl('thumbnail')}}" onerror="this.src=''">
+		<img src="{{get('thumbnail')}}" onerror="this.src=''">
 		<div>
 			<strong><a href="#show/{{id}}">{{get('title')}}</a></strong>
+			<a class="on-right"><span class="icon user"> {{get('authorName')}}</span><span class="icon time"  style="padding-right:20px"> {{createdAt.ago()}}</span></a>
 			<a href="#comments/{{id}}" class="on-right"><span class="count">{{get('comments')}}</span></a>
+			<a href="#update/{{id}}" class="on-right"><span class="icon edit"/></a>
 		</div>
 	</li>
 </script>
 <script type="text/tmpl" id="tmplPostRef">
 	<li class="thumb" id="_{{id}}">
-		<img src="{{getUrl('thumbnail')}}" onerror="this.src=''">
+		<img src="{{get('thumbnail')}}" onerror="this.src=''">
 		<div>
 			<strong><a href="#show/{{get('post')}}">{{get('title')}}</a></strong>
 		</div>

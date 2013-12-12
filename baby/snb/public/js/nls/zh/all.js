@@ -17,10 +17,11 @@
 	social:"社交",
 	communication:"交流",
 	learning:"学习",
-	mandarin:"正文",
+	mandarin:"普通话",
 	english:"英语",
 	imagination:"想象",
 	title:"名称",
 	content:"内容",
-	'my tasks':"宝贝的欢乐时光"
+	'my tasks':"宝贝的欢乐时光",
+	'my favorites':"我的收藏"
 })

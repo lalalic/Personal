@@ -3,8 +3,11 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 	return new (FormPage.extend({
 		content:'<form><fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"/></fieldset>\
 			<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+text("content")+'/></form>',
-		cmds:'<a><span class="icon picture"/></a><a><button type="submit"><span class="icon save"/></button></a>',
-		events:_.extend({},FormPage.prototype.events,{'click span.picture':'insertImage'}),
+		cmds:'<a><span class="icon picture"/></a><a><span class="icon external-link"/></a><a><button type="submit"><span class="icon save"/></button></a>',
+		events:_.extend({},FormPage.prototype.events,{
+			'click span.picture':'insertImage',
+			'click span.external-link':'linkImage'
+		}),
 		initialize: function(){
 			FormPage.prototype.initialize.apply(this,arguments)
 			this.editor=makeEditor(this.$('form [contenteditable]').get(0))
@@ -56,11 +59,19 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 		insertImage:function(){
 			this.editor.insertImage()
 		},
-		save: function(){
-			var thumb=this.editor.getThumb()
-			thumb && this.model.set('thumbnail',thumb)
-			this.model.set('content',this.editor.getContent())
-			return FormPage.prototype.save.apply(this,arguments)
+		linkImage: function(){
+			this.editor.linkImage()
+		},
+		save: function(e){
+			try{
+				e.preventDefault()
+				var thumb=this.editor.getThumb()
+				thumb && this.model.set('thumbnail',thumb)
+				this.model.set('content',this.editor.getContent())
+				return FormPage.prototype.save.apply(this,arguments)
+			}catch(e){
+			}
+			return false
 		},
 		change: function(e){
 			var el=e.srcElement

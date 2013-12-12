@@ -67,18 +67,29 @@ define(['tool/uploader'],function(uploader){
 						}
 				}).click()
 			},
+			linkImage: function(url){
+				if((url=prompt(text("input image url")))){
+					el.focus()
+					restoreSelection();
+					document.execCommand("insertHTML", false, "<br><img src='"+url+"'><br>");
+				}
+			},
+			pickUser: function(){},
+			bold: function(){
+			},
 			getThumb:function(){
 				if(el['thumb'])
 					return el.thumb;
 				var thumb=this.querySelector('img');
 				if(!thumb)
 					return null;
-				if(_.has(String.prototype,'toImageData'))
-					return new Parse.File('thumb.jpg',{base64:thumb.src.toImageData(96)});
-				return null;
+				return thumb.src;
 			},
 			getContent:function(){
 				return this.innerHTML.replace(TRIM_TAG,"\n").replace(TRIM_LINE,'\n\n');
+			},
+			setContent: function(content){
+				this.innerHTML=content
 			}
 		})
 	}
