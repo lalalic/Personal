@@ -3,10 +3,10 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 	return new (FormPage.extend({
 		content:'<form><fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"/></fieldset>\
 			<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+text("content")+'/></form>',
-		cmds:'<a><span class="icon picture"/></a><a><span class="icon external-link"/></a><a><button type="submit"><span class="icon save"/></button></a>',
+		cmds:'<a><span class="icon picture"/></a><a><span class="icon link-picture"/></a><a><button type="submit"><span class="icon save"/></button></a>',
 		events:_.extend({},FormPage.prototype.events,{
-			'click span.picture':'insertImage',
-			'click span.external-link':'linkImage'
+			'click span.picture':'insertPicture',
+			'click span.link-picture':'linkPicture'
 		}),
 		initialize: function(){
 			FormPage.prototype.initialize.apply(this,arguments)
@@ -42,24 +42,22 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 					this.model=id
 					this.render()
 				}else{
-					this.model=new Post
-					this.model.id=id
+					this.model=new Post({id:id})
 					this.model.fetch().then(function(){me.render()})
 				}
 				break
 			case 2:
-				this.model=new Post({tags:['Boy','Girl','30','Learning',categoryName]})
-				this.model.set('category',categoryName)
+				this.model=new Post({tags:['Boy','Girl','30','Learning',categoryName],category:categoryName})
 				this.render()
 				this.setTitle(text("Create New ")+text(categoryName))
 				break
 			}
 			return FormPage.prototype.show.apply(this,arguments)
 		},
-		insertImage:function(){
+		insertPicture:function(){
 			this.editor.insertImage()
 		},
-		linkImage: function(){
+		linkPicture: function(){
 			this.editor.linkImage()
 		},
 		save: function(e){

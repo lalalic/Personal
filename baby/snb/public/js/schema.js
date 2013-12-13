@@ -76,7 +76,7 @@ define(function(){
 				}
 			}),
 			story:TABLE.extend({
-				fields:{post:TEXT,author:TEXT,authorName:TEXT,category:TEXT,title:TEXT,content:TEXT,comments:INT,duration:INT,tags:ARRAY,thumbnail:TEXT},
+				fields:{post:TEXT,author:TEXT,authorName:TEXT,child:TEXT, childName:TEXT, content:TEXT,comments:INT,thumbnail:TEXT},
 				indexes:{post:1},
 				foreigns:['author','post','child']
 			}),

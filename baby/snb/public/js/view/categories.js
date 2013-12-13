@@ -6,9 +6,9 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 	return new (ListPage.extend({
 		title:text('Super Daddy'),
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
-			<a href="#tasks"><span class="icon list"/></a>\
-			<a href="#sync"><span class="icon upload"/><span class="tag count"/></a>\
-			<a href="#test"><span class="icon certificate"/></a>',
+			<a href="#tasks"><span class="icon tasks"/></a>\
+			<a href="#sync"><span class="icon sync"/><span class="tag count"/></a>\
+			<a href="#test"><span class="icon test"/></a>',
 		itemTemplate:'#tmplCates',
 		collection:new Parse.Collection,
 		initialize: function(){
@@ -17,7 +17,7 @@ define(['app','view/base','tool/offline'],function(app,View,offline){
 			this.collection.reset(Tag.grouped.category)
 			if(!!$.os.phone)
 				this.$('header nav a:first-child').prop('onclick',null)
-			this.$sync=this.$el.find('footer span.upload').parent()
+			this.$sync=this.$el.find('footer span.sync').parent()
 		},
 		clear: function(){
 			return this

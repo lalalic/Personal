@@ -158,7 +158,7 @@ define('app',function(){
 	//entities
 	_.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','),
 		function(o){this[o]=Parse.Object.extend(o.toLowerCase())},app)
-	var Tag=app.Tag, Post=app.Post, Child=app.Child, Favorite=app.Favorite,Task=app.Task
+	var Tag=app.Tag, Post=app.Post, Child=app.Child, Favorite=app.Favorite,Task=app.Task,Story=app.Story
 	
 	//router
 	var router=new Parse.Router
@@ -171,6 +171,8 @@ define('app',function(){
 		'post,create/:catId/:catname,post,user',
 		'update,update/:id,post,user',
 		'showpost,show/:id,post1',
+		'updateStory,story/:post/:id,story,user',
+		'createStory,story/:post,story,user',
 		'comments,comments/:id,comments',
 		'posts,category/:id/:name,posts',
 		'test,test,test',

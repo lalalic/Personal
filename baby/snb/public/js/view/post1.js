@@ -6,20 +6,21 @@ define(['view/base','app'],function(View, app){
 		.stat{position:relative;height:300px;background-color:black}\
 		</style>')
 	var Page=View.Page, 
-		Post=app.Post, Favorite=app.Favorite, Task=app.Task, Child=app.Child
+		Post=app.Post, Favorite=app.Favorite, Task=app.Task, Child=app.Child, Story=app.Story
 	return new (Page.extend({
-		cmds:'<a href="#comments"><span class="icon comment"/></a>\
-			<a href="#story"><span class="icon file"/></a>\
-			<a><span class="icon star"/></a>\
-			<a><span class="icon menu"/></a>',
+		cmds:'<a href="#story"><span title="'+text("tell your baby's story")+'" class="icon story"/></a>\
+			<a href="#comments"><span title="'+text("comment")+'" class="icon comment"/></a>\
+			<a><span title="'+text("favorite")+'" class="icon star"/></a>\
+			<a><span title="'+text("plan for baby")+'" class="icon calendar"/></a>',
 		events:_.extend({},Page.prototype.events,{
 			'click span.star':'toggleFavorite',
-			'click span.menu':'showTaskOption',
+			'click span.calendar':'showTaskOption',
 			'click #taskOption input':'addTask'
 		}),
 		initialize: function(){
 			Page.prototype.initialize.apply(this,arguments)
 			this.content=_.template('#tmplPost')
+			this.tmplStory=_.template('#tmplStory')
 			this.$('article').attr('id','show')
 			this.$el.append('<div id="taskOption" class="popup hidden"/>')
 			this.taskOption=this.$('#taskOption')
@@ -39,6 +40,12 @@ define(['view/base','app'],function(View, app){
 				this.model.id=id
 				this.model.fetch().then(function(){me.render()})
 			}
+			if(this.model!=null){
+				var stories=new Parse.Query(Story).equalTo('post',id)
+				stories.find().then(function(stories){
+					me.rendStories(stories)
+				})
+			}
 			return Page.prototype.show.apply(this,arguments)
 		},
 		render: function(){
@@ -50,12 +57,19 @@ define(['view/base','app'],function(View, app){
 			})
 			this._task(function(f){
 				if(f){
-					me.$('a span.menu').addClass('tasked')
+					me.$('a span.calendar').addClass('tasked')
 					me.taskOption.find('input[value="'+f.get('type')+'"]').click()
 				}
 			})
 			this.$('footer span.comment').parent().attr('href','#comments/'+this.model.id)
+			this.$('footer span.story').parent().attr('href','#story/'+this.model.id)
 			return this
+		},
+		rendStories: function(stories){
+			var me=this
+			_.each(stories, function(story){
+				this.append(me.tmplStory(story))
+			},this.$('#stories'))
 		},
 		toggleFavorite:function(){
 			var me=this
@@ -101,7 +115,7 @@ define(['view/base','app'],function(View, app){
 				this._task(function(f){
 					switch(type){
 					case 0:
-						f && f.destroy() && me.$('a span.menu').removeClass('tasked')
+						f && f.destroy() && me.$('a span.calendar').removeClass('tasked')
 						break
 					default:
 						f=f||new Task({post:me.model.id,title:me.model.get('title'),
@@ -110,14 +124,14 @@ define(['view/base','app'],function(View, app){
 						f.set('type',type)
 						f.save()
 							.then(function(){
-								me.$('a span.menu').addClass('tasked')
+								me.$('a span.calendar').addClass('tasked')
 							})
 					}
 				})
 			}
 		},
 		clear: function(){
-			this.$('a span.menu').removeClass('tasked')
+			this.$('a span.calendar').removeClass('tasked')
 			this.$('a span.star').removeClass('favorited')
 			this.taskOption.find('input[value="0"]').click()
 			return Page.prototype.clear.apply(this,arguments)

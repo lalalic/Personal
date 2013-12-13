@@ -95,8 +95,8 @@ define(['spec','view/base','lib/jasmine'],function(Specs,View){
 	return new (Page.extend({
 		title:'Test',
 		content:'<ul><li><textarea style="width:100%;height:100px"></textarea><div class="specs"></div></li></ul>',
-		cmds:'<a class="passed" status="passed"><span class="icon ok"/><span class="tag count"/></a>\
-			<a class="failed" status="failed"><span class="icon off"/><span class="tag count"/></a>\
+		cmds:'<a class="passed" status="passed"><span class="icon passed"/><span class="tag count"/></a>\
+			<a class="failed" status="failed"><span class="icon failed"/><span class="tag count"/></a>\
 			<a class="skipped" status="skipped"><span class="icon filter"/><span class="tag count"/></a>',
 		events: _.extend({},Page.prototype.events,{'change textarea':'debug'}),
 		initialize: function(){

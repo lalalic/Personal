@@ -59,12 +59,12 @@ define(['app'],function(app){
 		Page=Parse.View.extend({
 			clazz:'Page',
 			tagName:'section',
-			title:'Default Page',
+			title:'Loading...',
 			navs:'<a><span class="icon left-sign back"/></a>\
 				<a href="#"><span class="icon home"/></a>\
 				<a class="on-right"><span class="icon user"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
-			content:'empty content',
+			content:'Loading...',
 			cmds:'',
 			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header><article class="active scroll">{{content}}</article><footer><nav>{{cmds}}</nav></footer>'),
 			events:{'click header .refresh': 'refresh',

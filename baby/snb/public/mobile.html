@@ -6,8 +6,8 @@
 	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
 	<title>Super Daddy</title>
+	<link rel="stylesheet" href="css/icon.css">
 	<link rel="stylesheet" href="css/lungo.css">
-	<link rel="stylesheet" href="css/lungo.icon.css">
 	<link rel="stylesheet" href="css/lungo.theme.css">
 	<script src="js/lib/require.js"></script>
 	<script src="js/lib/zepto.min.js"></script>
@@ -40,7 +40,7 @@
 		<div>
 			<strong><a href="#category/{{id}}/{{get('name')}}">{{text(get('name'))}}</a></strong>
 			<small>{{get('desc')}}</small>
-			<a class="on-right" href="#create/{{id}}/{{get('name')}}" style="font-family:lungojsicon;cursor:pointer">&#xf067;</a>
+			<a class="on-right" href="#create/{{id}}/{{get('name')}}" style="cursor:pointer"><span class="icon plus"/></a>
 		</div>
 	</li>
 </script>
@@ -110,8 +110,13 @@
 		</div>
 		<ul class="list" id="stories"/>
 	</div>
-	
 </script>
+<script type="text/tmpl" id="tmplStory">
+	<li>
+		<pre><span class="icon baby"/>{{get('childName')}}: {{get('content')}}</pre>
+	</li>
+</script>
+
 <script type="text/tmpl" id="tmplComment">
 	<li class="thumb" id="_{{id}}">
 		<a><span class="icon user"/><br>{{get('authorName')}}</a>

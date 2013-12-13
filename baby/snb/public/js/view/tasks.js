@@ -2,13 +2,13 @@ define(['view/base','app','tool/offline'],function(View, app,offline){
 	var ListPage=View.ListPage, Task=app.Task
 	return new (ListPage.extend({
 		title:text('My Tasks'),
-		cmds:'<a href="#plan" class="primary"><span class="icon magnet plan"/></a>\
-			<a href="#categories"><span class="icon search"/></a>\
+		cmds:'<a href="#" class="primary"><span class="icon suggest"/></a>\
+			<a href="#categories"><span class="icon categories"/></a>\
 			<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#sync"><span class="icon upload"/><span class="tag count"/></a>',
 		itemTemplate:'#tmplPostRef',
 		events:_.extend({},ListPage.prototype.events,{
-			'click footer span.plan': 'autoplan'
+			'click footer span.suggest': 'suggest'
 		}),
 		collection: Task.all,
 		initialize: function(){
@@ -24,7 +24,7 @@ define(['view/base','app','tool/offline'],function(View, app,offline){
 				this.$sync.hide();
 			return ListPage.prototype.show.apply(this,arguments)
 		},
-		autoplan: function(){
+		suggest: function(){
 			
 		}
 	}))
