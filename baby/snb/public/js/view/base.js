@@ -198,17 +198,12 @@ define(['app'],function(app){
 				this.model.set(el.name,el.value)
 				return this
 			},
-			save: function(e){
-				try{
-					e.preventDefault()
-					var isUpdate=this.model.id, me=this
-					this.model.save()
-						.then(function(m){
-							me[isUpdate?'onChanged':'onAdded'](m)
-						})
-				}catch(e){
-					console.error(e.message)
-				}
+			save: function(){
+				var isUpdate=this.model.id, me=this
+				this.model.save()
+					.then(function(m){
+						me[isUpdate?'onChanged':'onAdded'](m)
+					})
 				return false
 			},
 			clear: function(){

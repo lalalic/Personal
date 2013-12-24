@@ -266,21 +266,21 @@ clazz('xpr.docx.out.html.css.PPr','xpr.docx.out.html.css.StyleConverter',functio
 clazz('xpr.docx.out.html.css.RPr','xpr.docx.out.html.css.StyleConverter',function(node,converted){
 	xpr.docx.out.html.css.StyleConverter.apply(this,arguments)
 },{
-	b: function(css,e){
+	b: function(e){
 		var val=e.getAttribute('w:val')
 		css.fontWeight=(!val||val=='true')?'700':''
 	},
-	i: function(css,e){
+	i: function(e){
 		var val=e.getAttribute('w:val')
 		css.fontStyle=(!val||val=='true')?'italic':'normal'
 	},
-	color: function(css,e){
+	color: function(e){
 		css.color='#'+e.getAttribute('w:val')
 	},
-	rStyle: function(css,e){
+	rStyle: function(e){
 		this.content && this.content.classList.add(e.getAttribute('w:val'))
 	},
-	sz: function(css,e){
+	sz: function(e){
 		css.fontSize=parseInt(e.getAttribute('w:val'))/2.0
 	}
 })

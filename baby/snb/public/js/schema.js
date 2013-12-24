@@ -51,34 +51,22 @@ define(function(){
 						})*/
 				},
 				sync:function(request,pendingId){
-					var data=request.data, images=[]
-						splitted=data.content.splitByImageData()
-					
-					_.each(splitted,function(data,i){
-						if(i%2==0) return
-						images.push(uploader.upload(data)
-							.then(function(newFile){
-								splitted[i]='<img src="'+newFile.url+'">'
-							}))
-					})
-					
-					if(images.length){
-						return Promise.when(images)
+					return TABLE.syncLocalImages(request,'content')
 						.then(function(){
-							data.content=splitted.join('')
-							TABLE.syncField(request,'content')
 							return TABLE.sync(request,pendingId)
 						})
-					}else
-						return TABLE.sync(request,pendingId)
-					
-					
 				}
 			}),
 			story:TABLE.extend({
 				fields:{post:TEXT,author:TEXT,authorName:TEXT,child:TEXT, childName:TEXT, content:TEXT,comments:INT,thumbnail:TEXT},
 				indexes:{post:1},
-				foreigns:['author','post','child']
+				foreigns:['author','post','child'],
+				sync: function(){
+					return TABLE.syncLocalImages(request,'content')
+						.then(function(){
+							return TABLE.sync(request,pendingId)
+						})
+				}
 			}),
 			task:TABLE.extend({
 				fields:{author:TEXT,authorName:TEXT,post:TEXT,title:TEXT,planAt:DATE,status:INT,time:INT,type:INT,child:TEXT},

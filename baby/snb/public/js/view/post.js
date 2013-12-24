@@ -60,15 +60,11 @@ define(['view/base','app','tool/editor'],function(View, app,makeEditor){
 		linkPicture: function(){
 			this.editor.linkImage()
 		},
-		save: function(e){
-			try{
-				e.preventDefault()
-				var thumb=this.editor.getThumb()
-				thumb && this.model.set('thumbnail',thumb)
-				this.model.set('content',this.editor.getContent())
-				return FormPage.prototype.save.apply(this,arguments)
-			}catch(e){
-			}
+		save: function(){
+			var thumb=this.editor.getThumb()
+			thumb && this.model.set('thumbnail',thumb)
+			this.model.set('content',this.editor.getContent())
+			return FormPage.prototype.save.apply(this,arguments)
 			return false
 		},
 		change: function(e){

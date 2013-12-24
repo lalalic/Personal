@@ -125,6 +125,27 @@ define(['schema','tool/uploader'],function(schema, uploader){
 				else
 					request._syncFields.push(field)
 			},
+			syncLocalImages: function(request, field){
+				var data=request.data, images,
+					splitted=data.content.splitByImageData()
+					
+				_.each(splitted,function(data,i){
+					if(i%2==0) return
+					images.push(uploader.upload(data)
+						.then(function(newFile){
+							splitted[i]='<img src="'+newFile.url+'">'
+						}))
+				})
+				
+				if(images.length){
+					return Promise.when(images)
+					.then(function(){
+						data.content=splitted.join('')
+						TABLE.syncField(request,field)
+					})
+				}else
+					return Parse.as()
+			},
 			extend: function(p){
 				var extended=_.extend({},this,p)
 				_.each('fields,indexes'.split(','),function(o){

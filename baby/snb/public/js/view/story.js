@@ -1,4 +1,4 @@
-define(['view/Base','app','tool/editor'],function(View, app, makeEditor){
+define(['view/base','app','tool/editor'],function(View, app, makeEditor){
 	var FormPage=View.FormPage, 
 		Story=app.Story, Favorite=app.Favorite, Post=app.Post, Child=app.Child
 	return new (FormPage.extend({

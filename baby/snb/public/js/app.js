@@ -85,7 +85,7 @@ define('app',function(){
 						var startApp=function (){
 							splash.show()
 							var _start=function(){					
-								require(['view/children'],function(children){
+								require(['view/children','view/story'],function(children){
 									children[$.media=='tablet' ? 'show' : 'hide']()
 								})
 								Parse.history.start()

@@ -1,6 +1,6 @@
 define(['view/base','app'],function(View, app){
 	$('body').append('<style>\
-		#show img{margin-left: auto;margin-right:auto;display:block;max-width:800px}\
+		#show img{margin-left: auto;margin-right:auto;display:block;width:80%}\
 		#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}\
 		.favorited,.tasked{color:yellow}\
 		.stat{position:relative;height:300px;background-color:black}\
