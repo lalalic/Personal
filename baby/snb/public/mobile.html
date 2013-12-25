@@ -130,18 +130,9 @@
 <span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
 	<span>{{title}}</span>
 	<%_.each(options,function(o){with(o){%>
-	<input type="{{type}}" name="{{name}}" value="{{get('name')}}" class="outview">
-	<span onclick="$(this).prev('input').click()">{{text(get('name'))}}</span>
+	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get('name')}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
 	<%}})%>
-</span>
-</script>
-<script type="text/tmpl" id="tmplSpecs">
-<span class="checkable open" onclick="$(this).toggleClass('open')">
-	<span>{{title}}</span>
-	<%_.each(specs,function(o){%>
-	<input type="checkbox" name="spec" value="{{o}}" class="outview">
-	<span onclick="$(this).prev('input').click()">{{o}}</span>
-	<%})%>
 </span>
 </script>
 <script type="text/tmpl" id="tmplSyncItem">

@@ -107,7 +107,8 @@ define(['spec','view/base','lib/jasmine'],function(Specs,View){
 			this.$('article').addClass('list')
 			this.addStyles()
 			this.$el.find('div.specs')
-				.append(_.template('#tmplSpecs',{title:'Specs',specs:Specs}))
+				.append(_.template('#tmplCheckable',{title:'Specs',type:'checkbox',name:'spec', options:Specs}))
+				.find('span.checkable').addClass('open')
 		},
 		debug: function(e){
 			new Function("",e.srcElement.value).call(this)
