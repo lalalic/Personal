@@ -83,13 +83,7 @@ define(['view/base','app'],function(View, app){
 				})
 		},
 		showTaskOption:function(e){
-			var me=this
-			this.taskOption.show()
-			e.stopPropagation()
-			$(document).one('click',function(e){
-				me.taskOption.hide()
-			})
-			
+			this.popup(thsi.taskOption,e)
 		},
 		_favorite: function(f){
 			if(Parse.User.current())

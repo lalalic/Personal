@@ -31,6 +31,6 @@
 .icon.camera:before{content:"\e612"}
 .icon.test:before{content:"\e61c"}
 .icon.sync:before{content:"\e61d"}
-.icon.categories:before{content:"\e61e"}
+.icon.posts:before, .icon.categories:before{content:"\e61e"}
 
 

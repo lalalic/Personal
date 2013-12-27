@@ -131,11 +131,19 @@ define(['app'],function(app){
 				app.clear4User()
 				this.reload()
 				return false
+			},
+			popup:function(el,e){
+				el.show()
+				e.stopPropagation()
+				$(document).one('click',function(e){
+					el.hide()
+				})
 			}
 		}),
 		ListPage=Page.extend({
 			content:'<ul class="list"/>',
 			itemTemplate:false,
+			collection: new (Parse.Collection.extend({})),
 			initialize: function(){
 				Page.prototype.initialize.apply(this,arguments)
 				this.$list=this.$('ul.list')

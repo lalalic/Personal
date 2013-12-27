@@ -9,14 +9,11 @@ define(['view/base','app'],function(View,app){
 		}),
 		initialize:function(){
 			ListPage.prototype.initialize.apply(this,arguments)
-			var t=_.template('#tmplCheckable')
-			this.$search=$('<div class="popup"/>')
-				.hide().appendTo(this.$el.css({position:'relative'})).css({left:'0px'})
-				.append(t({title:text('shortcut'),name:'shortcut',type:'radio',options:['All','Mine','Smart']}))
-				.append(t({title:text('category'),name:'category',type:'radio',options:Tag.grouped.category}))
-				.append(t({title:text('gender'),name:'tags',type:'checkbox',options:Tag.grouped.gender}))
-				.append(t({title:text('duration'),name:'tags',type:'checkbox',options:Tag.grouped.duration}))
-				.append(t({title:text('goal'),name:'tags',type:'checkbox',options:Tag.grouped.goal}))
+			this.$search=this.$el.css({position:'relative'})
+				.append(_.template('#tmplSearch',app))
+				.find('.popup')
+					.hide()
+					.css({left:'0px'})
 		},
 		show:function(catId, catName){
 			ListPage.prototype.show.apply(this,arguments)
@@ -25,12 +22,9 @@ define(['view/base','app'],function(View,app){
 			this.setTitle(text(catName))
 			return this
 		},
-		showSearchWidget: function(){
-			this.$search.show()
-				.find('.checkable')
-				.addClass('open')
-			//shortcut: all, mine, Aging, 
-			//category, tag
+		showSearchWidget: function(e){
+			this.popup(this.$search,e)
+			this.$search.find('.checkable').addClass('open')
 		}
 	}))
 })

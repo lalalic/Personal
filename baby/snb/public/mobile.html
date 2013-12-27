@@ -138,5 +138,18 @@
 <script type="text/tmpl" id="tmplSyncItem">
 	<li id="_{{createdAt}}">{{title}} <span class="on-right">{{Date.fromTime(createdAt).ago()}}</span></li>
 </script>
+<script type="text/tmpl" id="tmplSearch">
+	<div class="popup hide">
+		<div>
+			{{_.template('#tmplCheckable',({title:text('shortcut'),name:'shortcut',type:'radio',options:['All','Mine','Smart']}))}}
+			{{_.template('#tmplCheckable',({title:text('category'),name:'category',type:'radio',options:Tag.grouped.category}))}}
+		</div>
+		<div>
+			{{_.template('#tmplCheckable',({title:text('gender'),name:'tags',type:'checkbox',options:Tag.grouped.gender}))}}
+			{{_.template('#tmplCheckable',({title:text('duration'),name:'tags',type:'checkbox',options:Tag.grouped.duration}))}}
+			{{_.template('#tmplCheckable',({title:text('goal'),name:'tags',type:'checkbox',options:Tag.grouped.goal}))}}
+		</div>
+	</div>
+</script>
 </body>
 </html>

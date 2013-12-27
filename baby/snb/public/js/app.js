@@ -163,7 +163,9 @@ define('app',function(){
 	//router
 	var router=new Parse.Router
 	_.each([//route name, url, view name
-		'categories,categories,categories',
+		'categories,,categories',
+		'main,main,main',
+		'search,posts/:query,main',
 		'createChild,child,child,user',
 		'updateChild,child/:id/:name,child,user',
 		'favorites,favorites,favorites,user',
@@ -174,7 +176,7 @@ define('app',function(){
 		'updateStory,story/:post/:id,story,user',
 		'createStory,story/:post,story,user',
 		'comments,comments/:id,comments',
-		'posts,category/:id/:name,posts',
+		'categoryPost,category/:id/:name,posts',
 		'test,test,test',
 		'syncOffline,sync,sync,user'],function(r){
 		router.route((r=r.split(','))[1],r[0],function(){
@@ -184,9 +186,6 @@ define('app',function(){
 			else
 				 require(['view/'+r[2]],function(page){page.show.apply(page,args)})
 		})
-	})
-	router.route('','home',function(){
-		router.navigate((app.isLoggedIn() ? 'tasks' : 'categories'),{trigger:true,replace:true})
 	})
 	return app
 })
