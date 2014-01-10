@@ -85,11 +85,11 @@ define('app',function(){
 						var startApp=function (){
 							splash.show()
 							var _start=function(){					
-								require(['view/children','view/story'],function(children){
+								require(['view/children'],function(children){
 									children[$.media=='tablet' ? 'show' : 'hide']()
+									Parse.history.start()
+									splash.remove()
 								})
-								Parse.history.start()
-								splash.remove()
 							}
 							app.init().then(_start,_start)
 						};

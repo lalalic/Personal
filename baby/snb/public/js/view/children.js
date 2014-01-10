@@ -69,6 +69,16 @@ define(['view/base','app'],function(View,app){
 		initialize: function(){
 			ChildrenAside.prototype.initialize.apply(this,arguments)
 			this.$el.removeAttr("data-transition")
+			$('body').append('<style>\
+				.children.popup{top:45px;height:1px;}\
+				.children.popup li{background-color:#00afe3}\
+				</style>')
+			var _show=View.Page.prototype.show, me=this
+			View.Page.prototype.show=function(){
+				_show.apply(this,arguments)
+				me.attach(this)
+				return this
+			}
 			return this
 		},
 		show: function(e){
@@ -129,18 +139,7 @@ define(['view/base','app'],function(View,app){
 	
 	switch($.media){
 	case 'phone':
-		$('body').append('<style>\
-			.children.popup{top:45px;height:1px;}\
-			.children.popup li{background-color:#00afe3}\
-			</style>')
-		var children=new PhoneVersion
-		var _show=Page.prototype.show
-		Page.prototype.show=function(){
-			_show.apply(this,arguments)
-			children.attach(this)
-			return this
-		}
-		return children
+		return new PhoneVersion
 	default:
 		return new ChildrenAside
 	}

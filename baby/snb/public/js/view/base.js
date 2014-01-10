@@ -55,7 +55,7 @@ define(['app'],function(app){
 			a.removeClass('doing')
 		})
 	})
-	var currentPage={section:null,aside:null}
+	var currentPage={section:null,aside:null},
 		Page=Parse.View.extend({
 			clazz:'Page',
 			tagName:'section',
