@@ -31,7 +31,7 @@ import com.sun.jersey.core.util.Base64;
 
 @Path(EntityService.VERSION+"/users")
 public class UserService extends EntityService{
-	private final static String KIND="_user";
+	public final static String KIND="_user";
 	public UserService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
 		super(request,appId, KIND);
 	}

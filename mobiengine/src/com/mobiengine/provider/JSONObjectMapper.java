@@ -18,6 +18,7 @@ import org.codehaus.jackson.map.module.SimpleModule;
 
 import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
+import com.mobiengine.service.UserService;
 
 
 @Provider
@@ -44,6 +45,8 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 				JsonProcessingException {
 			try {
 				entity.setProperty("id", entity.getKey().getId());
+				if(UserService.KIND.equals(entity.getKind()))
+					entity.removeProperty("password");
 				jg.writeObject(entity.getProperties());
 			} finally  {
 				entity.removeProperty("id");

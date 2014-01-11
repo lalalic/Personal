@@ -9,6 +9,7 @@ define(['view/base','app'],function(View,app){
 			'click ul.extra .create>a':'onCreate'},
 		initialize: function(){
 			ListPage.prototype.initialize.apply(this,arguments)
+			this.collection.on('current',this.changeCurrent,this)
 			this.collection.trigger('reset')
 			$('body').append('<style>\
 				.applist.popup{top:45px;height:1px;}\
@@ -26,12 +27,11 @@ define(['view/base','app'],function(View,app){
 			Application.current(null)
 		},
 		onClickApp:function(e){
-			this.changeCurrent(Application.all.get(parseInt($(this).data('id'))))
+			Application.current(Application.all.get(parseInt(this.id.substr(1))))
 		},
 		changeCurrent:function(m){
-			var current=Application.current(m)
-			var apps=this.$('li').removeClass('active')
-			current && apps.filter('#_'+current.id).addClass('active')
+			m && this.$('#_'+m.id).addClass('active')
+				.siblings('.active').removeClass('active')
 			if(this.$menuHolder)
 				this.onAttached()
 			return this
@@ -39,16 +39,17 @@ define(['view/base','app'],function(View,app){
 		addOne: function(item){
 			ListPage.prototype.addOne.apply(this,arguments)
 			if(this.collection.length==1)
-				this.changeCurrent(item)
+				Application.current(item)
 			return this
 		},
 		removeOne: function(item){
 			ListPage.prototype.removeOne.apply(this,arguments)
-			if(Application.current.id==item.id){
+			var current=Application.current()
+			if(current && current.id==item.id){
 				if(this.collection.length)
-					this.changeCurrent(this.collection.models[0])
+					Application.current(this.collection.models.first())
 				else
-					this.changeCurrent(null)
+					Application.current(null)
 			}
 		},
 		changeOne: function(item){
@@ -56,21 +57,17 @@ define(['view/base','app'],function(View,app){
 			if(item.hasChanged('name'))
 				li.find('a').text(item.get('name'))
 		},
-		isCurrent: function(m){
-			return (m.id+"")==localStorage.getItem('appCurrent')
-		},
 		onAttached:function(){
-			switch(this.collection.length){
-			case 0:
-				this.$('.create').hide()
-				this.$menuHolder.attr('href','#app')
-					.html('<span class="icon plus"/>')
-				break;
-			default:
-				var current=Application.current()
+			var app=Application.current()
+			if(app){
 				this.$('.create').show()
-				this.$menuHolder.removeAttr('href')
-					.html('<span>'+(current && current.get('name') || '...')+'</span>')
+				this.$menuHolder.removeAttr('href').empty()
+					.html('<span>'+app.get('name')+'</span>')
+					.find('span').click(_.bind(this.show,this))
+			}else{
+				this.$('.create').hide()
+				this.$menuHolder.attr('href','#app').empty()
+					.html('<span class="icon plus"/>')
 					.find('span').click(_.bind(this.show,this))
 			}
 		}

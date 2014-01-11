@@ -128,23 +128,14 @@ define(['app'],function(app){
 				this.prototype.tagName='div'
 				this.prototype.className+=" hidden popup"
 				this.prototype.attach=function(page){
-					$menu=$(menuSelector||'header .user').parent()
+					$menu=page.$(menuSelector||'header .user').parent()
 					if($menu.length==0)
 						return;
 					if(app.isLoggedIn()){
-						$menu.hide()
-						if(!page._$menuHolder)
-							$menu.before(this.$menuHolder=page._$menuHolder=$('<a class="on-right"></a>'))
-						else
-							this.$menuHolder=page._$menuHolder
+						$menu.hide().before(this.$menuHolder)
 						this.onAttached && this.onAttached()
 					}else{
 						$menu.show()
-						if(page._$menuHolder){
-							page._$menuHolder.remove()
-							delete page._$menuHolder
-						}
-						this.$menuHolder=null
 					}
 				}
 				var _init=this.prototype.initialize
@@ -160,6 +151,7 @@ define(['app'],function(app){
 					this.$('header,footer').remove()
 					this.$('article').removeClass('scroll')
 					this.$el.removeAttr("data-transition")
+					this.$menuHolder=$(document.createElement('a')).addClass('on-right')
 					return this
 				}
 				this.prototype.show=function(e){

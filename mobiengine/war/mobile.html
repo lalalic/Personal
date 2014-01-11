@@ -66,7 +66,7 @@
 	</form>
 </script>
 <script type="text/tmpl" id="tmplApps">
-	<li><a data-id="{{id}}" class="app">{{get('name')}}</a></li>
+	<li><a id="_{{id}}" class="app">{{get('name')}}</a></li>
 </script>
 
 <script type="text/tmpl" id="tmplMenu">
@@ -78,13 +78,18 @@
 	</ul>
 </script>
 <script type="text/tmpl" id="tmplTable">
-	<table id="table_{{get('name')}}" class="data hidden">
-		<tr>
-			<%_.each(get('fields'),function(field){with(field){%>
-			<th>{{name}}</th>		
-			<%}})%>
-		</tr>
-	</table>
+	<colgroup>
+		<col/>
+		<%_.each(model.get('fields'),function(field){with(field){if(field.name!='password'){%>
+		<col/>
+		<%}}})%>
+	</colgroup>
+	<tr>
+		<td><input type="checkbox"></td>
+		<%_.each(model.get('fields'),function(field){with(field){if(field.name!='password'){%>
+		<th>{{name}}</th>		
+		<%}}})%>
+	</tr>
 </script>
 </body>
 </html>

@@ -3,6 +3,15 @@ define(['app','view/base'],function(App,View){
 	return new (FormPage.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
 		content:_.template('#tmplApp',{}),
+		initialize:function(){
+			FormPage.prototype.initialize.apply(this,arguments)
+			Application.all.on('current',this.changeCurrent,this)
+		},
+		changeCurrent:function(m){
+			this.model=Application.current() || new Application
+			this.setTitle(this.model.id ? this.model.get('name') : text("create new application"))
+			this.render()
+		},
 		show: function(){
 			this.model=Application.current() || new Application
 			this.setTitle(this.model.id ? this.model.get('name') : text("create new application"))
@@ -20,8 +29,13 @@ define(['app','view/base'],function(App,View){
 		},
 		onAdded:function(a){
 			FormPage.prototype.onAdded.apply(this,arguments)
-			Applicaiton.current(a)
+			Application.current(a)
 			return this
+		},
+		hide: function(){
+			if(!this.model.id)
+				Application.restoreCurrent()
+			return FormPage.prototype.hide.apply(this,arguments)
 		}
 	}))
 })

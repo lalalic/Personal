@@ -118,6 +118,9 @@ define('app',function(){
 		init4User:function(user){
 			return user.verify().then(_.bind(function(){
 					return this.Application.all.fetch()
+						.then(function(){
+							app.Application.current(app.Application.all.first())
+						})
 				},this))
 		},
 		isLoggedIn: function(){
@@ -130,7 +133,11 @@ define('app',function(){
 	
 	;(function(){//Models
 		var Model=Backbone.Model.extend({
-			kind:false,
+			get:function(name){
+				if(name=='id'||name=='createdAt'||name=='updatedAt')
+					return this[name]
+				return Backbone.Model.prototype.get.apply(this,arguments)
+			},
 			toJSON: function(){
 				var a=Backbone.Model.prototype.toJSON.apply(this,arguments)
 				_.each(['id','createdAt','updatedAt'],function(attr){
@@ -188,7 +195,7 @@ define('app',function(){
 					return new this.Collection()
 				} 
 			})
-		var currentApp, Application=app.Application=Model.extend({
+		var currentApp, prevApp,Application=app.Application=Model.extend({
 			urlRoot:'1/apps'
 		},{
 			current:function(m){
@@ -202,6 +209,7 @@ define('app',function(){
 					}else
 						return null
 				case null:
+					prevApp=currentApp
 					localStorage.removeItem('currentApp')
 					currentApp=null
 					Application.all.trigger('current')
@@ -213,6 +221,9 @@ define('app',function(){
 					console.log('set current application')
 					return m
 				}
+			},
+			restoreCurrent:function(){
+				this.current(prevApp)
 			}
 		})
 		var current, User=app.User=Model.extend({
