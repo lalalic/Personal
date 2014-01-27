@@ -26,10 +26,10 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.mobiengine.service.SchemaService.Schema;
 import com.mobiengine.service.SchemaService.TYPES;
 
-@Path(EntityService.VERSION+"/apps")
+@Path(Service.VERSION+"/apps")
 public class ApplicationService extends EntityService {
 	private final static String MAIN_APP="www";
-	private final static String KIND="_app";
+	final static String KIND="_app";
 	
 	public ApplicationService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
 		super(request,appId, KIND);
@@ -102,10 +102,11 @@ public class ApplicationService extends EntityService {
 				SchemaService.makeFieldSchema("name", TYPES.String, true, false),
 				SchemaService.makeFieldSchema("url", TYPES.String, true, true),
 				SchemaService.makeFieldSchema("author", TYPES.Integer, true, false),
-				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false));
+				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false),
+				SchemaService.makeFieldSchema("cloudCode", TYPES.File, false, false));
 	}
 	
-	@Path(EntityService.VERSION+"/init")
+	@Path(Service.VERSION+"/init")
 	public static class InitOnce{
 		@GET
 		public Response initSystem(){

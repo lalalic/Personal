@@ -43,7 +43,7 @@ define(['app','view/base'],function(app,View){
 			createHead:function(){
 				var colgroup=$(document.createElement('colgroup')).appendTo(this.el)
 				var tr=$(document.createElement('tr')).appendTo(this.el)
-				tr.append('<input type="checkbox">')
+				tr.append('<td><input type="checkbox"></td>')
 				_.each(this.model.get('fields'),function(field){
 					if(field.name=='password')
 						return

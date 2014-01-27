@@ -29,7 +29,7 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.mobiengine.service.SchemaService.TYPES;
 import com.sun.jersey.core.util.Base64;
 
-@Path(EntityService.VERSION+"/users")
+@Path(Service.VERSION+"/users")
 public class UserService extends EntityService{
 	public final static String KIND="_user";
 	public UserService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
@@ -68,13 +68,13 @@ public class UserService extends EntityService{
 		}
 	}
 	
-	protected String getSessionToken(Entity user){
+	protected static String getSessionToken(Entity user){
 		return new String(Base64.encode(KeyFactory.keyToString(user.getKey())));
 	}
 	
 	@SuppressWarnings("deprecation")
-	protected Entity getByName(String name){
-		Query query=new Query(this.kind);
+	protected static Entity getByName(String name){
+		Query query=new Query(KIND);
 		query.addFilter("username", FilterOperator.EQUAL, name);
 		return DatastoreServiceFactory.getDatastoreService()
 			.prepare(query)
@@ -99,12 +99,10 @@ public class UserService extends EntityService{
 				SchemaService.makeFieldSchema("email", TYPES.String, true, true));
 	}
 	
-	@Path(EntityService.VERSION+"/requestPasswordReset")
-	public static class RequestPasswordResetService{
-		@SuppressWarnings("unused")
-		private UserService service;
+	@Path(Service.VERSION+"/requestPasswordReset")
+	public static class RequestPasswordResetService extends Service{
 		public RequestPasswordResetService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			service=new UserService(request,appId);
+			super(request,appId,KIND);
 		}
 
 		@POST
@@ -115,11 +113,10 @@ public class UserService extends EntityService{
 		}
 	}
 	
-	@Path(EntityService.VERSION+"/me")
-	public static class VerifyService{
-		private UserService service;
+	@Path(Service.VERSION+"/me")
+	public static class VerifyService extends Service{
 		public VerifyService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			service=new UserService(request,appId);
+			super(request,appId,KIND);
 		}
 		@GET
 		@Produces(MediaType.APPLICATION_JSON)
@@ -129,9 +126,9 @@ public class UserService extends EntityService{
 				if(KIND.equals(key.getKind())){
 					Entity user=DatastoreServiceFactory.getDatastoreService().get(key);
 					if(user!=null){
-						user.setProperty("sessionToken", service.getSessionToken(user));
-						service.session.setAttribute("userid", user.getKey().getId());
-						service.session.setAttribute("username", user.getProperty("username"));
+						user.setProperty("sessionToken", getSessionToken(user));
+						session.setAttribute("userid", user.getKey().getId());
+						session.setAttribute("username", user.getProperty("username"));
 						user.removeProperty("password");
 						return Response.ok().entity(user).build();
 					}
@@ -142,11 +139,10 @@ public class UserService extends EntityService{
 			throw new RuntimeException("Don't hack me");
 		}
 	}
-	@Path(EntityService.VERSION+"/login")
-	public static class LoginService{
-		private UserService service;
+	@Path(Service.VERSION+"/login")
+	public static class LoginService extends Service{
 		public LoginService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			service=new UserService(request,appId);
+			super(request,appId,KIND);
 		}
 
 		@GET
@@ -158,7 +154,7 @@ public class UserService extends EntityService{
 			if (password == null || password.length() == 0)
 				throw new RuntimeException("password can't be empty.");
 			
-			Entity user=service.getByName(name);
+			Entity user=getByName(name);
 			if(user==null)
 				return Response.status(Status.NOT_FOUND).build();
 			
@@ -167,9 +163,9 @@ public class UserService extends EntityService{
 				digest = java.security.MessageDigest.getInstance("MD5");
 				digest.update(password.getBytes());
 				if (new String(digest.digest()).equals(user.getProperty("password"))){
-					user.setProperty("sessionToken", service.getSessionToken(user));
-					service.session.setAttribute("userid", user.getKey().getId());
-					service.session.setAttribute("username", user.getProperty("username"));
+					user.setProperty("sessionToken", getSessionToken(user));
+					session.setAttribute("userid", user.getKey().getId());
+					session.setAttribute("username", user.getProperty("username"));
 					user.removeProperty("password");
 					return Response.ok().entity(user).build();
 				}else

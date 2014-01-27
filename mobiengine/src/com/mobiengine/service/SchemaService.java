@@ -25,7 +25,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
 
-@Path(EntityService.VERSION+"/schemas")
+@Path(Service.VERSION+"/schemas")
 public class SchemaService extends EntityService{
 	private static final String KIND="_schema";
 	private static final Map<String, Schema> schemas=new HashMap<String,Schema>();

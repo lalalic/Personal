@@ -52,7 +52,6 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 				entity.removeProperty("id");
 			}
 		}
-		
 	}
 	
 	private static class JSONEmbeddedEntity extends JsonSerializer<EmbeddedEntity>{

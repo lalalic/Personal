@@ -8,7 +8,7 @@ import javax.ws.rs.core.Context;
 import com.google.appengine.api.datastore.Entity;
 import com.mobiengine.service.SchemaService.TYPES;
 
-@Path(EntityService.VERSION+"/roles")
+@Path(Service.VERSION+"/roles")
 public class RoleService extends EntityService {
 	private final static String KIND="_role";
 	public RoleService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
