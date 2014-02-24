@@ -7,6 +7,9 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
@@ -27,6 +30,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.mobiengine.js.Cloud;
 import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
@@ -40,6 +44,7 @@ public class Service{
 	long userId;
 	String userName;
 	private Entity app;
+	private Cloud cloud;
 	
 	public Service(
 			@Context HttpServletRequest request,
@@ -171,5 +176,20 @@ public class Service{
 
 	public Entity getApp() {
 		return app;
+	}
+	
+	public Cloud getCloud(){
+		if(cloud!=null)
+			return cloud;
+		ScriptEngine engine=new ScriptEngineManager().getEngineByName("JavaScript");
+		cloud=new Cloud(engine);
+		engine.put("Cloud",cloud);
+		try {
+			if(!app.hasProperty("cloudCode"))
+				engine.eval(app.getProperty("cloudCode").toString());
+		} catch (ScriptException e) {
+			
+		}
+		return cloud;
 	}
 }

@@ -132,28 +132,28 @@ public class EntityService extends Service{
 			return Response.noContent().entity(e).build();
 		}
 	}
-	
+
 	public void beforeCreate(Entity entity, JSONObject request) {
-		
+		this.getCloud().beforeSave(entity);
 	}
 
 	public void afterCreate(Entity entity, JSONObject response) {
-
+		this.getCloud().afterSave(entity);
 	}
 
 	public void beforeUpdate(Entity entity, JSONObject request) {
-
+		this.getCloud().beforeSave(entity);
 	}
 
 	public void afterUpdate(Entity entity) {
-
+		this.getCloud().afterSave(entity);
 	}
 
 	public void beforeDelete(Key entity) {
-
+		this.getCloud().beforeDelete(entity);
 	}
 
 	public void afterDelete(Key entity) {
-
+		this.getCloud().afterDelete(entity);
 	}
 }

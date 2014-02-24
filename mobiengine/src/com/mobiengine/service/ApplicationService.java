@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -34,6 +37,18 @@ public class ApplicationService extends EntityService {
 	public ApplicationService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
 		super(request,appId, KIND);
 	}
+	
+	@POST
+	@Path("/cloudcode")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response cloudCode(@FormParam(value = "cloudcode")String cloudCode){
+		Entity app=this.getApp();
+		app.setProperty("cloudCode", cloudCode);
+		DatastoreServiceFactory.getAsyncDatastoreService().put(app);
+		return Response.ok().build();
+	}
+	
 	
 	@Override
 	public void beforeCreate(Entity app, JSONObject request){

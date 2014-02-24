@@ -32,7 +32,7 @@ public class CloudCode implements ResourceFilterFactory{
 		public ContainerRequest filter(ContainerRequest request) {
 			Service service=getService(request);
 			Entity app=service.getApp();
-			//if(app.hasProperty("cloudCode"))
+			if(app.hasProperty("cloudCode"))
 			{
 				ScriptEngine engine=getEngine(service);
 				try {
@@ -41,7 +41,6 @@ public class CloudCode implements ResourceFilterFactory{
 				} catch (ScriptException e) {
 					
 				}
-				
 			}
 			return request;
 		}
