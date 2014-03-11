@@ -1,4 +1,4 @@
-define(['view/base','app'],function(View,app){
+define(['UI','app'],function(View,app){
 	var Page=View.Page, User=app.User
 	return new (Page.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',

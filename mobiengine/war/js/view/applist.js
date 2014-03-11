@@ -1,4 +1,4 @@
-define(['view/base','app'],function(View,app){
+define(['UI','app'],function(View,app){
 	var ListPage=View.ListPage,Application=app.Application
 	return new (ListPage.extend({
 		className:'applist',

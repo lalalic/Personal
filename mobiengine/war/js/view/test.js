@@ -1,4 +1,4 @@
-define(['spec','view/base','lib/jasmine'],function(Specs,View){
+define(['spec','UI','lib/jasmine'],function(Specs,View){
 	window.asyncIt=function(p,msgTimeout,more,timeout){
 		if(_.isFunction(msgTimeout)){
 			more=msgTimeout

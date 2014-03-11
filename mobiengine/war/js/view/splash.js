@@ -1,4 +1,4 @@
-define(['view/base'],function(View){
+define(['UI'],function(View){
 	var Page=View.Page
 	return new (Page.extend({
 		el:'#splash',

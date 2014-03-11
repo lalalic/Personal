@@ -1,5 +1,5 @@
-define(['view/base'],function(View){
-	var Page=View.Page
+define(['UI'],function(UI){
+	var Page=UI.Page
 	return new (Page.extend({
 		title:text("Mobile Engine"),
 		cmds:'<a href="#applist"><span class="icon apps"/></a>\

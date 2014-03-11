@@ -1,4 +1,4 @@
-define(['app','view/base'],function(app,View){
+define(['app','UI'],function(app,View){
 	var ListPage=View.ListPage,
 		Schema=app.Schema,Application=app.Application
 	$('body').append('<style>\

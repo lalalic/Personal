@@ -1,4 +1,4 @@
-define(['app'],function(app){
+define(['app',"jQuery"],function(app, $){
 	$('body').append("<style>\
 		body,section,aside{overflow:hidden}\
 		nav img{width:32px;height:32px}\

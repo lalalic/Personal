@@ -1,4 +1,4 @@
-define(['app','view/base'],function(App,View){
+define(['app','UI'],function(App,View){
 	var FormPage=View.FormPage, Application=App.Application
 	return new (FormPage.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',

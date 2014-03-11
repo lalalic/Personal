@@ -1,4 +1,4 @@
-define(['app','view/base'],function(app,View){
+define(['app','UI'],function(app,View){
 	var Application=app.Application, 
 		FormPage=View.FormPage
 	return new (FormPage.extend({
