@@ -153,7 +153,7 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 		route: function(name, url, view, needLogin){
 			router.route(url, name, function(){
 				if(needLogin && !app.isLoggedIn())
-					require([view],function(page){page.show('signin')})
+					require(['view/user'],function(page){page.show('signin')})
 				else{
 					var args=arguments
 					require([view],function(page){page.show.apply(page,args)})
@@ -166,6 +166,7 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 	var router=new Backbone.Router
 	_.each([//route name, url, view name[,user]
 		'main,,view/main',
+		'account,account,view/user',
 		'test,test,view/test',
 		'features,features,view/features',
 		'syncOffline,sync,view/sync,true'],function(r){

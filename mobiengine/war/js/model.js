@@ -1,71 +1,88 @@
 define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, Backbone, Promise){
+	Backbone.Collection.prototype.url=function(){
+		if(this.model){
+			var root=this.model.prototype.urlRoot
+			if(_.isString(root))
+				return this.model.Collection.prototype.url=root;
+			else if(_.isFunction(root))
+				return this.model.Collection.prototype.url=(new this.model()).urlRoot()
+		}
+	}
 	var Model=Backbone.Model.extend({
-	get:function(name){
-		if(name=='id'||name=='createdAt'||name=='updatedAt')
-			return this[name]
-		return Backbone.Model.prototype.get.apply(this,arguments)
-	},
-	toJSON: function(){
-		var a=Backbone.Model.prototype.toJSON.apply(this,arguments)
-		_.each(['id','createdAt','updatedAt'],function(attr){
-			if(_.has(this,attr))
-				a[attr]=this[attr]
-		},this)
-		return a
-	},
-	parse:function(data){
-		if(_.has(data,'id')){
-			this.id=data.id
-			delete data.id
-		}
-		if(_.has(data,'updatedAt')){
-			this.updatedAt=new Date()
-			this.updatedAt.setTime(Date.parse(data.updatedAt))
-			delete data.updatedAt
-		}
-		if(_.has(data,'createdAt')){
-			this.createdAt=new Date()
-			this.createdAt.setTime(Date.parse(data.createdAt))
-			delete data.createdAt
-		}
-		return data
-	},
-	sync:function(method,model,opt){
-		var p=new Promise,
-			defaultOpt={
-				error:function(model,e){
-					p.reject(e)
-				},
-				success:function(model){
-					p.resolve(model)
-				}
+		version:'1',
+		className:'_unknown',
+		get:function(name){
+			if(name=='id'||name=='createdAt'||name=='updatedAt')
+				return this[name]
+			return Backbone.Model.prototype.get.apply(this,arguments)
+		},
+		toJSON: function(){
+			var a=Backbone.Model.prototype.toJSON.apply(this,arguments)
+			_.each(['id','createdAt','updatedAt'],function(attr){
+				if(_.has(this,attr))
+					a[attr]=this[attr]
+			},this)
+			return a
+		},
+		urlRoot: function(){
+			return this.version+"/classes/"+this.className
+		},
+		parse:function(data){
+			if(_.has(data,'id')){
+				this.id=data.id
+				delete data.id
 			}
-		if(opt){
-			_.each(['error','success'],function(name){
-				if(name in opt){
-					var _raw=opt[name]
-					opt[name]=function(){
-						_raw.apply(null,arguments)
-						defaultOpt[name].apply(null,arguments)
+			if(_.has(data,'updatedAt')){
+				this.updatedAt=new Date()
+				this.updatedAt.setTime(Date.parse(data.updatedAt))
+				delete data.updatedAt
+			}
+			if(_.has(data,'createdAt')){
+				this.createdAt=new Date()
+				this.createdAt.setTime(Date.parse(data.createdAt))
+				delete data.createdAt
+			}
+			return data
+		},
+		sync:function(method,model,opt){
+			var p=new Promise,
+				defaultOpt={
+					error:function(model,e){
+						p.reject(e)
+					},
+					success:function(model){
+						p.resolve(model)
 					}
-				}else
-					otp[name]=defaultOpt[name]
-			})
-		}else
-			opt=defaultOpt
-		Backbone.Model.prototype.sync.call(this,method,model,opt)
-		return p
-	}},{
-		collection:function(){
-			if(!this.Collection)
-				this.Collection=Backbone.Collection.extend({model:this,url:this.prototype.urlRoot})
-			return new this.Collection()
-		} 
-	});
+				}
+			if(opt){
+				_.each(['error','success'],function(name){
+					if(name in opt){
+						var _raw=opt[name]
+						opt[name]=function(){
+							_raw.apply(null,arguments)
+							defaultOpt[name].apply(null,arguments)
+						}
+					}else
+						otp[name]=defaultOpt[name]
+				})
+			}else
+				opt=defaultOpt
+			Backbone.Model.prototype.sync.call(this,method,model,opt)
+			return p
+		}},{
+			collection:function(){
+				if(!this.Collection)
+					this.Collection=Backbone.Collection.extend({model:this})
+				return new this.Collection()
+			} 
+		});
 
 	_.extend(app,{// extend app schema
-		Model: Model,
+		createKind: function(name){
+			return Model.extend({className:name})
+		},
 		Application: Model.extend({
+				className:'_app',
 				urlRoot:'1/apps'
 			},{
 				current:function(m){
@@ -97,6 +114,7 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 				}
 			}),
 		User: Model.extend({
+			className:'_user',
 			urlRoot:'1/users',
 			parse: function(r){
 				var attrs=Model.prototype.parse.apply(this,arguments)
@@ -189,12 +207,21 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			}
 		}),
 		Role: Model.extend({
+			className:'_role',
 			urlRoot:'1/roles'
 		},{}),
 		Schema: Model.extend({
-			urlRoot:'1/schemas'
-		},{}),
-		
+			className:'_schema',
+			urlRoot:'1/schemas',
+			defaults:{
+				fields:[
+					{name:'id'},
+					{name:'createdAt'},
+					{name:'updatedAt'},
+					{name:'ACL'}
+				]
+			}
+		},{}),	
 		init: function(){
 			$.ajaxSetup({
 				dataType:'json',
@@ -221,6 +248,10 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			return currentUser!=null
 		}
 	})
+	app._app=app.Application
+	app._user=app.User
+	app._role=app.Role
+	app._schema=app.Schema
 
 	var Application=app.Application,
 		currentApp, 

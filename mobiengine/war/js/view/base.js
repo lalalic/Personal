@@ -205,7 +205,7 @@ define(['app',"jQuery"],function(app, $){
 				return this
 			},
 			clear: function(){
-				this.$list.children().hide()
+				//this.$list.children().hide()
 				return Page.prototype.clear.apply(this,arguments)
 			}
 		}),
