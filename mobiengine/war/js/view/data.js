@@ -57,19 +57,23 @@ define(['app','UI'],function(app,View){
 		title:text('Data Browser'),
 		cmds:'<a><span class="icon plus"/>row</a>\
 			<a><span class="icon remove"/>row</a>\
-			<a><span class="icon remove"/>all row</a>\
 			<a><span class="icon plus"/>field</a>\
 			<a><span class="icon remove"/>field</a>\
 			<a><span class="icon remove"/>class</a>',
+		events:_.extend({},ListPage.prototype.events,{
+
+		}),
 		initialize:function(){
 			this.collection=Schema.collection()
 			ListPage.prototype.initialize.apply(this,arguments)
 			this.$tables=$('<nav data-control="groupbar"/>').insertBefore(this.$('article'))
+			this.$list=this.$('article')
 			Application.all.on('current',this.changeApp,this)
 			this.changeApp()
 		},
 		changeApp:function(){
 			this.$tables.empty()
+			this.$list.empty()
 			this.collection.fetch()
 		},
 		addOne:function(model){
@@ -84,7 +88,7 @@ define(['app','UI'],function(app,View){
 						table.show()
 					})
 			
-			this.$('article').append((table.el))
+			this.$list.append(table.el)
 			current==null && $a.click()
 		}
 	}))
