@@ -1,4 +1,5 @@
 define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, Backbone, Promise){
+	window.DATATYPE='String, Integer, Float, Boolean, Date, File, GeoPoint, Array, Object, Pointer'.split(',')
 	Backbone.Collection.prototype.url=function(){
 		if(this.model){
 			var root=this.model.prototype.urlRoot
@@ -27,6 +28,31 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		urlRoot: function(){
 			return this.version+"/classes/"+this.className
 		},
+		_promise: function(p, opt){
+			var me=this,
+				defaultOpt={
+					error:function(model,e){
+						p.reject(e)
+					},
+					success:function(model){
+						p.resolve(me)
+					}
+				}
+			if(opt){
+				_.each(['error','success'],function(name){
+					if(name in opt){
+						var _raw=opt[name]
+						opt[name]=function(){
+							_raw.apply(null,arguments)
+							defaultOpt[name].apply(null,arguments)
+						}
+					}else
+						otp[name]=defaultOpt[name]
+				})
+			}else
+				opt=defaultOpt
+			return opt
+		},
 		parse:function(data){
 			if(_.has(data,'id')){
 				this.id=data.id
@@ -45,36 +71,20 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			return data
 		},
 		sync:function(method,model,opt){
-			var p=new Promise,
-				defaultOpt={
-					error:function(model,e){
-						p.reject(e)
-					},
-					success:function(model){
-						p.resolve(model)
-					}
-				}
-			if(opt){
-				_.each(['error','success'],function(name){
-					if(name in opt){
-						var _raw=opt[name]
-						opt[name]=function(){
-							_raw.apply(null,arguments)
-							defaultOpt[name].apply(null,arguments)
-						}
-					}else
-						otp[name]=defaultOpt[name]
-				})
-			}else
-				opt=defaultOpt
-			Backbone.Model.prototype.sync.call(this,method,model,opt)
+			var p=new Promise
+			Backbone.Model.prototype.sync.call(this,method,model,this._promise(p, opt))
+			return p
+		},
+		destroy: function(opt){
+			var p=new Promise
+			Backbone.Model.prototype.destroy.call(this,this._promise(p,opt))
 			return p
 		}},{
 			collection:function(){
 				if(!this.Collection)
 					this.Collection=Backbone.Collection.extend({model:this})
 				return new this.Collection()
-			} 
+			}
 		});
 
 	_.extend(app,{// extend app schema
@@ -111,6 +121,17 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 				},
 				restoreCurrent:function(){
 					this.current(prevApp)
+				},
+				collection:function(){
+					if(!this.Collection){
+						this.Collection=Backbone.Collection.extend({model:this})
+						this.Collection.prototype.fetch=function(){
+							if(User.current()==null)
+								return Promise.as();
+							return Backbone.Collection.prototype.fetch.apply(this,arguments)
+						}
+					}
+					return new this.Collection()
 				}
 			}),
 		User: Model.extend({
@@ -213,22 +234,26 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		Schema: Model.extend({
 			className:'_schema',
 			urlRoot:'1/schemas',
-			defaults:{
-				fields:[
-					{name:'id'},
-					{name:'createdAt'},
-					{name:'updatedAt'},
-					{name:'ACL'}
-				]
+			addColumn:function(column){
+				var me=this
+				Backbone.sync('create',this, {
+					url:this.urlRoot+'/'+this.id+'/column',
+					attrs:column,
+					success:function(){
+						var fields=me.get('fields'), i=fields.length-3
+						fields.splice(i,0,column)
+						me.trigger('addColumn',column, i)
+					}
+				})
 			}
 		},{}),	
 		init: function(){
 			$.ajaxSetup({
 				dataType:'json',
 				beforeSend:function(xhr, settings){
-					var current=app.Application.current()
+					var current=Application.current()
 					xhr.setRequestHeader("X-Application-Id", 
-						current&&current.get('apiKey')||'aglub19hcHBfaWRyCgsSBF9hcHAYAQw');
+						current && current.get('apiKey')||'aglub19hcHBfaWRyCgsSBF9hcHAYAQw')
 				}
 			})
 			

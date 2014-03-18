@@ -10,7 +10,7 @@ import com.mobiengine.service.SchemaService.TYPES;
 
 @Path(Service.VERSION+"/roles")
 public class RoleService extends EntityService {
-	private final static String KIND="_role";
+	public final static String KIND="_role";
 	public RoleService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
 		super(request,appId, KIND);
 	}

@@ -14,7 +14,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -156,7 +155,7 @@ public class UserService extends EntityService{
 			
 			Entity user=getByName(name);
 			if(user==null)
-				return Response.status(Status.NOT_FOUND).build();
+				throw new RuntimeException("username or password is not correct.");
 			
 			MessageDigest digest;
 			try {
@@ -169,9 +168,7 @@ public class UserService extends EntityService{
 					user.removeProperty("password");
 					return Response.ok().entity(user).build();
 				}else
-					return Response.serverError()
-						.entity(new RuntimeException("username or password is not correct."))
-						.build();
+					throw new RuntimeException("username or password is not correct.");
 			} catch (NoSuchAlgorithmException e) {
 				return Response.serverError()
 					.entity(new RuntimeException("System error."))

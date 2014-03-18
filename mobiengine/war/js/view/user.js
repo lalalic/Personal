@@ -44,15 +44,11 @@ define(['UI','app'],function(View,app){
 			return false
 		},
 		signup: function(){
-			try{
-				var f=this.$('form#signup').get(0),
-					user=new User({username:f.username.value,password:f.password.value})
-				user.signUp().then(function(){
-					app.navigate('#app',{trigger:true,replace:true})
-				})
-			}catch(e){
-				console.error(e)
-			}
+			var f=this.$('form#signup').get(0),
+				user=new User({username:f.username.value,password:f.password.value})
+			user.signUp().then(function(){
+				app.navigate('app',{trigger:true,replace:true})
+			})
 			return false
 		},
 		password: function(){

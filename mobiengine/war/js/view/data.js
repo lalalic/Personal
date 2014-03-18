@@ -11,6 +11,18 @@ define(['app','UI'],function(app,View){
 			tagName:'table',
 			className:'data hidden',
 			template:function(){},
+			itemTemplate:function(item){
+				var tr=document.createElement('tr')
+				var fields=this.model.get('fields')
+				var tds=_.map(fields, function(field){
+					if(field.name=='password')
+						return ''
+					var value=item.get(field.name)
+					return "<td>"+(value||'&nbsp;')+"</td>"
+				})
+				$(tr).html('<td><input type="checkbox"></td>'+tds.join(''))
+				return tr
+			},
 			initialize:function(){
 				var clazz=this.model.get('name')
 				if(clazz in app)
@@ -19,21 +31,10 @@ define(['app','UI'],function(app,View){
 					this.collection=app.createKind(clazz).collection()
 					
 				ListPage.prototype.initialize.apply(this,arguments)
+				this.model.on('destroy',this.destroy,this)
 				this.$list.remove()
 				this.$list=this.$el
 				this.createHead()
-				this.itemTemplate=function(item){
-					var tr=document.createElement('tr')
-					var fields=this.model.get('fields')
-					var tds=_.map(fields, function(field){
-						if(field.name=='password')
-							return ''
-						var value=item.get(field.name)
-						return "<td>"+(value||'&nbsp;')+"</td>"
-					})
-					$(tr).html('<td><input type="checkbox"></td>'+tds.join(''))
-					return tr
-				}
 			},
 			show:function(){
 				this.$el.show().siblings('table').hide()
@@ -43,32 +44,79 @@ define(['app','UI'],function(app,View){
 				this.collection.fetch()
 			},
 			createHead:function(){
-				var colgroup=$(document.createElement('colgroup')).appendTo(this.el)
-				var tr=$(document.createElement('tr')).appendTo(this.el)
-				tr.append('<td><input type="checkbox"></td>')
-				_.each(this.model.get('fields'),function(field){
-					if(field.name=='password')
-						return
-					var th=document.createElement('th')
-					tr.append($(th).text(field.name))
-					colgroup.append('<col/>')
-				})
+				this.thead=$(document.createElement('tr')).appendTo(this.el)
+					.append('<td style="width:1px"><input type="checkbox"></td>')
+				_.each(this.model.get('fields'),this.appendField,this)
+				this.model.on('addColumn',_.bind(this.newField,this))
+			},
+			newField: function(field){
+				if(field.name=='password')
+					return
+				var th=document.createElement('th')
+				$(th).text(field.name).insertBefore(this.newFieldTh)
+				return field
+			},
+			appendField: function(field){
+				if(field.name=='password')
+					return
+				var th=document.createElement('th')
+				this.thead.append($(th).text(field.name))
+				if(field.name=='createdAt')
+					this.newFieldTh=th
+				return field
+			},
+			destroy: function(){
+				var me=this, args=arguments
+				return this.model.destroy()
+					.then(function(){
+						ListPage.prototype.destroy.apply(me,args)
+					})
 			}
-		});
+		}),
+		columnUI=new (View.Popup.extend({
+			model:{},
+			className:'form',
+			template:_.template($("#tmplColumnUI").html()),
+			events:{
+				"click button.cancel":'close',
+				"click button.create":'create',
+				'change input[name]':'change'
+			},
+			render: function(){
+				this.$el.html(this.template({}));
+				return this
+			},
+			show: function(){
+				this.$('input[name]').val('')
+				return View.Popup.prototype.show.apply(this,arguments)
+			},
+			change: function(e){
+				var el=e.target
+				this.model[el.name]=el.value
+				return this
+			},
+			create: function(){
+				current.model.addColumn(this.model)
+				this.model={}
+			}
+		}));
 	return new (ListPage.extend({
 		newID:0,
 		title:text('Data Browser'),
-		cmds:'<a><span class="icon plus"/>row</a>\
-			<a><span class="icon remove"/>row</a>',
+		cmds:'<a class="row"><span class="icon plus"/>row</a>\
+			<a class="row"><span class="icon remove"/>row</a>\
+			<a class="column"><span class="icon plus"/>column</a>\
+			<a class="table"><span class="icon remove"/>table</a>',
 		events:_.extend({},ListPage.prototype.events,{
-
+			"click a.column":'onNewColumn',
+			"click a.table": 'onRemoveTable'
 		}),
 		initialize:function(){
 			this.collection=Schema.collection()
 			ListPage.prototype.initialize.apply(this,arguments)
 			this.$tables=$('<nav data-control="groupbar"></nav>').insertBefore(this.$('article'))
 			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
-				.click(_.bind(this.newTable,this))
+				.click(_.bind(this.onNewTable,this))
 			this.$list=this.$('article')
 			Application.all.on('current',this.changeApp,this)
 			this.changeApp()
@@ -83,22 +131,42 @@ define(['app','UI'],function(app,View){
 				$a=$('<a/>')
 					.text(model.get('name'))
 					.insertBefore(this.$createTable)
-					.click(function(){
-						current=table
-						$(this).addClass('active')
-							.siblings('.active').removeClass('active')
-						table.show()
-					})
+					.click(this.onSwitchTable(table))
 			
 			this.$list.append(table.el)
 			if(current==null || model.isNew())
 				$a.click()
 		},
-		newTable:function(){
-			var table=new Schema(), 
-				name='table'+(this.newID++)
-			table.set('name',name)
-			this.collection.add(table)
+		onSwitchTable:function(table){
+			var me=this
+			return function(){
+				current=table
+				me.model=current.model
+				$(this).addClass('active')
+					.siblings('.active').removeClass('active')
+				table.show()
+			}
+		},
+		onNewTable:function(){
+			var me=this,table=new Schema()
+			prompt(text('please input the table name'),'table'+(this.newID++))
+				.then(function(name){
+					table.set('name',name)
+					table.save().then(function(){
+						me.collection.add(table)
+					})
+				})
+		},
+		onNewColumn: function(){
+			columnUI.show()
+		},
+		onRemoveTable: function(){
+			current.destroy()
+			.then(function(){
+				var theA=this.$tables.find('a.active')
+				theA.nearest('a').click()
+				theA.remvoe()
+			})
 		}
 	}))
 })

@@ -24,7 +24,6 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -35,6 +34,9 @@ import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
 	public static final String VERSION="1";
+	static{
+		ApplicationService.initSystem();
+	}
 	
 	Schema schema;
 	HttpSession session;
@@ -59,22 +61,18 @@ public class Service{
 	}
 	
 	protected void initService(){
-		if(this.appId==null)
-			throw new RuntimeException("No X-Application-Id in header");
-		
-		try {
-			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
-		} catch (EntityNotFoundException e) {
-			throw new RuntimeException("No this Application");
-		}
-		
-		if (NamespaceManager.get() == null)
-			NamespaceManager.set(Long.toString(KeyFactory.stringToKey(this.appId).getId()));
-		schema = Schema.get(this.appId);
 		Object userid=session.getAttribute("userid");
 		if(userid!=null){
 			userId=(Long)userid;
 			userName=(String)session.getAttribute("username");
+		}
+		
+		try {
+			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
+			NamespaceManager.set(Long.toString(KeyFactory.stringToKey(this.appId).getId()));
+			schema = Schema.get(this.appId);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	
@@ -185,7 +183,7 @@ public class Service{
 		cloud=new Cloud(engine);
 		engine.put("Cloud",cloud);
 		try {
-			if(!app.hasProperty("cloudCode"))
+			if(app.hasProperty("cloudCode"))
 				engine.eval(app.getProperty("cloudCode").toString());
 		} catch (ScriptException e) {
 			

@@ -1,4 +1,4 @@
-define(['app',"jQuery"],function(app, $){
+define(['app',"jQuery","Promise"],function(app, $, Promise){
 	$('body').append("<style>\
 		body,section,aside{overflow:hidden}\
 		nav img{width:32px;height:32px}\
@@ -20,17 +20,19 @@ define(['app',"jQuery"],function(app, $){
 		.tag:empty{visibility:hidden!important}\
 		.primary{background-color:red!important}\
 		</style>")
-		
-	$(document).on('ajaxSend',function(){
+	
+	$(document).ajaxSend(function(){
 		var a=$('section.show span.refresh').parent().addClass('doing')
 		$(document).one('ajaxComplete',function(){
 			a.removeClass('doing')
 		})
+	}).ajaxError(function(event, jqXHR, ajaxSettings, statusText){
+		alert(jqXHR.responseText)
 	})
-	var User=app.User
-	var currentPage={section:null,aside:null}
+	
+	var User=app.User,
+		currentPage={section:null,aside:null},
 		Page=Backbone.View.extend({
-			clazz:'Page',
 			tagName:'section',
 			title:app.title,
 			navs:'<a><span class="icon left-sign back"/></a>\
@@ -66,7 +68,7 @@ define(['app',"jQuery"],function(app, $){
 				if(currentPage[this.tagName]==this)
 					return this
 				currentPage[this.tagName] && currentPage[this.tagName].hide()
-				this.$el.addClass('show')
+				this.$el.appendTo('body').addClass('show')
 					.one('webkitAnimationEnd animationend',function(){
 						$(this).data('direction','')
 					}).data('direction','in')
@@ -80,6 +82,7 @@ define(['app',"jQuery"],function(app, $){
 			hide: function(){
 				this.clear()
 				this.$el.removeClass('show')
+				this.$el.detach()
 				return this
 			},
 			clear: function(){
@@ -101,7 +104,6 @@ define(['app',"jQuery"],function(app, $){
 			},
 			signout: function(){
 				User.logOut()
-				app.clear4User()
 				this.reload()
 				return false
 			},
@@ -203,10 +205,6 @@ define(['app',"jQuery"],function(app, $){
 				this.collection.query=q;
 				this.refresh()
 				return this
-			},
-			clear: function(){
-				//this.$list.children().hide()
-				return Page.prototype.clear.apply(this,arguments)
 			}
 		}),
 		FormPage=Page.extend({
@@ -255,7 +253,56 @@ define(['app',"jQuery"],function(app, $){
 			setDefault: function(){
 				return this
 			}
-		})
+		}),
+		Popup=Backbone.View.extend({
+			container:$('<div class="window confirm show"/>').appendTo($('<div class="notification show"></div>')),
+			initialize:function(){
+				Backbone.View.prototype.initialize.apply(this,arguments)
+				return this.render()
+			},
+			render:function(){
+				this.template && this.$el.append(this.template(this))
+				this.content && this.$el.append(this.content)
+				return this
+			},
+			show: function(){
+				this.container.append(this.el)
+					.parent().appendTo('body')
+			},
+			close: function(){
+				this.$el.detach()
+				this.container.parent().detach()
+			}
+		}),
+		Prompt=new (Popup.extend({
+			events:{
+				'click button.ok':'onOK',
+				'click button.cancel':'onCancel'
+			},
+			content:'<h1>title here</h1><div class="form"><input type="text"></div><div><button class="ok">OK</button><button class="cancel">Cancel</button></div>',
+			show:function(title,value){
+				Popup.prototype.show.apply(this,arguments)
+				title && this.$('h1').html(title)
+				value && this.$('input').val(value)
+				return (this.value=new Promise())
+			},
+			onOK:function(){
+				this.value.resolve(this.$('input').val())
+				this.reset()
+			},
+			onCancel:function(){
+				this.value.reject()
+				this.reset()
+			},
+			reset:function(){
+				this.$('h1').html('')
+				this.$('input').val('')
+				this.close()
+			}
+		}))
+	window.prompt=function(title,defaultValue){
+		return Prompt.show(title)
+	}
 	
-	return {Page:Page,FormPage:FormPage,ListPage:ListPage}
+	return {Page:Page,FormPage:FormPage,ListPage:ListPage,Popup:Popup}
 })

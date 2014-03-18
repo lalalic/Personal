@@ -43,6 +43,16 @@
 	</form>
 </script>
 
+<script type="text/tmpl" id="tmplCheckable">
+<span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
+	<span>{{title}}</span>
+	<%_.each(options,function(o){with(o){%>
+	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get('name')}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
+	<%}})%>
+</span>
+</script>
+
 <script type="text/tmpl" id="tmplApp">
 	<form >
 		<fieldset>
@@ -53,7 +63,7 @@
 		</fieldset>
 		<fieldset>
 			<label>{{text('Applicaiton Key')}}:</label>
-			<input type="text" name="apiKey">
+			<input type="text" name="apiKey" readonly="readonly">
 		</fieldset>
 	</form>
 </script>
@@ -69,19 +79,31 @@
 		<li><a href="#settings" class="settings">{{text('Settings')}}</a></li>
 	</ul>
 </script>
-<script type="text/tmpl" id="tmplTable">
-	<colgroup>
-		<col/>
-		<%_.each(model.get('fields'),function(field){with(field){if(field.name!='password'){%>
-		<col/>
-		<%}}})%>
-	</colgroup>
-	<tr>
-		<td><input type="checkbox"></td>
-		<%_.each(model.get('fields'),function(field){with(field){if(field.name!='password'){%>
-		<th>{{name}}</th>		
-		<%}}})%>
-	</tr>
+
+<script type="text/tmpl" id="tmplColumnUI">
+	<fieldset>
+		<input placeholder="{{text('name')}}" name="name" type="text">
+		{{_.template('#tmplCheckable',({title:text('Data Type'), type:'radio', name: 'type', options:DATATYPE}))}}
+	</fieldset>	
+	<button class="anchor create">{{text('Create Column')}}</button>
+	<button class="anchor cancel">cancel</button>
+</script>
+
+<script type="text/tmpl" id="tmplEmpty">
+	<div class="empty">
+		<span class="icon {{type}}"></span>
+		<strong>{{title}}</strong>
+		<small>{{description}}</small>
+		<div>{{action}}</div>
+	</div>
+</script>
+
+<script type="text/tmpl" id="tmplNoApp">
+	{{_.template($('#tmplEmpty').html())({
+				type:'user',
+				title:text('App Empty'),
+				description:text('Signin and create your first app'),
+				action:'<button class="anchor">signin</button>'})}}
 </script>
 </body>
 </html>

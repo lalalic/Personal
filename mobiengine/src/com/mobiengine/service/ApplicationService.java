@@ -2,7 +2,6 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -22,20 +21,27 @@ import org.codehaus.jettison.json.JSONObject;
 
 import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
 import com.mobiengine.service.SchemaService.Schema;
 import com.mobiengine.service.SchemaService.TYPES;
 
 @Path(Service.VERSION+"/apps")
 public class ApplicationService extends EntityService {
+	private static String TOP_NAMESPACE=null;
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
 	
 	public ApplicationService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
 		super(request,appId, KIND);
+	}
+	
+	@Override
+	protected void initService(){
+		super.initService();
+		NamespaceManager.set(TOP_NAMESPACE);
 	}
 	
 	@POST
@@ -49,18 +55,30 @@ public class ApplicationService extends EntityService {
 		return Response.ok().build();
 	}
 	
-	
 	@Override
 	public void beforeCreate(Entity app, JSONObject request){
-		if(this.userId!=0){
-			app.setProperty("author", this.userId);
-			app.setUnindexedProperty("authorName", this.userName);
+		app.setProperty("author", this.userId);
+		app.setUnindexedProperty("authorName", this.userName);
+		try {
+			app.setProperty("name", request.getString("name"));
+			app.setProperty("url", request.getString("url"));
+		} catch (JSONException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+	
+	@Override 
+	public void beforeUpdate(Entity app, JSONObject request){
+		try {
+			app.setProperty("name", request.getString("name"));
+			app.setProperty("url", request.getString("url"));
+		} catch (JSONException e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	
 	@Override
 	public void afterCreate(Entity app,JSONObject response){
-		String _namespace=NamespaceManager.get();
 		try{
 			NamespaceManager.set(app.getKey().getId()+"");
 			List<Entity> defaults=new ArrayList<Entity>(); 
@@ -72,7 +90,7 @@ public class ApplicationService extends EntityService {
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage());
 		}finally{
-			NamespaceManager.set(_namespace);	
+			NamespaceManager.set(TOP_NAMESPACE);	
 		}
 	}
 	
@@ -120,46 +138,40 @@ public class ApplicationService extends EntityService {
 				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false),
 				SchemaService.makeFieldSchema("cloudCode", TYPES.File, false, false));
 	}
-	
-	@Path(Service.VERSION+"/init")
-	public static class InitOnce{
-		@GET
-		public Response initSystem(){
-			try {
-				ApplicationService service=new ApplicationService(null,null){
-					@Override 
-					protected void initService(){
-						this.schema=new Schema(){
-							@SuppressWarnings("unchecked")
-							protected void retrieve(){
-								Entity schema=makeSchema();
-								TreeMap<String,EmbeddedEntity> fields=new TreeMap<String,EmbeddedEntity>();
-								for(EmbeddedEntity field: (List<EmbeddedEntity>)schema.getProperty("fields"))
-									fields.put(field.getProperty("name").toString(), field);
-								this.types.put("_app",fields);
-							}
-						};
-					}
-					
-					@Override 
-					protected void makeDefaultSchema(List<Entity> schemas){
-						schemas.add(makeSchema());
-					}
-					
-					@Override
-					protected String getUrlRoot(){
-						return "";
-					}
-					
-				};
-				JSONObject ob=new JSONObject();
-				ob.put("name", MAIN_APP);
-				ob.put("url", "www");
-				return service.create(ob);
-			} catch (JSONException e) {
-				return Response.serverError()
-					.entity(e).build();
-			}
+
+	// initialize the whole system
+	static void initSystem(){
+		NamespaceManager.set(null);
+		Entity www=DatastoreServiceFactory.getDatastoreService()
+			.prepare(new Query(KIND))
+			.asSingleEntity();
+		if(www!=null){
+			TOP_NAMESPACE=www.getKey().getId()+"";
+			return;
+		}
+		
+		try {
+			ApplicationService service=new ApplicationService(null,null){
+				@Override 
+				protected void initService(){
+					this.schema=new Schema(){
+						protected void retrieve(){}
+					};
+				}
+				
+				@Override
+				public void afterCreate(Entity app,JSONObject response){
+					super.afterCreate(app, response);
+					TOP_NAMESPACE=app.getKey().getId()+"";
+				}
+				
+			};
+			JSONObject ob=new JSONObject();
+			ob.put("name", MAIN_APP);
+			ob.put("url", MAIN_APP);
+			service.create(ob);
+		} catch (JSONException e) {
+			
 		}
 	}
 }

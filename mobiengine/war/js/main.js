@@ -134,7 +134,7 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 			}).resize()
 			
 			require(['view/splash','i18n!nls/all'].add('Plugin!',plugins),function(splash,i18n){
-				window.text=function(a){return  ((a=a.toLowerCase()) in i18n) ? i18n[a] : (i18n[a]=a)}
+				window.text=function(a, b){return  ((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)}
 				document.title=text(document.title)
 				splash.show()
 				var _start=function(){
@@ -159,6 +159,9 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 					require([view],function(page){page.show.apply(page,args)})
 				}
 			})
+		},
+		navigate:function(url, opt){
+			router.navigate(url, opt)
 		}
 	},Backbone.Events);
 	
