@@ -30,6 +30,9 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 		alert(jqXHR.responseText)
 	})
 	
+	Backbone.View.prototype._class=function(){
+		return this.__proto__.constructor
+	}
 	var User=app.User,
 		currentPage={section:null,aside:null},
 		Page=Backbone.View.extend({
@@ -41,18 +44,22 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				<a class="on-right"><span class="icon refresh"/></a>',
 			content:'Loading...',
 			cmds:'',
-			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header><article class="active scroll">{{content}}</article><footer><nav>{{cmds}}</nav></footer>'),
+			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header>\
+				<article class="active scroll">{{content}}</article>\
+				<footer><nav>{{cmds}}</nav></footer>'),
 			events:{'click header .refresh': 'refresh',
 				'click header .back':'back', 
 				'click header .user':'user',
 				'click .signout': 'signout'},
 			initialize: function(){
 				this.$el.data('transition','slide')
+				this.render()
+			},
+			render: function(){
 				$(document.body).append(this.$el.html(this.template(this)))
-				if(!this.cmds)
-					this.$('footer').hide()
-				if(!this.navs)
-					this.$('header').hide()
+				!this.cmds && this.$('footer').hide()
+				!this.navs && this.$('header').hide()
+				return this
 			},
 			loading: function(a){
 				this.$('span.refresh').parent()[a===false?'removeClass':'addClass']('doing')
@@ -67,7 +74,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			show: function(){
 				if(currentPage[this.tagName]==this)
 					return this
-				currentPage[this.tagName] && currentPage[this.tagName].hide()
+				currentPage[this.tagName] && currentPage[this.tagName].close()
 				this.$el.appendTo('body').addClass('show')
 					.one('webkitAnimationEnd animationend',function(){
 						$(this).data('direction','')
@@ -79,11 +86,14 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				this.$el.find('header .home,header .back')[(location.hash==''||location.hash=='#') ? 'hide' : 'show']()
 				return this
 			},
-			hide: function(){
+			close: function(){
 				this.clear()
 				this.$el.removeClass('show')
 				this.$el.detach()
 				return this
+			},
+			hide: function(){
+				return this.close()
 			},
 			clear: function(){
 				return this
@@ -170,13 +180,13 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				this.$list=this.$('ul.list')
 				if(_.isString(this.itemTemplate))
 					this.itemTemplate=_.template(this.itemTemplate)
-				this.collection.on('reset',this.render, this)
+				this.collection.on('reset',this.renderAllItems, this)
 				this.collection.on('add', this.addOne, this)
 				this.collection.on('remove', this.removeOne, this)
 				this.collection.on('change', this.changeOne, this)
 				this.refresh()
 			},
-			render:function(){
+			renderAllItems:function(){
 				this.$list.empty()
 				this.collection.each(this.addOne,this)
 				return this
@@ -194,10 +204,10 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				return this
 			},
 			refresh: function(){
-				this.collection && this.collection.fetch()
+				this.collection && this.collection.fetch({reset:true})
 				return this
 			},
-			setQuery: function(q){
+			setQuery: function(q){//deprecated for parse
 				if(_.isEqual(this.collection.query,q)){
 					this.$list.children().show()
 					return this
@@ -211,30 +221,30 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			content:'<form/>',
 			events:_.extend({},Page.prototype.events,{
 				'change form *[name]':'change',
-				'submit form':'save'
+				'submit form':'__submit'
 			}),
 			initialize:function(){
 				Page.prototype.initialize.apply(this,arguments)
 				this.$('form').attr('id',this.cid+'form')
 				this.$('button[type=submit]').attr('form',this.cid+'form')
-			},
-			show: function(){
-				Page.prototype.show.apply(this,arguments)
-				this.render()
-				return this
+				this.setModel(this.model)
 			},
 			change: function(e){
 				var el=e.target
 				this.model.set(el.name,el.value)
 				return this
 			},
-			save: function(){
-				var isUpdate=this.model.id, me=this
-				this.model.save()
-					.then(function(m){
-						me[isUpdate?'onChanged':'onAdded'](m)
-					})
+			__submit: function(){
+				this.save()
 				return false
+			},
+			save: function(){
+				var isUpdate=!this.model.isNew()
+				this.model.save()
+				.then(_.bind(function(m){
+					this[isUpdate?'onChanged':'onAdded'](m)
+				},this))
+				return this
 			},
 			clear: function(){
 				this.$('form').get(0).reset()
@@ -249,6 +259,17 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			},
 			onChanged: function(m){
 				m.trigger('change',m)
+			},
+			setModel: function(model){
+				if(this.model==model)
+					return this;
+				this.clear()
+				this.model=model
+				model && this.$('form *[name]').each(function(){
+					model.has(this.name) &&
+						$(this).val(model.get(this.name))
+				})
+				return this
 			},
 			setDefault: function(){
 				return this

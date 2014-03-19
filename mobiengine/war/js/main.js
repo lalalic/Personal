@@ -107,7 +107,7 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 		  };
 		
 		var _template=_.template, templates={}
-		_.template=function(text,data,setting){
+		_.template=function(text,data,setting){//make template support id selector
 			if(text.charAt(0)=='#'){
 				var name=text.substr(1);
 				if(!(name in templates)){

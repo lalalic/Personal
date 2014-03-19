@@ -93,18 +93,21 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		},
 		Application: Model.extend({
 				className:'_app',
-				urlRoot:'1/apps'
+				urlRoot:'1/apps',
+				saveCloudCode: function(){
+					this.hasChanged('cloudCode') && 
+					Backbone.sync('create',this, {
+						url:this.urlRoot+'/cloudcode',
+						attrs:{cloudCode: this.get('cloudCode')}
+					})
+				}
 			},{
 				current:function(m){
 					switch(m){
 					case undefined:
-						var app=localStorage.getItem('currentApp')
-						if(app!=null){
-							if(currentApp==null)
-								currentApp=Application.all.get(parseInt(app))
+						if(currentApp!=null)
 							return currentApp
-						}else
-							return null
+						return (m=localStorage.getItem('currentApp')) && (m=Application.all.get(parseInt(m))) &&  this.current(m) || null
 					case null:
 						prevApp=currentApp
 						localStorage.removeItem('currentApp')

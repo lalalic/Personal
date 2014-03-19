@@ -18,10 +18,11 @@ define(['UI','app'],function(View,app){
 			return this
 		},
 		render: function(){
+			ListPage.prototype.render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
 				.append('<li class="create thumb"><a href="#app"><span class="icon plus"/></a></li>')
 				.append('<li class="thumb"><a href="javascript:void"><span class="icon signout"/></a></li>')			
-			return ListPage.prototype.render.apply(this,arguments)
+			return this
 		},
 		onCreate:function(){
 			Application.current(null)

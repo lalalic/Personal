@@ -5,23 +5,17 @@ define(['app','UI'],function(app,View){
 		title:text('Cloud Code'),
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
 		content:"<form><fieldset><textarea name='cloudCode' placeholder='write your cloud code'></textarea></fieldset></form>",
-		show: function(){
-			this.model=Application.current()
-			FormPage.prototype.show.apply(this,arguments)
+		initialize:function(){
+			FormPage.prototype.initialize.apply(this,arguments)
+			Application.all.on('current',this.setModel,this)
 		},
-		render:function(){
-			var f=this.$('form').get(0)
-			f.reset()
-			if(this.model.has('cloudCode'))
-				f.cloudCode.value=this.model.get('cloudCode')
+		show: function(){
+			this.setModel(Application.current())
+			return FormPage.prototype.show.apply(this,arguments)
 		},
 		save: function(){
-			try{
-				$.post('1/apps/cloudcode',{cloudcode:this.model.get('cloudCode')})
-			}catch(error){
-				
-			}
-			return false
+			this.model.saveCloudCode()
+			return this
 		}
 	}))
 })

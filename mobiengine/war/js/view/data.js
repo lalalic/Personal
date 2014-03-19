@@ -119,12 +119,18 @@ define(['app','UI'],function(app,View){
 				.click(_.bind(this.onNewTable,this))
 			this.$list=this.$('article')
 			Application.all.on('current',this.changeApp,this)
-			this.changeApp()
 		},
-		changeApp:function(){
+		changeApp:function(m){
+			if(this.app==m)
+				return
+			this.app=m
 			this.$createTable.siblings().remove()
 			this.$list.empty()
-			this.collection.fetch()
+			this.collection.fetch({reset:true})
+		},
+		show: function(){
+			this.changeApp(Application.current())
+			return ListPage.prototype.show.apply(this,arguments)
 		},
 		addOne:function(model){
 			var table=new Table({model:model}), 
