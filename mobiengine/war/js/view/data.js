@@ -102,6 +102,7 @@ define(['app','UI'],function(app,View){
 		}));
 	return new (ListPage.extend({
 		newID:0,
+		collection:Schema.collection(),
 		title:text('Data Browser'),
 		cmds:'<a class="row"><span class="icon plus"/>row</a>\
 			<a class="row"><span class="icon remove"/>row</a>\
@@ -112,7 +113,6 @@ define(['app','UI'],function(app,View){
 			"click a.table": 'onRemoveTable'
 		}),
 		initialize:function(){
-			this.collection=Schema.collection()
 			ListPage.prototype.initialize.apply(this,arguments)
 			this.$tables=$('<nav data-control="groupbar"></nav>').insertBefore(this.$('article'))
 			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
@@ -126,7 +126,7 @@ define(['app','UI'],function(app,View){
 			this.app=m
 			this.$createTable.siblings().remove()
 			this.$list.empty()
-			this.collection.fetch({reset:true})
+			this.collection.fetch()
 		},
 		show: function(){
 			this.changeApp(Application.current())

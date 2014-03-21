@@ -83,7 +83,11 @@
 <script type="text/tmpl" id="tmplColumnUI">
 	<fieldset>
 		<input placeholder="{{text('name')}}" name="name" type="text">
-		{{_.template('#tmplCheckable',({title:text('Data Type'), type:'radio', name: 'type', options:DATATYPE}))}}
+		<select name="type">
+			<%_.each(DATATYPE,function(o){%> 
+			<option value="{{o}}">{{o}}</option>"
+			<%})%>
+		</select>
 	</fieldset>	
 	<button class="anchor create">{{text('Create Column')}}</button>
 	<button class="anchor cancel">cancel</button>

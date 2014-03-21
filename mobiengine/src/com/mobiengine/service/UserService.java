@@ -135,7 +135,7 @@ public class UserService extends EntityService{
 			} catch (EntityNotFoundException e) {
 				
 			}
-			throw new RuntimeException("Don't hack me");
+			throw new RuntimeException("Your session has already been expired.");
 		}
 	}
 	@Path(Service.VERSION+"/login")

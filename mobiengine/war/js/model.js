@@ -9,6 +9,9 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 				return this.model.Collection.prototype.url=(new this.model()).urlRoot()
 		}
 	}
+	Backbone.Collection.prototype.parse=function(response){
+		return response.results
+	}
 	var Model=Backbone.Model.extend({
 		version:'1',
 		className:'_unknown',
@@ -265,7 +268,8 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			return user ? Promise.when([this.init4User(user)]) : Promise.as()
 		},
 		init4User: function(user){
-			return user.verify().then(_.bind(function(){
+			return user.verify()
+			.then(_.bind(function(){
 				return this.Application.all.fetch()
 					.then(function(){
 						app.Application.current(app.Application.all.first())

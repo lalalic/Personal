@@ -2,9 +2,11 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -30,7 +32,7 @@ import com.mobiengine.service.SchemaService.TYPES;
 
 @Path(Service.VERSION+"/apps")
 public class ApplicationService extends EntityService {
-	private static String TOP_NAMESPACE=null;
+	public static String TOP_NAMESPACE=null;
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
 	
@@ -114,7 +116,12 @@ public class ApplicationService extends EntityService {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response get(@QueryParam("where") JSONObject ob) {
+	public Response get(@QueryParam("where") JSONObject ob, 
+			@QueryParam("order") String order, 
+			@QueryParam("limit") @DefaultValue("-1") int limit, 
+			@QueryParam("skip") @DefaultValue("0") int skip,
+			@QueryParam("keys") String keys,
+			@QueryParam("count") boolean count){
 		if(ob==null)
 			ob=new JSONObject();
 		try {
@@ -122,9 +129,9 @@ public class ApplicationService extends EntityService {
 		} catch (JSONException ex) {
 			throw new RuntimeException(ex.getMessage());
 		}
-		Response r=super.get(ob);
+		Response r=super.get(ob, order, limit, skip, keys, count);
 		@SuppressWarnings("unchecked")
-		List<Entity> apps=(List<Entity>)r.getEntity();
+		List<Entity> apps=(List<Entity>)((Map<String,Object>)r.getEntity()).get("results");
 		for(Entity app : apps)
 			app.setProperty("apiKey", getApiKey(app));
 		return r;

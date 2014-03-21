@@ -57,17 +57,18 @@ public class Service{
 		}
 		this.appId = appId;
 		this.kind = kind;
-		initService();
-	}
-	
-	protected void initService(){
 		Object userid=session.getAttribute("userid");
 		if(userid!=null){
 			userId=(Long)userid;
 			userName=(String)session.getAttribute("username");
 		}
 		
+		initService();
+	}
+	
+	protected void initService(){
 		try {
+			NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
 			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
 			NamespaceManager.set(Long.toString(KeyFactory.stringToKey(this.appId).getId()));
 			schema = Schema.get(this.appId);

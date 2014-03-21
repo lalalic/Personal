@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.codehaus.jettison.json.JSONString;
 
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.EmbeddedEntity;
@@ -145,7 +144,6 @@ public class SchemaService extends EntityService{
 		//how to drop a table
 	}
 	
-	enum TYPES{String, Integer, Float, Boolean, Date, File, GeoPoint, Array, Object, Pointer}
 	public static class Schema{
 		protected TreeMap<String,TreeMap<String, EmbeddedEntity>> types=new TreeMap<String,TreeMap<String, EmbeddedEntity>>();
 		Schema(){
@@ -200,51 +198,65 @@ public class SchemaService extends EntityService{
 						entity.removeProperty(key);
 					continue;
 				}
+				TYPES type=TYPES.valueOf((String)schema.getProperty("type"));
+				
+				if((value instanceof JSONObject) && ((JSONObject)value).has(_OP)){
+					JSONObject info=(JSONObject)value;
+					OP op=OP.valueOf(info.getString(_OP));
+					value=op.eval(type, entity, key, info);
+				}else
+					value=type.asEntityValue(value);
 				
 				if(schema.hasProperty("unique")){
 					int count=exists(kind,key,value);
 					if((isNew && count>0) || (!isNew && count>1))
 						throw new RuntimeException(value+" already exits in "+kind);
 				}
+				
 				if(schema.hasProperty("unindex"))
 					entity.setUnindexedProperty(key, value);
 				else
 					entity.setProperty(key, value);
+				
 			}
 		}
 		
 		@SuppressWarnings({ "rawtypes", "deprecation" })
 		public void populate(Query query, JSONObject ob) throws Exception{
+			String kind=query.getKind();
+			if(KIND.equals(kind) || ApplicationService.KIND.equals(kind))//_schema kind is for internal only
+				return;
+			TreeMap<String, EmbeddedEntity> fields=types.get(kind);
+			if(fields==null)
+				throw new RuntimeException(kind+" is not defined as a type");
+			
 			Iterator it=ob.keys();
 			while(it.hasNext()){
 				String name=it.next().toString();
 				Object value=ob.get(name);
-				if(value instanceof JSONObject){
-					Iterator it1=((JSONObject)value).keys();
-					while(it1.hasNext()){
-						String op=it1.next().toString();
-						query.addFilter(name, FilterOperator.valueOf(op), ((JSONObject)value).get(op));
-					}
-				}else if(value instanceof JSONString){
-					query.addFilter(name, FilterOperator.EQUAL, value.toString());
-				}else if(value instanceof JSONArray){
-					query.addFilter(name, FilterOperator.IN, toArray((JSONArray)value));
-				}else if("_orderBy".equalsIgnoreCase(name)){
+				if("_orderBy".equalsIgnoreCase(name)){
 					String field=value.toString();
 					if(field.startsWith("-"))
 						query.addSort(field.substring(1),SortDirection.DESCENDING);
 					else
 						query.addSort(field, SortDirection.ASCENDING);
-				}else
-					query.addFilter(name, FilterOperator.EQUAL, value);
+					continue;
+				}
+				
+				EmbeddedEntity schema=fields.get(name);
+				if(schema==null)
+					continue;
+				TYPES type=TYPES.valueOf((String)schema.getProperty("type"));
+				
+				if(value instanceof JSONObject){
+					Iterator it1=((JSONObject)value).keys();
+					while(it1.hasNext()){
+						String op=it1.next().toString();
+						query.addFilter(name, FilterOperator.valueOf(op), type.asEntityValue(((JSONObject)value).get(op)));
+					}
+				}else 
+					query.addFilter(name, FilterOperator.EQUAL, type.asEntityValue(value));
 			}
-		}
-		
-		private Object[] toArray(JSONArray ob) throws Exception{
-			Object[] data = new Object[ob.length()];
-			for(int i=0,len=data.length; i<len; i++)
-				data[i]=ob.get(i);
-			return data;
 		}
 		
 		public static synchronized Schema get(String appKey){
@@ -254,4 +266,139 @@ public class SchemaService extends EntityService{
 			return schemas.get(appKey);
 		}
 	}	
+	
+	enum TYPES{
+		String, Integer, Float, 
+		Boolean{
+			 
+		},
+		Date{
+			@Override
+			Object asEntityValue(Object value){
+				return null;
+			}
+		}, 
+		File, 
+		GeoPoint{
+			@Override
+			Object asEntityValue(Object value){
+				return null;
+			}
+		}, 
+		Array{
+			@Override
+			Object asEntityValue(Object value){
+				return null;
+			}
+		}, 
+		Object{
+			@Override
+			Object asEntityValue(Object value){
+				return null;
+			}
+		}, 
+		Pointer{
+			
+		};
+		
+		Object asEntityValue(Object value){
+			return value;
+		}
+	}
+	
+	static final String _OP="__op";
+	
+	enum OP{
+		Increment{
+
+			@Override
+			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
+				if(TYPE!=TYPES.Integer)
+					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+				int amount = op.getInt("amount");
+				if(entity.hasProperty(key))
+					return ((Integer)entity.getProperty(key))+amount;
+				else
+					return amount;
+			}},
+		Add{
+
+			@Override
+			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
+				if(TYPE!=TYPES.Array)
+					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+				Object[] value=(Object[])entity.getProperty(key);
+				JSONArray objects=op.getJSONArray("objects");
+				if(objects==null || objects.length()==0)
+					return value;
+				
+				Object[] result;
+				int i=0;
+				if(value==null)
+					result=new Object[objects.length()];
+				else{
+					result=new Object[value.length+objects.length()];
+					for(Object a : value)
+						result[i++]=a;
+				}
+				for(int l=0; l<objects.length(); l++)
+					result[i++]=objects.get(l);
+				
+				return result;
+			}},
+		AddUnique{
+
+			@Override
+			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op) throws Exception{
+				if(TYPE!=TYPES.Array)
+					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+				Object[] value=(Object[])entity.getProperty(key);
+				JSONArray objects=op.getJSONArray("objects");
+				if(objects==null || objects.length()==0)
+					return value;
+				
+				Object[] result;
+				int i=0;
+				if(value==null)
+					result=new Object[objects.length()];
+				else{
+					result=new Object[value.length+objects.length()];
+					for(Object a : value)
+						result[i++]=a;
+				}
+				for(int l=0; l<objects.length(); l++)
+					result[i++]=objects.get(l);
+				
+				return result;
+				
+			}},
+		Remove{
+
+			@Override
+			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op) throws Exception{
+				if(TYPE!=TYPES.Array)
+					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+				Object[] value=(Object[])entity.getProperty(key);
+				JSONArray objects=op.getJSONArray("objects");
+				if(objects==null || objects.length()==0)
+					return value;
+				
+				Object[] result;
+				int i=0;
+				if(value==null)
+					result=new Object[objects.length()];
+				else{
+					result=new Object[value.length+objects.length()];
+					for(Object a : value)
+						result[i++]=a;
+				}
+				for(int l=0; l<objects.length(); l++)
+					result[i++]=objects.get(l);
+				
+				return result;
+			}
+			
+		};
+		abstract Object eval(TYPES TYPE, Entity entity, String key, JSONObject op) throws Exception;
+	}
 }

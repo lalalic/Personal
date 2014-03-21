@@ -1,11 +1,13 @@
 package com.mobiengine.service;
 
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -28,6 +30,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.SortDirection;
 
 @Path(Service.VERSION+"/classes/{kind:\\w+}")
 public class EntityService extends Service{
@@ -59,7 +62,7 @@ public class EntityService extends Service{
 
 			return Response
 					.ok()
-					.header("Location",	this.getUrlRoot() +"/"+ changed.getLong("id"))
+					//.header("Location",	this.getUrlRoot() +"/"+ changed.getLong("id"))
 					.entity(changed).build();
 		} catch (Exception ex) {
 			return Response.serverError().entity(ex).build();
@@ -119,17 +122,49 @@ public class EntityService extends Service{
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response get(@QueryParam("where") JSONObject ob) {
+	public Response get(@QueryParam("where") JSONObject ob, 
+			@QueryParam("order") String order, 
+			@QueryParam("limit") @DefaultValue("-1") int limit, 
+			@QueryParam("skip") @DefaultValue("-1") int skip,
+			@QueryParam("keys") String keys,
+			@QueryParam("count") boolean count) {
 		try {
 			Query query = new Query(kind);
 			if(ob!=null)
 				schema.populate(query, ob);
+			FetchOptions opt =FetchOptions.Builder.withDefaults();
+			if(limit>-1)
+				opt.limit(limit);
+			
+			if(skip>0)
+				opt.offset(skip);
+			
+			if(order!=null){
+				for(String o : order.split(",")){
+					if(o.trim().length()==0)
+						continue;
+					if(o.startsWith("-"))
+						query.addSort(o, SortDirection.DESCENDING);
+					else
+						query.addSort(o, SortDirection.ASCENDING);
+				}
+			}
+			
+			if("id".equalsIgnoreCase(keys))
+				query.setKeysOnly();
+			
 			PreparedQuery pq = DatastoreServiceFactory
 					.getAsyncDatastoreService().prepare(query);
-			List<Entity> result = pq.asList(FetchOptions.Builder.withLimit(20));
-			return Response.ok().entity(result).build();
+		
+			Map<String,Object> response=new HashMap<String,Object>();
+			response.put("results", pq.asList(opt));
+			
+			if(count)
+				response.put("count", pq.countEntities(FetchOptions.Builder.withLimit(0)));
+			
+			return Response.ok().entity(response).build();
 		} catch (Exception e) {
-			return Response.noContent().entity(e).build();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 

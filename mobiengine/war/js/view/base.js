@@ -204,7 +204,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				return this
 			},
 			refresh: function(){
-				this.collection && this.collection.fetch({reset:true})
+				this.collection && this.collection.fetch()
 				return this
 			},
 			setQuery: function(q){//deprecated for parse
@@ -289,6 +289,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			show: function(){
 				this.container.append(this.el)
 					.parent().appendTo('body')
+				return this
 			},
 			close: function(){
 				this.$el.detach()
@@ -300,10 +301,10 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				'click button.ok':'onOK',
 				'click button.cancel':'onCancel'
 			},
-			content:'<h1>title here</h1><div class="form"><input type="text"></div><div><button class="ok">OK</button><button class="cancel">Cancel</button></div>',
+			content:'<h6>title here</h6><div class="form"><input type="text"></div><div><button class="ok">OK</button><button class="cancel">Cancel</button></div>',
 			show:function(title,value){
 				Popup.prototype.show.apply(this,arguments)
-				title && this.$('h1').html(title)
+				title && this.$('h6').html(title)
 				value && this.$('input').val(value)
 				return (this.value=new Promise())
 			},
@@ -316,7 +317,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				this.reset()
 			},
 			reset:function(){
-				this.$('h1').html('')
+				this.$('h6').html('')
 				this.$('input').val('')
 				this.close()
 			}
