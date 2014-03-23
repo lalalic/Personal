@@ -71,6 +71,7 @@ public class Service{
 			if(!ApplicationService.TOP_NAMESPACE.equals(id))
 				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
 			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
+			
 			NamespaceManager.set(id);
 			schema = Schema.get(this.appId);
 		} catch (Exception e) {

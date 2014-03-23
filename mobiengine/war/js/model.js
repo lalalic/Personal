@@ -274,7 +274,7 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		init: function(){
 			$.ajaxSetup({
 				dataType:'json',
-				headers: {'X-Application-Id": this.apiKey}
+				headers: {"X-Application-Id": this.apiKey}
 			})
 			
 			var user=this.User.current()

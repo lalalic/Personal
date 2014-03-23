@@ -43,6 +43,9 @@ public class ApplicationService extends EntityService {
 	@Override
 	protected void initService(){
 		super.initService();
+		if(!TOP_NAMESPACE.equals(NamespaceManager.get()))
+			if(this.userId!=(Long)this.getApp().getProperty("author"))
+				throw new RuntimeException("Access Denied");
 		NamespaceManager.set(TOP_NAMESPACE);
 	}
 	
