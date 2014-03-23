@@ -51,26 +51,27 @@ public class Service{
 	public Service(
 			@Context HttpServletRequest request,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
+		this.appId = appId;
+		this.kind = kind;
 		if(request!=null){
 			session=request.getSession();
 			request.setAttribute("service", this);
+			Object userid=session.getAttribute("userid");
+			if(userid!=null){
+				userId=(Long)userid;
+				userName=(String)session.getAttribute("username");
+			}
 		}
-		this.appId = appId;
-		this.kind = kind;
-		Object userid=session.getAttribute("userid");
-		if(userid!=null){
-			userId=(Long)userid;
-			userName=(String)session.getAttribute("username");
-		}
-		
 		initService();
 	}
 	
 	protected void initService(){
 		try {
-			NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
+			String id=Long.toString(KeyFactory.stringToKey(this.appId).getId());
+			if(!ApplicationService.TOP_NAMESPACE.equals(id))
+				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
 			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
-			NamespaceManager.set(Long.toString(KeyFactory.stringToKey(this.appId).getId()));
+			NamespaceManager.set(id);
 			schema = Schema.get(this.appId);
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());

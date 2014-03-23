@@ -1,4 +1,4 @@
-define(['app','UI'],function(app,View){
+define(['app','UI','jQuery'],function(app,View, $){
 	var ListPage=View.ListPage,
 		Schema=app.Schema,Application=app.Application
 	$('body').append('<style>\
@@ -7,6 +7,10 @@ define(['app','UI'],function(app,View){
 	table.data td, table.data th{border:1px solid lightgray}\
 	</style>');
 	var current,
+		switchAppKey=function(e,xhr){
+			var current=Application.current()
+			current && xhr.setRequestHeader("X-Application-Id", current.get('apiKey'))
+		},
 		Table=ListPage.extend({
 			tagName:'table',
 			className:'data hidden',
@@ -118,7 +122,6 @@ define(['app','UI'],function(app,View){
 			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
 				.click(_.bind(this.onNewTable,this))
 			this.$list=this.$('article')
-			Application.all.on('current',this.changeApp,this)
 		},
 		changeApp:function(m){
 			if(this.app==m)
@@ -129,8 +132,16 @@ define(['app','UI'],function(app,View){
 			this.collection.fetch()
 		},
 		show: function(){
+			$(document).on('ajaxSend', switchAppKey)
 			this.changeApp(Application.current())
+			Application.all.on('current',this.changeApp,this)
 			return ListPage.prototype.show.apply(this,arguments)
+		},
+		close: function(){
+			ListPage.prototype.close.apply(this,arguments)
+			Application.all.off('current',this.changeApp,this)
+			$(document).off('ajaxSend', switchAppKey)
+			return this
 		},
 		addOne:function(model){
 			var table=new Table({model:model}), 

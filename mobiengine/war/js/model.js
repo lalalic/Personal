@@ -132,8 +132,11 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 					if(!this.Collection){
 						this.Collection=Backbone.Collection.extend({model:this})
 						this.Collection.prototype.fetch=function(){
-							if(User.current()==null)
+							if(User.current()==null){
+								if(!this.isEmpty())
+									this.reset()
 								return Promise.as();
+							}
 							return Backbone.Collection.prototype.fetch.apply(this,arguments)
 						}
 					}
@@ -252,15 +255,26 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 					}
 				})
 			}
-		},{}),	
+		},{
+			collection:function(){
+				if(!this.Collection){
+						this.Collection=Backbone.Collection.extend({model:this})
+						this.Collection.prototype.fetch=function(){
+							if(Application.current()==null){
+								if(!this.isEmpty())
+									this.reset()
+								return Promise.as();
+							}
+							return Backbone.Collection.prototype.fetch.apply(this,arguments)
+						}
+					}
+					return new this.Collection()
+			}
+		}),	
 		init: function(){
 			$.ajaxSetup({
 				dataType:'json',
-				beforeSend:function(xhr, settings){
-					var current=Application.current()
-					xhr.setRequestHeader("X-Application-Id", 
-						current && current.get('apiKey')||'aglub19hcHBfaWRyCgsSBF9hcHAYAQw')
-				}
+				headers: {'X-Application-Id": this.apiKey}
 			})
 			
 			var user=this.User.current()

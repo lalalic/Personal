@@ -34,6 +34,8 @@ require.config({
 	},
 	deps:['jQuery','app', 'model','Promise'],
 	callback:function($, app, model, Promise){
+		app.apiKey='aglub19hcHBfaWRyCgsSBF9hcHAYAQw'
+		
 		app.route('createApp','app','view/app',true)
 		app.route('settings','settings','view/app',true)
 		app.route('schema','data','view/data',true)
