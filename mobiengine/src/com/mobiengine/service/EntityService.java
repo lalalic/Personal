@@ -65,7 +65,7 @@ public class EntityService extends Service{
 					//.header("Location",	this.getUrlRoot() +"/"+ changed.getLong("id"))
 					.entity(changed).build();
 		} catch (Exception ex) {
-			return Response.serverError().entity(ex).build();
+			throw new RuntimeException(ex.getMessage());
 		}
 	}
 
@@ -84,15 +84,16 @@ public class EntityService extends Service{
 			entity.setProperty("updatedAt", now);
 			schema.populate(entity, ob);
 			this.beforeUpdate(entity, ob);
-			DatastoreServiceFactory.getAsyncDatastoreService().put(entity);
+			DatastoreServiceFactory.getDatastoreService().put(entity);
 			this.afterUpdate(entity);
 			JSONObject changed = new JSONObject();
 			changed.put("updatedAt", now);
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
-			return Response.serverError().entity(ex).build();
+			throw new RuntimeException(ex.getMessage());
 		}
 	}
+	
 
 	@DELETE
 	@Path("{id:.*}")
@@ -101,7 +102,7 @@ public class EntityService extends Service{
 	public Response remove(@PathParam("id") long id) {
 		Key key = KeyFactory.createKey(kind, id);
 		this.beforeDelete(key);
-		DatastoreServiceFactory.getAsyncDatastoreService().delete(key);
+		DatastoreServiceFactory.getDatastoreService().delete(key);
 		this.afterDelete(key);
 		return Response.ok().build();
 	}

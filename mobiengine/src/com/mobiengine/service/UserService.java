@@ -170,9 +170,7 @@ public class UserService extends EntityService{
 				}else
 					throw new RuntimeException("username or password is not correct.");
 			} catch (NoSuchAlgorithmException e) {
-				return Response.serverError()
-					.entity(new RuntimeException("System error."))
-					.build();
+				throw new RuntimeException("System error");
 			}
 		}
 	}

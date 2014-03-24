@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -91,6 +92,7 @@ public class SchemaService extends EntityService{
 			entity.setUnindexedProperty("name", ob.getString("name"));
 			entity.setUnindexedProperty("fields", makeSchema("a").getProperty("fields"));
 			DatastoreServiceFactory.getDatastoreService().put(entity);
+			schemas.put(this.appId, new Schema());
 			return Response
 					.ok()
 					.header("Location",	this.getUrlRoot() +"/"+ entity.getKey().getId())
@@ -105,7 +107,7 @@ public class SchemaService extends EntityService{
 		return Response.serverError().entity(new RuntimeException("Not Support")).build();
 	}
 	
-	@POST
+	@PUT
 	@Path("{id:.*}/column")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -124,11 +126,12 @@ public class SchemaService extends EntityService{
 					ob.has("searchable"),
 					ob.has("unique")));
 			DatastoreServiceFactory.getAsyncDatastoreService().put(entity);
+			schemas.put(this.appId, new Schema());
 			JSONObject changed = new JSONObject();
 			changed.put("updatedAt", now);
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
-			return Response.serverError().entity(ex).build();
+			throw new RuntimeException(ex.getMessage());
 		}
 	}
 	

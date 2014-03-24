@@ -1,12 +1,15 @@
 define(['app','UI','jQuery'],function(app,View, $){
 	var ListPage=View.ListPage,
 		Schema=app.Schema,Application=app.Application
-	$('body').append('<style>\
+	$('body').append("<style>\
 	table.data{width:100%}\
+	table.data>tbody{background-color:white}\
+	table.data td:empty:before{content:'(undefined)';color:lightgray}\
 	table.data th{text-align:center;font-weight:700}\
 	table.data td, table.data th{border:1px solid lightgray}\
-	</style>');
+	</style>");
 	var current,
+		input=$(document.createElement('input')),
 		switchAppKey=function(e,xhr){
 			var current=Application.current()
 			current && xhr.setRequestHeader("X-Application-Id", current.get('apiKey'))
@@ -22,9 +25,17 @@ define(['app','UI','jQuery'],function(app,View, $){
 					if(field.name=='password')
 						return ''
 					var value=item.get(field.name)
-					return "<td>"+(value||'&nbsp;')+"</td>"
+					return "<td>"+(value||'')+"</td>"
 				})
 				$(tr).html('<td><input type="checkbox"></td>'+tds.join(''))
+				item.on('sync',function(m){
+					$('td:eq(1)',tr).text(item.id)
+					$('td:last-child',tr)
+						.prev().text(item.updatedAt)
+						.prev().text(item.createdAt)
+				}).on('destroy',function(){
+					$(tr).remove()
+				})
 				return tr
 			},
 			initialize:function(){
@@ -34,7 +45,7 @@ define(['app','UI','jQuery'],function(app,View, $){
 				else
 					this.collection=app.createKind(clazz).collection()
 					
-				ListPage.prototype.initialize.apply(this,arguments)
+				this._super().initialize.apply(this,arguments)
 				this.model.on('destroy',this.destroy,this)
 				this.$list.remove()
 				this.$list=this.$el
@@ -48,7 +59,8 @@ define(['app','UI','jQuery'],function(app,View, $){
 				this.collection.fetch()
 			},
 			createHead:function(){
-				this.thead=$(document.createElement('tr')).appendTo(this.el)
+				this.thead=$(document.createElement('tr'))
+					.appendTo($('<thead/>').appendTo(this.el))
 					.append('<td style="width:1px"><input type="checkbox"></td>')
 				_.each(this.model.get('fields'),this.appendField,this)
 				this.model.on('addColumn',_.bind(this.newField,this))
@@ -73,8 +85,12 @@ define(['app','UI','jQuery'],function(app,View, $){
 				var me=this, args=arguments
 				return this.model.destroy()
 					.then(function(){
-						ListPage.prototype.destroy.apply(me,args)
+						me._super().destroy.apply(me,args)
 					})
+			},
+			newModel: function(){
+				this.collection.add(this.currentModel=new this.collection.model())
+				return this
 			}
 		}),
 		columnUI=new (View.Popup.extend({
@@ -92,7 +108,7 @@ define(['app','UI','jQuery'],function(app,View, $){
 			},
 			show: function(){
 				this.$('input[name]').val('')
-				return View.Popup.prototype.show.apply(this,arguments)
+				return this._super().show.apply(this,arguments)
 			},
 			change: function(e){
 				var el=e.target
@@ -114,10 +130,14 @@ define(['app','UI','jQuery'],function(app,View, $){
 			<a class="table"><span class="icon remove"/>table</a>',
 		events:_.extend({},ListPage.prototype.events,{
 			"click a.column":'onNewColumn',
-			"click a.table": 'onRemoveTable'
+			"click a.table": 'onRemoveTable',
+			'click a.row .plus':'onNewRow',
+			'change input':'onChangeValue',
+			'blur input':'onInputBlur',
+			'dblclick table.data td':'switchInput'
 		}),
 		initialize:function(){
-			ListPage.prototype.initialize.apply(this,arguments)
+			this._super().initialize.apply(this,arguments)
 			this.$tables=$('<nav data-control="groupbar"></nav>').insertBefore(this.$('article'))
 			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
 				.click(_.bind(this.onNewTable,this))
@@ -135,12 +155,17 @@ define(['app','UI','jQuery'],function(app,View, $){
 			$(document).on('ajaxSend', switchAppKey)
 			this.changeApp(Application.current())
 			Application.all.on('current',this.changeApp,this)
-			return ListPage.prototype.show.apply(this,arguments)
+			return this._super().show.apply(this,arguments)
 		},
 		close: function(){
-			ListPage.prototype.close.apply(this,arguments)
+			this._super().close.apply(this,arguments)
 			Application.all.off('current',this.changeApp,this)
 			$(document).off('ajaxSend', switchAppKey)
+			return this
+		},
+		refresh: function(){
+			if(this.$el.is('.show'))
+				return this._super().refresh.apply(this,arguments)
 			return this
 		},
 		addOne:function(model){
@@ -184,6 +209,27 @@ define(['app','UI','jQuery'],function(app,View, $){
 				theA.nearest('a').click()
 				theA.remvoe()
 			})
+		},
+		onNewRow: function(){
+			current.newModel()
+		},
+		switchInput:function(e){
+			input.val($(e.target).text())
+			$(e.target).append(input)
+			input.focus()
+		},
+		onChangeValue: function(){
+			var schema=current.model,
+				model=current.currentModel,
+				td=input.parent(),
+				i=$('td',td.parent()).index(td)-1,
+				field=schema.get('fields')[i]
+			td.text(input.val())
+			model.set(field.name,input.val())
+			model.patch(field.name)
+		},
+		onInputBlur: function(){
+			//input.detach()
 		}
 	}))
 })

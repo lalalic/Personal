@@ -78,6 +78,10 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			Backbone.Model.prototype.sync.call(this,method,model,this._promise(p, opt))
 			return p
 		},
+		patch: function(){
+			var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
+			return this.save(null,{attrs:patchs})
+		},
 		destroy: function(opt){
 			var p=new Promise
 			Backbone.Model.prototype.destroy.call(this,this._promise(p,opt))
@@ -96,14 +100,7 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		},
 		Application: Model.extend({
 				className:'_app',
-				urlRoot:'1/apps',
-				saveCloudCode: function(){
-					this.hasChanged('cloudCode') && 
-					Backbone.sync('create',this, {
-						url:this.urlRoot+'/cloudcode',
-						attrs:{cloudCode: this.get('cloudCode')}
-					})
-				}
+				urlRoot:'1/apps'
 			},{
 				current:function(m){
 					switch(m){
@@ -218,6 +215,7 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			logOut: function(){
 				currentUser=null
 				localStorage.removeItem('currentUser')
+				location.reload()
 			}
 		},{
 			current:function(){
@@ -245,7 +243,7 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 			urlRoot:'1/schemas',
 			addColumn:function(column){
 				var me=this
-				Backbone.sync('create',this, {
+				Backbone.sync('update',this, {
 					url:this.urlRoot+'/'+this.id+'/column',
 					attrs:column,
 					success:function(){

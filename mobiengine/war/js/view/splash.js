@@ -15,7 +15,7 @@ define(['UI'],function(View){
 			},this)
 		},
 		show: function(){
-			Page.prototype.show.apply(this,arguments)
+			this._super().show.apply(this,arguments)
 			var me=this
 			if(this.length>1)
 				this.interval=setInterval(function(){me.slide()},1500)

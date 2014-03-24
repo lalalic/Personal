@@ -177,7 +177,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			itemTemplate:false,
 			initialize: function(){
 				Page.prototype.initialize.apply(this,arguments)
-				this.$list=this.$('ul.list')
+				this.$list=this.$('ul.list:eq(0)')
 				if(_.isString(this.itemTemplate))
 					this.itemTemplate=_.template(this.itemTemplate)
 				this.collection.on('reset',this.renderAllItems, this)
@@ -262,7 +262,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			},
 			setModel: function(model){
 				if(this.model==model)
-					return this;
+					return this
 				this.clear()
 				this.model=model
 				model && this.$('form *[name]').each(function(){

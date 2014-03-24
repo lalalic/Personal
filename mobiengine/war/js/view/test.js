@@ -100,7 +100,7 @@ define(['spec','UI','lib/jasmine'],function(Specs,View){
 			<a class="skipped" status="skipped"><span class="icon filter"/><span class="tag count"/></a>',
 		events: _.extend({},Page.prototype.events,{'change textarea':'debug'}),
 		initialize: function(){
-			Page.prototype.initialize.apply(this,arguments)
+			this._super().initialize.apply(this,arguments)
 			var env= this.jasmin = jasmine.getEnv();
 			env.updateInterval = 1000;
 			env.addReporter(new Reporter(this.$('ul'), this.$el))

@@ -8,7 +8,7 @@ define(['UI','app'],function(View,app){
 			'click .applist .app': 'onClickApp',
 			'click ul.extra .create>a':'onCreate'},
 		initialize: function(){
-			ListPage.prototype.initialize.apply(this,arguments)
+			this._super().initialize.apply(this,arguments)
 			this.collection.on('current',this.changeCurrent,this)
 			this.collection.trigger('reset')
 			$('body').append('<style>\
@@ -18,7 +18,7 @@ define(['UI','app'],function(View,app){
 			return this
 		},
 		render: function(){
-			ListPage.prototype.render.apply(this,arguments)
+			this._super().render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
 				.append('<li class="create thumb"><a href="#app"><span class="icon plus"/></a></li>')
 				.append('<li class="thumb"><a href="javascript:void"><span class="icon signout"/></a></li>')			
@@ -38,13 +38,13 @@ define(['UI','app'],function(View,app){
 			return this
 		},
 		addOne: function(item){
-			ListPage.prototype.addOne.apply(this,arguments)
+			this._super().addOne.apply(this,arguments)
 			if(this.collection.length==1)
 				Application.current(item)
 			return this
 		},
 		removeOne: function(item){
-			ListPage.prototype.removeOne.apply(this,arguments)
+			this._super().removeOne.apply(this,arguments)
 			var current=Application.current()
 			if(current && current.id==item.id){
 				if(this.collection.length)

@@ -5,12 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -44,20 +41,7 @@ public class ApplicationService extends EntityService {
 	protected void initService(){
 		super.initService();
 		if(!TOP_NAMESPACE.equals(NamespaceManager.get()))
-			if(this.userId!=(Long)this.getApp().getProperty("author"))
-				throw new RuntimeException("Access Denied");
-		NamespaceManager.set(TOP_NAMESPACE);
-	}
-	
-	@POST
-	@Path("/cloudcode")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response cloudCode(@FormParam(value = "cloudcode")String cloudCode){
-		Entity app=this.getApp();
-		app.setProperty("cloudCode", cloudCode);
-		DatastoreServiceFactory.getAsyncDatastoreService().put(app);
-		return Response.ok().build();
+			throw new RuntimeException("Access Denied");
 	}
 	
 	@Override
@@ -75,8 +59,14 @@ public class ApplicationService extends EntityService {
 	@Override 
 	public void beforeUpdate(Entity app, JSONObject request){
 		try {
-			app.setProperty("name", request.getString("name"));
-			app.setProperty("url", request.getString("url"));
+			if(this.userId!=(Long)app.getProperty("author"))
+				throw new RuntimeException("Access Denied");
+			
+			if(request.has("name")){
+				app.setProperty("name", request.getString("name"));
+				app.setProperty("url", request.getString("url"));
+			}else
+				app.setProperty("cloudCode", request.getString("cloudCode"));
 		} catch (JSONException e) {
 			throw new RuntimeException(e.getMessage());
 		}

@@ -69,6 +69,9 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 				return base+one
 			})) : this;
 		}
+		Date.prototype.toString=function(){
+			return this.getTime()
+		}
 		var _debug=console.debug
 		console.debug=function(m){
 			if(DEBUG)
@@ -121,6 +124,12 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 				return templates[name]
 			}else
 				return _template(text,data,setting)
+		}
+		/*make all Backbone class have this function*/
+		Backbone.View.prototype._super=
+		Backbone.Collection.prototype._super=
+		Backbone.Model.prototype._super=function(){
+			return this.__proto__.constructor.__super__
 		}
 	}
 	
