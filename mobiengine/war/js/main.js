@@ -69,15 +69,30 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 				return base+one
 			})) : this;
 		}
+		Date.prototype.ago=function(){
+			var delta=parseInt((new Date().getTime()-this.getTime())/1000),
+				aday=24*60*60
+			if(delta<aday){
+				if(delta<60)
+					return delta+" "+text('seconds ago')
+				else if(delta<60*60)
+					return parseInt(delta/60)+" "+text('minutes ago')
+				else
+					return parseInt(delta/60/60)+" "+text('hours ago')
+			}else if (delta<aday*2)
+				return text('yesterday')
+			else
+				return (this.getMonth()+1)+"-"+(this.getDay()+1)
+		}
 		Date.prototype.toString=function(){
-			return this.getTime()
+			return this.getFullYear()+"-"+(this.getMonth()+1)+"-"+(this.getDay()+1)
+			+" "+this.getHours()+":"+(this.getMinutes()+1)
 		}
 		var _debug=console.debug
 		console.debug=function(m){
 			if(DEBUG)
 				_debug.apply(console,arguments)
 		}
-		Node.prototype.remove=function(){this.parentNode.removeChild(this)}
 		
 		$.isOffline=function(){
 			if(location.protocol.match(/^file/))
@@ -131,6 +146,19 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 		Backbone.Model.prototype._super=function(){
 			return this.__proto__.constructor.__super__
 		}
+		
+		Backbone.Collection.prototype.url=function(){
+			if(this.model){
+				var root=this.model.prototype.urlRoot
+				if(_.isString(root))
+					return this.model.Collection.prototype.url=root;
+				else if(_.isFunction(root))
+					return this.model.Collection.prototype.url=(new this.model()).urlRoot()
+			}
+		}
+		Backbone.Collection.prototype.parse=function(response){
+			return response.results
+		}
 	}
 	
 	var app=_.extend({
@@ -173,7 +201,100 @@ define('app',['jQuery','Underscore','Promise','Backbone'],function($, _, Promise
 		},
 		navigate:function(url, opt){
 			router.navigate(url, opt)
-		}
+		},
+		createKind:function(schema){
+			var m=this.Model.extend({className:schema.get('name')})
+			m.prototype.schema={}
+			_.each(schema.get('fields'),function(metadata){
+				this[metadata.name]=metadata
+			},m.prototype.schema)
+			return m
+		},
+		Model:Backbone.Model.extend({
+			version:'1',
+			className:'_unknown',
+			get:function(name){
+				if(name=='id'||name=='createdAt'||name=='updatedAt')
+					return this[name]
+				return Backbone.Model.prototype.get.apply(this,arguments)
+			},
+			toJSON: function(){
+				var a=Backbone.Model.prototype.toJSON.apply(this,arguments)
+				_.each(['id','createdAt','updatedAt'],function(attr){
+					if(_.has(this,attr))
+						a[attr]=this[attr]
+				},this)
+				return a
+			},
+			urlRoot: function(){
+				return this.version+"/classes/"+this.className
+			},
+			_promise: function(p, opt){
+				var me=this,
+					defaultOpt={
+						error:function(model,e){
+							p.reject(e)
+						},
+						success:function(model){
+							p.resolve(me)
+						}
+					}
+				if(opt){
+					_.each(['error','success'],function(name){
+						if(name in opt){
+							var _raw=opt[name]
+							opt[name]=function(){
+								_raw.apply(null,arguments)
+								defaultOpt[name].apply(null,arguments)
+							}
+						}else
+							otp[name]=defaultOpt[name]
+					})
+				}else
+					opt=defaultOpt
+				return opt
+			},
+			parse:function(data){
+				if(_.has(data,'id')){
+					this.id=data.id
+					delete data.id
+				}
+				if(_.has(data,'updatedAt')){
+					this.updatedAt=new Date()
+					this.updatedAt.setTime(Date.parse(data.updatedAt))
+					delete data.updatedAt
+				}
+				if(_.has(data,'createdAt')){
+					this.createdAt=new Date()
+					this.createdAt.setTime(Date.parse(data.createdAt))
+					delete data.createdAt
+				}
+				return data
+			},
+			sync:function(method,model,opt){
+				var p=new Promise
+				Backbone.Model.prototype.sync.call(this,method,model,this._promise(p, opt))
+				return p
+			},
+			patch: function(){
+				var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
+				return this.save(null,{attrs:patchs})
+			},
+			destroy: function(opt){
+				var p=new Promise
+				Backbone.Model.prototype.destroy.call(this,this._promise(p,opt))
+				return p
+			}},{
+				collection:function(){
+					if(!this.Collection)
+						this.Collection=Backbone.Collection.extend({model:this})
+					return new this.Collection()
+				},
+				types:{
+					
+				},
+				DATATYPE:'String,Integer,Float,Boolean,Date,File,GeoPoint,Array,Object,Pointer'.split(',')
+			})
 	},Backbone.Events);
 	
 	//router

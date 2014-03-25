@@ -1,104 +1,6 @@
 define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, Backbone, Promise){
-	window.DATATYPE='String, Integer, Float, Boolean, Date, File, GeoPoint, Array, Object, Pointer'.split(',')
-	Backbone.Collection.prototype.url=function(){
-		if(this.model){
-			var root=this.model.prototype.urlRoot
-			if(_.isString(root))
-				return this.model.Collection.prototype.url=root;
-			else if(_.isFunction(root))
-				return this.model.Collection.prototype.url=(new this.model()).urlRoot()
-		}
-	}
-	Backbone.Collection.prototype.parse=function(response){
-		return response.results
-	}
-	var Model=Backbone.Model.extend({
-		version:'1',
-		className:'_unknown',
-		get:function(name){
-			if(name=='id'||name=='createdAt'||name=='updatedAt')
-				return this[name]
-			return Backbone.Model.prototype.get.apply(this,arguments)
-		},
-		toJSON: function(){
-			var a=Backbone.Model.prototype.toJSON.apply(this,arguments)
-			_.each(['id','createdAt','updatedAt'],function(attr){
-				if(_.has(this,attr))
-					a[attr]=this[attr]
-			},this)
-			return a
-		},
-		urlRoot: function(){
-			return this.version+"/classes/"+this.className
-		},
-		_promise: function(p, opt){
-			var me=this,
-				defaultOpt={
-					error:function(model,e){
-						p.reject(e)
-					},
-					success:function(model){
-						p.resolve(me)
-					}
-				}
-			if(opt){
-				_.each(['error','success'],function(name){
-					if(name in opt){
-						var _raw=opt[name]
-						opt[name]=function(){
-							_raw.apply(null,arguments)
-							defaultOpt[name].apply(null,arguments)
-						}
-					}else
-						otp[name]=defaultOpt[name]
-				})
-			}else
-				opt=defaultOpt
-			return opt
-		},
-		parse:function(data){
-			if(_.has(data,'id')){
-				this.id=data.id
-				delete data.id
-			}
-			if(_.has(data,'updatedAt')){
-				this.updatedAt=new Date()
-				this.updatedAt.setTime(Date.parse(data.updatedAt))
-				delete data.updatedAt
-			}
-			if(_.has(data,'createdAt')){
-				this.createdAt=new Date()
-				this.createdAt.setTime(Date.parse(data.createdAt))
-				delete data.createdAt
-			}
-			return data
-		},
-		sync:function(method,model,opt){
-			var p=new Promise
-			Backbone.Model.prototype.sync.call(this,method,model,this._promise(p, opt))
-			return p
-		},
-		patch: function(){
-			var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
-			return this.save(null,{attrs:patchs})
-		},
-		destroy: function(opt){
-			var p=new Promise
-			Backbone.Model.prototype.destroy.call(this,this._promise(p,opt))
-			return p
-		}},{
-			collection:function(){
-				if(!this.Collection)
-					this.Collection=Backbone.Collection.extend({model:this})
-				return new this.Collection()
-			}
-		});
-
 	_.extend(app,{// extend app schema
-		createKind: function(name){
-			return Model.extend({className:name})
-		},
-		Application: Model.extend({
+		Application: app.Model.extend({
 				className:'_app',
 				urlRoot:'1/apps'
 			},{
@@ -140,11 +42,11 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 					return new this.Collection()
 				}
 			}),
-		User: Model.extend({
+		User: app.Model.extend({
 			className:'_user',
 			urlRoot:'1/users',
 			parse: function(r){
-				var attrs=Model.prototype.parse.apply(this,arguments)
+				var attrs=this._super().parse.apply(this,arguments)
 				if(_.has(attrs,'sessionToken')){
 					localStorage.setItem('sessionToken',attrs.sessionToken)
 					delete attrs.sessionToken
@@ -234,11 +136,11 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 				User.current().requestPasswordReset(email)
 			}
 		}),
-		Role: Model.extend({
+		Role: app.Model.extend({
 			className:'_role',
 			urlRoot:'1/roles'
 		},{}),
-		Schema: Model.extend({
+		Schema: app.Model.extend({
 			className:'_schema',
 			urlRoot:'1/schemas',
 			addColumn:function(column){
@@ -303,5 +205,5 @@ define(['app', 'jQuery','Underscore','Backbone', 'Promise'],function(app, $, _, 
 		User=app.User,
 		currentUser
 		
-	return Model
+	return app.Model
 })

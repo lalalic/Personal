@@ -1,15 +1,20 @@
-define(['app','UI','jQuery'],function(app,View, $){
+define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 	var ListPage=View.ListPage,
 		Schema=app.Schema,Application=app.Application
 	$('body').append("<style>\
-	table.data{width:100%}\
+	table.data{width:100%;table-layout:fixed}\
 	table.data>tbody{background-color:white}\
+	table.data>tbody>tr:nth-child(even){background-color:aliceblue}\
 	table.data td:empty:before{content:'(undefined)';color:lightgray}\
-	table.data th{text-align:center;font-weight:700}\
-	table.data td, table.data th{border:1px solid lightgray}\
+	table.data th{font-weight:700}\
+	table.data thead td:first-child{width:1em}\
+	table.data thead th:nth-child(2){width:5em}\
+	table.data input[type=checkbox]{margin-left:1px}\
+	table.data input.a{width:100%;height:100%;border:0;}\
 	</style>");
 	var current,
-		input=$(document.createElement('input')),
+		readonlyFields='id,createdAt,updatedAt'.split(','),
+		input=$(document.createElement('input')).addClass('a'),
 		switchAppKey=function(e,xhr){
 			var current=Application.current()
 			current && xhr.setRequestHeader("X-Application-Id", current.get('apiKey'))
@@ -17,34 +22,39 @@ define(['app','UI','jQuery'],function(app,View, $){
 		Table=ListPage.extend({
 			tagName:'table',
 			className:'data hidden',
+			events:{'change thead input':'onSelectorChange'},
 			template:function(){},
 			itemTemplate:function(item){
 				var tr=document.createElement('tr')
 				var fields=this.model.get('fields')
 				var tds=_.map(fields, function(field){
-					if(field.name=='password')
-						return ''
 					var value=item.get(field.name)
+					if(_.indexOf(readonlyFields,field.name)!=-1)
+						return '<td class="readonly">'+(value||'')+"</td>"
 					return "<td>"+(value||'')+"</td>"
 				})
+				
 				$(tr).html('<td><input type="checkbox"></td>'+tds.join(''))
+					.dblclick(_.bind(function(){
+						this.currentModel=item
+					},this))
+					
 				item.on('sync',function(m){
-					$('td:eq(1)',tr).text(item.id)
-					$('td:last-child',tr)
-						.prev().text(item.updatedAt)
-						.prev().text(item.createdAt)
+					if(m.updatedAt==m.createdAt){
+						$('td:eq(1)',tr).text(m.id)
+						$('td:last-child',tr)
+							.prev().text(m.updatedAt)
+							.prev().text(m.createdAt)
+					}else
+						$('td:last-child',tr)
+							.prev().text(m.updatedAt)
 				}).on('destroy',function(){
 					$(tr).remove()
 				})
 				return tr
 			},
 			initialize:function(){
-				var clazz=this.model.get('name')
-				if(clazz in app)
-					this.collection=app[clazz].collection()
-				else
-					this.collection=app.createKind(clazz).collection()
-					
+				this.collection=app.createKind(this.model).collection()	
 				this._super().initialize.apply(this,arguments)
 				this.model.on('destroy',this.destroy,this)
 				this.$list.remove()
@@ -61,15 +71,15 @@ define(['app','UI','jQuery'],function(app,View, $){
 			createHead:function(){
 				this.thead=$(document.createElement('tr'))
 					.appendTo($('<thead/>').appendTo(this.el))
-					.append('<td style="width:1px"><input type="checkbox"></td>')
+					.append('<td><input type="checkbox"></td>')
 				_.each(this.model.get('fields'),this.appendField,this)
 				this.model.on('addColumn',_.bind(this.newField,this))
 			},
 			newField: function(field){
-				if(field.name=='password')
-					return
-				var th=document.createElement('th')
-				$(th).text(field.name).insertBefore(this.newFieldTh)
+				$(document.createElement('th'))
+					.text(field.name)
+					.insertBefore(this.$('thead th:last-child').prev().prev())
+				$('<td/>').insertBefore(this.$('tbody td:last-child').prev().prev())
 				return field
 			},
 			appendField: function(field){
@@ -77,20 +87,28 @@ define(['app','UI','jQuery'],function(app,View, $){
 					return
 				var th=document.createElement('th')
 				this.thead.append($(th).text(field.name))
-				if(field.name=='createdAt')
-					this.newFieldTh=th
 				return field
 			},
 			destroy: function(){
 				var me=this, args=arguments
 				return this.model.destroy()
-					.then(function(){
-						me._super().destroy.apply(me,args)
-					})
 			},
 			newModel: function(){
-				this.collection.add(this.currentModel=new this.collection.model())
+				this.collection.add(new this.collection.model())
 				return this
+			},
+			onSelectorChange: function(e){
+				this.$('tbody input[type=checkbox]')
+					.prop('checked',e.target.checked)
+			},
+			removeSelected: function(){
+				var me=this
+				this.$('tbody input:checked')
+					.each(function(){
+						$(this).parent().parent().dblclick()
+						me.currentModel.destroy()
+						me.currentModel=null
+					})
 			}
 		}),
 		columnUI=new (View.Popup.extend({
@@ -100,7 +118,7 @@ define(['app','UI','jQuery'],function(app,View, $){
 			events:{
 				"click button.cancel":'close',
 				"click button.create":'create',
-				'change input[name]':'change'
+				'change [name]':'change'
 			},
 			render: function(){
 				this.$el.html(this.template({}));
@@ -132,9 +150,11 @@ define(['app','UI','jQuery'],function(app,View, $){
 			"click a.column":'onNewColumn',
 			"click a.table": 'onRemoveTable',
 			'click a.row .plus':'onNewRow',
-			'change input':'onChangeValue',
-			'blur input':'onInputBlur',
-			'dblclick table.data td':'switchInput'
+			'click a.row .remove':'removeSelectedRow',
+			'change input.a':'onChangeValue',
+			'blur input.a':'onBlurInput',
+			'keypress input.a':'onEnterInput',
+			'dblclick table.data tbody td:not(.readonly)':'switchInput'
 		}),
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
@@ -213,23 +233,61 @@ define(['app','UI','jQuery'],function(app,View, $){
 		onNewRow: function(){
 			current.newModel()
 		},
-		switchInput:function(e){
-			input.val($(e.target).text())
-			$(e.target).append(input)
-			input.focus()
+		switchInput:function(e, td){
+			var schema=current.model,
+				td=$(e.target),
+				i=$('td',td.parent()).index(td)-1,
+				field=schema.get('fields')[i],
+				type='text'
+			input.removeProp('list')
+			switch(field.type){
+			case 'Integer':
+			case 'Float':
+				type='number'
+				break
+			case 'Date':
+				type='date'
+				break
+			case 'Time':
+				type='time'
+				break
+			case 'DateTime':
+				type='datetime'
+				break
+			case 'File':
+				type='file'
+				break
+			case 'Boolean':
+				input.attr('list','Boolean')
+				break
+			}
+			input.prop('type',type)
+			input.val(td.text())
+				.width(td.width())
+				.appendTo(td.empty())
+				.focus()
 		},
 		onChangeValue: function(){
 			var schema=current.model,
 				model=current.currentModel,
 				td=input.parent(),
 				i=$('td',td.parent()).index(td)-1,
-				field=schema.get('fields')[i]
-			td.text(input.val())
-			model.set(field.name,input.val())
+				field=schema.get('fields')[i],
+				value=input.val()
+			model.set(field.name,value)
 			model.patch(field.name)
 		},
-		onInputBlur: function(){
-			//input.detach()
+		onBlurInput: function(e,td){
+			if((td=input.parent()).length==0)
+				return;
+			try{input.detach()}catch(e){}
+			td.html(input.val())
+		},
+		onEnterInput: function(e){
+			e.which==13 &&	input.blur()
+		},
+		removeSelectedRow: function(){
+			current.removeSelected()
 		}
 	}))
 })

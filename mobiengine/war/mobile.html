@@ -84,8 +84,8 @@
 	<fieldset>
 		<input placeholder="{{text('name')}}" name="name" type="text">
 		<select name="type">
-			<%_.each(DATATYPE,function(o){%> 
-			<option value="{{o}}">{{o}}</option>"
+			<%_.each(require("app").Model.DATATYPE,function(o){%> 
+			<option value="{{o}}">{{o}}</option>
 			<%})%>
 		</select>
 	</fieldset>	
@@ -109,5 +109,9 @@
 				description:text('Signin and create your first app'),
 				action:'<button class="anchor">signin</button>'})}}
 </script>
+<datalist id="Boolean">
+	<option value="true">
+	<option value="false">
+</datalist>
 </body>
 </html>

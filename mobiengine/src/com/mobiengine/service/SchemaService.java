@@ -196,7 +196,7 @@ public class SchemaService extends EntityService{
 			for(String key: fields.keySet()){
 				Object value=null;
 				EmbeddedEntity schema=fields.get(key);
-				if(!ob.has(key) || (value=ob.get(key))==null || value.toString().length()==0){
+				if(ob.has(key) && (value=ob.get(key))==null || value.toString().length()==0){
 					if(entity.hasProperty(key) && !("createdAt".equals(key) || "updatedAt".equals(key)))
 						entity.removeProperty(key);
 					continue;
