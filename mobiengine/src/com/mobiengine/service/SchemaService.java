@@ -194,10 +194,12 @@ public class SchemaService extends EntityService{
 				throw new RuntimeException(kind+" is not defined as a type");
 			boolean isNew=entity.getKey().getId()==0;
 			for(String key: fields.keySet()){
+				if(!ob.has(key))
+					continue;
 				Object value=null;
 				EmbeddedEntity schema=fields.get(key);
-				if(ob.has(key) && (value=ob.get(key))==null || value.toString().length()==0){
-					if(entity.hasProperty(key) && !("createdAt".equals(key) || "updatedAt".equals(key)))
+				if(ob.has(key) && ((value=ob.get(key))==null || value==JSONObject.NULL || value.toString().length()==0)){
+					if(entity.hasProperty(key))
 						entity.removeProperty(key);
 					continue;
 				}
@@ -271,10 +273,7 @@ public class SchemaService extends EntityService{
 	}	
 	
 	enum TYPES{
-		String, Integer, Float, 
-		Boolean{
-			 
-		},
+		String, Integer, Float, Boolean,
 		Date{
 			@Override
 			Object asEntityValue(Object value){
@@ -300,9 +299,7 @@ public class SchemaService extends EntityService{
 				return null;
 			}
 		}, 
-		Pointer{
-			
-		};
+		Pointer;
 		
 		Object asEntityValue(Object value){
 			return value;

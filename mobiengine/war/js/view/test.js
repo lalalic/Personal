@@ -91,7 +91,7 @@ define(['spec','UI','lib/jasmine'],function(Specs,View){
 		}
 	});
 	
-	var Page=View.Page, ready=new Promise()
+	var Page=View.Page, ready=new $.Deferred
 	return new (Page.extend({
 		title:'Test',
 		content:'<ul><li><textarea style="width:100%;height:100px"></textarea><div class="specs"></div></li></ul>',

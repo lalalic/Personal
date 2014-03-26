@@ -1,4 +1,4 @@
-define(['app',"jQuery","Promise"],function(app, $, Promise){
+define(['app',"jQuery"],function(app, $){
 	$('body').append("<style>\
 		body,section,aside{overflow:hidden}\
 		nav img{width:32px;height:32px}\
@@ -27,7 +27,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			a.removeClass('doing')
 		})
 	}).ajaxError(function(event, jqXHR, ajaxSettings, statusText){
-		alert(jqXHR.responseText)
+		alert(jqXHR.responseText||statusText)
 	})
 	
 	Backbone.View.prototype._class=function(){
@@ -231,7 +231,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 			},
 			change: function(e){
 				var el=e.target
-				this.model.set(el.name,el.value)
+				this.model.set(el.name,el.value,{validate:true})
 				return this
 			},
 			__submit: function(){
@@ -306,7 +306,7 @@ define(['app',"jQuery","Promise"],function(app, $, Promise){
 				Popup.prototype.show.apply(this,arguments)
 				title && this.$('h6').html(title)
 				value && this.$('input').val(value)
-				return (this.value=new Promise())
+				return (this.value=new $.Deferred)
 			},
 			onOK:function(){
 				this.value.resolve(this.$('input').val())

@@ -213,7 +213,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			var me=this,table=new Schema()
 			prompt(text('please input the table name'),'table'+(this.newID++))
 				.then(function(name){
-					table.set('name',name)
+					table.set('name',name,{validate:true})
 					table.save().then(function(){
 						me.collection.add(table)
 					})
@@ -274,7 +274,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				i=$('td',td.parent()).index(td)-1,
 				field=schema.get('fields')[i],
 				value=input.val()
-			model.set(field.name,value)
+			model.set(field.name,value, {validate:true})
 			model.patch(field.name)
 		},
 		onBlurInput: function(e,td){

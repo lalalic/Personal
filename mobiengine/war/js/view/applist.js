@@ -17,6 +17,7 @@ define(['UI','app'],function(View,app){
 				</style>')
 			return this
 		},
+		refresh:function(){},
 		render: function(){
 			this._super().render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
