@@ -1,1 +1,1 @@
-jsdoc -c ./jsdoc.json
+jsdoc -c ./jsdoc.json ./jsdoc.md
