@@ -2,10 +2,19 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 	var User=app.User,
 		currentApp, 
 		prevApp,
+		/**
+		 *  @class
+		 *  @memberof app
+		 *  @augments app.Model
+		 */
 		Application=app.Application=app._app=app.Model.extend({
 			className:'_app',
 			urlRoot:'1/apps'
-		},{
+		},/** @lends app.Application */{
+			/** 
+			 * get current user 
+			 * @returns {app.User} 
+			 */
 			current:function(m){
 				switch(m){
 				case undefined:
@@ -26,9 +35,15 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 					return m
 				}
 			},
+			/**
+			 *  restore to previous application when cancel create new application
+			 */
 			restoreCurrent:function(){
 				this.current(prevApp)
 			},
+			/**
+			 *  create Application Collection 
+			 */
 			collection:function(){
 				if(!this.Collection){
 					this.Collection=Backbone.Collection.extend({model:this})
