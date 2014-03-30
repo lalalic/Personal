@@ -40,7 +40,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 					},this))
 					
 				item.on('sync',function(m){
-					if(m.updatedAt==m.createdAt){
+					if(m.updatedAt.getTime()==m.createdAt.getTime()){
 						$('td:eq(1)',tr).text(m.id)
 						$('td:last-child',tr)
 							.prev().text(m.updatedAt)
