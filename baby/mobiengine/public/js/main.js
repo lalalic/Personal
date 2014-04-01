@@ -31,22 +31,14 @@
  */
 require.config(/** @lends requireJSConf*/{
 	baseUrl:'./js',
-	deps:['jQuery', 'app', 'deps/text!template.html','model'],
-	callback: function($, app, templates, model){
-		//add routes
-		app.route('createApp','app','view/app',true)
-		app.route('settings','settings','view/app',true)
-		app.route('schema','data','view/data',true)
-		app.route('analytics','analytics','view/analytics',true)
-		app.route('cloudcode','cloudcode','view/cloudcode',true)
-		
+	deps:['jQuery', 'app', 'model'],
+	callback: function($, app, model){		
 		//start application
 		$(function () {
-			templates && $('body').append(templates)
+			//templates && $('body').append(templates)
 			app.start({
-				asideView:'view/menu',
-				shortcutView:'view/applist',
-				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw'
+				shortcutView:'view/children',
+				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYCwyiAQEx'
 			})
 		})
 	},

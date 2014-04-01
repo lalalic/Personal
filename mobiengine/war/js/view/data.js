@@ -89,10 +89,6 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				this.thead.append($(th).text(field.name))
 				return field
 			},
-			destroy: function(){
-				var me=this, args=arguments
-				return this.model.destroy()
-			},
 			newModel: function(){
 				this.collection.add(new this.collection.model())
 				return this
@@ -223,7 +219,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			columnUI.show()
 		},
 		onRemoveTable: function(){
-			current.destroy()
+			current.model.destroy()
 			.then(function(){
 				var theA=this.$tables.find('a.active')
 				theA.nearest('a').click()

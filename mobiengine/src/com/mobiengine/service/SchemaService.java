@@ -26,6 +26,7 @@ import org.codehaus.jettison.json.JSONObject;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
@@ -137,8 +138,14 @@ public class SchemaService extends EntityService{
 	
 	@Override
 	public void beforeDelete(Key entity) {
-		if(UserService.KIND.equals(entity.getKind())
-				|| RoleService.KIND.equals(entity.getKind()))
+		String kind = null; 
+		try {
+			kind=(String)DatastoreServiceFactory.getDatastoreService().get(entity).getProperty("name");
+		} catch (EntityNotFoundException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+		if(UserService.KIND.equals(kind)
+				|| RoleService.KIND.equals(kind))
 			throw new RuntimeException("Not Supported");
 	}
 	

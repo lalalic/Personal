@@ -6,7 +6,7 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	<servlet>
 		<servlet-name>REST</servlet-name>
-		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>	
+		<servlet-class>com.mobiengine.WebApp</servlet-class>	
 		<init-param>
 			<param-name>com.sun.jersey.config.property.packages</param-name>
 			<param-value>com.mobiengine.service, com.mobiengine.provider</param-value>
@@ -17,8 +17,8 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     	</init-param>
     	<!-- init-param>
          	<param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
-         	<param-value>com.mobiengine.filter.CloudCode</param-value>
-     	</init-param -->
+         	<param-value>com.mobiengine.filter.AccessControl</param-value>
+     	</init-param-->
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>

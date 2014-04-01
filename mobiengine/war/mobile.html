@@ -9,7 +9,7 @@
 	<link rel="stylesheet" href="css/icon.css">
 	<link rel="stylesheet" href="css/lungo.css">
 	<link rel="stylesheet" href="css/lungo.theme.css">
-	<script data-main="js/main" src="js/lib/require.js"></script>
+	<script data-main="js/main" src="js/deps/require.js"></script>
 </head>
 <body data-device="phone" data-position="absolute">
 <section id="splash" class="show">
@@ -53,62 +53,6 @@
 </span>
 </script>
 
-<script type="text/tmpl" id="tmplApp">
-	<form >
-		<fieldset>
-			<label>{{text('applicaiton name')}}:</label>
-			<input type="text" name="name">
-			<label>{{text('url')}}:</label>
-			<input type="text" name="url">
-		</fieldset>
-		<fieldset>
-			<label>{{text('Applicaiton Key')}}:</label>
-			<input type="text" name="apiKey" readonly="readonly">
-		</fieldset>
-	</form>
-</script>
-<script type="text/tmpl" id="tmplApps">
-	<li><a id="_{{id}}" class="app">{{get('name')}}</a></li>
-</script>
-
-<script type="text/tmpl" id="tmplMenu">
-	<ul class="list">
-		<li><a href="#analytics" class="analytics">{{text('Analytics')}}</a></li>
-		<li><a href="#data" class="databrowser">{{text('Data Browser')}}</a></li>
-		<li><a href="#cloudcode" class="cloudcode">{{text('Cloud Code')}}</a></li>
-		<li><a href="#settings" class="settings">{{text('Settings')}}</a></li>
-	</ul>
-</script>
-
-<script type="text/tmpl" id="tmplColumnUI">
-	<fieldset>
-		<input placeholder="{{text('name')}}" name="name" type="text">
-		<select name="type">
-			<%_.each(require("app").Model.DATATYPE,function(o){%> 
-			<option value="{{o}}">{{o}}</option>
-			<%})%>
-		</select>
-	</fieldset>	
-	<button class="anchor create">{{text('Create Column')}}</button>
-	<button class="anchor cancel">cancel</button>
-</script>
-
-<script type="text/tmpl" id="tmplEmpty">
-	<div class="empty">
-		<span class="icon {{type}}"></span>
-		<strong>{{title}}</strong>
-		<small>{{description}}</small>
-		<div>{{action}}</div>
-	</div>
-</script>
-
-<script type="text/tmpl" id="tmplNoApp">
-	{{_.template($('#tmplEmpty').html())({
-				type:'user',
-				title:text('App Empty'),
-				description:text('Signin and create your first app'),
-				action:'<button class="anchor">signin</button>'})}}
-</script>
 <datalist id="Boolean">
 	<option value="true">
 	<option value="false">

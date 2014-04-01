@@ -5,14 +5,11 @@
 	<meta name="format-detection" content="telephone=no" />
 	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
-	<title>Super Daddy</title>
+	<title>Mobile Engine</title>
 	<link rel="stylesheet" href="css/icon.css">
 	<link rel="stylesheet" href="css/lungo.css">
 	<link rel="stylesheet" href="css/lungo.theme.css">
-	<script src="js/lib/require.js"></script>
-	<script src="js/lib/zepto.min.js"></script>
-	<script src="js/lib/parse-1.2.12.js"></script>
-	<script src="js/app.js"></script>
+	<script data-main="js/main" src="js/deps/require.js"></script>
 </head>
 <body data-device="phone" data-position="absolute">
 <section id="splash" class="show">
@@ -31,7 +28,36 @@
 	</article>
 </section>
 
-<script>require(['app'],function(app){app.start()})</script>
+<script type="text/tmpl" id="tmplUser">
+	<form id="signin">
+		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
+		<fieldset><input name="password" type="password" placeholder="{{text('password')}}"></fieldset>
+	</form>
+	<form id="signup">
+		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
+		<fieldset><input name="email" type="email" placeholder="{{text('email address where reset password will be sent')}}"></fieldset>
+		<fieldset><input name="password" type="text" placeholder="{{text('password')}}"></fieldset>
+	</form>
+	<form id="password">
+		<fieldset><input name="email" type="text" placeholder="{{text('email address where new password would send')}}"></fieldset>
+	</form>
+</script>
+
+<script type="text/tmpl" id="tmplCheckable">
+<span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
+	<span>{{title}}</span>
+	<%_.each(options,function(o){with(o){%>
+	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get('name')}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
+	<%}})%>
+</span>
+</script>
+
+<datalist id="Boolean">
+	<option value="true">
+	<option value="false">
+</datalist>
+
 
 <script type="text/tmpl" id="tmplCates">
 	<li class="thumb" id="_{{id}}">
@@ -55,6 +81,7 @@
 		</div>
 	</li>
 </script>
+
 <script type="text/tmpl" id="tmplPostRef">
 	<li class="thumb" id="_{{id}}">
 		<img src="{{get('thumbnail')}}" onerror="this.src=''">
@@ -63,20 +90,7 @@
 		</div>
 	</li>
 </script>
-<script type="text/tmpl" id="tmplUser">
-	<form id="signin">
-		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
-		<fieldset><input name="password" type="password" placeholder="{{text('password')}}"></fieldset>
-	</form>
-	<form id="signup">
-		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
-		<fieldset><input name="email" type="email" placeholder="{{text('email address where reset password will be sent')}}"></fieldset>
-		<fieldset><input name="password" type="text" placeholder="{{text('password')}}"></fieldset>
-	</form>
-	<form id="password">
-		<fieldset><input name="email" type="text" placeholder="{{text('email address where new password would send')}}"></fieldset>
-	</form>
-</script>
+
 <script type="text/tmpl" id="tmplChild">
 	<form> 
 		<fieldset><input type="text" name="name" placeholder="{{text('baby name')}}"></fieldset>
@@ -126,18 +140,11 @@
 		</div>
 	</li>
 </script>
-<script type="text/tmpl" id="tmplCheckable">
-<span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
-	<span>{{title}}</span>
-	<%_.each(options,function(o){with(o){%>
-	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get('name')}}" class="outview">
-	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
-	<%}})%>
-</span>
-</script>
+
 <script type="text/tmpl" id="tmplSyncItem">
 	<li id="_{{createdAt}}">{{title}} <span class="on-right">{{Date.fromTime(createdAt).ago()}}</span></li>
 </script>
+
 <script type="text/tmpl" id="tmplSearch">
 	<div class="popup hide">
 		<div>
@@ -151,5 +158,6 @@
 		</div>
 	</div>
 </script>
+
 </body>
 </html>

@@ -8,6 +8,7 @@
   -->
   <threadsafe>true</threadsafe>
   <sessions-enabled>true</sessions-enabled>
+  <async-session-persistence enabled="true" />
 
   <!-- Configure java.util.logging -->
   <system-properties>
