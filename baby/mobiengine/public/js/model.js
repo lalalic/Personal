@@ -7,12 +7,24 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 	var Tag = app.Tag,
 		Post = app.Post,
 		Child = _.extend(app.Child,/** @lends app.Child */{
-			current: function(child){
-				if(child!=undefined){
-					currentChild=child
-					Child.all.trigger('current',currentChild)
+			current: function(m){
+				switch(m){
+				case undefined:
+					if(currentChild!=null)
+						return currentChild
+					return (m=localStorage.getItem('currentChild')) && (m=Child.all.get(parseInt(m))) &&  this.current(m) || null
+				case null:
+					localStorage.removeItem('currentChild')
+					currentChild=null
+					Child.all.trigger('current')
+					return null
+				default:
+					currentChild=m
+					localStorage.setItem('currentChild',m.id)
+					Child.all.trigger('current',m)
+					console.log('set current child')
+					return m
 				}
-				return currentChild
 			}
 		}), currentChild,
 		Favorite = app.Favorite,
@@ -30,14 +42,14 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		var args = arguments
 		return (Tag.all = Tag.collection())
 			.fetch()
-			.then(function (o) {
-				Tag.grouped = _.groupBy(o, function (t) {
+			.then(function () {
+				Tag.grouped = _.groupBy(Tag.all, function (t) {
 					Tag.all[t.id] = t
 					return t.get('category')
 				})
 			})
 			.then(function () {
-				return _init.apply(this, args)
+				return _init.apply(app, args)
 			})
 	}
 
@@ -46,14 +58,9 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		return _init4User.apply(this,arguments).then(function(){
 			return $.when(
 				new Query(Child).equalTo('author',user.id).fetch()
-					.then(function(o){
-						Child.all.reset(o)
-						if(o.length){
-							var v=localStorage.getItem('currentChild')
-							localStorage.setItem('currentChild',
-								Child.current(v ? Child.all.get(parseInt(v)) : o[0]).id)
-						}else
-							Child.current(null)
+					.then(function(children){
+						Child.all.reset(children)
+						Child.current(Child.all.first())
 					}),
 				new Query(Favorite).equalTo('author',user.id).fetch()
 					.then(function(favorites){
