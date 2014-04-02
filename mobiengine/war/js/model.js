@@ -9,7 +9,9 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		 */
 		Application=app.Application=app._app=app.Model.extend({
 			className:'_app',
-			urlRoot:'1/apps'
+			urlRoot: function(){
+				return this.version+'/apps'
+			}
 		},/** @lends app.Application */{
 			/** 
 			 * get current user 

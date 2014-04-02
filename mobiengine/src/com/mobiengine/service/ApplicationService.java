@@ -1,6 +1,7 @@
 package com.mobiengine.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -76,10 +77,17 @@ public class ApplicationService extends EntityService {
 	public void afterCreate(Entity app,JSONObject response){
 		try{
 			NamespaceManager.set(app.getKey().getId()+"");
-			List<Entity> defaults=new ArrayList<Entity>(); 
-			defaults.add(UserService.makeSchema());
-			defaults.add(RoleService.makeSchema());
-			makeDefaultSchema(defaults);
+			List<Entity> defaults=new ArrayList<Entity>();
+			Date now = new Date();
+			Entity entity=null;
+			defaults.add(entity=UserService.makeSchema());
+			entity.setProperty("createdAt", now);
+			entity.setProperty("updatedAt", now);
+			
+			defaults.add(entity=RoleService.makeSchema());
+			entity.setProperty("createdAt", now);
+			entity.setProperty("updatedAt", now);
+			
 			DatastoreServiceFactory.getAsyncDatastoreService().put(defaults);
 			response.put("apiKey", getApiKey(app));
 		}catch(Exception ex){
@@ -101,10 +109,6 @@ public class ApplicationService extends EntityService {
 		//1. remove all data
 		
 		//2. remove app
-	}
-	
-	protected void makeDefaultSchema(List<Entity> schemas){
-		
 	}
 	
 	@GET

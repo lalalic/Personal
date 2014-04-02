@@ -6,18 +6,15 @@ define(['UI','app'],function(View,app){
 		itemTemplate:'#tmplApps',
 		events:{
 			'click .applist .app': 'onClickApp',
-			'click ul.extra .create>a':'onCreate'},
+			'click ul.extra .create>a':'onCreate'
+		},
 		initialize: function(){
 			this._super().initialize.apply(this,arguments)
 			this.collection.on('current',this.changeCurrent,this)
 			this.collection.trigger('reset')
-			$('body').append('<style>\
-				.applist.popup{top:45px;height:1px;}\
-				.appplist.popup li{background-color:#00afe3}\
-				</style>')
 			return this
 		},
-		refresh:function(){},
+		refresh:function(){return this},
 		render: function(){
 			this._super().render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
@@ -73,5 +70,8 @@ define(['UI','app'],function(View,app){
 					.find('span').click(_.bind(this.show,this))
 			}
 		}
+	},{
+		STYLE:".applist.popup{top:45px;height:1px;}\
+			.appplist.popup li{background-color:#00afe3}"
 	}).asMenu())
 })

@@ -124,8 +124,8 @@ public class SchemaService extends EntityService{
 			addField(entity, makeFieldSchema(
 					ob.getString("name"), 
 					ob.has("type") ? TYPES.valueOf(ob.getString("type")) : TYPES.String,
-					ob.has("searchable"),
-					ob.has("unique")));
+					ob.has("searchable") && ob.getBoolean("searchable"),
+					ob.has("unique") && ob.getBoolean("unique")));
 			DatastoreServiceFactory.getAsyncDatastoreService().put(entity);
 			schemas.put(this.appId, new Schema());
 			JSONObject changed = new JSONObject();

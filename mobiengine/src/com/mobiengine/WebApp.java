@@ -14,7 +14,7 @@ public class WebApp extends ServletContainer {
 	@Override
 	public void service(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		response.addHeader("Access-Control-Allow-Headers","X-Application-Id,Request,X-Requested-With");
+		response.addHeader("Access-Control-Allow-Headers","X-Application-Id,Request,X-Requested-With,Content-Type,Accept,X-Session-Token");
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		response.addHeader("Access-Control-Allow-Method", "*");
 		if(request.getMethod().toUpperCase()=="OPTIONS")

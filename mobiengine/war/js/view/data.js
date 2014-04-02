@@ -46,7 +46,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			initialize:function(){
 				this.collection=app.createKind(this.model).collection()	
 				this._super().initialize.apply(this,arguments)
-				this.model.on('destroy',this.destroy,this)
+				this.model.on('destroy',this.remove,this)
 				this.$list.remove()
 				this.$list=this.$el
 				this.createHead()
@@ -98,7 +98,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			}
 		}),
 		columnUI=new (View.Popup.extend({
-			model:{},
+			model:{searchable:true, unique: false},
 			className:'form',
 			template:_.template($("#tmplColumnUI").html()),
 			events:{
@@ -121,9 +121,9 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			},
 			create: function(){
 				current.model.addColumn(this.model)
-				this.model={}
+				this.model={searchable:true, unique: false}
 			}
-		}));
+		}))
 	return new (ListPage.extend({
 		newID:0,
 		collection:Schema.collection(),
@@ -134,8 +134,8 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			<a class="column"><span class="icon plus"/>column</a>\
 			<a class="table"><span class="icon remove"/>table</a>',
 		events:_.extend({},ListPage.prototype.events,{
-			"click a.column":'onNewColumn',
-			"click a.table": 'onRemoveTable',
+			"click a.column .plus":'onNewColumn',
+			"click a.table .remove": 'onRemoveTable',
 			'click a.row .plus':'onNewRow',
 			'click a.row .remove':'removeSelectedRow',
 			'change a.table input':'importData',
@@ -184,8 +184,12 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 					.click(this.onSwitchTable(table))
 			
 			this.$list.append(table.el)
-			if(current==null || model.isNew())
+			if(current==null)
 				$a.click()
+			else if(model==this.newTable){
+				$a.click()
+				delete this.newTable
+			}
 		},
 		onSwitchTable:function(table){
 			var me=this
@@ -203,6 +207,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				.then(function(name){
 					table.set('name',name,{validate:true})
 					table.save().then(function(){
+						me.newTable=table
 						me.collection.add(table)
 					})
 				})
@@ -212,11 +217,8 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		},
 		onRemoveTable: function(){
 			current.model.destroy()
-			.then(function(){
-				var theA=this.$tables.find('a.active')
-				theA.nearest('a').click()
-				theA.remvoe()
-			})
+			this.$tables.find('a.active').remove()
+			this.$tables.find('a').first().click()
 		},
 		onNewRow: function(){
 			current.newModel()
