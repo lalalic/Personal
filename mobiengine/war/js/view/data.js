@@ -1,18 +1,8 @@
 define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 	var ListPage=View.ListPage,
-		Schema=app.Schema,Application=app.Application
-	$('body').append("<style>\
-	table.data{width:100%;table-layout:fixed}\
-	table.data>tbody{background-color:white}\
-	table.data>tbody>tr:nth-child(even){background-color:aliceblue}\
-	table.data td:empty:before{content:'(undefined)';color:lightgray}\
-	table.data th{font-weight:700}\
-	table.data thead td:first-child{width:1em}\
-	table.data thead th:nth-child(2){width:5em}\
-	table.data input[type=checkbox]{margin-left:1px}\
-	table.data input.a{width:100%;height:100%;border:0;}\
-	</style>");
-	var current,
+		Schema=app.Schema,
+		Application=app.Application,
+		current,
 		readonlyFields='id,createdAt,updatedAt'.split(','),
 		input=$(document.createElement('input')).addClass('a'),
 		switchAppKey=function(e,xhr){
@@ -139,6 +129,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		collection:Schema.collection(),
 		title:text('Data Browser'),
 		cmds:'<a class="row"><span class="icon plus"/>row</a>\
+			<a class="table"><span class="icon load" onclick="$(this).next().click()"/><input type="file" class="outview">import</a>\
 			<a class="row"><span class="icon remove"/>row</a>\
 			<a class="column"><span class="icon plus"/>column</a>\
 			<a class="table"><span class="icon remove"/>table</a>',
@@ -147,6 +138,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			"click a.table": 'onRemoveTable',
 			'click a.row .plus':'onNewRow',
 			'click a.row .remove':'removeSelectedRow',
+			'change a.table input':'importData',
 			'change input.a':'onChangeValue',
 			'blur input.a':'onBlurInput',
 			'keypress input.a':'onEnterInput',
@@ -284,6 +276,29 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		},
 		removeSelectedRow: function(){
 			current.removeSelected()
+		},
+		importData:function(e){
+			var reader=new FileReader()
+			reader.onloadend=function(e){
+				_.each($.parseJSON(e.target.result),function(o){
+					var m=new this.collection.model(o)
+					m.save().then(function(){
+						current.collection.add(m)
+					})
+				},current)
+			}
+			reader.readAsText(e.target.files[0])
 		}
+	},{
+		STYLE:
+			"table.data{width:100%;table-layout:fixed}\
+			table.data>tbody{background-color:white}\
+			table.data>tbody>tr:nth-child(even){background-color:aliceblue}\
+			table.data td:empty:before{content:'(undefined)';color:lightgray}\
+			table.data th{font-weight:700}\
+			table.data thead td:first-child{width:1em}\
+			table.data thead th:nth-child(2){width:5em}\
+			table.data input[type=checkbox]{margin-left:1px}\
+			table.data input.a{width:100%;height:100%;border:0;}"
 	}))
 })

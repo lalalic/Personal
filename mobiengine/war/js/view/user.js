@@ -1,3 +1,8 @@
+/**
+ * User model to provide signin, signup, and forget password function
+ * @module User
+ * @requires UI
+ */
 define(['UI','app'],function(View,app){
 	var Page=View.Page, User=app.User
 	return new (Page.extend({

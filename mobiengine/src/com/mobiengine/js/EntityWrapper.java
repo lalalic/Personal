@@ -10,6 +10,7 @@ public class EntityWrapper {
 		this.entity=entity;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public Future save(){
 		return null;
 	}

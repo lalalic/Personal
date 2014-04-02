@@ -305,6 +305,10 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			}),
 		app=_.extend(/** @lends app*/{
 			/**
+			* application title shown as title of page
+			*/
+			title:'Application',
+			/**
 			 *  service endpoint
 			 *  @type {string}
 			 *  @default http://localhost
@@ -312,9 +316,6 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 *  app.start({service:'http://a.com'})
 			 */
 			service:'http://localhost',
-			/**
-			 *  @version
-			 */
 			version:'0.01',
 			/**
 			 *  application public key distributed by service provider
@@ -385,10 +386,11 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				
 				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),function(splash,i18n){
 					/**
-					 *  @global
+					 * translate string to local string
+					 * @global
 					 */
 					window.text=function(a, b){return  ((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)}
-					document.title=text(document.title)
+					app.title=document.title=text(app.title)
 					splash.show()
 					var _start=function(){
 							Backbone.history.start()

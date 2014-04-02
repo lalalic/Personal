@@ -3,7 +3,8 @@
         "allowUnknownTags": true
     },
     "source": {
-		"include":["main.js", "lib/app.js", "model.js"],
+		"include":["main.js", "deps/app.js", "model.js", 
+			"view/base.js", "view/user.js", "view/test.js", "view/splash.js"],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },

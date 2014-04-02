@@ -44,6 +44,7 @@ require.config(/** @lends requireJSConf*/{
 		$(function () {
 			templates && $('body').append(templates)
 			app.start({
+				title:'Mobile Engine',
 				asideView:'view/menu',
 				shortcutView:'view/applist',
 				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw'
