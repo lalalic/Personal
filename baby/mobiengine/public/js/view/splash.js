@@ -1,3 +1,7 @@
+/**
+ * splash page when start up application
+ * @module Splash
+ */
 define(['UI'],function(View){
 	var Page=View.Page
 	return new (Page.extend({

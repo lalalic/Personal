@@ -43,10 +43,7 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		return (Tag.all = Tag.collection())
 			.fetch()
 			.then(function () {
-				Tag.grouped = _.groupBy(Tag.all, function (t) {
-					Tag.all[t.id] = t
-					return t.get('category')
-				})
+				Tag.grouped=Tag.all.groupBy('category')
 			})
 			.then(function () {
 				return _init.apply(app, args)
@@ -74,4 +71,5 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 				)
 		})
 	}
+	app.Model.prototype.getUrl=function(){return ''}
 })

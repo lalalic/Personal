@@ -1,21 +1,21 @@
 define(['UI','app'],function(UI,app){
 	var Child=app.Child
 	return new (UI.ListPage.extend({
+		className: 'children',
 		itemTemplate:'#tmplChildren',
-		cmds:'<a href="#child"><span class="icon plus"/></a>',
 		collection: Child.all,
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
-			this.$('header').remove()
-			this.$('article').removeClass('scroll')
 			this.collection.on('current',this.showCurrent, this)
 			this.collection.trigger('reset')
-		},
-		clear: function(){
 			return this
 		},
+		refresh: function(){return this},
 		render: function(){
 			this._super().render.apply(this,arguments)
+			$('<ul class="list extra">').appendTo(this.$('article'))
+				.append('<li class="create thumb"><a href="#child"><span class="icon plus"/></a></li>')
+				.append('<li class="thumb"><a href="javascript:void"><span class="icon signout"/></a></li>')			
 			return this.showCurrent(Child.current())
 		},
 		showCurrent: function(m){
@@ -40,6 +40,20 @@ define(['UI','app'],function(UI,app){
 				li.find('a').text(item.get('name'))
 			if(item.hasChanged('photo'))
 				li.find('img').attr('src',item.getUrl('photo'))
+		},
+		onAttached:function(){
+			var child=Child.current()
+			if(child){
+				this.$('.create').show()
+				this.$menuHolder.removeAttr('href').empty()
+					.html('<span>'+child.get('name')+'</span>')
+					.find('span').click(_.bind(this.show,this))
+			}else{
+				this.$('.create').hide()
+				this.$menuHolder.attr('href','#child').empty()
+					.html('<span class="icon plus"/>')
+					.find('span').click(_.bind(this.show,this))
+			}
 		}
 	}).asMenu())
 })

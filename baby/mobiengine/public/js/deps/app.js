@@ -243,9 +243,9 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 					var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
 					return this.save(null,{attrs:patchs})
 				}
-			},/** @lends ap.Model */{
+			},/** @lends app.Model */{
 				/**
-				 *  @memberof app.Model
+				 *  set schema
 				 */
 				setSchema: function(schema){
 					this.prototype.className=schema.get('name')
@@ -256,7 +256,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 					return this
 				},
 				/**
-				 *  @memberof app.Model
+				 *  create collection of Model
 				 */
 				collection:function(){
 					if(!this.Collection)
@@ -265,7 +265,6 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				},
 				/**
 				 *  convert from string to type-safed value
-				 *  @memberof app.Model
 				 *  @readonly
 				 *  @enum {Function} 
 				 */
@@ -305,6 +304,10 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			}),
 		app=_.extend(/** @lends app*/{
 			/**
+			* application title shown as title of page
+			*/
+			title:'Application',
+			/**
 			 *  service endpoint
 			 *  @type {string}
 			 *  @default http://localhost
@@ -312,9 +315,6 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 *  app.start({service:'http://a.com'})
 			 */
 			service:'http://localhost',
-			/**
-			 *  @version
-			 */
 			version:'0.01',
 			/**
 			 *  application public key distributed by service provider
@@ -385,10 +385,13 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				
 				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),function(splash,i18n){
 					/**
-					 *  @global
+					 * translate string to local string
+					 * @global
 					 */
-					window.text=function(a, b){return  ((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)}
-					document.title=text(document.title)
+					window.text=function(a, b){
+						return  a ? (((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)) : ''
+					}
+					app.title=document.title=text(app.title)
 					splash.show()
 					var _start=function(){
 							Backbone.history.start()
@@ -493,7 +496,9 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 */
 			User: Model.extend(/** @lends app.User.prototype*/{
 				className:'_user',
-				urlRoot:'1/users',
+				urlRoot: function(){
+					return this.version+'/users'
+				},
 				parse: function(r){
 					var attrs=this._super().parse.apply(this,arguments)
 					if(_.has(attrs,'sessionToken')){
@@ -599,7 +604,9 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 */
 			Role: Model.extend(/** @lends app.Role.prototype */{
 				className:'_role',
-				urlRoot:'1/roles'
+				urlRoot: function(){
+					return this.version+'/roles'
+				}
 			}),
 			/**
 			 *  Schema Model
@@ -608,7 +615,9 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 */
 			Schema: Model.extend(/** @lends app.Schema.prototype */{
 				className:'_schema',
-				urlRoot:'1/schemas',
+				urlRoot: function(){
+					return this.version+'/schemas'
+				},
 				/**
 				 *  @returns {Promise}
 				 */
@@ -675,7 +684,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				fetch : function () {
 					return $.ajax({
 						context : this,
-						url : this.objectClass.urlRoot(),
+						url : (new this.objectClass).urlRoot(),
 						type : 'get',
 						data : this.toJSON()
 					}).then(function (r) {
@@ -694,7 +703,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				count : function () {
 					return $.ajax({
 						context : this,
-						url : this.objectClass.urlRoot(),
+						url : (new this.objectClass).urlRoot(),
 						type : 'get',
 						data : _.extend(this.toJSON(), {
 							limit : 0,
@@ -713,7 +722,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				first : function () {
 					return $.ajax({
 						context : this,
-						url : this.objectClass.urlRoot(),
+						url : (new this.objectClass).urlRoot(),
 						type : 'get',
 						data : _.extend(this.toJSON(), {
 							limit : 1

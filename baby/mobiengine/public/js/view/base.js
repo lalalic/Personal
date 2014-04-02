@@ -1,26 +1,10 @@
+/**
+ * base UI classes
+ * @module UI
+ * @requires app
+ * @requires jQuery
+ */
 define(['app',"jQuery"],function(app, $){
-	$('body').append("<style>\
-		body,section,aside{overflow:hidden}\
-		nav img{width:32px;height:32px}\
-		.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}\
-		.outview{position:absolute;top:-9999px;height:1px}\
-		span.checkable{line-height:35px;}\
-		span.checkable>span{padding:5px;cursor:default}\
-		span.checkable>span:not(:first-of-type){color:lightgray}\
-		span.checkable>span:hover{color:blue}\
-		span.checkable input:checked+span{color:black}\
-		span.checkable>span:first-of-type{background-color:lightgreen;color:white}\
-		span.checkable input{position:absolute;top:-9999px;height:1px}\
-		span.checkable input:not(:checked)+span{display:none}\
-		span.checkable.open input:not(:checked)+span{display:initial}\
-		span.checkable:not(.open)>span:first-of-type:after{content:'...'}\
-		span.checkable.vertical>span{display:block!important}\
-		.tags{text-align:center}\
-		.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
-		.tag:empty{visibility:hidden!important}\
-		.primary{background-color:red!important}\
-		</style>")
-	
 	$(document).ajaxSend(function(){
 		var a=$('section.show span.refresh').parent().addClass('doing')
 		$(document).one('ajaxComplete',function(){
@@ -30,20 +14,37 @@ define(['app',"jQuery"],function(app, $){
 		alert(jqXHR.responseText||statusText)
 	})
 	
-	Backbone.View.prototype._class=function(){
-		return this.__proto__.constructor
+	var _extend=Backbone.View.extend
+	Backbone.View.extend=function(properties,classProperties){
+		var aView=_extend.apply(this,arguments)
+		if(classProperties==undefined || !classProperties.STYLE)
+			delete aView.STYLE
+		aView.STYLE && $('head').append("<style>"+aView.STYLE+"</style>")
+		return aView
 	}
+		
+	
 	var User=app.User,
 		currentPage={section:null,aside:null},
-		Page=Backbone.View.extend({
+		/**
+		 * @class Page
+		 * @memberof module:UI
+		 * @augments Backbone.View
+		 */
+		Page=Backbone.View.extend(/** @lends module:UI.Page.prototype*/{
 			tagName:'section',
+			/**Page Title*/
 			title:app.title,
+			/**html navigation buttons in header*/
 			navs:'<a><span class="icon left-sign back"/></a>\
 				<a href="#"><span class="icon home"/></a>\
 				<a class="on-right"><span class="icon user"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
+			/** html content in body*/
 			content:'Loading...',
+			/** html commands buttons in footer*/
 			cmds:'',
+			/** template function to render page */
 			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header>\
 				<article class="active scroll">{{content}}</article>\
 				<footer><nav>{{cmds}}</nav></footer>'),
@@ -61,12 +62,11 @@ define(['app',"jQuery"],function(app, $){
 				!this.navs && this.$('header').hide()
 				return this
 			},
-			loading: function(a){
-				this.$('span.refresh').parent()[a===false?'removeClass':'addClass']('doing')
-			},
+			/**refresh page*/
 			refresh: function(){
 				return this
 			},
+			/**set title*/
 			setTitle:function(t){
 				this.$('header h1').html(t).text()
 				return this
@@ -95,16 +95,19 @@ define(['app',"jQuery"],function(app, $){
 			hide: function(){
 				return this.close()
 			},
+			/**clear content when close page*/
 			clear: function(){
 				return this
 			},
+			/**go back page*/
 			back: function(){
 				history.go(-1)
 			},
+			/**reload page*/
 			reload: function(){
 				location.reload()
 				return this
-			}, 
+			},
 			user: function(){
 				if(!User.current()){
 					require(['view/user'],function(user){
@@ -117,6 +120,10 @@ define(['app',"jQuery"],function(app, $){
 				this.reload()
 				return false
 			},
+			/**
+			 * popup a container
+			 * @param {DOMElement} container
+			 */
 			popup:function(el,e){
 				el.show()
 				e.stopPropagation()
@@ -124,7 +131,28 @@ define(['app',"jQuery"],function(app, $){
 					el.hide()
 				})
 			}
-		},{
+		},/** @lends module:UI.Page*/{
+			/**css styles used by this UI class*/
+			STYLE: "body,section,aside{overflow:hidden}\
+					nav img{width:32px;height:32px}\
+					.doing{-webkit-animation:rotatingLoader 600ms infinite linear;moz-animation:rotatingLoader 600ms infinite linear}\
+					.outview{position:absolute;top:-9999px;height:1px}\
+					span.checkable{line-height:35px;}\
+					span.checkable>span{padding:5px;cursor:default}\
+					span.checkable>span:not(:first-of-type){color:lightgray}\
+					span.checkable>span:hover{color:blue}\
+					span.checkable input:checked+span{color:black}\
+					span.checkable>span:first-of-type{background-color:lightgreen;color:white}\
+					span.checkable input{position:absolute;top:-9999px;height:1px}\
+					span.checkable input:not(:checked)+span{display:none}\
+					span.checkable.open input:not(:checked)+span{display:initial}\
+					span.checkable:not(.open)>span:first-of-type:after{content:'...'}\
+					span.checkable.vertical>span{display:block!important}\
+					.tags{text-align:center}\
+					.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
+					.tag:empty{visibility:hidden!important}\
+					.primary{background-color:red!important}",
+			/**convert this Page class to Aside Page class */
 			asAside:function(){
 				this.prototype.tagName='aside'
 				this.prototype.className='show box'
@@ -136,6 +164,7 @@ define(['app',"jQuery"],function(app, $){
 				}
 				return this
 			},
+			/**convert this page class to Shortcut Page class*/
 			asMenu: function(menuSelector){
 				this.prototype.tagName='div'
 				this.prototype.className+=" hidden popup"
@@ -172,8 +201,14 @@ define(['app',"jQuery"],function(app, $){
 				return this
 			}
 		}),
-		ListPage=Page.extend({
+		/**
+		 * @class ListPage
+		 * @memberof module:UI
+		 * @augments module:UI.Page
+		 */
+		ListPage=Page.extend(/** @lends module:UI.ListPage.prototype*/{
 			content:'<ul class="list"/>',
+			/**templat function to render for an item*/
 			itemTemplate:false,
 			initialize: function(){
 				Page.prototype.initialize.apply(this,arguments)
@@ -217,7 +252,12 @@ define(['app',"jQuery"],function(app, $){
 				return this
 			}
 		}),
-		FormPage=Page.extend({
+		/**
+		 * @class FormPage
+		 * @memberof module:UI
+		 * @augments module:UI.Page
+		 */
+		FormPage=Page.extend(/**@lends module:UI.FormPage*/{
 			content:'<form/>',
 			events:_.extend({},Page.prototype.events,{
 				'change form *[name]':'change',
@@ -275,7 +315,12 @@ define(['app',"jQuery"],function(app, $){
 				return this
 			}
 		}),
-		Popup=Backbone.View.extend({
+		/**
+		 * @class Popup
+		 * @memberof module:UI
+		 * @augments Backbone.View
+		 */
+		Popup=Backbone.View.extend(/**@lends module:UI.Popup.prototype*/{
 			container:$('<div class="window confirm show"/>').appendTo($('<div class="notification show"></div>')),
 			initialize:function(){
 				Backbone.View.prototype.initialize.apply(this,arguments)
@@ -296,7 +341,12 @@ define(['app',"jQuery"],function(app, $){
 				this.container.parent().detach()
 			}
 		}),
-		Prompt=new (Popup.extend({
+		/**
+		 * @class Prompt
+		 * @memberof module:UI
+		 * @augments module:UI.Popup
+		 */
+		Prompt=new (Popup.extend(/**@lends module:UI.Prompt.prototype*/{
 			events:{
 				'click button.ok':'onOK',
 				'click button.cancel':'onCancel'
@@ -322,6 +372,12 @@ define(['app',"jQuery"],function(app, $){
 				this.close()
 			}
 		}))
+	/**
+	 * override default prompt
+	 * @global
+	 * @function
+	 * @returns {Promise}
+	 */
 	window.prompt=function(title,defaultValue){
 		return Prompt.show(title)
 	}

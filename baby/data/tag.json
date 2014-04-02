@@ -1,0 +1,82 @@
+[
+	{
+        "category": "category",
+        "name": "Game"
+    },
+	{
+        "category": "category",
+        "name": "Drawing"
+    },
+	{
+        "category": "category",
+        "name": "Reading"
+    },
+	{
+        "category": "category",
+        "name": "Handcraft"
+    },
+	{
+        "category": "category",
+        "name": "DVD"
+    },
+	{
+        "category": "gender",
+        "name": "Boy"
+    },
+	{
+        "category": "gender",
+        "name": "Girl"
+    },
+	{
+        "category": "duration",
+        "name": "10"
+    },
+	{
+        "category": "duration",
+        "name": "30"
+    },
+	{
+        "category": "duration",
+        "name": "45"
+    },
+	{
+        "category": "duration",
+        "name": "60"
+    },
+	{
+        "category": "duration",
+        "name": "90"
+    },
+	{
+        "category": "duration",
+        "name": "120"
+    },
+	{
+        "category": "goal",
+        "name": "Observation"
+    },
+	{
+        "category": "goal",
+        "name": "Social"
+    },
+	{
+        "category": "goal",
+        "name": "Communication"
+    },
+	{
+        "category": "goal",
+        "name": "Learning"
+    },
+	{
+        "category": "goal",
+        "name": "Mandarin"
+    },
+	{
+        "category": "goal",
+        "name": "English"
+    },
+	{
+        "category": "goal",
+        "name": "Imagination"
+    }
+]

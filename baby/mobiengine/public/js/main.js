@@ -32,13 +32,15 @@
 require.config(/** @lends requireJSConf*/{
 	baseUrl:'./js',
 	deps:['jQuery', 'app', 'model'],
-	callback: function($, app, model){		
+	callback: function($, app, model){
+		app.route('createChild','child','view/child',true)
 		//start application
 		$(function () {
 			//templates && $('body').append(templates)
 			app.start({
+				title:'Super Daddy',
 				shortcutView:'view/children',
-				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYCwyiAQEx'
+				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYBQyiAQEx'
 			})
 		})
 	},

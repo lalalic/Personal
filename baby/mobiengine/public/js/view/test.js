@@ -1,4 +1,9 @@
-define(['spec','UI','lib/jasmine'],function(Specs,View){
+/**
+ * Test specs
+ * @module Test
+ * @requires UI
+ */
+define(['spec','UI','jasmine'],function(Specs,View){
 	window.asyncIt=function(p,msgTimeout,more,timeout){
 		if(_.isFunction(msgTimeout)){
 			more=msgTimeout
