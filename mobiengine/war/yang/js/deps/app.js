@@ -5,7 +5,7 @@
  * @requires Underscore 
  * @requires Backbone 
  */
-define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
+define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backbone){
 	(function(){
 		$.os=$.extend($.os||{},{phonegap:_.has(window,'_cordovaNative')})
 		window.reject=function(p){return function(e){p.reject()}}
@@ -367,7 +367,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 			 *  })
 			 */
 			start: function(opt){
-				opt && _.extend(this,opt)
+				opt && _.extend(this,module.config,opt||{})
 				
 				$(window).bind('resize',function(){
 					if($('#media').length==0)

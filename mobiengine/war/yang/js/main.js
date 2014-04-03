@@ -31,7 +31,15 @@
  */
 require.config(/** @lends requireJSConf*/{
 	baseUrl:'./js',
-	deps:['jQuery', 'app', 'deps/text!template.html','model'],
+	config:{
+		"app":{
+			apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw',
+			title:'Mobile Engine',
+			asideView:'view/menu',
+			shortcutView:'view/applist'
+		}
+	},
+	deps:['jQuery', 'app', 'model'],
 	callback: function($, app, templates, model){
 		//add routes
 		app.route('createApp','app','view/app',true)
@@ -42,7 +50,6 @@ require.config(/** @lends requireJSConf*/{
 		
 		//start application
 		$(function () {
-			templates && $('body').append(templates)
 			app.start({
 				title:'Mobile Engine',
 				asideView:'view/menu',
@@ -70,9 +77,10 @@ require.config(/** @lends requireJSConf*/{
 		"Backbone":"deps/backbone-min",
 		"app":"deps/app",
 		"i18n":"deps/i18n",
+		"text":"deps/text",
 		"Phonegap":"file:///android_asset/www/phonegap.js",
 		
-		"UI":"view/base",
+		"UI":"deps/base",
 		"Plugin":"deps/plugin"
 	},	
 	waitSeconds:30,
