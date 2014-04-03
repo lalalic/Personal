@@ -104,7 +104,7 @@ public class EntityService extends Service{
 		this.beforeDelete(key);
 		DatastoreServiceFactory.getDatastoreService().delete(key);
 		this.afterDelete(key);
-		return Response.ok().build();
+		return Response.ok().entity(1).build();
 	}
 
 	@GET

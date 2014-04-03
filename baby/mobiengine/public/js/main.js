@@ -34,9 +34,10 @@ require.config(/** @lends requireJSConf*/{
 	deps:['jQuery', 'app', 'model'],
 	callback: function($, app, model){
 		app.route('createChild','child','view/child',true)
+		app.route('updateChild','child/:id/:name','view/child',true)
+		
 		//start application
 		$(function () {
-			//templates && $('body').append(templates)
 			app.start({
 				title:'Super Daddy',
 				shortcutView:'view/children',

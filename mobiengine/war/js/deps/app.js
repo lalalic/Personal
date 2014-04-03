@@ -163,7 +163,9 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 		 */
 		Backbone.View.prototype._super=
 		Backbone.Collection.prototype._super=
-		Backbone.Model.prototype._super=function(){
+		Backbone.Model.prototype._super=function(a){
+			if(this.__proto__==this.__proto__.constructor.__super__)
+				throw "no _super on this class";
 			return this.__proto__.constructor.__super__
 		}
 		
@@ -624,7 +626,7 @@ define(['jQuery','Underscore','Backbone'], function($, _, Backbone){
 				addColumn:function(column){
 					return Backbone.sync('update',this, {
 						context:this,
-						url:this.urlRoot+'/'+this.id+'/column',
+						url:this.urlRoot()+'/'+this.id+'/column',
 						attrs:column
 					}).then(function(){
 						var fields=this.get('fields'), i=fields.length-3

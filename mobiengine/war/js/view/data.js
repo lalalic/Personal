@@ -217,8 +217,10 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		},
 		onRemoveTable: function(){
 			current.model.destroy()
-			this.$tables.find('a.active').remove()
-			this.$tables.find('a').first().click()
+			.then(_.bind(function(){
+				this.$tables.find('a.active').remove()
+				this.$tables.find('a').first().click()
+			},this))
 		},
 		onNewRow: function(){
 			current.newModel()
