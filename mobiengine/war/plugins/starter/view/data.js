@@ -15,7 +15,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		Schema=app.Schema,
 		Application=app.Application,
 		current,
-		readonlyFields='id,createdAt,updatedAt'.split(','),
+		readonlyFields='id,createdAt,updatedAt,password'.split(','),
 		input=$(document.createElement('input')).addClass('a'),
 		switchAppKey=function(e,xhr){
 			var current=Application.current()
@@ -85,8 +85,6 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				return field
 			},
 			appendField: function(field){
-				if(field.name=='password')
-					return
 				var th=document.createElement('th')
 				this.thead.append($(th).text(field.name))
 				return field

@@ -1,5 +1,5 @@
-define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
-	
+define(['Plugin', 'app'],function(Plugin, app){
+	//extends models
 	_.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','), function (o) {
 		this[o] = app.createKind(new Backbone.Model({name : o }))
 	}, app)
@@ -72,4 +72,20 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		})
 	}
 	app.Model.prototype.getUrl=function(){return ''}
+	
+
+	return Plugin.extend({
+		description:"help play with your children",
+		init:function(){
+			$.extend(app,{
+				title:'Super Daddy',
+				shortcutView:this.module('view/children'),
+				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYBQyiAQEx'
+			})
+			
+			app.route('main','',this.module('view/categories'),false)
+			app.route('createChild','child',this.module('view/child'),true)
+			app.route('updateChild','child/:id/:name',this.module('view/child'),true)
+		}
+	})
 })

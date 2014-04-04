@@ -1,8 +1,24 @@
 define(['UI','app','tool/uploader'],function(UI,app,uploader){
+	var tmplChild='\
+		<form>\
+			<fieldset><input type="text" name="name" placeholder="'+text('baby name')+'"></fieldset>\
+			<fieldset>\
+				<select name="gender">\
+					<option value=0>'+text('Boy')+'</option>\
+					<option value=1>'+text('Girl')+'</option>\
+				</select>\
+			</fieldset>\
+			<fieldset><input type="date" name="birthday" placeholder="'+text('birthday')+'"></fieldset>\
+			<fieldset>\
+				<div name="photo" style="width:150px;height:150px;border:1px solid;display:block;margin:0px auto;background-repeat:no-repeat;background-position:center center"/>\
+			</fieldset>\
+		</form>'
+	
 	var Child=app.Child
 	return new (UI.FormPage.extend({
 		model:new Child,
 		collection: Child.all,
+		content:tmplChild,
 		cmds:'<a><span class="icon user"/></a>\
 		<a><span class="icon remove"/></a>\
 		<a><button type="submit" form="childForm"><span class="icon save"/></button></a>',
@@ -11,15 +27,14 @@ define(['UI','app','tool/uploader'],function(UI,app,uploader){
 			'click .icon.user': 'setCurrent',
 			'click .icon.remove': 'deleteChild'
 		}),
-		initialize:function(){
-			this.content=_.template('#tmplChild',this.model)
-			return this._super().initialize.apply(this,arguments)
-		},
 		show: function(id){
-			id && (this.model=Child.all.get(id))
-			if(!this.model)
-				this.model=new Child
-			return this._super().show.apply(this,arguments)
+			this._super().show.apply(this,arguments)
+			var model
+			id && (model=Child.all.get(parseInt(id)))
+			if(!model)
+				model=new Child
+			this.setModel(model)
+			return this
 		},
 		setModel:function(m){
 			this._super().setModel.apply(this,arguments)

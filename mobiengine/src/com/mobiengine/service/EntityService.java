@@ -75,6 +75,9 @@ public class EntityService extends Service{
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response update(@PathParam("id") long id, JSONObject ob) {
 		try {
+			ob.remove("updatedAt");
+			ob.remove("createdAt");
+			ob.remove("id");
 			Key key = KeyFactory.createKey(kind, id);
 			Entity entity = DatastoreServiceFactory.getDatastoreService().get(
 					key);

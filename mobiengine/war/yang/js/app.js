@@ -382,6 +382,11 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 						headers: {"X-Application-Id": app.apiKey},
 						beforeSend: function(xhr, setting){
 							setting.url=app.service+setting.url
+							var data=setting.data
+							if(setting.data){
+								delete data.createdAt
+								delete data.updatedAt
+							}
 						}
 					})
 					/**

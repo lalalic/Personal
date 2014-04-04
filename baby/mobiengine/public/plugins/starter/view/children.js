@@ -1,8 +1,13 @@
 define(['UI','app'],function(UI,app){
+	var tmplChildren='\
+		<li class="thumb" id="_{{id}}">\
+			<img src="{{getUrl("photo")}}">\
+			<div><a href="#child/{{id}}/{{get("name")}}">{{get("name")}}</a></div>\
+		</li>'
+	
 	var Child=app.Child
 	return new (UI.ListPage.extend({
-		className: 'children',
-		itemTemplate:'#tmplChildren',
+		itemTemplate:_.template(tmplChildren),
 		collection: Child.all,
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
@@ -55,5 +60,5 @@ define(['UI','app'],function(UI,app){
 					.find('span').click(_.bind(this.show,this))
 			}
 		}
-	}).asMenu())
+	}).asShortcut())
 })

@@ -151,19 +151,11 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 					span.checkable:not(.open)>span:first-of-type:after{content:'...'}\
 					span.checkable.vertical>span{display:block!important}\
 					.tags{text-align:center}\
-					.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
+					.tags:before{content:'f02b';font-family:'lungojsicon';font-weight:normal!important}\
 					.tag:empty{visibility:hidden!important}\
+					.popup.shortcut{top:45px; height:1px;}\
+					.popup.shortcut li{background-color:#00afe3}\
 					.primary{background-color:red!important}",
-			TEMPLATE: '\
-				<script type="text/tmpl" id="tmplCheckable">\
-					<span class="checkable" onclick="$(this).siblings().removeClass(\'open\'); $(this).toggleClass(\'open\')">\
-						<span>{{title}}</span>\
-						<%_.each(options,function(o){with(o){%>\
-						<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get(\'name\')}}" class="outview">\
-						<span onclick="$(this).prev(\'input\').click()">{{text(_.isString(o) ? o : get(\'name\'))}}</span>\
-						<%}})%>\
-					</span>\
-				</script>',
 			/**convert this Page class to Aside Page class */
 			asAside:function(){
 				this.prototype.tagName='aside'
@@ -177,9 +169,9 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				return this
 			},
 			/**convert this page class to Shortcut Page class*/
-			asMenu: function(menuSelector){
+			asShortcut: function(menuSelector){
 				this.prototype.tagName='div'
-				this.prototype.className+=" hidden popup"
+				this.prototype.className="hidden popup shortcut "+(this.prototype.className||"")
 				this.prototype.attach=function(page){
 					$menu=page.$(menuSelector||'header .user').parent()
 					if($menu.length==0)

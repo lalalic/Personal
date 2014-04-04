@@ -16,7 +16,7 @@ public class WebApp extends ServletContainer {
 			throws ServletException, IOException {
 		response.addHeader("Access-Control-Allow-Headers","X-Application-Id,Request,X-Requested-With,Content-Type,Accept,X-Session-Token");
 		response.addHeader("Access-Control-Allow-Origin", "*");
-		response.addHeader("Access-Control-Allow-Method", "*");
+		response.addHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
 		if(request.getMethod().toUpperCase()=="OPTIONS")
 			return;
 		long start=System.currentTimeMillis();

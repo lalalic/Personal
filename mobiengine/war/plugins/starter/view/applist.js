@@ -70,8 +70,5 @@ define(['UI','app'],function(View,app){
 					.find('span').click(_.bind(this.show,this))
 			}
 		}
-	},{
-		STYLE:".applist.popup{top:45px;height:1px;}\
-			.appplist.popup li{background-color:#00afe3}"
-	}).asMenu())
+	}).asShortcut())
 })
