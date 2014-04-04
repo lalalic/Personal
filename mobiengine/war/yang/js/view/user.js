@@ -4,10 +4,24 @@
  * @requires UI
  */
 define(['UI','app'],function(View,app){
+	var tmplUser='\
+			<form id="signin">\
+				<fieldset><input name="username" type="text" placeholder="'+text('user name')+'"></fieldset>\
+				<fieldset><input name="password" type="password" placeholder="'+text('password')+'"></fieldset>\
+			</form>\
+			<form id="signup">\
+				<fieldset><input name="username" type="text" placeholder="'+text('user name')+'"></fieldset>\
+				<fieldset><input name="email" type="email" placeholder="'+text('email address where reset password will be sent')+'"></fieldset>\
+				<fieldset><input name="password" type="text" placeholder="'+text('password')+'"></fieldset>\
+			</form>\
+			<form id="password">\
+				<fieldset><input name="email" type="text" placeholder="'+text('email address where new password would send')+'"></fieldset>\
+			</form>'
 	var Page=View.Page, User=app.User
+
 	return new (Page.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
-		content:_.template('#tmplUser',{}),
+		content:tmplUser,
 		events:_.extend({},Page.prototype.events,{
 			'submit form#signin':'signin',
 			'submit form#signup':'signup',

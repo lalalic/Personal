@@ -32,31 +32,15 @@
 require.config(/** @lends requireJSConf*/{
 	baseUrl:'./js',
 	config:{
-		"app":{
-			apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw',
-			title:'Mobile Engine',
-			asideView:'view/menu',
-			shortcutView:'view/applist'
+		Plugin:{
+			root:"../../plugins/",//use path replative to ./js
+			zipped:false
 		}
 	},
-	deps:['jQuery', 'app', 'model'],
-	callback: function($, app, templates, model){
-		//add routes
-		app.route('createApp','app','view/app',true)
-		app.route('settings','settings','view/app',true)
-		app.route('schema','data','view/data',true)
-		app.route('analytics','analytics','view/analytics',true)
-		app.route('cloudcode','cloudcode','view/cloudcode',true)
-		
+	deps:['jQuery', 'app'],
+	callback: function($, app){
 		//start application
-		$(function () {
-			app.start({
-				title:'Mobile Engine',
-				asideView:'view/menu',
-				shortcutView:'view/applist',
-				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw'
-			})
-		})
+		$(function () {app.start()})
 	},
 	shim:{
 		'Backbone': {
@@ -71,17 +55,15 @@ require.config(/** @lends requireJSConf*/{
 		}
 	},
 	paths:{
-		"JSZip":"deps/jszip.min",
-		"jQuery":"deps/jquery.min",
-		"Underscore":"deps/underscore-min",
-		"Backbone":"deps/backbone-min",
-		"app":"deps/app",
-		"i18n":"deps/i18n",
-		"text":"deps/text",
-		"Phonegap":"file:///android_asset/www/phonegap.js",
+		"JSZip":"http://cdnjs.cloudflare.com/ajax/libs/jszip/2.0.0/jszip",
+		"jQuery":"http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min",
+		"Underscore":"http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min",
+		"Backbone":"http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min",
+		"i18n":"http://cdnjs.cloudflare.com/ajax/libs/require-i18n/2.0.4/i18n",
+		"text":"http://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.10/text",
+		"Jasmine":"http://cdnjs.cloudflare.com/ajax/libs/jasmine/2.0.0/jasmine",
 		
-		"UI":"deps/base",
-		"Plugin":"deps/plugin"
+		"Phonegap":"file:///android_asset/www/phonegap.js",
 	},	
 	waitSeconds:30,
 	urlArgs: "v=0.1"

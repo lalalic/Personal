@@ -1,4 +1,16 @@
 define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
+	var tmplColumn='\
+			<fieldset>\
+				<input placeholder="'+text('name')+'" name="name" type="text">\
+				<select name="type">\
+					<%_.each(require("app").Model.DATATYPE,function(o){%> \
+					<option value="{{o}}">{{o}}</option>\
+					<%})%>\
+				</select>\
+			</fieldset>\
+			<button class="anchor create">'+text('Create Column')+'</button>\
+			<button class="anchor cancel">cancel</button>'
+	
 	var ListPage=View.ListPage,
 		Schema=app.Schema,
 		Application=app.Application,
@@ -100,7 +112,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		columnUI=new (View.Popup.extend({
 			model:{searchable:true, unique: false},
 			className:'form',
-			template:_.template($("#tmplColumnUI").html()),
+			template:_.template(tmplColumn),
 			events:{
 				"click button.cancel":'close',
 				"click button.create":'create',

@@ -17,13 +17,14 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 	var _extend=Backbone.View.extend
 	Backbone.View.extend=function(properties,classProperties){
 		var aView=_extend.apply(this,arguments)
-		if(classProperties==undefined || !classProperties.STYLE)
-			delete aView.STYLE
-		aView.STYLE && $('head').append("<style>"+aView.STYLE+"</style>")
+		aView.STYLE && $('head').append("<style>"+aView.STYLE+"</style>") && (delete aView.STYLE)
+		aView.TEMPLATE && $('body').append(aView.TEMPLATE) && (delete aView.TEMPLATE)
 		return aView
 	}
 		
-	
+	var tmplPage='<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header>\
+				<article class="active scroll">{{content}}</article>\
+				<footer><nav>{{cmds}}</nav></footer>'
 	var User=app.User,
 		currentPage={section:null,aside:null},
 		/**
@@ -46,9 +47,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 			/** html commands buttons in footer*/
 			cmds:'',
 			/** template function to render page */
-			template:_.template('<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header>\
-				<article class="active scroll">{{content}}</article>\
-				<footer><nav>{{cmds}}</nav></footer>'),
+			template:_.template(tmplPage),
 			events:{'click header .refresh': 'refresh',
 				'click header .back':'back', 
 				'click header .user':'user',
@@ -155,6 +154,16 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 					.tags:before{content:'\f02b';font-family:'lungojsicon';font-weight:normal!important}\
 					.tag:empty{visibility:hidden!important}\
 					.primary{background-color:red!important}",
+			TEMPLATE: '\
+				<script type="text/tmpl" id="tmplCheckable">\
+					<span class="checkable" onclick="$(this).siblings().removeClass(\'open\'); $(this).toggleClass(\'open\')">\
+						<span>{{title}}</span>\
+						<%_.each(options,function(o){with(o){%>\
+						<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get(\'name\')}}" class="outview">\
+						<span onclick="$(this).prev(\'input\').click()">{{text(_.isString(o) ? o : get(\'name\'))}}</span>\
+						<%}})%>\
+					</span>\
+				</script>',
 			/**convert this Page class to Aside Page class */
 			asAside:function(){
 				this.prototype.tagName='aside'

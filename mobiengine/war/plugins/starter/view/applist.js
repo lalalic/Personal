@@ -3,7 +3,7 @@ define(['UI','app'],function(View,app){
 	return new (ListPage.extend({
 		className:'applist',
 		collection: Application.all,
-		itemTemplate:'#tmplApps',
+		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{get("name")}}</a></li>'),
 		events:{
 			'click .applist .app': 'onClickApp',
 			'click ul.extra .create>a':'onCreate'

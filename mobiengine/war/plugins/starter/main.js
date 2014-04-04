@@ -1,4 +1,9 @@
-define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
+/**
+ * starter plugin to config app, routes, and extend models
+ * @module starter
+ */
+define(['module','Plugin', 'app', 'jQuery','Underscore','Backbone'],
+function(module, Plugin, app, $, _, Backbone){
 	var User=app.User,
 		currentApp, 
 		prevApp,
@@ -93,4 +98,23 @@ define(['app', 'jQuery','Underscore','Backbone'],function(app, $, _, Backbone){
 		this.Application.all=this.Application.collection()
 		return _init.apply(this,arguments)
 	}
+
+	return Plugin.extend({
+		description:'manage applications',
+		init: function(){
+			$.extend(app,{
+				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw',
+				title:'Mobile Engine',
+				asideView:this.module('view/menu'),
+				shortcutView:this.module('view/applist')
+			})
+
+			app.route('main','',this.module('view/main'),true)
+			app.route('createApp','app',this.module('view/app'),true)
+			app.route('settings','settings',this.module('view/app'),true)
+			app.route('schema','data',this.module('view/data'),true)
+			app.route('analytics','analytics',this.module('view/analytics'),true)
+			app.route('cloudcode','cloudcode',this.module('view/cloudcode'),true)
+		}
+	})
 })

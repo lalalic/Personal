@@ -9,7 +9,7 @@
 	<link rel="stylesheet" href="css/icon.css">
 	<link rel="stylesheet" href="css/app.css">
 	<link rel="stylesheet" href="css/app.theme.css">
-	<script data-main="js/main" src="js/deps/require.js"></script>
+	<script data-main="js/main" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js"></script>
 </head>
 <body data-device="phone" data-position="absolute">
 <section id="splash" class="show">
@@ -28,21 +28,6 @@
 	</article>
 </section>
 
-<script type="text/tmpl" id="tmplUser">
-	<form id="signin">
-		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
-		<fieldset><input name="password" type="password" placeholder="{{text('password')}}"></fieldset>
-	</form>
-	<form id="signup">
-		<fieldset><input name="username" type="text" placeholder="{{text('user name')}}"></fieldset>
-		<fieldset><input name="email" type="email" placeholder="{{text('email address where reset password will be sent')}}"></fieldset>
-		<fieldset><input name="password" type="text" placeholder="{{text('password')}}"></fieldset>
-	</form>
-	<form id="password">
-		<fieldset><input name="email" type="text" placeholder="{{text('email address where new password would send')}}"></fieldset>
-	</form>
-</script>
-
 <script type="text/tmpl" id="tmplCheckable">
 <span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
 	<span>{{title}}</span>
@@ -51,6 +36,15 @@
 	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
 	<%}})%>
 </span>
+</script>
+
+<script type="text/tmpl" id="tmplEmpty">
+	<div class="empty">
+		<span class="icon {{type}}"></span>
+		<strong>{{title}}</strong>
+		<small>{{description}}</small>
+		<div>{{action}}</div>
+	</div>
 </script>
 
 <datalist id="Boolean">

@@ -316,7 +316,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 			 *  @example
 			 *  app.start({service:'http://a.com'})
 			 */
-			service:'http://localhost',
+			service: location.protocol=='file:' ? 'http://localhost/' : '/',
 			version:'0.01',
 			/**
 			 *  application public key distributed by service provider
@@ -332,7 +332,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 			 *  //pluginA, PluginB, and pluginC must be loaded before application starts
 			 *  app.start({plugins:"pluginA,pluginB,pluginC"})
 			 */
-			plugins:'',
+			plugins:'starter',
 			/**
 			 *  debug switch
 			 *  @type {boolean}
@@ -367,8 +367,6 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 			 *  })
 			 */
 			start: function(opt){
-				opt && _.extend(this,module.config,opt||{})
-				
 				$(window).bind('resize',function(){
 					if($('#media').length==0)
 						$('body').append('<div id="media" class="outview"></div>')
@@ -376,16 +374,16 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 					$('body').data('device',$.media)
 				}).resize()
 				
-				$.ajaxSetup({
-					dataType:'json',
-					headers: {"X-Application-Id": this.apiKey},
-					beforeSend: function(xhr, setting){
-						if(setting.isLocal && /^1\//.test(setting.url))
-							setting.url=app.service.replace(/\/*$/,'')+'/'+setting.url
-					}
-				})
-				
 				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),function(splash,i18n){
+					_.extend(this,module.config(),opt||{})
+				
+					$.ajaxSetup({
+						dataType:'json',
+						headers: {"X-Application-Id": app.apiKey},
+						beforeSend: function(xhr, setting){
+							setting.url=app.service+setting.url
+						}
+					})
 					/**
 					 * translate string to local string
 					 * @global

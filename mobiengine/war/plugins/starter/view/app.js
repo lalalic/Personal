@@ -1,8 +1,21 @@
 define(['app','UI'],function(App,View){
+	var tmplApp='\
+		<form >\
+			<fieldset>\
+				<label>'+text('applicaiton name')+':</label>\
+				<input type="text" name="name">\
+				<label>'+text('url')+':</label>\
+				<input type="text" name="url">\
+			</fieldset>\
+			<fieldset>\
+				<label>'+text('Applicaiton Key')+':</label>\
+				<input type="text" name="apiKey" readonly="readonly">\
+			</fieldset>\
+		</form>'
 	var FormPage=View.FormPage, Application=App.Application
 	return new (FormPage.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
-		content:_.template('#tmplApp',{}),
+		content:tmplApp,
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
 			Application.all.on('current',this.setModel,this)

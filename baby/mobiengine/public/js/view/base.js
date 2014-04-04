@@ -4,7 +4,7 @@
  * @requires app
  * @requires jQuery
  */
-define(['app',"jQuery"],function(app, $){
+define(['app',"jQuery", "Underscore"],function(app, $, _){
 	$(document).ajaxSend(function(){
 		var a=$('section.show span.refresh').parent().addClass('doing')
 		$(document).one('ajaxComplete',function(){
@@ -27,6 +27,7 @@ define(['app',"jQuery"],function(app, $){
 	var User=app.User,
 		currentPage={section:null,aside:null},
 		/**
+		 * initialize->render->template, close/hide->clear->detach el
 		 * @class Page
 		 * @memberof module:UI
 		 * @augments Backbone.View
@@ -54,6 +55,8 @@ define(['app',"jQuery"],function(app, $){
 				'click .signout': 'signout'},
 			initialize: function(){
 				this.$el.data('transition','slide')
+				if(_.isString(this.template))
+					this.template=_.template(this.template)
 				this.render()
 			},
 			render: function(){
@@ -253,6 +256,7 @@ define(['app',"jQuery"],function(app, $){
 			}
 		}),
 		/**
+		 * 
 		 * @class FormPage
 		 * @memberof module:UI
 		 * @augments module:UI.Page
@@ -269,9 +273,12 @@ define(['app',"jQuery"],function(app, $){
 				this.$('button[type=submit]').attr('form',this.cid+'form')
 				this.setModel(this.model)
 			},
+			/**
+			 * handler for change on *[name] 
+			 */
 			change: function(e){
 				var el=e.target
-				this.model.set(el.name,el.value,{validate:true})
+				this.model.set(el.name,el.value,{validate:true, silent: true})
 				return this
 			},
 			__submit: function(){
@@ -300,6 +307,9 @@ define(['app',"jQuery"],function(app, $){
 			onChanged: function(m){
 				m.trigger('change',m)
 			},
+			/**
+			 * change model and then show values
+			 */
 			setModel: function(model){
 				if(this.model==model)
 					return this
@@ -311,6 +321,9 @@ define(['app',"jQuery"],function(app, $){
 				})
 				return this
 			},
+			/**
+			 * set default value on input 
+			 */
 			setDefault: function(){
 				return this
 			}
