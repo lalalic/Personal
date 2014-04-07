@@ -86,6 +86,11 @@ define(['Plugin', 'app'],function(Plugin, app){
 			app.route('main','',this.module('view/categories'),false)
 			app.route('createChild','child',this.module('view/child'),true)
 			app.route('updateChild','child/:id/:name',this.module('view/child'),true)
+			app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
+			//app.route('search','posts/:query',this.module('view/main'),false)
+			app.route('post','create/:catId/:catname',this.module('view/post'),true)
+		
+		
 		}
 	})
 })
