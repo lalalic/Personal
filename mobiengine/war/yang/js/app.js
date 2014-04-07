@@ -181,6 +181,12 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 		Backbone.Collection.prototype.parse=function(response){
 			return response.results
 		}
+		
+		var _sync=Backbone.Collection.prototype.sync
+		Backbone.Collection.prototype.sync=function(method, model, opt){
+			method=="read" && this.query && (opt.data=this.query.toJSON())
+			return _sync.apply(this,arguments)
+		}
 	})();
 	
 	var currentUser,
@@ -260,10 +266,12 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 				/**
 				 *  create collection of Model
 				 */
-				collection:function(){
+				collection:function(models, options){
 					if(!this.Collection)
 						this.Collection=Backbone.Collection.extend({model:this})
-					return new this.Collection()
+					var a=new this.Collection(models, options)
+					a.query=new app.Query(this)
+					return a
 				},
 				/**
 				 *  convert from string to type-safed value
@@ -712,7 +720,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 						type : 'get',
 						data : _.extend(this.toJSON(), {
 							limit : 0,
-							count : 1
+							count : true
 						})
 					}).then(function (r) {
 						return r.count

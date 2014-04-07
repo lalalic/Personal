@@ -55,13 +55,12 @@ require.config(/** @lends requireJSConf*/{
 		}
 	},
 	paths:{
-		"JSZip":"http://cdnjs.cloudflare.com/ajax/libs/jszip/2.0.0/jszip",
-		"jQuery":"http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min",
-		"Underscore":"http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min",
-		"Backbone":"http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min",
-		"i18n":"http://cdnjs.cloudflare.com/ajax/libs/require-i18n/2.0.4/i18n",
-		"text":"http://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.10/text",
-		"Jasmine":"http://cdnjs.cloudflare.com/ajax/libs/jasmine/2.0.0/jasmine",
+		"JSZip":"libs/jszip.min",
+		"jQuery":"libs/jquery-2.1.0.min",
+		"Underscore":"libs/underscore-min",
+		"Backbone":"libs/backbone-min",
+		"i18n":"libs/i18n",
+		"Jasmine":"libs/jasmin",
 		
 		"Phonegap":"file:///android_asset/www/phonegap.js",
 	},	

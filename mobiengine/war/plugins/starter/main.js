@@ -63,7 +63,7 @@ function(module, Plugin, app, $, _, Backbone){
 						return Backbone.Collection.prototype.fetch.apply(this,arguments)
 					}
 				}
-				return new this.Collection()
+				return app.Model.collection.apply(this,arguments)
 			}
 		});
 
@@ -79,7 +79,7 @@ function(module, Plugin, app, $, _, Backbone){
 				return Backbone.Collection.prototype.fetch.apply(this,arguments)
 			}
 		}
-		return new this.Collection()
+		return app.Model.collection.apply(this,arguments)
 	}
 	
 	var _init4User=app.init4User

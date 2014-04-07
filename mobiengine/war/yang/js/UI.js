@@ -242,6 +242,10 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				this.$list.find('#_'+item.id).replaceWith(this.itemTemplate(item))
 				return this
 			},
+			show: function(){
+				Page.prototype.show.apply(this,arguments)
+				return this.refresh()
+			},
 			refresh: function(){
 				this.collection && this.collection.fetch()
 				return this
