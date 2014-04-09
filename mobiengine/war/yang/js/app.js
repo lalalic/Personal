@@ -245,12 +245,25 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 					return data
 				},
 				/**
-				 *  @function
+				 *  only sync changed attributes
 				 */
 				patch: function(){
 					var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
 					return this.save(null,{attrs:patchs})
+				},
+				/**
+				 * add unique value to an array field
+				 */
+				addUnique:function(name, value){
+					
+				},
+				/**
+				 * remove item from an array field
+				 */
+				remove: function(name, value){
+				
 				}
+				
 			},/** @lends app.Model */{
 				/**
 				 *  set schema

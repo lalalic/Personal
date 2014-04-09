@@ -5,7 +5,7 @@ define(['UI','app'],function(View,app){
 				<div>\
 					<strong><a href="#show/{{id}}">{{get("title")}}</a></strong>\
 					<a class="on-right"><span class="icon user"> {{get("authorName")}}</span>\
-						<span class="icon time"  style="padding-right:20px"> {{createdAt.ago()}}</span></a>\
+						<span class="icon time"  style="padding-right:20px"> {{createdAt}}</span></a>\
 					<a href="#comments/{{id}}" class="on-right"><span class="cunt">{{get("comments")}}</span></a>\
 					<a href="#update/{{id}}" class="on-right"><span class="icon edit"/></a>\
 				</div>\

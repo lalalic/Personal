@@ -32,6 +32,37 @@
 </section>
 
 <script>require(['app'],function(app){app.start()})</script>
+<script type="text/tmpl" id="tmplCates">
+	<li class="thumb" id="_{{id}}">
+		<img src="{{getUrl('thumbnail')}}" onerror="this.src=''">
+		<div>
+			<strong><a href="#category/{{id}}/{{get('name')}}">{{text(get('name'))}}</a></strong>
+			<small>{{get('desc')}}</small>
+			<a class="on-right" href="#create/{{id}}/{{get('name')}}" style="cursor:pointer"><span class="icon plus"/></a>
+		</div>
+	</li>
+</script>
+<script type="text/tmpl" id="tmplChild">
+	<form> 
+		<fieldset><input type="text" name="name" placeholder="{{text('baby name')}}"></fieldset>
+		<fieldset>
+			<select name="gender">
+				<option value=0>{{text('Boy')}}</option>
+				<option value=1>{{text('Girl')}}</option>
+			</select>
+		</fieldset>
+		<fieldset><input type="date" name="birthday" placeholder="{{text('birthday')}}"></fieldset>
+		<fieldset>
+			<div name="photo" style="width:150px;height:150px;border:1px solid;display:block;margin:0px auto;background-repeat:no-repeat;background-position:center center"/>
+		</fieldset>
+	</form>
+</script>
+<script type="text/tmpl" id="tmplChildren">
+	<li class="thumb" id="_{{id}}">
+		<img src="{{getUrl('photo')}}" onerror="this.src='/img/baby.png'">
+		<div><a href="#child/{{id}}/{{get('name')}}">{{get('name')}}</a></div>
+	</li>
+</script>
 
 <script type="text/tmpl" id="tmplPosts">
 	<li class="thumb" id="_{{id}}">

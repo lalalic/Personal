@@ -175,7 +175,3 @@ Parse.Cloud.afterSave("post", function(request, response) {
 		},error)
 });
 
-Parse.Cloud.define("init",function(request, response){
-	
-})
-

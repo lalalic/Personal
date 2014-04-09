@@ -2,9 +2,14 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 	var FormPage=View.FormPage, Post=app.Post, Tag=app.Tag, Favorit=app.Tag
 	return new (FormPage.extend({
 		model:new Post,
-		content:'<form><fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"/></fieldset>\
-			<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+text("content")+'/></form>',
-		cmds:'<a><span class="icon picture"/></a><a><span class="icon link-picture"/></a><a><button type="submit"><span class="icon save"/></button></a>',
+		content:'\
+			<form>\
+				<fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"></div></fieldset>\
+				<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+text("content")+'/>\
+			</form>',
+		cmds:'<a><span class="icon picture"/></a>\
+			<a><span class="icon link-picture"/></a>\
+			<a><button type="submit"><span class="icon save"/></button></a>',
 		events:_.extend({},FormPage.prototype.events,{
 			'click span.picture':'insertPicture',
 			'click span.link-picture':'linkPicture'
@@ -48,9 +53,9 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 				if(_.isObject(id))
 					this.setModel(id)
 				else{
-					var model=new Post({id:id}))
+					var model=new Post({id:id})
 					model.fetch()
-						.then(_.bind(function(){this.setModel(this.model)},this))
+						.then(_.bind(function(){this.setModel(model)},this))
 				}
 				break
 			case 2:
@@ -72,7 +77,7 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 			return FormPage.prototype.save.apply(this,arguments)
 		},
 		change: function(e){
-			var el=e.srcElement
+			var el=e.target
 			switch(el.name){
 			case 'tags':
 				this.model[el.checked ? 'addUnique' : 'remove']('tags',el.value)
@@ -80,6 +85,10 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 			default:
 				FormPage.prototype.change.apply(this,arguments)
 			}
+		},
+		clear:function(){
+			$(this.editor).empty()
+			return this._super().clear.apply(this,arguments)
 		}
 	}))
 })

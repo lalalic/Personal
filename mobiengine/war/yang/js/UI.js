@@ -151,7 +151,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 					span.checkable:not(.open)>span:first-of-type:after{content:'...'}\
 					span.checkable.vertical>span{display:block!important}\
 					.tags{text-align:center}\
-					.tags:before{content:'f02b';font-family:'lungojsicon';font-weight:normal!important}\
+					.tags:before{content:'\ue61a';font-family:'lungojsicon';font-weight:normal!important}\
 					.tag:empty{visibility:hidden!important}\
 					.popup.shortcut{top:45px; height:1px;}\
 					.popup.shortcut li{background-color:#00afe3}\

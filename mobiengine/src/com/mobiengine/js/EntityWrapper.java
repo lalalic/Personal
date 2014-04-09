@@ -1,21 +1,20 @@
 package com.mobiengine.js;
 
-import java.util.concurrent.Future;
-
 import com.google.appengine.api.datastore.Entity;
 
 public class EntityWrapper {
 	Entity entity;
+	long id;
 	public EntityWrapper(Entity entity){
 		this.entity=entity;
+		id=entity.getKey().getId();
 	}
 	
-	@SuppressWarnings("rawtypes")
-	public Future save(){
-		return null;
+	public boolean isNew(){
+		return entity.getKey()!=null;
 	}
 	
-	public static Entity get(){
-		return null;
+	public void set(String name, Object value){
+		entity.setProperty(name, value);
 	}
 }
