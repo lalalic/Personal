@@ -5,14 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -34,21 +32,22 @@ public class ApplicationService extends EntityService {
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
 	
-	public ApplicationService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-		super(request,appId, KIND);
+	public ApplicationService(@HeaderParam("X-Session-Token") String sessionToken,
+			@HeaderParam("X-Application-Id") String appId) {
+		super(sessionToken,appId,KIND);
 	}
 	
 	@Override
 	protected void initService(){
 		super.initService();
-		if(!TOP_NAMESPACE.equals(NamespaceManager.get()))
+		if(user==null || !TOP_NAMESPACE.equals(NamespaceManager.get()))
 			throw new RuntimeException("Access Denied");
 	}
 	
 	@Override
 	public void beforeCreate(Entity app, JSONObject request){
-		app.setProperty("author", this.userId);
-		app.setUnindexedProperty("authorName", this.userName);
+		app.setProperty("author", user.getKey().getId());
+		app.setUnindexedProperty("authorName", user.getProperty("username"));
 		try {
 			app.setProperty("name", request.getString("name"));
 			app.setProperty("url", request.getString("url"));
@@ -60,7 +59,7 @@ public class ApplicationService extends EntityService {
 	@Override 
 	public void beforeUpdate(Entity app, JSONObject request){
 		try {
-			if(this.userId!=(Long)app.getProperty("author"))
+			if(user.getKey().getId()!=(Long)app.getProperty("author"))
 				throw new RuntimeException("Access Denied");
 			
 			if(request.has("name")){
@@ -122,7 +121,7 @@ public class ApplicationService extends EntityService {
 		if(ob==null)
 			ob=new JSONObject();
 		try {
-			ob.put("author", this.userId);
+			ob.put("author", user.getKey().getId());
 		} catch (JSONException ex) {
 			throw new RuntimeException(ex.getMessage());
 		}

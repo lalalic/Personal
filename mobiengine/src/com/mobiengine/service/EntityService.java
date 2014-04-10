@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -16,7 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -35,9 +33,9 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 @Path(Service.VERSION+"/classes/{kind:\\w+}")
 public class EntityService extends Service{
 	public EntityService(
-			@Context HttpServletRequest request,
+			@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
-		super(request,appId,kind);
+		super(sessionToken,appId,kind);
 	}
 
 	@POST

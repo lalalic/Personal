@@ -3,7 +3,6 @@ package com.mobiengine.service;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -11,7 +10,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -21,7 +19,6 @@ import org.codehaus.jettison.json.JSONObject;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
-import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
@@ -31,8 +28,9 @@ import com.sun.jersey.core.util.Base64;
 @Path(Service.VERSION+"/users")
 public class UserService extends EntityService{
 	public final static String KIND="_user";
-	public UserService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-		super(request,appId, KIND);
+	public UserService(@HeaderParam("X-Session-Token") String sessionToken,
+			@HeaderParam("X-Application-Id") String appId) {
+		super(sessionToken,appId,KIND);
 	}
 	
 	protected String getUrlRoot(){
@@ -59,8 +57,6 @@ public class UserService extends EntityService{
 	@Override
 	public void afterCreate(Entity user, JSONObject response){
 		try {
-			session.setAttribute("userid", user.getKey().getId());
-			session.setAttribute("username", user.getProperty("username"));
 			response.put("sessionToken", getSessionToken(user));
 		} catch (JSONException ex) {
 			throw new RuntimeException(ex);
@@ -68,7 +64,25 @@ public class UserService extends EntityService{
 	}
 	
 	protected static String getSessionToken(Entity user){
-		return new String(Base64.encode(KeyFactory.keyToString(user.getKey())));
+		return new String(Base64.encode(user.getKey().getId()+"-"+user.getProperty("username")));
+	}
+	
+	public static Entity resolvSessionToken(String token){
+		String[] infos=Base64.base64Decode(token).split("-");
+		if(infos.length!=2)
+			throw new RuntimeException("token error");
+		long id=Long.parseLong(infos[0]);
+		String username=infos[1];
+		Entity user;
+		try {
+			user = DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, id));
+				
+		} catch (EntityNotFoundException e) {
+			throw new RuntimeException("token error");
+		}
+		if(!username.equals(user.getProperty("username")))
+			throw new RuntimeException("token error");
+		return user;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -80,7 +94,7 @@ public class UserService extends EntityService{
 			.asSingleEntity();
 	}
 	
-	private String encrypt(String msg){
+	private static String encrypt(String msg){
 		MessageDigest digest;
 		try {
 			digest = java.security.MessageDigest.getInstance("MD5");
@@ -100,8 +114,9 @@ public class UserService extends EntityService{
 	
 	@Path(Service.VERSION+"/requestPasswordReset")
 	public static class RequestPasswordResetService extends Service{
-		public RequestPasswordResetService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			super(request,appId,KIND);
+		public RequestPasswordResetService(@HeaderParam("X-Session-Token") String sessionToken,
+				@HeaderParam("X-Application-Id") String appId) {
+			super(sessionToken,appId,KIND);
 		}
 
 		@POST
@@ -114,34 +129,26 @@ public class UserService extends EntityService{
 	
 	@Path(Service.VERSION+"/me")
 	public static class VerifyService extends Service{
-		public VerifyService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			super(request,appId,KIND);
+		public VerifyService(@HeaderParam("X-Session-Token") String sessionToken,
+				@HeaderParam("X-Application-Id") String appId) {
+			super(sessionToken,appId,KIND);
 		}
 		@GET
 		@Produces(MediaType.APPLICATION_JSON)
-		public Response verifySession(@HeaderParam("X-Session-Token") String sessionKey){
-			Key key=KeyFactory.stringToKey(new String(Base64.decode(sessionKey)));
+		public Response verifySession(){
 			try {
-				if(KIND.equals(key.getKind())){
-					Entity user=DatastoreServiceFactory.getDatastoreService().get(key);
-					if(user!=null){
-						user.setProperty("sessionToken", getSessionToken(user));
-						session.setAttribute("userid", user.getKey().getId());
-						session.setAttribute("username", user.getProperty("username"));
-						user.removeProperty("password");
-						return Response.ok().entity(user).build();
-					}
-				}
-			} catch (EntityNotFoundException e) {
-				
+				user.setProperty("sessionToken", getSessionToken(user));
+				user.removeProperty("password");
+				return Response.ok().entity(user).build();
+			} catch (Throwable ex) {
+				throw new RuntimeException("Your session has already been expired.");
 			}
-			throw new RuntimeException("Your session has already been expired.");
 		}
 	}
 	@Path(Service.VERSION+"/login")
 	public static class LoginService extends Service{
-		public LoginService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-			super(request,appId,KIND);
+		public LoginService(@HeaderParam("X-Application-Id") String appId) {
+			super(null,appId,KIND);
 		}
 
 		@GET
@@ -157,21 +164,12 @@ public class UserService extends EntityService{
 			if(user==null)
 				throw new RuntimeException("username or password is not correct.");
 			
-			MessageDigest digest;
-			try {
-				digest = java.security.MessageDigest.getInstance("MD5");
-				digest.update(password.getBytes());
-				if (new String(digest.digest()).equals(user.getProperty("password"))){
-					user.setProperty("sessionToken", getSessionToken(user));
-					session.setAttribute("userid", user.getKey().getId());
-					session.setAttribute("username", user.getProperty("username"));
-					user.removeProperty("password");
-					return Response.ok().entity(user).build();
-				}else
-					throw new RuntimeException("username or password is not correct.");
-			} catch (NoSuchAlgorithmException e) {
-				throw new RuntimeException("System error");
-			}
+			if (encrypt(password).equals(user.getProperty("password"))){
+				user.setProperty("sessionToken", getSessionToken(user));
+				user.removeProperty("password");
+				return Response.ok().entity(user).build();
+			}else
+				throw new RuntimeException("username or password is not correct.");
 		}
 	}
 }

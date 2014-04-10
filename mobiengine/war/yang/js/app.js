@@ -400,7 +400,8 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 				
 					$.ajaxSetup({
 						dataType:'json',
-						headers: {"X-Application-Id": app.apiKey},
+						headers: {"X-Application-Id": app.apiKey,
+							"X-Session-Token":localStorage.getItem('sessionToken')},
 						beforeSend: function(xhr, setting){
 							setting.url=app.service+setting.url
 							var data=setting.data
@@ -549,12 +550,11 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 				logIn: function(){
 					return $.ajax({
 						context:this,
-						url:'1/login',
+						url:this.version+'/login',
 						method:'get',
 						data:this.toJSON()
 					}).then(function(user){
-						delete this.attributes.password
-						this.set(this.parse(user),{silent:true})
+						this.set(user,{parse:true,silent:true})
 						localStorage.setItem('currentUser',JSON.stringify(this.toJSON()))
 						return currentUser=this
 					})
@@ -566,7 +566,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 					return $.ajax({
 						context:this,
 						timeout:20000,
-						url:'1/me',
+						url:this.version+'/me',
 						method:'get',
 						headers:{"X-Session-Token":localStorage.getItem('sessionToken')}
 					}).then(function(user){
@@ -583,7 +583,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 				 */
 				requestPasswordReset:function(email){
 					return $.ajax({
-						url:'1/requestPasswordReset',
+						url:this.version+'/requestPasswordReset',
 						type:'json',
 						method:'POST',
 						data:this.toJSON()
@@ -595,6 +595,8 @@ define(['module','jQuery','Underscore','Backbone'], function(module, $, _, Backb
 				logOut: function(){
 					currentUser=null
 					localStorage.removeItem('currentUser')
+					localStorage.removeItem('sessionToken')
+					localStorage.removeItem('JSESSIONID')
 					location.reload()
 				}
 			},/** @lends app.User */{

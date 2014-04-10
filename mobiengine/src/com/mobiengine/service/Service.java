@@ -10,13 +10,10 @@ import java.io.ObjectOutputStream;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 
 import org.codehaus.jettison.json.JSONObject;
 
@@ -39,30 +36,26 @@ public class Service{
 	}
 	
 	Schema schema;
-	HttpSession session;
 
 	String kind;
 	String appId;
-	long userId;
-	String userName;
+	Entity user;
 	private Entity app;
 	private Cloud cloud;
 	
 	public Service(
-			@Context HttpServletRequest request,
+			@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
 		this.appId = appId;
 		this.kind = kind;
-		if(request!=null){
-			session=request.getSession();
-			request.setAttribute("service", this);
-			Object userid=session.getAttribute("userid");
-			if(userid!=null){
-				userId=(Long)userid;
-				userName=(String)session.getAttribute("username");
-			}
-		}
 		initService();
+		try{
+			if(sessionToken!=null)
+				user=UserService.resolvSessionToken(sessionToken);
+		}catch(Exception ex){
+			
+		}
+		
 	}
 	
 	protected void initService(){

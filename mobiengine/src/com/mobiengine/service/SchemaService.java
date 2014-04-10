@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -16,7 +15,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -76,8 +74,9 @@ public class SchemaService extends EntityService{
 		return field;
 	}
 	
-	public SchemaService(@Context HttpServletRequest request,@HeaderParam("X-Application-Id")String appId){
-		super(request,appId, KIND);
+	public SchemaService(@HeaderParam("X-Session-Token") String sessionToken,
+			@HeaderParam("X-Application-Id") String appId) {
+		super(sessionToken,appId,KIND);
 	}
 	
 	@POST
