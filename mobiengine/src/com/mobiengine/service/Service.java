@@ -7,8 +7,6 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -16,6 +14,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import org.codehaus.jettison.json.JSONObject;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Script;
+import org.mozilla.javascript.Scriptable;
 
 import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.Blob;
@@ -174,12 +175,14 @@ public class Service{
 	public Cloud getCloud(){
 		if(cloud!=null)
 			return cloud;
-		ScriptEngine engine=new ScriptEngineManager().getEngineByName("JavaScript");
-		cloud=new Cloud(engine);
-		engine.put("Cloud",cloud);
+		
+		Context ctx = Context.enter();
+		cloud=new Cloud(ctx);
+		Scriptable topScope=ctx.initStandardObjects(null);
+		
 		try {
 			if(app.hasProperty("cloudCode"))
-				engine.eval(app.getProperty("cloudCode").toString());
+				ctx.evaluateString(topScope, app.getProperty("cloudCode").toString(), sourceName, lineno, securityDomain)();
 		} catch (ScriptException e) {
 			
 		}

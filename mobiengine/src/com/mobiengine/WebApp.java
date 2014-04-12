@@ -2,10 +2,12 @@ package com.mobiengine;
 
 import java.io.IOException;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.mobiengine.js.Cloud;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 public class WebApp extends ServletContainer {
@@ -23,5 +25,14 @@ public class WebApp extends ServletContainer {
 		super.service(request, response);
 		response.addIntHeader("X-Runtime", (int)(System.currentTimeMillis()-start));
 	}
+
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		Cloud.init();
+		super.init(config);
+	}
+	
+	
+	
 
 }

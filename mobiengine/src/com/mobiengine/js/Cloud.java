@@ -4,27 +4,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.script.ScriptEngine;
-
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 
 
-public class Cloud {
+public class Cloud{
 	protected static final int BEFORE_SAVE=0;
 	protected static final int AFTER_SAVE=1;
 	protected static final int BEFORE_DELETE=2;
 	protected static final int AFTER_DELETE=3;
-	protected ScriptEngine engine;
+	protected Context engine;
 	HashMap<String, HashMap<Integer,List<Function>>> codes=new HashMap<String, HashMap<Integer,List<Function>>>();	
 	
-	public Cloud(){
-		
-	}
-	
-	public Cloud(ScriptEngine engine) {
+	public Cloud(Context context) {
 		this.engine=engine;
 	}
 
@@ -78,5 +73,14 @@ public class Cloud {
 		return functions;
 	}
 	
-	
+	public static void init(){
+		Context ctx=Context.enter();
+		try{
+			
+		}finally{
+			ctx.exit();
+		}
+		
+		
+	}
 }
