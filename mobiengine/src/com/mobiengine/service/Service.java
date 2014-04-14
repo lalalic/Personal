@@ -168,10 +168,14 @@ public class Service{
 		return app;
 	}
 	
+	public Entity getUser(){
+		return user;
+	}
+	
 	public Cloud getCloud(){
 		if(cloud!=null)
 			return cloud;
 		
-		return cloud=new Cloud(app.hasProperty("cloudCode") ? app.getProperty("cloudCode").toString() : "");
+		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? app.getProperty("cloudCode").toString() : "");
 	}
 }

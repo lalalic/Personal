@@ -8,10 +8,12 @@ import java.util.List;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptableObject;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
+import com.mobiengine.service.Service;
 
 
 public class Cloud{
@@ -21,9 +23,11 @@ public class Cloud{
 	protected static final int AFTER_DELETE=3;
 	protected Context ctx;
 	protected ScriptableObject scope;
+	protected Service service;
+	protected Response response;
 	HashMap<String, HashMap<Integer,List<Function>>> codes=new HashMap<String, HashMap<Integer,List<Function>>>();	
 	
-	public Cloud(String code) {
+	public Cloud(Service service, String code) {
 		ctx=Context.enter();
 		scope=(ScriptableObject)ctx.newObject(sharedScope);
 		scope.setPrototype(sharedScope);
@@ -32,6 +36,8 @@ public class Cloud{
 		
 		if(code!=null && code.trim().length()>0)
 			ctx.evaluateString(scope, code, "main.js", 1, null);
+		this.service=service;
+		response=new Response();
 	}
 
 	public void beforeSave(String kind, Function callback){
@@ -39,8 +45,10 @@ public class Cloud{
 	}
 	
 	public void beforeSave(Entity entity){
-		Request request=new Request(entity);
-		Response response=new Response();
+		NativeObject request=new NativeObject();
+		request.put("object", request, ctx.evaluateString(scope, "", "", 1, null));
+		request.put("user", request, service.getUser().getProperties());
+		//Request request=new Request(entity,service.getUser());
 		for(Function f : getFunctionList(entity.getKind(),BEFORE_SAVE))
 			f.call(ctx, scope, null, new Object[]{request,response});
 	}
@@ -50,7 +58,7 @@ public class Cloud{
 	}
 	
 	public void afterSave(Entity entity){
-		Request request=new Request(entity);
+		Request request=new Request(entity,service.getUser());
 		Response response=new Response();
 		for(Function f : getFunctionList(entity.getKind(),BEFORE_SAVE))
 			f.call(ctx, scope, null, new Object[]{request,response});
@@ -104,6 +112,6 @@ public class Cloud{
 	}
 	
 	public static Reader getJSFileReader(String filename){
-		return new InputStreamReader(Cloud.class.getResourceAsStream("libs/"+filename));
+		return new InputStreamReader(Cloud.class.getClassLoader().getResourceAsStream("libs/"+filename));
 	}
 }

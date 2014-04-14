@@ -35,11 +35,6 @@ public class ApplicationService extends EntityService {
 	public ApplicationService(@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId) {
 		super(sessionToken,appId,KIND);
-	}
-	
-	@Override
-	protected void initService(){
-		super.initService();
 		if(user==null || !TOP_NAMESPACE.equals(NamespaceManager.get()))
 			throw new RuntimeException("Access Denied");
 	}
