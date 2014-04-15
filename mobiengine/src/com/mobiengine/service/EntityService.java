@@ -29,13 +29,20 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.mobiengine.js.Cloud;
 
 @Path(Service.VERSION+"/classes/{kind:\\w+}")
 public class EntityService extends Service{
+	private Cloud cloud;
+	
 	public EntityService(
 			@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
 		super(sessionToken,appId,kind);
+	}
+	
+	public EntityService(Entity app, Entity user, String kind){
+		super(app, user,kind);
 	}
 
 	@POST
@@ -44,13 +51,13 @@ public class EntityService extends Service{
 	public Response create(JSONObject ob) {
 		try {
 			Entity entity = new Entity(kind);
+			populate(entity, ob);
+			this.beforeCreate(entity, ob);
 			Date now = new Date();
 			entity.setProperty("createdAt", now);
 			entity.setProperty("updatedAt", now);
-			schema.populate(entity, ob);
-			this.beforeCreate(entity, ob);
 			DatastoreServiceFactory.getDatastoreService().put(entity);
-			
+		
 			JSONObject changed = new JSONObject();
 			changed.put("createdAt", now);
 			changed.put("updatedAt", now);
@@ -83,7 +90,7 @@ public class EntityService extends Service{
 				throw new Exception("Entity Not Exist");
 			Date now = new Date();
 			entity.setProperty("updatedAt", now);
-			schema.populate(entity, ob);
+			populate(entity, ob);
 			this.beforeUpdate(entity, ob);
 			DatastoreServiceFactory.getDatastoreService().put(entity);
 			this.afterUpdate(entity);
@@ -169,7 +176,19 @@ public class EntityService extends Service{
 			throw new RuntimeException(e.getMessage());
 		}
 	}
-
+	
+	public void populate(Entity entity, JSONObject ob) throws Exception{
+		this.schema.populate(entity, ob);
+	}
+	
+	public Cloud getCloud(){
+		if(cloud!=null)
+			return cloud;
+		Entity app=getApp();
+		
+		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? app.getProperty("cloudCode").toString() : "");
+	}
+	
 	public void beforeCreate(Entity entity, JSONObject request) {
 		this.getCloud().beforeSave(entity);
 	}

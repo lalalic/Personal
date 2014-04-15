@@ -2,6 +2,7 @@ package com.mobiengine.provider;
 
 import java.io.IOException;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -23,6 +24,7 @@ import com.mobiengine.service.UserService;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON,MediaType.APPLICATION_OCTET_STREAM})
 public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 	ObjectMapper om=new ObjectMapper();
 	public JSONObjectMapper(){
@@ -30,7 +32,7 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 		module.addSerializer(Entity.class, new JSONEntity());
 		module.addSerializer(EmbeddedEntity.class, new JSONEmbeddedEntity());
 		om.registerModule(module);
-		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, true);
 	}
 	@Override
 	public ObjectMapper getContext(Class<?> arg0) {
@@ -44,7 +46,8 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 				SerializerProvider provider) throws IOException,
 				JsonProcessingException {
 			try {
-				entity.setProperty("id", entity.getKey().getId());
+				if(entity.getKey().getId()!=0)
+					entity.setProperty("id", entity.getKey().getId());
 				if(UserService.KIND.equals(entity.getKind()))
 					entity.removeProperty("password");
 				jg.writeObject(entity.getProperties());

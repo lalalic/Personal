@@ -8,17 +8,19 @@ define(['app','UI'],function(app,View){
 		events: _.extend({},FormPage.prototype.events,{
 			"change input[type=file]": "upload"
 		}),
-		content:"<form><fieldset><textarea name='cloudCode' placeholder='write your cloud code'></textarea></fieldset></form>",
+		content:"<form><fieldset><textarea name='cloudCode' spellcheck='false' placeholder='write your cloud code'></textarea></fieldset></form>",
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
 			Application.all.on('current',this.setModel,this)
 		},
 		show: function(){
 			this.setModel(Application.current())
-			return this._super().show.apply(this,arguments)
+			this._super().show.apply(this,arguments)
+			this.$('textarea').height(this.$('article').height()+"px")
+			return this
 		},
 		save: function(){
-			this.model.patch('cloudCode')
+			this.model.save('cloudCode',this.model.get('cloudCode'))
 			return this
 		},
 		upload:function(e){

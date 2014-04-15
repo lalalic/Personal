@@ -23,7 +23,6 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.mobiengine.js.Cloud;
 import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
@@ -37,8 +36,7 @@ public class Service{
 	String kind;
 	String appId;
 	Entity user;
-	private Entity app;
-	private Cloud cloud;
+	Entity app;
 	
 	public Service(
 			@HeaderParam("X-Session-Token") String sessionToken,
@@ -52,7 +50,15 @@ public class Service{
 		}catch(Exception ex){
 			
 		}
-		
+	}
+	
+	public Service(Entity app, Entity user, String kind){
+		this.app=app;
+		this.user=user;
+		this.appId=app.getKey().getId()+"";
+		this.kind=kind;
+		NamespaceManager.set(this.appId);
+		schema = Schema.get(this.appId);
 	}
 	
 	protected void initService(){
@@ -172,10 +178,7 @@ public class Service{
 		return user;
 	}
 	
-	public Cloud getCloud(){
-		if(cloud!=null)
-			return cloud;
-		
-		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? app.getProperty("cloudCode").toString() : "");
+	public String getKind(){
+		return this.kind;
 	}
 }

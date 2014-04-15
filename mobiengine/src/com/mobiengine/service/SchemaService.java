@@ -79,6 +79,10 @@ public class SchemaService extends EntityService{
 		super(sessionToken,appId,KIND);
 	}
 	
+	public SchemaService(Entity app, Entity user) {
+		super(app,user,KIND);
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

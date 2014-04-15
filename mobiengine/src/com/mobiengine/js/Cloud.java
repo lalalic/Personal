@@ -2,18 +2,26 @@ package com.mobiengine.js;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jettison.json.JSONObject;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.json.JsonParser;
+import org.mozilla.javascript.json.JsonParser.ParseException;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
-import com.mobiengine.service.Service;
+import com.mobiengine.provider.JSONObjectMapper;
+import com.mobiengine.service.EntityService;
 
 
 public class Cloud{
@@ -21,21 +29,27 @@ public class Cloud{
 	protected static final int AFTER_SAVE=1;
 	protected static final int BEFORE_DELETE=2;
 	protected static final int AFTER_DELETE=3;
+	protected static final ObjectMapper JSON=new JSONObjectMapper().getContext(null);
 	protected Context ctx;
 	protected ScriptableObject scope;
-	protected Service service;
+	protected EntityService service;
 	protected Response response;
 	HashMap<String, HashMap<Integer,List<Function>>> codes=new HashMap<String, HashMap<Integer,List<Function>>>();	
 	
-	public Cloud(Service service, String code) {
+	public Cloud(EntityService service, String code) {
 		ctx=Context.enter();
 		scope=(ScriptableObject)ctx.newObject(sharedScope);
 		scope.setPrototype(sharedScope);
 		scope.setParentScope(null);
 		scope.defineProperty("Cloud", this, ScriptableObject.READONLY);
-		
-		if(code!=null && code.trim().length()>0)
-			ctx.evaluateString(scope, code, "main.js", 1, null);
+		try {
+			ctx.evaluateReader(scope, getJSFileReader("model.js"), "model.js", 1, null);
+			if(code!=null && code.trim().length()>0)
+				ctx.evaluateString(scope, code, "main.js", 1, null);
+		} catch (Exception e) {
+			throw new RuntimeException("Cloud: "+e.getMessage());
+		}
+
 		this.service=service;
 		response=new Response();
 	}
@@ -45,23 +59,50 @@ public class Cloud{
 	}
 	
 	public void beforeSave(Entity entity){
-		NativeObject request=new NativeObject();
-		request.put("object", request, ctx.evaluateString(scope, "", "", 1, null));
-		request.put("user", request, service.getUser().getProperties());
-		//Request request=new Request(entity,service.getUser());
-		for(Function f : getFunctionList(entity.getKind(),BEFORE_SAVE))
-			f.call(ctx, scope, null, new Object[]{request,response});
+		List<Function> callbacks=getFunctionList(entity.getKind(),BEFORE_SAVE);
+		if(callbacks.size()==0)
+			return;
+		try {
+			NativeObject request=makeRequest(entity);
+			for(Function f : callbacks)
+				f.call(ctx, scope, null, new Object[]{makeRequest(entity),response});
+			Object maybeChanged=ScriptableObject.callMethod((Scriptable)request.get("object"), "toJSON", new Object[]{});
+			JSONObject ob=parse((String)NativeJSON.stringify(ctx, scope, maybeChanged, null, null));
+			service.populate(entity, ob);
+		} catch (Exception e) {
+			throw new RuntimeException("Cloud: "+e.getMessage());
+		}
 	}
-
+	
+	private NativeObject makeRequest(Entity entity){
+		NativeObject request=new NativeObject();
+		ScriptableObject jsEntity=jsModel(entity);
+		ScriptableObject jsUser=jsModel(service.getUser());
+		request.put("object", request, jsEntity);
+		request.put("user", request, jsUser);
+		return request;
+	}
+	
+	private ScriptableObject jsModel(Entity entity){
+		ScriptableObject m=null;
+		try {
+			scope.defineProperty("_temp_data", new JsonParser(ctx,scope).parseValue(stringify(entity)), ScriptableObject.PERMANENT);
+			m=(ScriptableObject)ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',_temp_data)", "", 1, null);
+		} catch (ParseException e) {
+			throw new RuntimeException("Cloud: "+e.getMessage());
+		}finally{
+			scope.delete("_temp_data");
+		}
+		return m;
+	}
+	
 	public void afterSave(String kind, Function callback){
 		getFunctionList(kind,AFTER_SAVE).add(callback);
 	}
 	
 	public void afterSave(Entity entity){
-		Request request=new Request(entity,service.getUser());
-		Response response=new Response();
 		for(Function f : getFunctionList(entity.getKind(),BEFORE_SAVE))
-			f.call(ctx, scope, null, new Object[]{request,response});
+			f.call(ctx, scope, null, new Object[]{makeRequest(entity),response});
 	}
 	
 	public void beforeDelete(String kind, Function callback){
@@ -98,11 +139,12 @@ public class Cloud{
 		Context ctx=Context.enter();
 		try{
 			sharedScope = ctx.initStandardObjects(new RequireSupport(), true);
-			sharedScope.defineFunctionProperties(new String[]{"load"}, sharedScope.getClass(), ScriptableObject.DONTENUM);
+			sharedScope.defineFunctionProperties(new String[]{"load","ajax"}, sharedScope.getClass(), ScriptableObject.DONTENUM);
 		    sharedScope.defineProperty("arguments", ctx.newArray(sharedScope, new Object[] {}), ScriptableObject.DONTENUM);
 
 		    ctx.evaluateReader(sharedScope, getJSFileReader("underscore-min.js"), "underscore-min.js", 1, null);
 			ctx.evaluateReader(sharedScope, getJSFileReader("backbone-min.js"), "backbone-min.js", 1, null);
+			ctx.evaluateString(sharedScope, "Backbone.ajax=function(o){return ajax(o,Cloud)}", "ajax.js", 1, null);
 			sharedScope.sealObject();
 		}catch(Exception ex){
 			throw new RuntimeException(ex);
@@ -113,5 +155,27 @@ public class Cloud{
 	
 	public static Reader getJSFileReader(String filename){
 		return new InputStreamReader(Cloud.class.getClassLoader().getResourceAsStream("libs/"+filename));
+	}
+	
+	public String stringify(Entity entity){
+		try {
+			StringWriter writer=new StringWriter();
+			JSON.writeValue(writer, entity);
+			return writer.toString();
+		} catch (Exception e) {
+			throw new RuntimeException("Cloud: "+e.getMessage());
+		}
+	}
+	
+	public JSONObject parse(String json){
+		try {
+			return new JSONObject(json);
+		} catch (Exception e) {
+			throw new RuntimeException("Cloud: "+e.getMessage());
+		}
+	}
+	
+	public JSONObject toJSON(Object js){
+		return parse((String)NativeJSON.stringify(ctx, scope, js, null, null));
 	}
 }

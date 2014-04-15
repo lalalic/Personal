@@ -14,6 +14,10 @@ public class RoleService extends EntityService {
 		super(sessionToken,appId,KIND);
 	}
 	
+	public RoleService(Entity app, Entity user) {
+		super(app,user, KIND);
+	}
+
 	public static Entity makeSchema(){
 		return SchemaService.makeSchema(KIND,
 				SchemaService.makeFieldSchema("name", TYPES.String, true, true),

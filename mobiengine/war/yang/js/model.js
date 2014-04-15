@@ -24,7 +24,6 @@ define(["Backbone"],function(Backbone){
 	Model=Backbone.Model.extend(/** @lends app.Model.prototype */{
 		version:'1',
 		className:'_unknown',
-		idAttribute:'id',
 		validate: function(attrs){
 			var error={}, failed=false
 			_.each(attrs,function(key,value){
@@ -51,19 +50,14 @@ define(["Backbone"],function(Backbone){
 				if(data[name]!=undefined){
 				switch(schema.type){
 				case 'Date':
-					data[name]=Date.from(data[name])
+					var d=new Date()
+					d.setTime(data[name])
+					data[name]=d
 					break
 				}
 				}
 			})
 			return data
-		},
-		/**
-		 *  only sync changed attributes
-		 */
-		patch: function(){
-			var patchs=arguments.length==0 ? this.changedAttributes() : this.pick.apply(this,arguments)
-			return this.save(null,{attrs:patchs})
 		},
 		/**
 		 * add unique value to an array field
@@ -141,9 +135,19 @@ define(["Backbone"],function(Backbone){
 		 *  @memberof app.Model
 		 *  @type {string[]}
 		 */
-		DATATYPE:'String,Integer,Float,Boolean,Date,File,GeoPoint,Array,Object,Pointer'.split(',')
-	}),
-	User=Model.extend(/** @lends app.User.prototype*/{
+		DATATYPE:'String,Integer,Float,Boolean,Date,File,GeoPoint,Array,Object,Pointer'.split(','),
+		create: function(kind,data,opt){
+			var M=Model.DEFINES[kind] || (Model.DEFINES[kind]=Model.extend({className:kind}))
+			return new M(data,opt)
+		}
+	})
+	Model.DEFINES={}
+	var _extend=Model.extend
+	Model.extend=function(instanceProperties, classProperties){
+		return Model.DEFINES[instanceProperties.className]=_extend.apply(this,arguments)
+	}
+	
+	var User=Model.extend(/** @lends app.User.prototype*/{
 		className:'_user',
 		urlRoot: function(){
 			return this.version+'/users'

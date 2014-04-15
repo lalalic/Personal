@@ -33,6 +33,10 @@ public class UserService extends EntityService{
 		super(sessionToken,appId,KIND);
 	}
 	
+	public UserService(Entity app, Entity user) {
+		super(app,user,KIND);
+	}
+
 	protected String getUrlRoot(){
 		return this.getClass().getAnnotation(Path.class).value();
 	}

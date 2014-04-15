@@ -44,12 +44,12 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 		show: function(id,categoryName){
 			var me=this
 			switch(arguments.length){
-			case 0:
+			case 1:
 				if(this.model.isNew())
 					break
 				this.setModel(new Post())
 				break
-			case 1:
+			case 2:
 				if(_.isObject(id))
 					this.setModel(id)
 				else{
@@ -58,7 +58,7 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 						.then(_.bind(function(){this.setModel(model)},this))
 				}
 				break
-			case 2:
+			case 3:
 				this.setModel(new Post({tags:['Boy','Girl','30','Learning',categoryName],category:categoryName}))
 				break
 			}

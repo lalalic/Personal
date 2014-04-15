@@ -366,7 +366,7 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			 *  @returns {app.Model}
 			 */
 			createKind:function(schema, properties, classProperties){
-				return Model.extend(properties, classProperties).setSchema(schema)
+				return Model.extend(properties||{className:schema.get('name')}, classProperties).setSchema(schema)
 			},
 			/**
 			 *  Base Model, all kinds of entity must be extends from this base model

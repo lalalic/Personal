@@ -231,7 +231,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				return this
 			},
 			addOne: function(item){
-				this.$list.append(this.itemTemplate(item)) 
+				this.itemTemplate && this.$list.append(this.itemTemplate(item)) 
 				return this
 			},
 			removeOne: function(item){
@@ -239,7 +239,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				return this
 			},
 			changeOne: function(item){
-				this.$list.find('#_'+item.id).replaceWith(this.itemTemplate(item))
+				this.itemTemplate && this.$list.find('#_'+item.id).replaceWith(this.itemTemplate(item))
 				return this
 			},
 			show: function(){
