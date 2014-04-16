@@ -19,6 +19,7 @@ import org.codehaus.jackson.map.module.SimpleModule;
 
 import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Text;
 import com.mobiengine.service.UserService;
 
 
@@ -31,6 +32,7 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 		SimpleModule module = new SimpleModule("appengine",Version.unknownVersion());
 		module.addSerializer(Entity.class, new JSONEntity());
 		module.addSerializer(EmbeddedEntity.class, new JSONEmbeddedEntity());
+		module.addSerializer(Text.class, new JSONText());
 		om.registerModule(module);
 		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, true);
 	}
@@ -63,6 +65,15 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 				SerializerProvider provider) throws IOException,
 				JsonProcessingException {
 			jg.writeObject(entity.getProperties());
+		}
+	}
+	
+	private static class JSONText extends JsonSerializer<Text>{
+		@Override
+		public void serialize(Text entity, JsonGenerator jg,
+				SerializerProvider provider) throws IOException,
+				JsonProcessingException {
+			jg.writeString(entity.getValue());
 		}
 	}
 

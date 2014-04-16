@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.mozilla.javascript.Context;
 
 import com.mobiengine.js.Cloud;
+import com.mobiengine.service.ApplicationService;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 public class WebApp extends ServletContainer {
@@ -28,12 +29,14 @@ public class WebApp extends ServletContainer {
 			super.service(request, response);
 			response.addIntHeader("X-Runtime", (int)(System.currentTimeMillis()-start));
 		}finally{
-			Context.exit();
+			if(Context.getCurrentContext()!=null)
+				Context.exit();
 		}
 	}
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
+		ApplicationService.initSystem();
 		Cloud.init();
 		super.init(config);
 	}

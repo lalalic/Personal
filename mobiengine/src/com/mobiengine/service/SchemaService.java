@@ -32,6 +32,7 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.Text;
 
 @Path(Service.VERSION+"/schemas")
 public class SchemaService extends EntityService{
@@ -67,7 +68,7 @@ public class SchemaService extends EntityService{
 		if(type==null)
 			type=TYPES.String;
 		field.setUnindexedProperty("type", type.toString());
-		if(searchable)
+		if(searchable && type.indexable())
 			field.setUnindexedProperty("searchable", searchable);
 		if(unique)
 			field.setUnindexedProperty("unique", unique);
@@ -228,7 +229,7 @@ public class SchemaService extends EntityService{
 						throw new RuntimeException(value+" already exits in "+kind);
 				}
 				
-				if(schema.hasProperty("unindex"))
+				if(schema.hasProperty("unindex") || (value instanceof Text))
 					entity.setUnindexedProperty(key, value);
 				else
 					entity.setProperty(key, value);
@@ -283,14 +284,28 @@ public class SchemaService extends EntityService{
 	}	
 	
 	enum TYPES{
-		String, Integer, Float, Boolean,
+		String{
+			@Override
+			Object asEntityValue(Object value){
+				if(value!=null && ((String)value).length()>500)
+					return new Text((String)value);
+				return value;
+			}
+		}, Integer, Float, Boolean,
 		Date{
 			@Override
 			Object asEntityValue(Object value){
 				return null;
 			}
 		}, 
-		File, 
+		File{
+			@Override
+			Object asEntityValue(Object value){
+				if(value!=null)
+					return new Text((String)value);
+				return value;
+			}
+		},
 		GeoPoint{
 			@Override
 			Object asEntityValue(Object value){
@@ -312,7 +327,18 @@ public class SchemaService extends EntityService{
 		Pointer;
 		
 		Object asEntityValue(Object value){
+			if(value instanceof String && ((String) value).length()>255)
+				return new Text((String)value);
 			return value;
+		}
+		
+		boolean indexable(){
+			switch(this){
+			case File:case Array:case Object:
+				return false;
+			default:
+				return true;
+			}
 		}
 	}
 	
@@ -320,7 +346,6 @@ public class SchemaService extends EntityService{
 	
 	enum OP{
 		Increment{
-
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
 				if(TYPE!=TYPES.Integer)

@@ -16,6 +16,22 @@ function(module, Plugin, app, $, _, Backbone){
 			className:'_app',
 			urlRoot: function(){
 				return this.version+'/apps'
+			},
+			saveCloudCode: function(){
+				return Backbone.sync('update',this, {
+					context:this,
+					url:this.url(),
+					attrs:{cloudCode:this.get('cloudCode')}
+				}).then(function(r){
+					this.set(r,{parse:true})
+				})
+			},
+			save: function(a){
+				var cloudCode=this.attributes['cloudCode']
+				delete this.attributes['cloudCode']
+				var r=this._super().save.apply(this,arguments)
+				cloudCode && (this.attributes['cloudCode']=cloudCode)
+				return r
 			}
 		},/** @lends app.Application */{
 			/** 
@@ -112,7 +128,7 @@ function(module, Plugin, app, $, _, Backbone){
 			app.route('main','',this.module('view/main'),true)
 			app.route('createApp','app',this.module('view/app'),true)
 			app.route('settings','settings',this.module('view/app'),true)
-			app.route('schema','data',this.module('view/data'),true)
+			app.route('schema','data(/:table)',this.module('view/data'),true)
 			app.route('analytics','analytics',this.module('view/analytics'),true)
 			app.route('cloudcode','cloudcode',this.module('view/cloudcode'),true)
 		}

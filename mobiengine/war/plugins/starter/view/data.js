@@ -42,14 +42,14 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 					},this))
 					
 				item.on('sync',function(m){
-					if(m.updatedAt.getTime()==m.createdAt.getTime()){
+					if(m.get('updatedAt').getTime()==m.get('createdAt').getTime()){
 						$('td:eq(1)',tr).text(m.id)
 						$('td:last-child',tr)
-							.prev().text(m.updatedAt)
-							.prev().text(m.createdAt)
+							.prev().text(m.get('updatedAt'))
+							.prev().text(m.get('createdAt'))
 					}else
 						$('td:last-child',tr)
-							.prev().text(m.updatedAt)
+							.prev().text(m.get('updatedAt'))
 				}).on('destroy',function(){
 					$(tr).remove()
 				})
@@ -169,11 +169,13 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			this.$list.empty()
 			this.collection.fetch()
 		},
-		show: function(){
+		show: function(table){
 			$(document).on('ajaxSend', switchAppKey)
 			this.changeApp(Application.current())
 			Application.all.on('current',this.changeApp,this)
-			return this._super().show.apply(this,arguments)
+			this._super().show.apply(this,arguments)
+			table && this.$('nav.groupbar a.__'+table).click()
+			return this
 		},
 		close: function(){
 			this._super().close.apply(this,arguments)
@@ -190,6 +192,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			var table=new Table({model:model}), 
 				$a=$('<a/>')
 					.text(model.get('name'))
+					.addClass("__"+model.get('name'))
 					.insertBefore(this.$createTable)
 					.click(this.onSwitchTable(table))
 			

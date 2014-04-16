@@ -27,10 +27,6 @@ import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
 	public static final String VERSION="1";
-	static{
-		ApplicationService.initSystem();
-	}
-	
 	Schema schema;
 
 	String kind;

@@ -29,6 +29,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.Text;
 import com.mobiengine.js.Cloud;
 
 @Path(Service.VERSION+"/classes/{kind:\\w+}")
@@ -88,10 +89,10 @@ public class EntityService extends Service{
 					key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
-			Date now = new Date();
-			entity.setProperty("updatedAt", now);
 			populate(entity, ob);
 			this.beforeUpdate(entity, ob);
+			Date now = new Date();
+			entity.setProperty("updatedAt", now);
 			DatastoreServiceFactory.getDatastoreService().put(entity);
 			this.afterUpdate(entity);
 			JSONObject changed = new JSONObject();
@@ -186,7 +187,7 @@ public class EntityService extends Service{
 			return cloud;
 		Entity app=getApp();
 		
-		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? app.getProperty("cloudCode").toString() : "");
+		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? ((Text)app.getProperty("cloudCode")).getValue() : "");
 	}
 	
 	public void beforeCreate(Entity entity, JSONObject request) {

@@ -23,6 +23,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Text;
 import com.mobiengine.service.SchemaService.Schema;
 import com.mobiengine.service.SchemaService.TYPES;
 
@@ -50,6 +51,10 @@ public class ApplicationService extends EntityService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
+	@Override
+	public void populate(Entity entity, JSONObject ob) throws Exception{
+		
+	}
 	
 	@Override 
 	public void beforeUpdate(Entity app, JSONObject request){
@@ -57,11 +62,12 @@ public class ApplicationService extends EntityService {
 			if(user.getKey().getId()!=(Long)app.getProperty("author"))
 				throw new RuntimeException("Access Denied");
 			
-			if(request.has("name")){
+			if(request.has("cloudCode"))
+				app.setProperty("cloudCode", new Text(request.getString("cloudCode")));
+			else{
 				app.setProperty("name", request.getString("name"));
 				app.setProperty("url", request.getString("url"));
-			}else
-				app.setProperty("cloudCode", request.getString("cloudCode"));
+			}
 		} catch (JSONException e) {
 			throw new RuntimeException(e.getMessage());
 		}
@@ -134,11 +140,11 @@ public class ApplicationService extends EntityService {
 				SchemaService.makeFieldSchema("url", TYPES.String, true, true),
 				SchemaService.makeFieldSchema("author", TYPES.Integer, true, false),
 				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false),
-				SchemaService.makeFieldSchema("cloudCode", TYPES.File, false, false));
+				SchemaService.makeFieldSchema("cloudCode", TYPES.String, false, false));
 	}
 
 	// initialize the whole system
-	static void initSystem(){
+	public static void initSystem(){
 		NamespaceManager.set(null);
 		Entity www=DatastoreServiceFactory.getDatastoreService()
 			.prepare(new Query(KIND))

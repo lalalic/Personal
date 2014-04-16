@@ -4,6 +4,37 @@
  */
 //define(["Backbone"],
 (function(Backbone,root){
+	root.promise=(function (
+		    a, // placeholder for pending callbacks
+		    b, // placeholder for fulfilled value
+		    e // placeholder for failed callbacks
+		) { 
+		    a = []; // callbacks or 0 if fulfilled
+		    e = [];
+		    return {
+		        resolve: function (c) { // fulfillment value
+		            b = c; // store the fulfilled value
+		            // send the value to every pre-registered callback
+		            while (a.length)
+		                a.shift()(b);
+		            // switch state to "fulfilled"
+		            a=0
+		        },
+		        failed: function(c){
+		        	b=c;
+		        	while(e.length)
+		        		e.shift()(b);
+		        	a=false
+		        },
+		        then: function (c,d) { // callback
+		            a ? // if it's not fulfilled yet
+		            (a.push(c),e.push(d)) : // added the callback to the queue
+		            (a===0 ? c(b) : d(b)) // otherwise, let it know what the fulfilled value
+		                 // was immediately
+		        }
+		    }
+		});	
+	
 	var currentUser,
 	Model=Backbone.Model.extend(/** @lends app.Model.prototype */{
 		version:'1',
@@ -58,9 +89,6 @@
 		schema:{
 			'createdAt':{type:'Date'},
 			'updatedAt':{type:'Date'}
-		},
-		sync: function(){
-			
 		}
 		
 	},/** @lends app.Model */{

@@ -59,17 +59,27 @@ define(["Backbone"],function(Backbone){
 			})
 			return data
 		},
-		/**
-		 * add unique value to an array field
-		 */
-		addUnique:function(name, value){
-			
+		get: function(name){
+			var value=Backbone.Model.prototype.get.call(this,name)
+			if(value && _.has(value,'__op')){
+			switch(value.__op){
+			case 'Increment':
+				return value.guess;
+			}}
+			return value
 		},
-		/**
-		 * remove item from an array field
-		 */
-		remove: function(name, value){
-		
+		increment: function(name,amount){
+			amount=_.isNumber(amount) ? amount : 1
+			var value=Backbone.Model.prototype.get.call(this,name)
+			if(_.isNull(value) || _.isUndefined(value))
+				value={__op:"Increment", amount:amount, guess:amount}
+			else if(_.isNumber(value))
+				value={__op:"Increment", amount:amount, guess:value+amount}
+			else {
+				value.amount+=amount;
+				value.guess+=amount;
+			}
+			this.set(name,value)
 		},
 		schema:{
 			'createdAt':{type:'Date'},

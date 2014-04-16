@@ -20,7 +20,7 @@ define(['app','UI'],function(app,View){
 			return this
 		},
 		save: function(){
-			this.model.save('cloudCode',this.model.get('cloudCode'))
+			this.model.saveCloudCode()
 			return this
 		},
 		upload:function(e){
