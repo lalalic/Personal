@@ -1,3 +1,7 @@
+/**
+ *  create and update post
+ *  @module Post
+ */
 define(['UI','app','tool/editor'],function(View, app,makeEditor){
 	var FormPage=View.FormPage, Post=app.Post, Tag=app.Tag, Favorit=app.Tag
 	return new (FormPage.extend({
@@ -25,20 +29,21 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 		},
 		setModel: function(m){
 			this._super().setModel.apply(this,arguments)
-			if(this.model!=m){
-				if(this.model.has('title')){
-					this.$('form input[name=title]').val(this.model.get('title'))
-					this.setTitle(text("Update"))
-				}
-				if(this.model.has('tags'))
-					_.each(this.model.get('tags'),function(tag){
-						this.$('.checkable input[value="'+tag+'"]').prop('checked','checked')
-						},this)
-				if(this.model.has('content'))
-					this.editor.setContent(this.model.get('content'))
-				if(this.model.isNew())
-					this.setTitle(text("Create New ")+text(this.model('category')||'Theme'))
-			}
+			if(this.model.has('title'))
+				this.$('form input[name=title]').val(this.model.get('title'))
+
+			if(this.model.has('tags'))
+				_.each(this.model.get('tags'),function(tag){
+					this.$('.checkable input[value="'+tag+'"]').prop('checked','checked')
+					},this)
+					
+			if(this.model.has('content'))
+				this.editor.setContent(this.model.get('content'))
+				
+			if(this.model.isNew())
+				this.setTitle(text("Create New ")+text(this.model.get('category')||'Theme'))
+			else
+				this.setTitle(text("Update"))
 			return this
 		},
 		show: function(id,categoryName){

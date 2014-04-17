@@ -11,8 +11,13 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 			return $.extend({
 				extend:this.extend,
 				root: this.root,
+				icon: "app",
+				author:{
+					name:'Raymond',
+					email:'raymond.li2@emc.com'
+				},
 				version:'0.1',
-				description:'',
+				description:'A plugin',
 				init:function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, parentRequire, onload, config){
@@ -67,10 +72,10 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 			var root=this.root+name+'/'
 			config.paths[name]=root+'main'
 			require([name],function(a){
-				a.name=name
+				a.id=a.name=name
 				a.root=root
 				a.init()
-				plugin.features.add(a)
+				plugin.features.add(_.omit(a,_.functions(a)))
 				onload(a)
 			})
 		}
@@ -85,11 +90,11 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 					var zip=new JSZip(data)
 					onload.fromText(zip.file("main.js").asText())
 					require([name],function(a){
-						a.name=name
+						a.id=a.name=name
 						a.root=root
 						a.zip=zip
 						a.init()
-						plugin.features.add(a)
+						plugin.features.add(_.omit(a,_.functions(a)))
 						onload(a)
 					})
 				}

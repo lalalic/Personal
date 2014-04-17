@@ -9,11 +9,11 @@
 .icon.signout:before{content:"\e602"}
 .icon.signin:before{content:"\e60f"}
 .icon.suggest:before{content:"\e604"}
-.icon.star:before{content:"\e606"}
+.icon.schema:before,.icon.app:before, .icon.star:before{content:"\e606"}
 .icon.baby:before,.icon.tasks:before{content:"\e607"}
 .icon.time:before{content:"\e610"}
 .icon.comment:before{content:"\e615"}
-.icon.calendar:before{content:"\e617"}
+.icon.data:before,.icon.calendar:before{content:"\e617"}
 .icon.tags:before{content:"\e61a"}
 .icon.bold:before{content:"\e619"}
 .icon.story:before{content:"\e616"}

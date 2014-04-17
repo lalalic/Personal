@@ -417,7 +417,7 @@ define(["Backbone"],function(Backbone){
 			}
 
 			this._where[key] = value
-				return this;
+			return this;
 		},
 		/**
 		 * Helper for condition queries

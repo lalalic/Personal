@@ -2,14 +2,26 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 	var tmplColumn='\
 			<fieldset>\
 				<input placeholder="'+text('name')+'" name="name" type="text">\
-				<select name="type">\
-					<%_.each(require("app").Model.DATATYPE,function(o){%> \
-					<option value="{{o}}">{{o}}</option>\
-					<%})%>\
-				</select>\
 			</fieldset>\
-			<button class="anchor create">'+text('Create Column')+'</button>\
-			<button class="anchor cancel">cancel</button>'
+			<fieldset>\
+				<label class="select">\
+					<select name="type">\
+						<%_.each(require("app").Model.DATATYPE,function(o){%> \
+						<option value="{{o}}">{{o}}</option>\
+						<%})%>\
+					</select>\
+				</label>\
+			</fieldset>\
+			<fieldset>\
+				<label class="anchor">'+text("Searchable?")+'</label>\
+				<input name="searchable" unchecked="unchecked" type="checkbox">\
+			</fieldset>\
+			<fieldset>\
+				<label class="anchor">'+text("Unique?")+'</label>\
+				<input name="unique" unchecked="unchecked" type="checkbox">\
+			</fieldset>\
+			<button class="anchor create" data-callback="accept">'+text('Create Column')+'</button>\
+			<button class="anchor cancel" data-callback="cancel">'+text('Cannel')+'</button>'
 	
 	var ListPage=View.ListPage,
 		Schema=app.Schema,
@@ -62,13 +74,19 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				this.$list.remove()
 				this.$list=this.$el
 				this.createHead()
+				this.$el.detach()
 			},
 			show:function(){
-				this.$el.show().siblings('table').hide()
+				this.$el.show()
 				this.refresh()
 			},
 			refresh:function(){
 				this.collection.fetch()
+			},
+			renderAllItems: function(){
+				this.collection.each(this.addOne,this)
+				this.newModel()
+				return this
 			},
 			createHead:function(){
 				this.thead=$(document.createElement('tr'))
@@ -105,6 +123,10 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 						me.currentModel.destroy()
 						me.currentModel=null
 					})
+			},
+			close: function(){
+				this.$el.detach()
+				return this
 			}
 		}),
 		columnUI=new (View.Popup.extend({
@@ -121,34 +143,55 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				return this
 			},
 			show: function(){
+				this.model={searchable:true, unique: false}
 				this.$('input[name]').val('')
+				this.$('input[name=searchable]').prop('checked',this.model.searchable)
+				this.$('input[name=unique]').prop('checked',this.model.unique)
 				return this._super().show.apply(this,arguments)
 			},
 			change: function(e){
 				var el=e.target
-				this.model[el.name]=el.value
+				switch(el.name){
+				case 'searchable':case 'unique':
+					this.model[el.name]=el.checked
+					break
+				default:
+					this.model[el.name]=el.value
+				}
 				return this
 			},
 			create: function(){
 				current.model.addColumn(this.model)
 				this.model={searchable:true, unique: false}
+				this.$('input[name=searchable]').prop('checked',this.model.searchable)
+				this.$('input[name=unique]').prop('checked',this.model.unique)
 			}
 		}))
 	return new (ListPage.extend({
 		newID:0,
 		collection:Schema.collection(),
 		title:text('Data Browser'),
-		cmds:'<a class="row"><span class="icon plus"/>row</a>\
-			<a class="table"><span class="icon load" onclick="$(this).next().click()"/><input type="file" class="outview">import</a>\
-			<a class="row"><span class="icon remove"/>row</a>\
-			<a class="column"><span class="icon plus"/>column</a>\
-			<a class="table"><span class="icon remove"/>table</a>',
+		cmds:'<a class="backup"><span class="icon data"/><span class="icon schema"/>Backup</a>\
+			<a class="table">'+View.FileLoader+'<span class="icon remove"/>table</a>\
+			<a class="row"><span class="icon plus"/><span class="icon remove"/>row</a>\
+			<a class="column"><span class="icon plus"/><span class="icon remove"/>column</a>\
+			<a class="schema">'+View.FileLoader+'schema</a>',
+
 		events:_.extend({},ListPage.prototype.events,{
-			"click a.column .plus":'onNewColumn',
-			"click a.table .remove": 'onRemoveTable',
+			'click a.backup .data':'backupData',
+			'click a.backup .schema':'backupSchema',
+			
+			'click a.table .remove': 'onRemoveTable',
+			'change a.table input':'importData',
+			
 			'click a.row .plus':'onNewRow',
 			'click a.row .remove':'removeSelectedRow',
-			'change a.table input':'importData',
+			
+			'click a.column .plus':'onNewColumn',
+			'click a.column .remove':'onRemoveColumn',
+			
+			'change a.schema input':'importSchema',
+			
 			'change input.a':'onChangeValue',
 			'blur input.a':'onBlurInput',
 			'keypress input.a':'onEnterInput',
@@ -196,7 +239,6 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 					.insertBefore(this.$createTable)
 					.click(this.onSwitchTable(table))
 			
-			this.$list.append(table.el)
 			if(current==null)
 				$a.click()
 			else if(model==this.newTable){
@@ -207,11 +249,13 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		onSwitchTable:function(table){
 			var me=this
 			return function(){
+				current && current.close()
 				current=table
 				me.model=current.model
 				$(this).addClass('active')
 					.siblings('.active').removeClass('active')
-				table.show()
+				me.$list.append(current.el)
+				current.show()
 			}
 		},
 		onNewTable:function(){
@@ -305,6 +349,15 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				},current)
 			}
 			reader.readAsText(e.target.files[0])
+		},
+		backupData:function(){
+			
+		},
+		backupSchema:function(){
+			
+		},
+		importSchema:function(e){
+			
 		}
 	},{
 		STYLE:

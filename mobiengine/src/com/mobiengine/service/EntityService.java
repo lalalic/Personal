@@ -81,9 +81,6 @@ public class EntityService extends Service{
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response update(@PathParam("id") long id, JSONObject ob) {
 		try {
-			ob.remove("updatedAt");
-			ob.remove("createdAt");
-			ob.remove("id");
 			Key key = KeyFactory.createKey(kind, id);
 			Entity entity = DatastoreServiceFactory.getDatastoreService().get(
 					key);
@@ -91,12 +88,11 @@ public class EntityService extends Service{
 				throw new Exception("Entity Not Exist");
 			populate(entity, ob);
 			this.beforeUpdate(entity, ob);
-			Date now = new Date();
-			entity.setProperty("updatedAt", now);
+			entity.setProperty("updatedAt", new Date());
 			DatastoreServiceFactory.getDatastoreService().put(entity);
 			this.afterUpdate(entity);
 			JSONObject changed = new JSONObject();
-			changed.put("updatedAt", now);
+			changed.put("updatedAt", entity.getProperty("updatedAt"));
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex.getMessage());

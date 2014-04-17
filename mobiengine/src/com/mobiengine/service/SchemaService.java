@@ -2,11 +2,10 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -37,7 +36,7 @@ import com.google.appengine.api.datastore.Text;
 @Path(Service.VERSION+"/schemas")
 public class SchemaService extends EntityService{
 	private static final String KIND="_schema";
-	private static final Map<String, Schema> schemas=new HashMap<String,Schema>();
+	private static final Map<String, Schema> schemas= new ConcurrentHashMap<String,Schema>();
 	
 	public static Entity makeSchema(String kind,EmbeddedEntity ... fieldSchemas){
 		Entity schema=new Entity(KIND);
@@ -53,13 +52,12 @@ public class SchemaService extends EntityService{
 		return schema;
 	}
 	
-	public static Entity addField(Entity schema, EmbeddedEntity ... fieldSchemas){
+	public static void addField(Entity schema, EmbeddedEntity ... fieldSchemas){
 		@SuppressWarnings("unchecked")
 		List<EmbeddedEntity> fields=(List<EmbeddedEntity>)schema.getProperty("fields");
 		int index=fields.size()-3;
 		for(EmbeddedEntity fieldSchema : fieldSchemas)
 			fields.add(index++,fieldSchema);
-		return schema;
 	}
 	
 	public static EmbeddedEntity makeFieldSchema(String name, TYPES type, boolean searchable, boolean unique){
@@ -90,14 +88,30 @@ public class SchemaService extends EntityService{
 	@Override
 	public Response create(JSONObject ob) {
 		try {
+			String newKind=ob.getString("name");
+			//check existence
+			if(this.schema.types.containsKey(newKind))
+				throw new RuntimeException(newKind + " has already existed.");
+			
 			Entity entity = new Entity(kind);
 			Date now = new Date();
 			entity.setProperty("createdAt", now);
 			entity.setProperty("updatedAt", now);
 			entity.setUnindexedProperty("name", ob.getString("name"));
 			entity.setUnindexedProperty("fields", makeSchema("a").getProperty("fields"));
+			if(ob.has("fields")){
+				for(JSONObject field: (JSONObject[])ob.get("fields")){
+					addField(entity, makeFieldSchema(
+							field.getString("name"), 
+							field.has("type") ? TYPES.valueOf(field.getString("type")) : TYPES.String,
+							field.has("searchable") && field.getBoolean("searchable"),
+							field.has("unique") && field.getBoolean("unique")));
+				}
+			}
+				
 			DatastoreServiceFactory.getDatastoreService().put(entity);
-			schemas.put(this.appId, new Schema());
+			this.schema.add(entity);
+			
 			return Response
 					.ok()
 					.header("Location",	this.getUrlRoot() +"/"+ entity.getKey().getId())
@@ -112,6 +126,7 @@ public class SchemaService extends EntityService{
 		return Response.serverError().entity(new RuntimeException("Not Support")).build();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@PUT
 	@Path("{id:.*}/column")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -123,17 +138,23 @@ public class SchemaService extends EntityService{
 					key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
-			Date now = new Date();
-			entity.setProperty("updatedAt", now);
-			addField(entity, makeFieldSchema(
-					ob.getString("name"), 
+			String fieldName=ob.getString("name");
+			ConcurrentHashMap<String, EmbeddedEntity> fields=this.schema.types.get(entity.getProperty("name"));
+			if(fields.contains(fieldName))
+				((List<EmbeddedEntity>)entity.getProperty("fields")).remove(fields.get(fieldName));
+			
+			EmbeddedEntity newField=null;
+			addField(entity, newField=makeFieldSchema(
+					fieldName, 
 					ob.has("type") ? TYPES.valueOf(ob.getString("type")) : TYPES.String,
 					ob.has("searchable") && ob.getBoolean("searchable"),
 					ob.has("unique") && ob.getBoolean("unique")));
+			entity.setProperty("updatedAt", new Date());
 			DatastoreServiceFactory.getAsyncDatastoreService().put(entity);
-			schemas.put(this.appId, new Schema());
+			fields.put(fieldName, newField);
+			
 			JSONObject changed = new JSONObject();
-			changed.put("updatedAt", now);
+			changed.put("updatedAt", entity.getProperty("updatedAt"));
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex.getMessage());
@@ -159,27 +180,33 @@ public class SchemaService extends EntityService{
 	}
 	
 	public static class Schema{
-		protected TreeMap<String,TreeMap<String, EmbeddedEntity>> types=new TreeMap<String,TreeMap<String, EmbeddedEntity>>();
+		protected ConcurrentHashMap<String, ConcurrentHashMap<String, EmbeddedEntity>> types=
+			new ConcurrentHashMap<String,ConcurrentHashMap<String, EmbeddedEntity>>();
+		
 		Schema(){
 			retrieve();
 		}
-		
-		@SuppressWarnings("unchecked")
-		protected void retrieve(){
+
+		protected void retrieve() {
 			Query query=new Query(KIND);
 			List<Entity> kinds=DatastoreServiceFactory.getDatastoreService()
 				.prepare(query)
 				.asList(FetchOptions.Builder.withDefaults());
 			
-			for(Entity kind : kinds){
-				String name=kind.getProperty("name").toString();
-				TreeMap<String,EmbeddedEntity> fields=new TreeMap<String,EmbeddedEntity>();
-				for(EmbeddedEntity field: (List<EmbeddedEntity>)kind.getProperty("fields"))
-					fields.put(field.getProperty("name").toString(), field);
-				types.put(name, fields);
-			}
+			for(Entity kind : kinds)
+				this.add(kind);
+			
 			if(types.isEmpty())
 				throw new RuntimeException("Applicaiton doesn't exist");
+		}
+		
+		@SuppressWarnings("unchecked")
+		protected void add(Entity kind){
+			String name=kind.getProperty("name").toString();
+			ConcurrentHashMap<String,EmbeddedEntity> fields=new ConcurrentHashMap<String,EmbeddedEntity>();
+			for(EmbeddedEntity field: (List<EmbeddedEntity>)kind.getProperty("fields"))
+				fields.put(field.getProperty("name").toString(), field);
+			types.put(name, fields);
 		}
 		
 		@SuppressWarnings("deprecation")
@@ -197,10 +224,13 @@ public class SchemaService extends EntityService{
 		}
 		
 		public void populate(Entity entity, JSONObject ob) throws Exception{
+			ob.remove("updatedAt");
+			ob.remove("createdAt");
+			ob.remove("id");
 			String kind=entity.getKind();
 			if(KIND.equals(kind) || ApplicationService.KIND.equals(kind))//_schema kind is for internal only
 				return;
-			TreeMap<String, EmbeddedEntity> fields=types.get(kind);
+			ConcurrentHashMap<String, EmbeddedEntity> fields=types.get(kind);
 			if(fields==null)
 				throw new RuntimeException(kind+" is not defined as a type");
 			boolean isNew=entity.getKey().getId()==0;
@@ -233,7 +263,6 @@ public class SchemaService extends EntityService{
 					entity.setUnindexedProperty(key, value);
 				else
 					entity.setProperty(key, value);
-				
 			}
 		}
 		
@@ -242,7 +271,7 @@ public class SchemaService extends EntityService{
 			String kind=query.getKind();
 			if(KIND.equals(kind) || ApplicationService.KIND.equals(kind))//_schema kind is for internal only
 				return;
-			TreeMap<String, EmbeddedEntity> fields=types.get(kind);
+			ConcurrentHashMap<String, EmbeddedEntity> fields=types.get(kind);
 			if(fields==null)
 				throw new RuntimeException(kind+" is not defined as a type");
 			

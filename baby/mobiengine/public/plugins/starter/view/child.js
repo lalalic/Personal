@@ -1,3 +1,9 @@
+/**
+ * create and update Children
+ * @module Child 
+ * @requires UI
+ * @requires uploader
+ */
 define(['UI','app','tool/uploader'],function(UI,app,uploader){
 	var tmplChild='\
 		<form>\

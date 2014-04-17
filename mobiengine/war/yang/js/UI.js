@@ -223,7 +223,6 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				this.collection.on('add', this.addOne, this)
 				this.collection.on('remove', this.removeOne, this)
 				this.collection.on('change', this.changeOne, this)
-				this.refresh()
 			},
 			renderAllItems:function(){
 				this.$list.empty()
@@ -248,15 +247,6 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 			},
 			refresh: function(){
 				this.collection && this.collection.fetch()
-				return this
-			},
-			setQuery: function(q){//deprecated for parse
-				if(_.isEqual(this.collection.query,q)){
-					this.$list.children().show()
-					return this
-				}
-				this.collection.query=q;
-				this.refresh()
 				return this
 			}
 		}),
@@ -400,5 +390,11 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 		return Prompt.show(title)
 	}
 	
-	return {Page:Page,FormPage:FormPage,ListPage:ListPage,Popup:Popup}
+	return {
+		Page:Page,
+		FormPage:FormPage,
+		ListPage:ListPage,
+		Popup:Popup,
+		FileLoader:'<span class="icon load" onclick="$(this).next().click()"/><input type="file" class="outview">'
+	}
 })

@@ -80,6 +80,9 @@ define(['tool/uploader'],function(uploader){
 			},
 			getContent:function(){
 				return this.innerHTML.replace(TRIM_TAG,"\n").replace(TRIM_LINE,'\n\n');
+			},
+			setContent: function(content){
+				this.innerHTML=content
 			}
 		})
 	}

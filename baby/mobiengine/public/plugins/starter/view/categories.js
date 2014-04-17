@@ -13,6 +13,7 @@ define(['app','UI'],function(app,UI){
 	return new (UI.ListPage.extend({
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#tasks"><span class="icon tasks"/></a>\
+			<a href="#features"><span class="icon apps"/></a>\
 			<a href="#sync"><span class="icon sync"/><span class="tag count"/></a>\
 			<a href="#test"><span class="icon test"/></a>',
 		itemTemplate:_.template(tmplCates),
