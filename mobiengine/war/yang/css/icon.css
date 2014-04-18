@@ -32,5 +32,6 @@
 .icon.preview:before,.icon.test:before{content:"\e61c"}
 .icon.load:before,.icon.sync:before{content:"\e61d"}
 .icon.apps:before,.icon.data:before,.icon.categories:before{content:"\e61e"}
+.icon.download:before{content:"\e60d"}
 
 

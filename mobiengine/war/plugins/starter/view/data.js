@@ -1,4 +1,4 @@
-define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
+define(['app','UI'],function(app,UI){
 	var tmplColumn='\
 			<fieldset>\
 				<input placeholder="'+text('name')+'" name="name" type="text">\
@@ -22,8 +22,9 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			</fieldset>\
 			<button class="anchor create" data-callback="accept">'+text('Create Column')+'</button>\
 			<button class="anchor cancel" data-callback="cancel">'+text('Cannel')+'</button>'
-	
-	var ListPage=View.ListPage,
+	var internal_tables="_user,_role,_schema".split(',')
+	var internal_fields="id,createdAt,updatedAt,ACL".split(',')
+	var ListPage=UI.ListPage,
 		Schema=app.Schema,
 		Application=app.Application,
 		current,
@@ -129,7 +130,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				return this
 			}
 		}),
-		columnUI=new (View.Popup.extend({
+		columnUI=new (UI.Popup.extend({
 			model:{searchable:true, unique: false},
 			className:'form',
 			template:_.template(tmplColumn),
@@ -171,16 +172,16 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 		newID:0,
 		collection:Schema.collection(),
 		title:text('Data Browser'),
-		cmds:'<a class="backup"><span class="icon data"/><span class="icon schema"/>Backup</a>\
-			<a class="table">'+View.FileLoader+'<span class="icon remove"/>table</a>\
+		cmds:'<a class="schema">'+UI.FileLoader+'<span class="icon download"/>schema</a>\
+			<a class="table">'+UI.FileLoader+'<span class="icon download"/><span class="icon remove"/>table</a>\
 			<a class="row"><span class="icon plus"/><span class="icon remove"/>row</a>\
-			<a class="column"><span class="icon plus"/><span class="icon remove"/>column</a>\
-			<a class="schema">'+View.FileLoader+'schema</a>',
+			<a class="column"><span class="icon plus"/><span class="icon remove"/>column</a>',
 
 		events:_.extend({},ListPage.prototype.events,{
-			'click a.backup .data':'backupData',
-			'click a.backup .schema':'backupSchema',
+			'change a.schema input':'importSchema',
+			'click a.schema .download': 'backupSchema',
 			
+			'click a.table .download': 'backupData',
 			'click a.table .remove': 'onRemoveTable',
 			'change a.table input':'importData',
 			
@@ -189,8 +190,6 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			
 			'click a.column .plus':'onNewColumn',
 			'click a.column .remove':'onRemoveColumn',
-			
-			'change a.schema input':'importSchema',
 			
 			'change input.a':'onChangeValue',
 			'blur input.a':'onBlurInput',
@@ -217,7 +216,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			this.changeApp(Application.current())
 			Application.all.on('current',this.changeApp,this)
 			this._super().show.apply(this,arguments)
-			table && this.$('nav.groupbar a.__'+table).click()
+			table && this.$('#.__'+table).click()
 			return this
 		},
 		close: function(){
@@ -235,7 +234,7 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			var table=new Table({model:model}), 
 				$a=$('<a/>')
 					.text(model.get('name'))
-					.addClass("__"+model.get('name'))
+					.attr('id',"__"+model.get('name'))
 					.insertBefore(this.$createTable)
 					.click(this.onSwitchTable(table))
 			
@@ -259,9 +258,10 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			}
 		},
 		onNewTable:function(){
-			var me=this,table=new Schema()
+			var me=this
 			prompt(text('please input the table name'),'table'+(this.newID++))
 				.then(function(name){
+					var table=new Schema()
 					table.set('name',name,{validate:true})
 					table.save().then(function(){
 						me.newTable=table
@@ -273,9 +273,12 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			columnUI.show()
 		},
 		onRemoveTable: function(){
+			var tableName=current.model.get('name')
+			if(tableName==app.User.prototype.className || tableName==app.Role.prototype.className)
+				return;
 			current.model.destroy()
 			.then(_.bind(function(){
-				this.$tables.find('a.active').remove()
+				this.$('#__'+tableName).remove()
 				this.$tables.find('a').first().click()
 			},this))
 		},
@@ -322,9 +325,11 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 				td=input.parent(),
 				i=$('td',td.parent()).index(td)-1,
 				field=schema.get('fields')[i],
-				value=input.val()
+				value=input.val(),
+				attrs={}
 			model.set(field.name,value, {validate:true})
-			model.patch(field.name)
+			attrs[field.name]=model.get(field.name)
+			model.save(null,{attrs:attrs})
 		},
 		onBlurInput: function(e,td){
 			if((td=input.parent()).length==0)
@@ -339,9 +344,9 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			current.removeSelected()
 		},
 		importData:function(e){
-			var reader=new FileReader()
+			var me=this, reader=new FileReader()
 			reader.onloadend=function(e){
-				_.each($.parseJSON(e.target.result),function(o){
+				_.each(JSON.parse(e.target.result),function(o){
 					var m=new this.collection.model(o)
 					m.save().then(function(){
 						current.collection.add(m)
@@ -350,14 +355,98 @@ define(['app','UI','jQuery','Underscore'],function(app,View, $, _){
 			}
 			reader.readAsText(e.target.files[0])
 		},
-		backupData:function(){
-			
-		},
 		backupSchema:function(){
-			
+			var schema={}
+			this.collection.each(function(a){
+				var fields=schema[a.get('name')]={}
+				_.chain(a.get('fields'))
+					.reject(function(a){return internal_fields.indexOf(a.name)!=-1})
+					.each(function(a){fields[a.name]=_.omit(a,'name')})
+			})
+			UI.util.save(btoa(JSON.stringify(schema,null, "\t")),
+				"schema.js",
+				"application/json")
+			return this
+		},
+		backupData:function(){
+			UI.util.save(btoa(JSON.stringify(current.collection,null,"\t")),
+				current.model.get('name')+'.js',
+				"application/json")
+			return this
 		},
 		importSchema:function(e){
-			
+			var me=this, reader=new FileReader()
+			reader.onloadend=function(e){
+				var schema=JSON.parse(e.target.result),
+					tableNames=[],
+					tables=_.chain(_.keys(schema))
+						.map(function(name){
+							var table=null
+							tableNames.push(name)
+							return {name:name,
+								fields:_.chain(_.keys(table=schema[name]))
+									.map(function(f){
+										var field=table[f]
+										field.name=f
+										return field
+									}).value()}
+						}).value()
+						
+				var currentTables=me.collection.toJSON(),
+					currentTableNames=_.pluck(currentTables,'name')
+				//delete
+				_.chain(_.difference(currentTableNames,tableNames,internal_tables))
+					.each(function(table){
+						me.$('#__'+table).click()
+						me.onRemoveTable()
+					})
+				//create
+				_.chain(_.difference(tableNames,currentTableNames))
+					.each(function(name){
+						var table=new Schema(_.findWhere(tables,{name:name}))
+						table.save().then(function(){
+							me.collection.add(table)
+						})
+					})
+				//update
+				_.chain(_.intersection(tableNames,currentTableNames))
+					.each(function(name){
+						me.$('#__'+name).click()
+						me.updateTableSchema(_.findWhere(tables,{name:name}))
+					})
+			}
+			reader.readAsText(e.target.files[0])
+		},
+		updateTableSchema:function(newSchema){
+			var me=this
+			var currentSchema=current.model.get('fields'),
+				currentFieldNames=_.difference(_.pluck(currentSchema,'name'),internal_fields)
+			var pendingSchema=newSchema.fields,
+				fieldNames=_.difference(_.pluck(pendingSchema,'name'),internal_fields)
+			var changed=false
+			//delete
+			_.chain(_.difference(currentFieldNames,fieldNames))
+				.each(function(name){
+					changed=true
+					currentSchema.splice(currentSchema.indexOf(_.findWhere(currentSchema,{name:name})),1)
+				})
+			//create
+			_.chain(_.difference(fieldNames,currentFieldNames))
+				.each(function(name){
+					changed=true
+					currentSchema.splice(currentSchema.length-3, 0, _.findWhere(pendingSchema,{name:name}))
+				})
+			//update
+			_.chain(_.intersection(fieldNames,currentFieldNames))
+				.each(function(name){
+					var currentField=_.findWhere(currentSchema,{name:name}),
+						newField=_.findWhere(pendingSchema,{name:name})
+					if(_.isEqual(currentField,newField))
+						return
+					changed=true
+					currentSchema.splice(currentSchema.indexOf(currentField),1,newField)
+				})
+			changed && current.model.save()
 		}
 	},{
 		STYLE:

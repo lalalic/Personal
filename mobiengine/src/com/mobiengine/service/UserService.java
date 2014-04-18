@@ -71,19 +71,13 @@ public class UserService extends EntityService{
 		return new String(Base64.encode(user.getKey().getId()+"-"+user.getProperty("username")));
 	}
 	
-	public static Entity resolvSessionToken(String token){
+	public static Entity resolvSessionToken(String token) throws EntityNotFoundException{
 		String[] infos=Base64.base64Decode(token).split("-");
 		if(infos.length!=2)
 			throw new RuntimeException("token error");
 		long id=Long.parseLong(infos[0]);
 		String username=infos[1];
-		Entity user;
-		try {
-			user = DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, id));
-				
-		} catch (EntityNotFoundException e) {
-			throw new RuntimeException("token error");
-		}
+		Entity user = DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, id));
 		if(!username.equals(user.getProperty("username")))
 			throw new RuntimeException("token error");
 		return user;

@@ -395,6 +395,16 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 		FormPage:FormPage,
 		ListPage:ListPage,
 		Popup:Popup,
-		FileLoader:'<span class="icon load" onclick="$(this).next().click()"/><input type="file" class="outview">'
+		FileLoader:'<span class="icon load" onclick="$(this).next().click()"/><input type="file" class="outview">',
+		util:{
+			save:function(data, name, type){
+				var a=document.createElement("a")
+				document.body.appendChild(a)
+				a.href='data:'+(type||'text/plain')+';base64,'+data
+				a.download=name||"document"
+				a.click()
+				document.body.removeChild(a)
+			}
+		}
 	}
 })

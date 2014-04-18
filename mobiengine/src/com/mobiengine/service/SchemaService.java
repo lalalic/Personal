@@ -2,14 +2,15 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -37,6 +39,7 @@ import com.google.appengine.api.datastore.Text;
 public class SchemaService extends EntityService{
 	private static final String KIND="_schema";
 	private static final Map<String, Schema> schemas= new ConcurrentHashMap<String,Schema>();
+	private static final String INTERNAL_FIELDS=",createdAt,updatedAt,ACL,id,";
 	
 	public static Entity makeSchema(String kind,EmbeddedEntity ... fieldSchemas){
 		Entity schema=new Entity(KIND);
@@ -82,48 +85,66 @@ public class SchemaService extends EntityService{
 		super(app,user,KIND);
 	}
 
-	@POST
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public Response create(JSONObject ob) {
+	public void beforeCreate(Entity entity, JSONObject ob) {
+		String newKind;
 		try {
-			String newKind=ob.getString("name");
-			//check existence
-			if(this.schema.types.containsKey(newKind))
-				throw new RuntimeException(newKind + " has already existed.");
-			
-			Entity entity = new Entity(kind);
-			Date now = new Date();
-			entity.setProperty("createdAt", now);
-			entity.setProperty("updatedAt", now);
-			entity.setUnindexedProperty("name", ob.getString("name"));
-			entity.setUnindexedProperty("fields", makeSchema("a").getProperty("fields"));
-			if(ob.has("fields")){
-				for(JSONObject field: (JSONObject[])ob.get("fields")){
-					addField(entity, makeFieldSchema(
-							field.getString("name"), 
-							field.has("type") ? TYPES.valueOf(field.getString("type")) : TYPES.String,
-							field.has("searchable") && field.getBoolean("searchable"),
-							field.has("unique") && field.getBoolean("unique")));
-				}
-			}
-				
-			DatastoreServiceFactory.getDatastoreService().put(entity);
-			this.schema.add(entity);
-			
-			return Response
-					.ok()
-					.header("Location",	this.getUrlRoot() +"/"+ entity.getKey().getId())
-					.entity(entity).build();
-		} catch (Exception ex) {
-			return Response.serverError().entity(ex).build();
+			newKind = ob.getString("name");
+		} catch (JSONException e) {
+			throw new RuntimeException(e.getMessage());
 		}
+		//check existence
+		if(this.schema.types.containsKey(newKind))
+			throw new RuntimeException(newKind + " has already existed.");
+		
+	}
+
+	@Override
+	public void afterCreate(Entity entity, JSONObject response) {
+		this.schema.add(entity);
+	}
+
+	@Override
+	public void beforeUpdate(Entity entity, JSONObject request) {
+		
+	}
+
+	@Override
+	public void afterUpdate(Entity entity) {
+		this.schema.add(entity);
 	}
 	
-	@Override 
-	public Response update(long id, JSONObject ob){
-		return Response.serverError().entity(new RuntimeException("Not Support")).build();
+	@SuppressWarnings("unchecked")
+	@Override
+	public void populate(Entity entity, JSONObject ob) throws Exception{
+		String newKind=ob.getString("name");
+		entity.setUnindexedProperty("name",newKind);
+		if(UserService.KIND.equals(newKind))
+			entity.setUnindexedProperty("fields", UserService.makeSchema().getProperty("fields"));
+		else if(RoleService.KIND.equals(newKind))
+			entity.setUnindexedProperty("fields", RoleService.makeSchema().getProperty("fields"));
+		else
+			entity.setUnindexedProperty("fields", makeSchema("a").getProperty("fields"));
+		
+		Set<String> exist=new HashSet<String>();
+		for(EmbeddedEntity field: (List<EmbeddedEntity>)entity.getProperty("fields"))
+			exist.add((String)field.getProperty("name"));
+		
+		if(ob.has("fields")){
+			JSONArray fields=ob.getJSONArray("fields");
+			for(int i=0, len=fields.length(); i<len; i++){
+				JSONObject field=fields.getJSONObject(i);
+				String name=field.getString("name");
+				if(exist.contains(name))
+					continue;
+				addField(entity, makeFieldSchema(
+						name, 
+						field.has("type") ? TYPES.valueOf(field.getString("type")) : TYPES.String,
+						field.has("searchable") && field.getBoolean("searchable"),
+						field.has("unique") && field.getBoolean("unique")));
+				exist.add(name);
+			}
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -133,12 +154,16 @@ public class SchemaService extends EntityService{
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createColumn(@PathParam("id") long id, JSONObject ob) {
 		try {
+			JSONObject changed = new JSONObject();
 			Key key = KeyFactory.createKey(kind, id);
 			Entity entity = DatastoreServiceFactory.getDatastoreService().get(
 					key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
 			String fieldName=ob.getString("name");
+			if(INTERNAL_FIELDS.indexOf(","+fieldName+",")!=-1)
+				return Response.ok().entity(changed).build();
+			
 			ConcurrentHashMap<String, EmbeddedEntity> fields=this.schema.types.get(entity.getProperty("name"));
 			if(fields.contains(fieldName))
 				((List<EmbeddedEntity>)entity.getProperty("fields")).remove(fields.get(fieldName));
@@ -153,7 +178,6 @@ public class SchemaService extends EntityService{
 			DatastoreServiceFactory.getAsyncDatastoreService().put(entity);
 			fields.put(fieldName, newField);
 			
-			JSONObject changed = new JSONObject();
 			changed.put("updatedAt", entity.getProperty("updatedAt"));
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
@@ -170,7 +194,9 @@ public class SchemaService extends EntityService{
 			throw new RuntimeException(e.getMessage());
 		}
 		if(UserService.KIND.equals(kind)
-				|| RoleService.KIND.equals(kind))
+				|| RoleService.KIND.equals(kind)
+				|| SchemaService.KIND.equals(kind)
+				|| ApplicationService.KIND.equals(kind))
 			throw new RuntimeException("Not Supported");
 	}
 	

@@ -287,6 +287,15 @@ define(["Backbone"],function(Backbone){
 				this.trigger('addColumn',column, i)
 			})
 		}
+	},{
+		upload:function(data){
+			return $.ajax({
+				url: this.prototype.version+'/schemas/import',
+				type:'post',
+				contentType:'application/json;charset=UTF-8',
+				data:data
+			})
+		}
 	}),
 	Query=Object.extend(function (objectClass) {
 			this.objectClass = objectClass;

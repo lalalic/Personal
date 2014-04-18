@@ -18,6 +18,7 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -43,7 +44,17 @@ public class Service{
 		try{
 			if(sessionToken!=null)
 				user=UserService.resolvSessionToken(sessionToken);
-		}catch(Exception ex){
+		}catch(EntityNotFoundException ex){
+			//maybe it's app owner
+			String namespace=NamespaceManager.get();
+			try{
+				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
+				user=UserService.resolvSessionToken(sessionToken);
+			}catch(Exception e){
+				
+			}finally{
+				NamespaceManager.set(namespace);
+			}
 			
 		}
 	}
