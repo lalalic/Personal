@@ -34,6 +34,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.Text;
+import com.google.appengine.api.search.GeoPoint;
 
 @Path(Service.VERSION+"/schemas")
 public class SchemaService extends EntityService{
@@ -339,18 +340,14 @@ public class SchemaService extends EntityService{
 	}	
 	
 	enum TYPES{
+		Integer, Float, Boolean,
+		Date, 
 		String{
 			@Override
 			Object asEntityValue(Object value){
 				if(value!=null && ((String)value).length()>500)
 					return new Text((String)value);
 				return value;
-			}
-		}, Integer, Float, Boolean,
-		Date{
-			@Override
-			Object asEntityValue(Object value){
-				return null;
 			}
 		}, 
 		File{
@@ -363,27 +360,35 @@ public class SchemaService extends EntityService{
 		},
 		GeoPoint{
 			@Override
-			Object asEntityValue(Object value){
-				return null;
+			Object asEntityValue(Object value) throws Exception{
+				JSONObject o=(JSONObject)value;
+				return new GeoPoint(o.getDouble("lat"),o.getDouble("lng"));
 			}
 		}, 
 		Array{
 			@Override
-			Object asEntityValue(Object value){
-				return null;
+			Object asEntityValue(Object value) throws Exception{
+				JSONArray data=(JSONArray)value;
+				List<Object> r=new ArrayList<Object>();
+				for(int i=0,len=data.length();i<len;i++)
+					r.add(data.get(i));
+				return r;
 			}
 		}, 
 		Object{
 			@Override
 			Object asEntityValue(Object value){
-				return null;
+				return ((JSONObject)value).toString();
 			}
 		}, 
-		Pointer;
+		Pointer{//{_className:'',id:x}
+			@Override
+			Object asEntityValue(Object value){
+				return ((JSONObject)value).toString();
+			}
+		};
 		
-		Object asEntityValue(Object value){
-			if(value instanceof String && ((String) value).length()>255)
-				return new Text((String)value);
+		Object asEntityValue(Object value) throws Exception{
 			return value;
 		}
 		
@@ -412,7 +417,6 @@ public class SchemaService extends EntityService{
 					return amount;
 			}},
 		Add{
-
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
 				if(TYPE!=TYPES.Array)

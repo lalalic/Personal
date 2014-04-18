@@ -32,7 +32,7 @@
 <span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
 	<span>{{title}}</span>
 	<%_.each(options,function(o){with(o){%>
-	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : get('name')}}" class="outview">
+	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : id}}" class="outview">
 	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
 	<%}})%>
 </span>

@@ -40,10 +40,10 @@ define(['UI','app'],function(View,app){
 			return this
 		},
 		show:function(catId, catName){
-			if(this.catId==catId)
+			if(this.catId==(catId=parseInt(catId)))
 				return this
 			this.catId=catId
-			this.collection.query.equalTo('category',catName)
+			this.collection.query.equalTo('category',catId)
 			this._super().show.apply(this,arguments)
 			this.$('footer .plus').parent().attr('href','#create/'+catId+"/"+catName)
 			this.setTitle(text(catName))

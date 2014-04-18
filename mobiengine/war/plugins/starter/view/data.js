@@ -131,7 +131,6 @@ define(['app','UI'],function(app,UI){
 			}
 		}),
 		columnUI=new (UI.Popup.extend({
-			model:{searchable:true, unique: false},
 			className:'form',
 			template:_.template(tmplColumn),
 			events:{
@@ -144,7 +143,7 @@ define(['app','UI'],function(app,UI){
 				return this
 			},
 			show: function(){
-				this.model={searchable:true, unique: false}
+				this.model={searchable:true, unique: false, type: this.$('select[name=type]').val()}
 				this.$('input[name]').val('')
 				this.$('input[name=searchable]').prop('checked',this.model.searchable)
 				this.$('input[name=unique]').prop('checked',this.model.unique)
@@ -163,7 +162,7 @@ define(['app','UI'],function(app,UI){
 			},
 			create: function(){
 				current.model.addColumn(this.model)
-				this.model={searchable:true, unique: false}
+				this.model={searchable:true, unique: false,  type: this.$('select[name=type]').val()}
 				this.$('input[name=searchable]').prop('checked',this.model.searchable)
 				this.$('input[name=unique]').prop('checked',this.model.unique)
 			}
@@ -352,6 +351,7 @@ define(['app','UI'],function(app,UI){
 						current.collection.add(m)
 					})
 				},current)
+				e.target.value=""
 			}
 			reader.readAsText(e.target.files[0])
 		},
@@ -414,6 +414,7 @@ define(['app','UI'],function(app,UI){
 						me.$('#__'+name).click()
 						me.updateTableSchema(_.findWhere(tables,{name:name}))
 					})
+				e.target.value=""
 			}
 			reader.readAsText(e.target.files[0])
 		},

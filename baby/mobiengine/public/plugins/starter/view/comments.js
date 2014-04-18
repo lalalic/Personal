@@ -1,5 +1,12 @@
 define(['UI','app'],function(UI, app){
-	var tmplComment=''
+	var tmplComment='\
+			<li class="thumb" id="_{{id}}">\
+				<a><span class="icon user"/><br>{{get("authorName")}}</a>\
+				<div>\
+					<p>{{get("content")}}</p>\
+					<span class="on-right">{{get("createdAt")}}</span>\
+				</div>\
+			</li>';
 	var Comment=app.Comment
 	return new (UI.ListPage.extend({
 		title:'Comments',
@@ -13,14 +20,15 @@ define(['UI','app'],function(UI, app){
 		itemTemplate:_.template(tmplComment),
 		collection: Comment.collection(),
 		show: function(id){
-			this.post=id
+			this.post=parseInt(id)
 			return this._super().show.apply(this,arguments)
 		},
 		refresh:function(){
-			this.collection.query
+			this.post && this.collection.query
 				.equalTo('post',this.post)
 				.ascending('createdAt')
-			return this._super().refresh.apply(this,arguments)
+			&& this._super().refresh.apply(this,arguments)
+			return this
 		},
 		save: function(){
 			new Comment({

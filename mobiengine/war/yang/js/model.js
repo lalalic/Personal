@@ -81,9 +81,17 @@ define(["Backbone"],function(Backbone){
 			}
 			this.set(name,value)
 		},
+		addUnique: function(name,value){
+			this.set(name,_.union(this.attributes[name]||[], _.isArray(value)? value : [value]))
+		},
+		remove: function(name,value){
+			this.set(name,_.difference(this.attributes[name]||[],_.isArray(value)? value : [value]))
+		},
 		schema:{
 			'createdAt':{type:'Date'},
-			'updatedAt':{type:'Date'}
+			'updatedAt':{type:'Date'},
+			'id':{type:'Integer'},
+			'ACL':{type:'Object'}
 		}
 		
 	},/** @lends app.Model */{
@@ -336,6 +344,11 @@ define(["Backbone"],function(Backbone){
 
 			return params;
 		},
+		toURL:function(){
+			var q=this.toJSON()
+			q.where=JSON.stringify(q.where)
+			return q
+		},
 		/**
 		 * fetch objects from server
 		 * @return {Promise}
@@ -345,7 +358,7 @@ define(["Backbone"],function(Backbone){
 				context : this,
 				url : (new this.objectClass).urlRoot(),
 				type : 'get',
-				data : this.toJSON()
+				data : this.toURL()
 			}).then(function (r) {
 				return _.map(r.results, function (json) {
 					return new this.objectClass(json);
@@ -364,7 +377,7 @@ define(["Backbone"],function(Backbone){
 				context : this,
 				url : (new this.objectClass).urlRoot(),
 				type : 'get',
-				data : _.extend(this.toJSON(), {
+				data : _.extend(this.toURL(), {
 					limit : 0,
 					count : true
 				})
@@ -383,7 +396,7 @@ define(["Backbone"],function(Backbone){
 				context : this,
 				url : (new this.objectClass).urlRoot(),
 				type : 'get',
-				data : _.extend(this.toJSON(), {
+				data : _.extend(this.toURL(), {
 					limit : 1
 				})
 			}).then(function (r) {

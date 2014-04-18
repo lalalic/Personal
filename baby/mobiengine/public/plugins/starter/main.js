@@ -32,7 +32,11 @@ define(['Plugin', 'app'],function(Plugin, app){
 		Story = app.Story,
 		User = app.User,
 		Query = app.Query
-
+	
+	Post.prototype.getTags=function(){
+		return _.map(this.get('tags'),function(id){return Tag.all.get(id).get('name')})
+	}
+	
 	var _init = app.init
 	app.init = function () {
 		Child.all = Child.collection()

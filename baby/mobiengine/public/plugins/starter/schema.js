@@ -17,10 +17,10 @@
 			"type": "Integer"
 		},
 		"post": {
-			"type": "String"
+			"type": "Integer"
 		},
 		"score": {
-			"type": "String"
+			"type": "Integer"
 		}
 	},
 	"_role": {
@@ -98,7 +98,7 @@
 			"searchable": true
 		},
 		"category": {
-			"type": "String",
+			"type": "Integer",
 			"searchable": true
 		},
 		"title": {
@@ -106,11 +106,12 @@
 			"searchable": true
 		},
 		"duration": {
-			"type": "String",
+			"type": "Integer",
 			"searchable": true
 		},
 		"tags": {
-			"type": "Array"
+			"type": "Array",
+			"searchable": true
 		},
 		"thumbnail": {
 			"type": "String"
@@ -188,13 +189,15 @@
 		},
 		"time": {
 			"searchable": false,
-			"unique": false
+			"unique": false,
+			"type": "Integer"
 		}
 	},
 	"Story": {
 		"author": {
 			"searchable": true,
-			"unique": false
+			"unique": false,
+			"type": "Integer"
 		},
 		"authorName": {
 			"searchable": false,
@@ -203,11 +206,13 @@
 		},
 		"content": {
 			"searchable": false,
-			"unique": false
+			"unique": false,
+			"type": "String"
 		},
 		"thumbnail": {
 			"searchable": false,
-			"unique": false
+			"unique": false,
+			"type": "String"
 		}
 	}
 }

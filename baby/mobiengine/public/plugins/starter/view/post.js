@@ -34,15 +34,18 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 
 			if(this.model.has('tags'))
 				_.each(this.model.get('tags'),function(tag){
-					this.$('.checkable input[value="'+tag+'"]').prop('checked','checked')
+					this.$('.checkable input[value='+tag+']').prop('checked','checked')
 					},this)
 					
 			if(this.model.has('content'))
 				this.editor.setContent(this.model.get('content'))
 				
-			if(this.model.isNew())
-				this.setTitle(text("Create New ")+text(this.model.get('category')||'Theme'))
-			else
+			if(this.model.isNew()){
+				var a
+				this.setTitle(text("Create New ")
+					+text((a=this.model.get('category'))&&Tag.all.get(this.model.get('category')).get('name')
+						||'Theme'))
+			}else
 				this.setTitle(text("Update"))
 			return this
 		},
@@ -58,13 +61,17 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 				if(_.isObject(id))
 					this.setModel(id)
 				else{
-					var model=new Post({id:id})
+					var model=new Post({id:parseInt(id)})
 					model.fetch()
 						.then(_.bind(function(){this.setModel(model)},this))
 				}
 				break
 			case 3:
-				this.setModel(new Post({tags:['Boy','Girl','30','Learning',categoryName],category:categoryName}))
+				this.setModel(new Post({
+					tags:_.chain(['Boy','Girl','30','Learning',categoryName])
+						.map(function(n){return Tag.all.findWhere({name:n}).id})
+						.value(),
+					category:parseInt(id)}))
 				break
 			}
 			return FormPage.prototype.show.apply(this,arguments)

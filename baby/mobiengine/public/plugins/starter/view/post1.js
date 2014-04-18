@@ -3,11 +3,12 @@
  *  @module Post1
  */
 define(['UI','app'],function(UI, app){
+	var Tag=app.Tag
 	var tmplPost='\
 		<div style="padding:10px">\
 		<div style="min-height:50%">\
 			<div>\
-				<span class="tags"> {{get("tags")}}</span>\
+				<span class="tags"> {{getTags()}}</span>\
 				<span class="on-right icon user"> {{get("authorName")}}</span>\
 				<span class="on-right icon time"  style="padding-right:20px"> {{get("createdAt")}}</span>\
 			</div>\
@@ -152,7 +153,7 @@ define(['UI','app'],function(UI, app){
 		clear: function(){
 			this.$('a span.calendar').removeClass('tasked')
 			this.$('a span.star').removeClass('favorited')
-			this.taskOption.find('input[value="0"]').click()
+			//this.taskOption.find('input[value="0"]').click()
 			return this._super().clear.apply(this,arguments)
 		}
 	},{

@@ -170,7 +170,7 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 		
 		var _sync=Backbone.Collection.prototype.sync
 		Backbone.Collection.prototype.sync=function(method, model, opt){
-			method=="read" && this.query && (opt.data=this.query.toJSON())
+			method=="read" && this.query && (opt.data=this.query.toURL())
 			return _sync.apply(this,arguments)
 		}
 		
