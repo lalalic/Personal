@@ -36,6 +36,7 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 				_.each(this.model.get('tags'),function(tag){
 					this.$('.checkable input[value='+tag+']').prop('checked','checked')
 					},this)
+			
 					
 			if(this.model.has('content'))
 				this.editor.setContent(this.model.get('content'))
@@ -71,7 +72,8 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 					tags:_.chain(['Boy','Girl','30','Learning',categoryName])
 						.map(function(n){return Tag.all.findWhere({name:n}).id})
 						.value(),
-					category:parseInt(id)}))
+					category:parseInt(id),
+					duration:30}))
 				break
 			}
 			return FormPage.prototype.show.apply(this,arguments)
@@ -91,8 +93,10 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 		change: function(e){
 			var el=e.target
 			switch(el.name){
+			case 'duration':
+				el.checked && this.model.set('duration',parseInt(el.value))
 			case 'tags':
-				this.model[el.checked ? 'addUnique' : 'remove']('tags',el.value)
+				this.model[el.checked ? 'addUnique' : 'remove']('tags',parseInt(el.value))
 				break
 			default:
 				FormPage.prototype.change.apply(this,arguments)

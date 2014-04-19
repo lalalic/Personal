@@ -1,4 +1,3 @@
-var aa
 function error(e){console.warn(e)}
 function isNewCreated(o){return o.get('createdAt').getTime()==o.get('updatedAt').getTime()}
 
@@ -16,29 +15,30 @@ Cloud.afterSave("Comment", function(request, response) {
 		post=Model.create('Post',{id:request.object.get("post")});
 	post.fetch().then(function(){
 		post.increment("comments",1)
-		post.save().then(null,error)
+		post.save()
 	},error)
 	
 	user.increment("score",1)
 	user.increment("comments",1)
-	user.save().then(null,error)
+	user.save()
 });
 
 Cloud.afterSave("Post", function(request, response) {
-	var post=request.object
+	var post=request.object,
 		user=request.user
 	if(!isNewCreated(post))
 		return
 	user.increment("post",1)
 	user.increment("score",10)
-	user.save().then(null,error)
+	user.save()
 
 	//tag count;category, duration, goal, gender, and etc
 	_.each(post.get('tags'),function(id){
 		var tag=Model.create('Tag',{id:id})
 		tag.fetch().then(function(){
+			console.debug("saving tag")
 			tag.increment('posts',1)
-			(aa=post.get('duration')) && tag.increment('time', aa)
+			post.has('duration') && tag.increment('time', post.get('duration'))
 			tag.save()
 		})
 	})

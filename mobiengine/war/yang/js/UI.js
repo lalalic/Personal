@@ -310,7 +310,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 					return this
 				this.clear()
 				this.model=model
-				model && this.$('form *[name]').each(function(){
+				model && this.$('form :input[name]').filter(':not(:checkbox,:radio)').each(function(){
 					model.has(this.name) &&
 						$(this).val(model.get(this.name))
 				})

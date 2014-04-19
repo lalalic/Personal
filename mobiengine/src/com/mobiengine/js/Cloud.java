@@ -105,7 +105,7 @@ public class Cloud{
 		List<Function> callbacks=getFunctionList(entity.getKind(),AFTER_SAVE);
 		if(callbacks.size()==0)
 			return;
-		String running="after save "+entity.getKind();
+		String running="after save a "+entity.getKind();
 		if(ran.contains(running)){
 			logger.severe("return from possible infinite loop for "+running);
 			return;
@@ -173,7 +173,7 @@ public class Cloud{
 		ScriptableObject m=null;
 		try {
 			scope.defineProperty("_temp_data", new JsonParser(ctx,scope).parseValue(stringify(entity)), ScriptableObject.PERMANENT);
-			m=(ScriptableObject)ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',_temp_data)", "", 1, null);
+			m=(ScriptableObject)ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',_temp_data,{parse:true})", "", 1, null);
 		} catch (ParseException e) {
 			logger.severe(e.getMessage());
 			throw new RuntimeException("Cloud: "+e.getMessage());
@@ -209,7 +209,7 @@ public class Cloud{
 		return new InputStreamReader(Cloud.class.getClassLoader().getResourceAsStream("libs/"+filename));
 	}
 	
-	public String stringify(Entity entity){
+	public String stringify(Object entity){
 		try {
 			StringWriter writer=new StringWriter();
 			JSON.writeValue(writer, entity);

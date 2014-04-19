@@ -35,6 +35,7 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 		module.addSerializer(Text.class, new JSONText());
 		om.registerModule(module);
 		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, true);
+		om.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
 	}
 	@Override
 	public ObjectMapper getContext(Class<?> arg0) {

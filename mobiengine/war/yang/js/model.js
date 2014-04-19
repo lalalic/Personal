@@ -100,7 +100,7 @@ define(["Backbone"],function(Backbone){
 		 */
 		setSchema: function(schema){
 			this.prototype.className=schema.get('name')
-			this.prototype.schema={}
+			this.prototype.schema=_.clone(Model.prototype.schema)
 			_.each(schema.get('fields'),function(metadata){
 				this[metadata.name]=metadata
 			},this.prototype.schema)

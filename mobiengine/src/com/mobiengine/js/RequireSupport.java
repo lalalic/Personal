@@ -6,6 +6,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.json.JsonParser;
 
 import com.google.appengine.api.datastore.Entity;
 import com.mobiengine.service.EntityService;
@@ -66,22 +67,23 @@ public class RequireSupport extends ScriptableObject {
 		}
 		
 		String http=(String) Context.jsToJava(option.get("type"),String.class);
-		JSONObject data= cloud.parse((String)option.get("data"));
+		String oData=(String)option.get("data");
+		JSONObject data= oData!=null ? cloud.parse(oData) : null;
 		switch(HTTP.valueOf(http)){
 		case POST:
-			return service.create(data).getEntity();
+			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.create(data).getEntity()));
 		case GET:
 			if(uriInfo.length-1==++i)
-				return service.get(Long.parseLong(uriInfo[i])).getEntity();
+				return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.get(Long.parseLong(uriInfo[i])).getEntity()));
 			
-			return service.get(data.getJSONObject("where"), 
-					data.getString("order"), 
-					data.getInt("limit"), 
-					data.getInt("skip"), 
-					data.getString("keys"), 
-					data.getBoolean("count")).getEntity();
+			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.get(data!=null ? data.getJSONObject("where") : null, 
+					data!=null ? data.getString("order") : null, 
+					data!=null ? data.getInt("limit") : -1, 
+					data!=null ? data.getInt("skip") : -1, 
+					data!=null ? data.getString("keys") : null, 
+					data!=null ? data.getBoolean("count") : false).getEntity()));
 		case PUT:
-			return service.update(Long.parseLong(uriInfo[++i]), data).getEntity();
+			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.update(Long.parseLong(uriInfo[++i]), data).getEntity()));
 		case DELETE:
 			return service.remove(Long.parseLong(uriInfo[++i])).getEntity();
 		}

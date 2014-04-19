@@ -28,8 +28,8 @@
 		        },
 		        then: function (c,d) { // callback
 		            a ? // if it's not fulfilled yet
-		            (a.push(c),e.push(d)) : // added the callback to the queue
-		            (a===0 ? c(b) : d(b)) // otherwise, let it know what the fulfilled value
+		            (c&&a.push(c),d&&e.push(d)) : // added the callback to the queue
+		            (a===0 ? c&&c(b) : d&&d(b)) // otherwise, let it know what the fulfilled value
 		                 // was immediately
 		        }
 		    }
@@ -74,21 +74,33 @@
 			})
 			return data
 		},
-		/**
-		 * add unique value to an array field
-		 */
-		addUnique:function(name, value){
-			
+		increment: function(name,amount){
+			amount=_.isNumber(amount) ? amount : 1
+			var value=Backbone.Model.prototype.get.call(this,name)
+			if(_.isNull(value) || _.isUndefined(value))
+				value={__op:"Increment", amount:amount, guess:amount}
+			else if(_.isNumber(value))
+				value={__op:"Increment", amount:amount, guess:value+amount}
+			else {
+				value.amount+=amount;
+				value.guess+=amount;
+			}
+			this.set(name,value)
 		},
-		/**
-		 * remove item from an array field
-		 */
-		remove: function(name, value){
-		
+		addUnique: function(name,value){
+			this.set(name,_.union(this.attributes[name]||[], _.isArray(value)? value : [value]))
+		},
+		remove: function(name,value){
+			this.set(name,_.difference(this.attributes[name]||[],_.isArray(value)? value : [value]))
 		},
 		schema:{
 			'createdAt':{type:'Date'},
-			'updatedAt':{type:'Date'}
+			'updatedAt':{type:'Date'},
+			'id':{type:'Integer'},
+			'ACL':{type:'Object'}
+		},
+		_super:function(){
+			return this.__proto__.constructor.__super__
 		}
 		
 	},/** @lends app.Model */{
@@ -97,7 +109,7 @@
 		 */
 		setSchema: function(schema){
 			this.prototype.className=schema.get('name')
-			this.prototype.schema={}
+			this.prototype.schema=_.clone(Model.prototype.schema)
 			_.each(schema.get('fields'),function(metadata){
 				this[metadata.name]=metadata
 			},this.prototype.schema)

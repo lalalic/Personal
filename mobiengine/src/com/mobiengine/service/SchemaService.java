@@ -410,9 +410,9 @@ public class SchemaService extends EntityService{
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
 				if(TYPE!=TYPES.Integer)
 					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
-				int amount = op.getInt("amount");
+				long amount = op.getLong("amount");
 				if(entity.hasProperty(key))
-					return ((Integer)entity.getProperty(key))+amount;
+					return ((Long)entity.getProperty(key))+amount;
 				else
 					return amount;
 			}},
