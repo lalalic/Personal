@@ -66,9 +66,7 @@
 					return
 				switch(schema.type){
 				case 'Date':
-					var d=new Date()
-					d.setTime(data[name])
-					data[name]=d
+					data[name]=new Date(data[name])
 					break
 				}
 			})
@@ -173,6 +171,47 @@
 	var _extend=Model.extend
 	Model.extend=function(instanceProperties, classProperties){
 		return Model.DEFINES[instanceProperties.className]=_extend.apply(this,arguments)
+	}
+	
+	Backbone.Collection.prototype.url=function(){
+		if(this.model){
+			var root=this.model.prototype.urlRoot
+			if(_.isString(root))
+				return this.model.Collection.prototype.url=root;
+			else if(_.isFunction(root))
+				return this.model.Collection.prototype.url=(new this.model()).urlRoot()
+		}
+	}
+	Backbone.Collection.prototype.parse=function(response){
+		return response.results
+	}
+	
+	var _sync=Backbone.Collection.prototype.sync
+	Backbone.Collection.prototype.sync=function(method, model, opt){
+		method=="read" && this.query && (opt.data=this.query.toURL())
+		return _sync.apply(this,arguments)
+	}
+	
+	Backbone.Collection.prototype.save=function(){
+		if(this.size()==0){
+			var p=promise()
+			p.resolve()
+			return p;
+		}
+			
+		var me=this
+		return Backbone.ajax({
+			url: this.url(),
+			data:this.toJSON(),
+			type:'PUT',
+			success:function(r){
+				var d=new Date()
+				d.setTime(r.updatedAt)
+				me.each(function(a){
+					a.set('updatedAt',d)
+				})
+			}
+		})
 	}
 	
 	var 

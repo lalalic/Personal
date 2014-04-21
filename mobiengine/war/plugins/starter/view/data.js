@@ -344,8 +344,8 @@ define(['app','UI'],function(app,UI){
 		},
 		importData:function(e){
 			var me=this, reader=new FileReader()
-			reader.onloadend=function(e){
-				_.each(JSON.parse(e.target.result),function(o){
+			reader.onloadend=function(a){
+				_.each(JSON.parse(a.target.result),function(o){
 					var m=new this.collection.model(o)
 					m.save().then(function(){
 						current.collection.add(m)
@@ -376,8 +376,8 @@ define(['app','UI'],function(app,UI){
 		},
 		importSchema:function(e){
 			var me=this, reader=new FileReader()
-			reader.onloadend=function(e){
-				var schema=JSON.parse(e.target.result),
+			reader.onloadend=function(a){
+				var schema=JSON.parse(a.target.result),
 					tableNames=[],
 					tables=_.chain(_.keys(schema))
 						.map(function(name){
@@ -442,7 +442,7 @@ define(['app','UI'],function(app,UI){
 				.each(function(name){
 					var currentField=_.findWhere(currentSchema,{name:name}),
 						newField=_.findWhere(pendingSchema,{name:name})
-					if(_.isEqual(currentField,newField))
+					if(_.isEqual(_.extend({type:'String',searchable:false,unique:false},currentField),_.extend({type:'String',searchable:false,unique:false},newField)))
 						return
 					changed=true
 					currentSchema.splice(currentSchema.indexOf(currentField),1,newField)

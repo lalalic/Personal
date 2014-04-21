@@ -31,11 +31,11 @@ define(['UI','app'],function(UI, app){
 			return this
 		},
 		save: function(){
-			new Comment({
+			var newComment=new Comment({
 				content:this.$('form textarea').val(),
 				post:this.post})
-				.save()
-				.then(_.bind(function(newComment){
+			newComment.save()
+				.then(_.bind(function(a){
 					this.$('form textarea').val("")
 					this.collection.add(newComment)
 				},this))

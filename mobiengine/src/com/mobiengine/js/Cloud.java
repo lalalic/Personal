@@ -46,7 +46,7 @@ public class Cloud{
 		scope.setPrototype(sharedScope);
 		scope.setParentScope(null);
 		scope.defineProperty("Cloud", this, ScriptableObject.READONLY);
-		ctx.evaluateString(scope, "Backbone.ajax=function(o,p,r){p=promise();try{r=ajax(o,Cloud);o.success(r);p.resolve(r)}catch(e){o.error(e);p.failed(e)}return p}", 
+		ctx.evaluateString(scope, "Backbone.ajax=function(o,p,r){p=promise();try{r=ajax(o,Cloud);o.success && o.success(r);p.resolve(r)}catch(e){o.error && o.error(e);p.failed(e);throw e}return p}", 
 				"<ajax>", 1, null);
 		try {
 			if(code!=null && code.trim().length()>0)
@@ -243,6 +243,10 @@ public class Cloud{
 		
 		public void warn(Object msg){
 			logger.warning(msg.toString());
+		}
+		
+		public void error(Object msg){
+			logger.severe(msg.toString());
 		}
 	}
 }

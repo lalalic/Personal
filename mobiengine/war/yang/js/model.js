@@ -50,12 +50,9 @@ define(["Backbone"],function(Backbone){
 				if(data[name]!=undefined){
 				switch(schema.type){
 				case 'Date':
-					var d=new Date()
-					d.setTime(data[name])
-					data[name]=d
+					data[name]=new Date(data[name])
 					break
-				}
-				}
+				}}
 			})
 			return data
 		},
@@ -121,7 +118,7 @@ define(["Backbone"],function(Backbone){
 		 *  @readonly
 		 *  @enum {Function} 
 		 */
-		types:{
+		types:{//convert from input to javascript data
 			Integer: function(value){
 				return parseInt(value)
 			},
@@ -163,6 +160,25 @@ define(["Backbone"],function(Backbone){
 	var _extend=Model.extend
 	Model.extend=function(instanceProperties, classProperties){
 		return Model.DEFINES[instanceProperties.className]=_extend.apply(this,arguments)
+	}
+	
+	Backbone.Collection.prototype.url=function(){
+		if(this.model){
+			var root=this.model.prototype.urlRoot
+			if(_.isString(root))
+				return this.model.Collection.prototype.url=root;
+			else if(_.isFunction(root))
+				return this.model.Collection.prototype.url=(new this.model()).urlRoot()
+		}
+	}
+	Backbone.Collection.prototype.parse=function(response){
+		return response.results
+	}
+	
+	var _sync=Backbone.Collection.prototype.sync
+	Backbone.Collection.prototype.sync=function(method, model, opt){
+		method=="read" && this.query && (opt.data=this.query.toURL())
+		return _sync.apply(this,arguments)
 	}
 	
 	var User=Model.extend(/** @lends app.User.prototype*/{

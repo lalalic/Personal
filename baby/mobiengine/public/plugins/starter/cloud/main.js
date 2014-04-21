@@ -33,13 +33,16 @@ Cloud.afterSave("Post", function(request, response) {
 	user.save()
 
 	//tag count;category, duration, goal, gender, and etc
+	var Tag=Model.extend({className:'Tag'}),
+		tags=Tag.collection()
 	_.each(post.get('tags'),function(id){
-		var tag=Model.create('Tag',{id:id})
+		var tag=new Tag({id:id})
+		tags.add(tag)
 		tag.fetch().then(function(){
 			console.debug("saving tag")
 			tag.increment('posts',1)
 			post.has('duration') && tag.increment('time', post.get('duration'))
-			tag.save()
 		})
 	})
+	tags.save()
 });

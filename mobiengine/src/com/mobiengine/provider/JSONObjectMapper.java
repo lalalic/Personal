@@ -1,8 +1,8 @@
 package com.mobiengine.provider;
 
 import java.io.IOException;
+import java.util.Date;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -25,7 +25,6 @@ import com.mobiengine.service.UserService;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes({MediaType.APPLICATION_JSON,MediaType.APPLICATION_OCTET_STREAM})
 public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 	ObjectMapper om=new ObjectMapper();
 	public JSONObjectMapper(){
@@ -33,13 +32,28 @@ public class JSONObjectMapper implements ContextResolver<ObjectMapper> {
 		module.addSerializer(Entity.class, new JSONEntity());
 		module.addSerializer(EmbeddedEntity.class, new JSONEmbeddedEntity());
 		module.addSerializer(Text.class, new JSONText());
+		/**
+		 * since JSONObject use Date.toString() to convert, so make it compatible
+		 */
+		module.addSerializer(java.util.Date.class, new JSONObjectDate());
 		om.registerModule(module);
-		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, true);
+		om.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 		om.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
 	}
 	@Override
 	public ObjectMapper getContext(Class<?> arg0) {
 		return om;
+	}
+	
+	private static class JSONObjectDate extends JsonSerializer<java.util.Date>{
+
+		@Override
+		public void serialize(Date d, JsonGenerator jg,
+				SerializerProvider provider) throws IOException,
+				JsonProcessingException {
+			jg.writeString(d.toString());
+		}
+		
 	}
 
 	private static class JSONEntity extends JsonSerializer<Entity>{

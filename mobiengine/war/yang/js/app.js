@@ -36,7 +36,8 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 		 *  @function external:Date.prototype.toSmartString
 		 */
 		Date.prototype.toSmartString=function(){
-			var delta=parseInt((new Date().getTime()-this.getTime())/1000),
+			var now=new Date(),
+				delta=parseInt((now.getTime()-this.getTime())/1000),
 				aday=24*60*60
 			if(delta<aday){
 				if(delta<60)
@@ -47,8 +48,17 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 					return parseInt(delta/60/60)+" "+text('hours ago')
 			}else if (delta<aday*2)
 				return text('yesterday')
-			else
-				return (this.getMonth()+1)+"-"+(this.getDay()+1)
+			else{
+				var n
+				switch((n=now.getFullYear()-this.getFullYear())){
+				case 0:
+					return (this.getMonth()+1)+"-"+(this.getDate()+1)
+				case 1:
+					return text("a year ago")
+				default:
+					return text(n+" years ago")
+				}
+			}
 		}
 		
 		/**
@@ -56,8 +66,7 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 		 *  @function external:Date.prototype.toString
 		 */
 		Date.prototype.toString=function(){
-			return this.getFullYear()+"-"+(this.getMonth()+1)+"-"+(this.getDay()+1)
-			+" "+this.getHours()+":"+(this.getMinutes()+1)
+			return this.toSmartString()
 		}
 		Date.regFrom=/[-\s+:T\.\+]/
 		/**
@@ -142,6 +151,7 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			}else
 				return _template(text,data,setting)
 		}
+		
 		/**
 		 *  shortcut to get a Model super class
 		 *  <br><b>Backbone.View</b> and <b>Backbone.Collection</b> have the same function
@@ -154,26 +164,8 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 				throw "no _super on this class";
 			return this.__proto__.constructor.__super__
 		}
-		
-		Backbone.Collection.prototype.url=function(){
-			if(this.model){
-				var root=this.model.prototype.urlRoot
-				if(_.isString(root))
-					return this.model.Collection.prototype.url=root;
-				else if(_.isFunction(root))
-					return this.model.Collection.prototype.url=(new this.model()).urlRoot()
-			}
-		}
-		Backbone.Collection.prototype.parse=function(response){
-			return response.results
-		}
-		
-		var _sync=Backbone.Collection.prototype.sync
-		Backbone.Collection.prototype.sync=function(method, model, opt){
-			method=="read" && this.query && (opt.data=this.query.toURL())
-			return _sync.apply(this,arguments)
-		}
-		
+	
+			
 		var _setItem=localStorage.setItem,
 			_getItem=localStorage.getItem
 		localStorage.setItem=function(a,b){

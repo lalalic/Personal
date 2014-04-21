@@ -50,7 +50,7 @@
 			"searchable": true
 		},
 		"time": {
-			"type": "String",
+			"type": "Integer",
 			"searchable": true
 		}
 	},

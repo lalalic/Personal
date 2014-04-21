@@ -1,7 +1,9 @@
 package com.mobiengine.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -18,8 +20,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
+import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
@@ -50,6 +54,7 @@ public class EntityService extends Service{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response create(JSONObject ob) {
+		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
 		try {
 			Entity entity = new Entity(kind);
 			populate(entity, ob);
@@ -57,7 +62,7 @@ public class EntityService extends Service{
 			Date now = new Date();
 			entity.setProperty("createdAt", now);
 			entity.setProperty("updatedAt", now);
-			DatastoreServiceFactory.getDatastoreService().put(entity);
+			db.put(entity);
 		
 			JSONObject changed = new JSONObject();
 			changed.put("createdAt", now);
@@ -72,6 +77,7 @@ public class EntityService extends Service{
 					.entity(changed).build();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex.getMessage());
+		}finally{
 		}
 	}
 
@@ -80,24 +86,59 @@ public class EntityService extends Service{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response update(@PathParam("id") long id, JSONObject ob) {
+		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
 		try {
 			Key key = KeyFactory.createKey(kind, id);
-			Entity entity = DatastoreServiceFactory.getDatastoreService().get(
-					key);
+			Entity entity = db.get(key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
 			populate(entity, ob);
 			this.beforeUpdate(entity, ob);
 			entity.setProperty("updatedAt", new Date());
-			DatastoreServiceFactory.getDatastoreService().put(entity);
+			db.put(entity);
 			this.afterUpdate(entity);
 			JSONObject changed = new JSONObject();
 			changed.put("updatedAt", entity.getProperty("updatedAt"));
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex.getMessage());
+		}finally{
+			
 		}
 	}
+	
+	@PUT
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response update(JSONArray obs) {
+		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
+		try {
+			Date now=new Date();
+			List<Entity> entities=new ArrayList<Entity>();
+			for(int i=0,len=obs.length();i<len-1;i++){
+				JSONObject ob=obs.getJSONObject(i);
+				long id=ob.getLong("id");
+				Key key = KeyFactory.createKey(kind, id);
+				Entity entity = db.get(key);
+				if (entity == null)
+					throw new Exception("Entity Not Exist");
+				populate(entity, ob);
+				entity.setProperty("updatedAt", now);
+				entities.add(entity);
+			}
+			if(!entities.isEmpty())
+				db.put(entities);
+
+			JSONObject changed = new JSONObject();
+			changed.put("updatedAt", now);
+			return Response.ok().entity(changed).build();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex.getMessage());
+		}finally{
+			
+		}
+	}
+	
 	
 
 	@DELETE
@@ -105,11 +146,16 @@ public class EntityService extends Service{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response remove(@PathParam("id") long id) {
-		Key key = KeyFactory.createKey(kind, id);
-		this.beforeDelete(key);
-		DatastoreServiceFactory.getDatastoreService().delete(key);
-		this.afterDelete(key);
-		return Response.ok().entity(1).build();
+		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
+		try{
+			Key key = KeyFactory.createKey(kind, id);
+			this.beforeDelete(key);
+			db.delete(key);
+			this.afterDelete(key);
+			return Response.ok().entity(1).build();
+		}finally{
+
+		}
 	}
 
 	@GET

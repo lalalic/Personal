@@ -11,6 +11,7 @@ define(['app','UI'],function(app,View){
 		content:"<form><fieldset><textarea name='cloudCode' spellcheck='false' placeholder='write your cloud code'></textarea></fieldset></form>",
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
+			this.$('article').removeClass('scroll')
 			Application.all.on('current',this.setModel,this)
 		},
 		show: function(){

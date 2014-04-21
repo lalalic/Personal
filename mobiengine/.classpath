@@ -7,6 +7,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-server-1.9.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jettison-1.1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/js.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-json-1.9.jar"/>
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER/appengine-java-sdk-1.7.4"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

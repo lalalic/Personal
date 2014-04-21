@@ -1,8 +1,10 @@
 package com.mobiengine.js;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -37,59 +39,159 @@ public class RequireSupport extends ScriptableObject {
 	
 	public static Object ajax(Context ctx, Scriptable scope, Object[] args,Function funObj) 
 		throws Exception{
-		NativeObject option=(NativeObject)args[0];
-		Cloud cloud=(Cloud)args[1];
-		String url=(String) Context.jsToJava(option.get("url"),String.class);
-		String[] uriInfo=url.split("/");
-		int i=0;
-		while(i<uriInfo.length-1){
-			if(Service.VERSION.equals(uriInfo[i]))
-				break;
-			i++;
-		}
-		
-		EntityService service=null;
-		Entity app=cloud.service.getApp();
-		Entity user=cloud.service.getUser();
-		switch(KIND.valueOf(uriInfo[++i])){
-		case users:
-			service=new UserService(app,user);
-			break;
-		case roles:
-			service=new RoleService(app,user);
-			break;
-		case schemas:
-			service=new SchemaService(app,user);
-			break;
-		case classes:
-			service=new EntityService(app,user,uriInfo[++i]);
-			break;
-		}
-		
-		String http=(String) Context.jsToJava(option.get("type"),String.class);
-		String oData=(String)option.get("data");
-		JSONObject data= oData!=null ? cloud.parse(oData) : null;
-		switch(HTTP.valueOf(http)){
-		case POST:
-			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.create(data).getEntity()));
-		case GET:
-			if(uriInfo.length-1==++i)
-				return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.get(Long.parseLong(uriInfo[i])).getEntity()));
-			
-			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.get(data!=null ? data.getJSONObject("where") : null, 
-					data!=null ? data.getString("order") : null, 
-					data!=null ? data.getInt("limit") : -1, 
-					data!=null ? data.getInt("skip") : -1, 
-					data!=null ? data.getString("keys") : null, 
-					data!=null ? data.getBoolean("count") : false).getEntity()));
-		case PUT:
-			return new JsonParser(ctx,scope).parseValue(cloud.stringify(service.update(Long.parseLong(uriInfo[++i]), data).getEntity()));
-		case DELETE:
-			return service.remove(Long.parseLong(uriInfo[++i])).getEntity();
-		}
-		return null;
+		return new AJAX(ctx,scope,(Cloud)args[1]).execute((NativeObject)args[0]);
 	}
+	
+	static class AJAX{
+		Context ctx;
+		Scriptable scope;
+		Cloud cloud;
+		
+		AJAX(Context ctx, Scriptable scope, Cloud cloud){
+			this.ctx=ctx;
+			this.scope=scope;
+			this.cloud=cloud;
+		}
+		
+		Object execute( NativeObject request) throws Exception{
+			HTTP http=HTTP.valueOf(((String) Context.jsToJava(request.get("type"),String.class)).toUpperCase());
+			
+			http.uri=new URIInfo((String) Context.jsToJava(request.get("url"),String.class));
+			
+			http.service=http.uri.kind.createService(cloud.service.getApp(), cloud.service.getUser());
+			Object rawData=request.get("data");
+			Object data=null;
+			if(rawData instanceof NativeArray)
+				data=new JSONArray(cloud.stringify(rawData));
+			else if(rawData!=null)
+				data=new JSONObject((String)rawData);
+				
+			Object r=http.execute(data);
+			return new JsonParser(ctx,scope).parseValue(cloud.stringify(r));
+		}
+		
+		class URIInfo{
+			KIND kind;
+			String[] info;
+			long id=0;
+			URIInfo(String url){
+				info=url.split("/");
+				int i=0;
+				while(i<info.length-1){
+					if(Service.VERSION.equals(info[i]))
+						break;
+					i++;
+				}
+				kind=KIND.valueOf(info[++i]);
+				if(kind==KIND.classes)
+					kind.setKind(info[++i]);
+				
+				if(info.length-1==i+1)
+					id=Long.parseLong(info[++i]);
+			}
+			
+		}
+		enum HTTP{
+			POST{
+				@Override
+				Object execute(JSONObject data) {
+					return service.create(data).getEntity();
+				}
 
-	enum HTTP{POST,PUT,GET,DELETE,PATCH}
-	enum KIND{users,roles,schemas,classes}
+				@Override
+				Object execute(JSONArray data) {
+					return null;
+				}
+	
+			
+			},PUT{
+
+				@Override
+				Object execute(JSONObject data) {
+					return service.update(uri.id, data).getEntity();
+				}
+
+				@Override
+				Object execute(JSONArray data) {
+					return service.update(data).getEntity();
+				}
+	
+				
+			},GET{
+
+				@Override
+				Object execute(JSONObject data)  throws Exception{
+					if(uri.id!=0)
+						return service.get(uri.id).getEntity();
+					else
+						return service.get(data!=null ? data.getJSONObject("where") : null, 
+								data!=null ? data.getString("order") : null, 
+								data!=null ? data.getInt("limit") : -1, 
+								data!=null ? data.getInt("skip") : -1, 
+								data!=null ? data.getString("keys") : null, 
+								data!=null ? data.getBoolean("count") : false).getEntity();
+				}
+
+				@Override
+				Object execute(JSONArray data) {
+					return null;
+				}
+	
+				
+			},DELETE{
+
+				@Override
+				Object execute(JSONObject data){
+					 return service.remove(uri.id).getEntity();
+				}
+
+				@Override
+				Object execute(JSONArray data) {
+					return null;
+				}
+	
+				
+			};
+			EntityService service;
+			URIInfo uri;
+			Object execute(Object data) throws Exception{
+				if(data==null || data instanceof JSONObject)
+					return execute((JSONObject)data);
+				else if(data instanceof JSONArray)
+					return execute((JSONArray)data);
+				return null;
+			}
+			abstract Object execute(JSONObject data) throws Exception;
+			abstract Object execute(JSONArray data) throws Exception;
+		}
+		enum KIND{
+			users{
+				@Override
+				EntityService createService(Entity app, Entity user){
+					return new UserService(app,user);
+				}
+			},roles{
+				@Override
+				EntityService createService(Entity app, Entity user){
+					return new RoleService(app,user);
+				}
+			},schemas{
+				@Override
+				EntityService createService(Entity app, Entity user){
+					return new SchemaService(app,user);
+				}
+			},classes{
+				String kind;
+				void setKind(String kind){
+					this.kind=kind;
+				}
+				@Override
+				EntityService createService(Entity app, Entity user){
+					return new EntityService(app,user,kind);
+				}
+			};
+			abstract EntityService createService(Entity app, Entity user);
+			void setKind(String kind){}
+		}
+	}
 }

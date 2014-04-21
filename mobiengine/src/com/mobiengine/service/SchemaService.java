@@ -331,11 +331,11 @@ public class SchemaService extends EntityService{
 			}
 		}
 		
-		public static synchronized Schema get(String appKey){
-			if(!schemas.containsKey(appKey)){
-				schemas.put(appKey, new Schema());
+		public static synchronized Schema get(String appID){
+			if(!schemas.containsKey(appID)){
+				schemas.put(appID, new Schema());
 			}
-			return schemas.get(appKey);
+			return schemas.get(appID);
 		}
 	}	
 	
@@ -409,7 +409,7 @@ public class SchemaService extends EntityService{
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
 				if(TYPE!=TYPES.Integer)
-					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+					throw new RuntimeException("field "+entity.getKind()+"."+key+" as "+TYPE+" doesn't support "+this.toString());
 				long amount = op.getLong("amount");
 				if(entity.hasProperty(key))
 					return ((Long)entity.getProperty(key))+amount;
@@ -420,7 +420,7 @@ public class SchemaService extends EntityService{
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op)  throws Exception{
 				if(TYPE!=TYPES.Array)
-					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+					throw new RuntimeException("field "+entity.getKind()+"."+key+" as "+TYPE+" doesn't support " + this.toString());
 				Object[] value=(Object[])entity.getProperty(key);
 				JSONArray objects=op.getJSONArray("objects");
 				if(objects==null || objects.length()==0)
@@ -445,7 +445,7 @@ public class SchemaService extends EntityService{
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op) throws Exception{
 				if(TYPE!=TYPES.Array)
-					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+					throw new RuntimeException("field "+entity.getKind()+"."+key+" as "+TYPE+" doesn't support "+this.toString());
 				Object[] value=(Object[])entity.getProperty(key);
 				JSONArray objects=op.getJSONArray("objects");
 				if(objects==null || objects.length()==0)
@@ -471,7 +471,7 @@ public class SchemaService extends EntityService{
 			@Override
 			Object eval(TYPES TYPE, Entity entity, String key, JSONObject op) throws Exception{
 				if(TYPE!=TYPES.Array)
-					throw new RuntimeException("field "+key+" as "+TYPE+" doesn't support increment");
+					throw new RuntimeException("field "+entity.getKind()+"."+key+" as "+TYPE+" doesn't support "+this.toString());
 				Object[] value=(Object[])entity.getProperty(key);
 				JSONArray objects=op.getJSONArray("objects");
 				if(objects==null || objects.length()==0)
