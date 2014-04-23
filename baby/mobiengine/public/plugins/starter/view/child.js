@@ -34,13 +34,8 @@ define(['UI','app','tool/uploader'],function(UI,app,uploader){
 			'click .icon.remove': 'deleteChild'
 		}),
 		show: function(id){
-			this._super().show.apply(this,arguments)
-			var model
-			id && (model=Child.all.get(parseInt(id)))
-			if(!model)
-				model=new Child
-			this.setModel(model)
-			return this
+			this.setModel(id&&Child.all.get(parseInt(id))||new Child)
+			return this._super().show.apply(this,arguments)
 		},
 		setModel:function(m){
 			this._super().setModel.apply(this,arguments)

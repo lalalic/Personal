@@ -84,6 +84,12 @@ define(["Backbone"],function(Backbone){
 		remove: function(name,value){
 			this.set(name,_.difference(this.attributes[name]||[],_.isArray(value)? value : [value]))
 		},
+		fetch: function(){
+			return Backbone.Model.prototype.fetch.apply(this,arguments).then(_.bind(function(){ return this},this))
+		},
+		save: function(){
+			return Backbone.Model.prototype.save.apply(this,arguments).then(_.bind(function(){return this},this))
+		},
 		schema:{
 			'createdAt':{type:'Date'},
 			'updatedAt':{type:'Date'},
@@ -321,6 +327,14 @@ define(["Backbone"],function(Backbone){
 			})
 		}
 	}),
+	File=Model.extend({
+			className:"_file",
+			urlRoot:function(){
+				return this.version+"/files"
+			}
+		},{
+		
+	})
 	Query=Object.extend(function (objectClass) {
 			this.objectClass = objectClass;
 			this._where = {};

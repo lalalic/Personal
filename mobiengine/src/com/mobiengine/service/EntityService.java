@@ -53,28 +53,27 @@ public class EntityService extends Service{
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response create(JSONObject ob) {
-		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
+	public Response create(JSONObject request) {
 		try {
 			Entity entity = new Entity(kind);
-			populate(entity, ob);
-			this.beforeCreate(entity, ob);
+			JSONObject response = new JSONObject();
+			
+			beforeCreate(entity, request, response);
+			populate(entity, request);
 			Date now = new Date();
 			entity.setProperty("createdAt", now);
 			entity.setProperty("updatedAt", now);
-			db.put(entity);
-		
-			JSONObject changed = new JSONObject();
-			changed.put("createdAt", now);
-			changed.put("updatedAt", now);
-			changed.put("id", entity.getKey().getId());
+			DatastoreServiceFactory.getDatastoreService().put(entity);
+
+			response.put("createdAt", now);
+			response.put("updatedAt", now);
+			response.put("id", entity.getKey().getId());
 			
-			this.afterCreate(entity, changed);
+			afterCreate(entity, request, response);
 
 			return Response
 					.ok()
-					//.header("Location",	this.getUrlRoot() +"/"+ changed.getLong("id"))
-					.entity(changed).build();
+					.entity(response).build();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex.getMessage());
 		}finally{
@@ -85,25 +84,26 @@ public class EntityService extends Service{
 	@Path("{id:.*}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response update(@PathParam("id") long id, JSONObject ob) {
+	public Response update(@PathParam("id") long id, JSONObject request) {
 		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
 		try {
 			Key key = KeyFactory.createKey(kind, id);
 			Entity entity = db.get(key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
-			populate(entity, ob);
-			this.beforeUpdate(entity, ob);
+			JSONObject response = new JSONObject();
+			request.put("id", entity.getKey().getId());
+			beforeUpdate(entity, request, response);
+			
+			populate(entity, request);
 			entity.setProperty("updatedAt", new Date());
 			db.put(entity);
-			this.afterUpdate(entity);
-			JSONObject changed = new JSONObject();
-			changed.put("updatedAt", entity.getProperty("updatedAt"));
-			return Response.ok().entity(changed).build();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex.getMessage());
-		}finally{
 			
+			response.put("updatedAt", entity.getProperty("updatedAt"));
+			afterUpdate(entity, request, response);
+			return Response.ok().entity(response).build();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
 	}
 	
@@ -133,9 +133,7 @@ public class EntityService extends Service{
 			changed.put("updatedAt", now);
 			return Response.ok().entity(changed).build();
 		} catch (Exception ex) {
-			throw new RuntimeException(ex.getMessage());
-		}finally{
-			
+			throw new RuntimeException(ex);
 		}
 	}
 	
@@ -146,15 +144,15 @@ public class EntityService extends Service{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response remove(@PathParam("id") long id) {
-		DatastoreService db = DatastoreServiceFactory.getDatastoreService();
 		try{
+			JSONObject response = new JSONObject();
 			Key key = KeyFactory.createKey(kind, id);
-			this.beforeDelete(key);
-			db.delete(key);
-			this.afterDelete(key);
-			return Response.ok().entity(1).build();
-		}finally{
-
+			beforeDelete(key, response);
+			DatastoreServiceFactory.getDatastoreService().delete(key);
+			afterDelete(key, response);
+			return Response.ok().entity(response).build();
+		}catch(Exception ex){
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -216,7 +214,7 @@ public class EntityService extends Service{
 			
 			return Response.ok().entity(response).build();
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -232,27 +230,27 @@ public class EntityService extends Service{
 		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? ((Text)app.getProperty("cloudCode")).getValue() : "");
 	}
 	
-	public void beforeCreate(Entity entity, JSONObject request) {
-		this.getCloud().beforeSave(entity);
+	public void beforeCreate(Entity entity, JSONObject request, JSONObject response) throws Exception{
+		this.getCloud().beforeSave(entity, request, response);
 	}
 
-	public void afterCreate(Entity entity, JSONObject response) {
-		this.getCloud().afterSave(entity);
+	public void afterCreate(Entity entity, JSONObject request, JSONObject response) throws Exception{
+		this.getCloud().afterSave(entity, request, response);
 	}
 
-	public void beforeUpdate(Entity entity, JSONObject request) {
-		this.getCloud().beforeSave(entity);
+	public void beforeUpdate(Entity entity, JSONObject request, JSONObject response) throws Exception {
+		this.getCloud().beforeSave(entity, request, response);
 	}
 
-	public void afterUpdate(Entity entity) {
-		this.getCloud().afterSave(entity);
+	public void afterUpdate(Entity entity, JSONObject request, JSONObject response) throws Exception {
+		this.getCloud().afterSave(entity, request, response);
 	}
 
-	public void beforeDelete(Key entity) {
-		this.getCloud().beforeDelete(entity);
+	public void beforeDelete(Key entity,  JSONObject response) throws Exception {
+		this.getCloud().beforeDelete(entity, response);
 	}
 
-	public void afterDelete(Key entity) {
-		this.getCloud().afterDelete(entity);
+	public void afterDelete(Key entity, JSONObject response) throws Exception {
+		this.getCloud().afterDelete(entity, response);
 	}
 }

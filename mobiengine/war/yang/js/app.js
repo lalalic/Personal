@@ -41,22 +41,22 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 				aday=24*60*60
 			if(delta<aday){
 				if(delta<60)
-					return delta+" "+text('seconds ago')
+					return -delta+"s"
 				else if(delta<60*60)
-					return parseInt(delta/60)+" "+text('minutes ago')
+					return -parseInt(delta/60)+"m"
 				else
-					return parseInt(delta/60/60)+" "+text('hours ago')
+					return -parseInt(delta/60/60)+"h"
 			}else if (delta<aday*2)
 				return text('yesterday')
 			else{
 				var n
 				switch((n=now.getFullYear()-this.getFullYear())){
 				case 0:
+					if(now.getMonth()==this.getMonth())
+						return (this.getDate()-now.getDate())+"d"
 					return (this.getMonth()+1)+"-"+(this.getDate()+1)
-				case 1:
-					return text("a year ago")
 				default:
-					return text(n+" years ago")
+					return -n+"y"
 				}
 			}
 		}
@@ -333,10 +333,11 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			route: function(name, url, view, needLogin){
 				router.route(url, name, function(){
 					if(needLogin && !app.isLoggedIn())
-						require(['view/user'],function(page){page.show('signin')})
+						require(['view/user'],function(page){(page['prototype'] ? new page() : page).show('signin')})
 					else{
-						var args=arguments
-						require([view],function(page){page.show.apply(page,args)})
+						var args=_.toArray(arguments)
+						args[args.length-1]==null && args.pop()
+						require([view],function(page){(page=(page['prototype'] ? new page() : page)).show.apply(page,args)})
 					}
 				})
 			},

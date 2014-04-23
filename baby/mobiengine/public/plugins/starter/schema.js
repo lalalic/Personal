@@ -21,6 +21,27 @@
 		},
 		"score": {
 			"type": "Integer"
+		},
+		"duration": {
+			"type": "Integer"
+		},
+		"stories": {
+			"type": "Integer"
+		},
+		"dayBeat":{
+			"type": "Integer"
+		},
+		"weekBeat":{
+			"type": "Integer"
+		},
+		"monthBeat":{
+			"type": "Integer"
+		},
+		"yearBeat":{
+			"type": "Integer"
+		},
+		"allBeat":{
+			"type": "Integer"
 		}
 	},
 	"_role": {
@@ -52,6 +73,24 @@
 		"time": {
 			"type": "Integer",
 			"searchable": true
+		},
+		"stories":{
+			"type": "Integer"
+		},
+		"dayBeat":{
+			"type": "Integer"
+		},
+		"weekBeat":{
+			"type": "Integer"
+		},
+		"monthBeat":{
+			"type": "Integer"
+		},
+		"yearBeat":{
+			"type": "Integer"
+		},
+		"allBeat":{
+			"type": "Integer"
 		}
 	},
 	"Child": {
@@ -127,6 +166,13 @@
 		},
 		"content": {
 			"type": "String"
+		},
+		"kind":{
+			"type": "String"
+		},
+		"parent": {
+			"searchable": true,
+			"type": "Integer"
 		}
 	},
 	"Favorite": {
@@ -213,6 +259,13 @@
 			"searchable": false,
 			"unique": false,
 			"type": "String"
+		},
+		"post":{
+			"searchable": true,
+			"type": "Integer"
+		},
+		"comments":{
+			"type": "Integer"
 		}
 	}
 }

@@ -42,7 +42,7 @@ public class UserService extends EntityService{
 	}
 	
 	@Override
-	public void beforeCreate(Entity user, JSONObject request){
+	public void beforeCreate(Entity user, JSONObject request, JSONObject response){
 		String name=(String)user.getProperty("username");
 		String password=(String)user.getProperty("password");
 		
@@ -59,7 +59,7 @@ public class UserService extends EntityService{
 	}
 	
 	@Override
-	public void afterCreate(Entity user, JSONObject response){
+	public void afterCreate(Entity user, JSONObject request, JSONObject response){
 		try {
 			response.put("sessionToken", getSessionToken(user));
 		} catch (JSONException ex) {

@@ -63,7 +63,7 @@ require.config(/** @lends requireJSConf*/{
 		"Jasmine":"libs/jasmin",
 		
 		"Phonegap":"file:///android_asset/www/phonegap.js",
-	},	
+	},
 	waitSeconds:30,
 	urlArgs: "v=0.1"
 });

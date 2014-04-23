@@ -72,6 +72,7 @@ define(['app','UI'],function(app,UI){
 				this.collection=app.createKind(this.model).collection()	
 				this._super().initialize.apply(this,arguments)
 				this.model.on('destroy',this.remove,this)
+				this.model.on('sync', this.onChangeSchema,this)
 				this.$list.remove()
 				this.$list=this.$el
 				this.createHead()
@@ -83,10 +84,15 @@ define(['app','UI'],function(app,UI){
 			},
 			refresh:function(){
 				this.collection.fetch()
+				return this
+			},
+			onChangeSchema: function(){
+				this.$el.empty()
+				this.createHead()
+				this.collection.fetch({reset:true})
 			},
 			renderAllItems: function(){
 				this.collection.each(this.addOne,this)
-				this.newModel()
 				return this
 			},
 			createHead:function(){
@@ -215,7 +221,7 @@ define(['app','UI'],function(app,UI){
 			this.changeApp(Application.current())
 			Application.all.on('current',this.changeApp,this)
 			this._super().show.apply(this,arguments)
-			table && this.$('#.__'+table).click()
+			table && this.$('#__'+table).click()
 			return this
 		},
 		close: function(){
@@ -456,6 +462,7 @@ define(['app','UI'],function(app,UI){
 			table.data>tbody>tr:nth-child(even){background-color:aliceblue}\
 			table.data td:empty:before{content:'(undefined)';color:lightgray}\
 			table.data th{font-weight:700}\
+			table.data td{white-space:nowrap;overflow:hidden;text-overflow: ellipsis;}\
 			table.data thead td:first-child{width:1em}\
 			table.data thead th:nth-child(2){width:5em}\
 			table.data input[type=checkbox]{margin-left:1px}\

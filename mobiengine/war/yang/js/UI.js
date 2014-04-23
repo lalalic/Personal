@@ -266,7 +266,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				Page.prototype.initialize.apply(this,arguments)
 				this.$('form').attr('id',this.cid+'form')
 				this.$('button[type=submit]').attr('form',this.cid+'form')
-				this.setModel(this.model)
+				this.model && this.setModel(this.model)
 			},
 			/**
 			 * handler for change on *[name] 

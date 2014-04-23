@@ -4,37 +4,6 @@
  */
 //define(["Backbone"],
 (function(Backbone,root){
-	root.promise=(function (
-		    a, // placeholder for pending callbacks
-		    b, // placeholder for fulfilled value
-		    e // placeholder for failed callbacks
-		) { 
-		    a = []; // callbacks or 0 if fulfilled
-		    e = [];
-		    return {
-		        resolve: function (c) { // fulfillment value
-		            b = c; // store the fulfilled value
-		            // send the value to every pre-registered callback
-		            while (a.length)
-		                a.shift()(b);
-		            // switch state to "fulfilled"
-		            a=0
-		        },
-		        failed: function(c){
-		        	b=c;
-		        	while(e.length)
-		        		e.shift()(b);
-		        	a=false
-		        },
-		        then: function (c,d) { // callback
-		            a ? // if it's not fulfilled yet
-		            (c&&a.push(c),d&&e.push(d)) : // added the callback to the queue
-		            (a===0 ? c&&c(b) : d&&d(b)) // otherwise, let it know what the fulfilled value
-		                 // was immediately
-		        }
-		    }
-		});	
-	
 	var currentUser,
 	Model=Backbone.Model.extend(/** @lends app.Model.prototype */{
 		version:'1',
@@ -90,6 +59,12 @@
 		},
 		remove: function(name,value){
 			this.set(name,_.difference(this.attributes[name]||[],_.isArray(value)? value : [value]))
+		},
+		fetch: function(){
+			return Backbone.Model.prototype.fetch.apply(this,arguments).then(_.bind(function(){return this},this))	
+		},
+		save: function(){
+			return Backbone.Model.prototype.save.apply(this,arguments).then(_.bind(function(){return this},this))	
 		},
 		schema:{
 			'createdAt':{type:'Date'},
@@ -193,12 +168,9 @@
 	}
 	
 	Backbone.Collection.prototype.save=function(){
-		if(this.size()==0){
-			var p=promise()
-			p.resolve()
-			return p;
-		}
-			
+		if(this.size()==0)
+			return Promise.as()
+		
 		var me=this
 		return Backbone.ajax({
 			url: this.url(),

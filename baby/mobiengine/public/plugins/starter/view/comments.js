@@ -19,23 +19,25 @@ define(['UI','app'],function(UI, app){
 		}),
 		itemTemplate:_.template(tmplComment),
 		collection: Comment.collection(),
-		show: function(id){
-			this.post=parseInt(id)
+		show: function(kind, id){
+			this.kind=kind
+			this.parent=parseInt(id)
 			return this._super().show.apply(this,arguments)
 		},
 		refresh:function(){
-			this.post && this.collection.query
-				.equalTo('post',this.post)
+			this.parent && this.collection.query
+				.equalTo('parent',this.parent)
 				.ascending('createdAt')
-			&& this._super().refresh.apply(this,arguments)
+				&& this._super().refresh.apply(this,arguments)
 			return this
 		},
 		save: function(){
-			var newComment=new Comment({
+			new Comment({
 				content:this.$('form textarea').val(),
-				post:this.post})
-			newComment.save()
-				.then(_.bind(function(a){
+				kind: this.kind,
+				parent:this.parent})
+				.save()
+				.then(_.bind(function(newComment){
 					this.$('form textarea').val("")
 					this.collection.add(newComment)
 				},this))

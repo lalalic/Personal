@@ -1,28 +1,30 @@
-define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
+define(["JSZip", "module"], function(JSZip,module){
 	var regI18N=/^i18n!/, 
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped
 		
 	var plugin={
+		version:'0.1',
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
 		features:new Backbone.Collection,
 		extend: function(more){
-			return $.extend({
+			var newPlugin=$.extend({
 				extend:this.extend,
 				root: this.root,
 				icon: "app",
 				author:{
-					name:'Raymond',
-					email:'raymond.li2@emc.com'
+					name:'your name',
+					email:'your email'
 				},
 				version:'0.1',
 				description:'A plugin',
+				depends:[],
 				init:function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, parentRequire, onload, config){
 					if(byFile)
-						return require([name],onload)
+						return parentRequire([name],onload)
 					var file=this.zip.file(this.fileName+".js")
 					if(file==null)
 						return console.error(this.fileName+" doesn't exist in plugin "+this.name)
@@ -63,7 +65,9 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 					this.fileName=name;
 					return this.root+name;
 				}
-			},more||{})
+			},more||{});
+			this.depends && (newPlugin.depends=_.uniq(_.union(this.depends,newPlugin.depends||[])));
+			return newPlugin
 		}
 	}
 	
@@ -74,9 +78,9 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 			require([name],function(a){
 				a.id=a.name=name
 				a.root=root
+				onload(a)
 				a.init()
 				plugin.features.add(_.omit(a,_.functions(a)))
-				onload(a)
 			})
 		}
 	}else{
@@ -93,9 +97,9 @@ define(["JSZip", "jQuery", "module"], function(JSZip, $, module){
 						a.id=a.name=name
 						a.root=root
 						a.zip=zip
+						onload(a)
 						a.init()
 						plugin.features.add(_.omit(a,_.functions(a)))
-						onload(a)
 					})
 				}
 			})

@@ -87,10 +87,10 @@ public class SchemaService extends EntityService{
 	}
 
 	@Override
-	public void beforeCreate(Entity entity, JSONObject ob) {
+	public void beforeCreate(Entity entity, JSONObject request, JSONObject response) {
 		String newKind;
 		try {
-			newKind = ob.getString("name");
+			newKind = request.getString("name");
 		} catch (JSONException e) {
 			throw new RuntimeException(e.getMessage());
 		}
@@ -101,17 +101,17 @@ public class SchemaService extends EntityService{
 	}
 
 	@Override
-	public void afterCreate(Entity entity, JSONObject response) {
+	public void afterCreate(Entity entity, JSONObject request, JSONObject response) {
 		this.schema.add(entity);
 	}
 
 	@Override
-	public void beforeUpdate(Entity entity, JSONObject request) {
+	public void beforeUpdate(Entity entity, JSONObject request, JSONObject response) {
 		
 	}
 
 	@Override
-	public void afterUpdate(Entity entity) {
+	public void afterUpdate(Entity entity, JSONObject request, JSONObject response) {
 		this.schema.add(entity);
 	}
 	
@@ -187,7 +187,7 @@ public class SchemaService extends EntityService{
 	}
 	
 	@Override
-	public void beforeDelete(Key entity) {
+	public void beforeDelete(Key entity, JSONObject response) {
 		String kind = null; 
 		try {
 			kind=(String)DatastoreServiceFactory.getDatastoreService().get(entity).getProperty("name");
@@ -202,7 +202,7 @@ public class SchemaService extends EntityService{
 	}
 	
 	@Override
-	public void afterDelete(Key entity){
+	public void afterDelete(Key entity, JSONObject response){
 		//how to drop a table
 	}
 	

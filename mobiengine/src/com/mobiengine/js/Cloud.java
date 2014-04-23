@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -18,12 +19,12 @@ import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.json.JsonParser;
-import org.mozilla.javascript.json.JsonParser.ParseException;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.mobiengine.provider.JSONObjectMapper;
 import com.mobiengine.service.EntityService;
+import com.mobiengine.service.UserService;
 
 
 public class Cloud{
@@ -33,12 +34,15 @@ public class Cloud{
 	protected static final int AFTER_DELETE=3;
 	protected static final ObjectMapper JSON=new JSONObjectMapper().getContext(null);
 	private static Logger logger=Logger.getLogger("Cloud");
+	private static String AJAX="Backbone.ajax=function(o,r){try{r=ajax(o,Cloud);o.success && o.success(r);return Promise.as(r)}catch(e){o.error && o.error(e); return Promise.error(e);}}";
+	
 	protected Context ctx;
 	protected ScriptableObject scope;
 	protected EntityService service;
 	protected Response response;
 	HashMap<String, HashMap<Integer,List<Function>>> codes=new HashMap<String, HashMap<Integer,List<Function>>>();
 	HashSet<String> ran=new HashSet<String>();
+	ScriptableObject jsUser;
 	
 	public Cloud(EntityService service, String code) {
 		ctx=Context.enter();
@@ -46,17 +50,22 @@ public class Cloud{
 		scope.setPrototype(sharedScope);
 		scope.setParentScope(null);
 		scope.defineProperty("Cloud", this, ScriptableObject.READONLY);
-		ctx.evaluateString(scope, "Backbone.ajax=function(o,p,r){p=promise();try{r=ajax(o,Cloud);o.success && o.success(r);p.resolve(r)}catch(e){o.error && o.error(e);p.failed(e);throw e}return p}", 
-				"<ajax>", 1, null);
+		ctx.evaluateString(scope, AJAX, "<ajax>", 1, null);
 		try {
 			if(code!=null && code.trim().length()>0)
 				ctx.evaluateString(scope, code, "main.js", 1, null);
 		} catch (Exception e) {
 			logger.severe(e.getMessage());
-			throw new RuntimeException("Cloud: "+e.getMessage());
+			throw new RuntimeException(e);
 		}
 
 		this.service=service;
+		try {
+			jsUser=jsModel(UserService.KIND, service.getUser());
+		} catch (Exception e) {
+			logger.severe("Cloud:"+e.getMessage());
+			throw new RuntimeException(e);
+		}
 		response=new Response();
 	}
 	
@@ -77,75 +86,91 @@ public class Cloud{
 	}
 	
 
-	public void beforeSave(Entity entity){
+	public void beforeSave(Entity entity, JSONObject req, JSONObject res)throws Exception{
 		List<Function> callbacks=getFunctionList(entity.getKind(),BEFORE_SAVE);
-		if(callbacks.size()==0)
+		if(callbacks.size()==0 || mayInfiniteLoop(entity.getKind(),"before save"))
 			return;
-		String running="before save "+entity.getKind();
-		if(ran.contains(running)){
-			logger.severe("return from possible infinite loop for "+running);
-			return;
-		}else
-			ran.add(running);
 			
 		try {
-			NativeObject request=makeRequest(entity);
+			NativeObject request=new NativeObject();
+			request.put("object", request, jsModel(entity.getKind(), request));
+			request.put("user", request, jsUser);
+			
+			response.object= new JsonParser(ctx,scope).parseValue(stringify(res));
 			for(Function f : callbacks)
 				f.call(ctx, scope, null, new Object[]{request,response});
-			Object maybeChanged=ScriptableObject.callMethod((Scriptable)request.get("object"), "toJSON", new Object[]{});
-			JSONObject ob=parse((String)NativeJSON.stringify(ctx, scope, maybeChanged, null, null));
-			service.populate(entity, ob);
+			
+			copy(req, 
+					parse((String)NativeJSON.stringify(ctx, scope, 
+							ScriptableObject.callMethod((Scriptable)request.get("object"), "toJSON", new Object[]{}), null, null)));
+			
+			copy(res, parse((String)NativeJSON.stringify(ctx, scope, response.object, null, null)));
+			
 		} catch (Exception e) {
 			logger.severe(e.getMessage());
-			throw new RuntimeException("Cloud: "+e.getMessage());
+			throw e;
 		}
 	}
 	
-	public void afterSave(Entity entity){
+	public void afterSave(Entity entity, JSONObject req, JSONObject res)throws Exception{
 		List<Function> callbacks=getFunctionList(entity.getKind(),AFTER_SAVE);
-		if(callbacks.size()==0)
+		if(callbacks.size()==0 || mayInfiniteLoop(entity.getKind(), "after save"))
 			return;
-		String running="after save a "+entity.getKind();
-		if(ran.contains(running)){
-			logger.severe("return from possible infinite loop for "+running);
-			return;
-		}else
-			ran.add(running);
-		NativeObject request=makeRequest(entity);
-		for(Function f : callbacks)
-			f.call(ctx, scope, null, new Object[]{request,response});
-	}
-	
-	
-	public void beforeDelete(Key entity){
-		List<Function> callbacks=getFunctionList(entity.getKind(),BEFORE_DELETE);
-		if(callbacks.size()==0)
-			return;
-		String running="before delete "+entity.getKind();
-		if(ran.contains(running)){
-			logger.severe("return from possible infinite loop for "+running);
-			return;
-		}else
-			ran.add(running);
 		
-		NativeObject request=makeRequest(new Entity(entity));
-		for(Function f : callbacks)
-			f.call(ctx, scope, null, new Object[]{request,response});
+		try {
+			NativeObject request=new NativeObject();
+			request.put("object", request, jsModel(entity.getKind(), entity));
+			request.put("user", request, jsUser);
+			response.object=new JsonParser(ctx,scope).parseValue(stringify(res));
+			for(Function f : callbacks)
+				f.call(ctx, scope, null, new Object[]{request,response});
+			
+			copy(res, parse((String)NativeJSON.stringify(ctx, scope, response.object, null, null)));
+		} catch (Exception e) {
+			logger.severe(e.getMessage());
+			throw e;
+		}
 	}
 	
-	public void afterDelete(Key entity){
+	
+	public void beforeDelete(Key entity, JSONObject res)throws Exception{
+		List<Function> callbacks=getFunctionList(entity.getKind(),BEFORE_DELETE);
+		if(callbacks.size()==0 || mayInfiniteLoop(entity.getKind(), "before delete"))
+			return;
+		
+		try {
+			NativeObject request=new NativeObject();
+			request.put("object", request, ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',{id:"+entity.getId()+"},{parse:true})", "", 1, null));
+			request.put("user", request, jsUser);
+			response.object=new JsonParser(ctx,scope).parseValue(stringify(res));
+			for(Function f : callbacks)
+				f.call(ctx, scope, null, new Object[]{request,response});
+			
+			copy(res, parse((String)NativeJSON.stringify(ctx, scope, response.object, null, null)));
+		} catch (Exception e) {
+			logger.severe(e.getMessage());
+			throw e;
+		}
+	}
+	
+	public void afterDelete(Key entity, JSONObject res)throws Exception{
 		List<Function> callbacks=getFunctionList(entity.getKind(),AFTER_DELETE);
-		if(callbacks.size()==0)
+		if(callbacks.size()==0 || mayInfiniteLoop(entity.getKind(), "after delete"))
 			return;
-		String running="after delete "+entity.getKind();
-		if(ran.contains(running)){
-			logger.severe("return from possible infinite loop for "+running);
-			return;
-		}else
-			ran.add(running);
-		NativeObject request=makeRequest(new Entity(entity));
-		for(Function f : callbacks)
-			f.call(ctx, scope, null, new Object[]{request,response});
+		
+		try {
+			NativeObject request=new NativeObject();
+			request.put("object", request, ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',{id:"+entity.getId()+"},{parse:true})", "", 1, null));
+			request.put("user", request, jsUser);
+			response.object=new JsonParser(ctx,scope).parseValue(stringify(res));
+			for(Function f : callbacks)
+				f.call(ctx, scope, null, new Object[]{request,response});
+			
+			copy(res, parse((String)NativeJSON.stringify(ctx, scope, response.object, null, null)));
+		} catch (Exception e) {
+			logger.severe(e.getMessage());
+			throw e;
+		}
 	}
 	
 	protected List<Function> getFunctionList(String kind, int type) {
@@ -160,29 +185,40 @@ public class Cloud{
 		return functions;
 	}
 	
-	private NativeObject makeRequest(Entity entity){
-		NativeObject request=new NativeObject();
-		ScriptableObject jsEntity=jsModel(entity);
-		ScriptableObject jsUser=jsModel(service.getUser());
-		request.put("object", request, jsEntity);
-		request.put("user", request, jsUser);
-		return request;
-	}
-	
-	private ScriptableObject jsModel(Entity entity){
+	private ScriptableObject jsModel(String kind, Object props) throws Exception{
 		ScriptableObject m=null;
 		try {
-			scope.defineProperty("_temp_data", new JsonParser(ctx,scope).parseValue(stringify(entity)), ScriptableObject.PERMANENT);
-			m=(ScriptableObject)ctx.evaluateString(scope, "Model.create('"+entity.getKind()+"',_temp_data,{parse:true})", "", 1, null);
-		} catch (ParseException e) {
+			scope.defineProperty("_temp_data", new JsonParser(ctx,scope).parseValue(stringify(props)), ScriptableObject.PERMANENT);
+			m=(ScriptableObject)ctx.evaluateString(scope, "Model.create('"+kind+"',_temp_data,{parse:true})", "", 1, null);
+		} catch (Exception e) {
 			logger.severe(e.getMessage());
-			throw new RuntimeException("Cloud: "+e.getMessage());
+			throw e;
 		}finally{
 			scope.delete("_temp_data");
 		}
 		return m;
 	}
 	
+	public void throwException(Object e) throws Exception{
+		Context.jsToJava(e, Exception.class);
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void copy(JSONObject raw, JSONObject changed) throws Exception{
+		String key;
+		for(Iterator<String> it=changed.keys();it.hasNext(); )
+			raw.put(key=it.next(), changed.get(key));
+	}
+
+	private boolean mayInfiniteLoop(String kind, String op) {
+		String running=op+kind;
+		if(ran.contains(running)){
+			logger.severe("return from possible infinite loop for "+running);
+			return true;
+		}else
+			ran.add(running);
+		return false;
+	}
 	
 	private static ScriptableObject sharedScope;
 	public static void init(){
@@ -194,6 +230,7 @@ public class Cloud{
 		    sharedScope.defineProperty("console", new Console(), ScriptableObject.READONLY);;
 
 		    ctx.evaluateReader(sharedScope, getJSFileReader("underscore-min.js"), "underscore-min.js", 1, null);
+		    ctx.evaluateReader(sharedScope, getJSFileReader("promise.js"), "promise.js", 1, null);
 			ctx.evaluateReader(sharedScope, getJSFileReader("backbone-min.js"), "backbone-min.js", 1, null);
 			ctx.evaluateReader(sharedScope, getJSFileReader("model.js"), "model.js", 1, null);			
 			sharedScope.sealObject();
@@ -209,28 +246,33 @@ public class Cloud{
 		return new InputStreamReader(Cloud.class.getClassLoader().getResourceAsStream("libs/"+filename));
 	}
 	
-	public String stringify(Object entity){
+	public String stringify(Object entity)throws Exception{
 		try {
 			StringWriter writer=new StringWriter();
 			JSON.writeValue(writer, entity);
 			return writer.toString();
 		} catch (Exception e) {
 			logger.severe(e.getMessage());
-			throw new RuntimeException("Cloud: "+e.getMessage());
+			throw e;
 		}
 	}
 	
-	public JSONObject parse(String json){
+	public JSONObject parse(String json) throws Exception{
 		try {
 			return new JSONObject(json);
 		} catch (Exception e) {
 			logger.severe(e.getMessage());
-			throw new RuntimeException("Cloud: "+e.getMessage());
+			throw e;
 		}
 	}
 	
-	public JSONObject toJSON(Object js){
-		return parse((String)NativeJSON.stringify(ctx, scope, js, null, null));
+	public JSONObject toJSON(Object js) throws Exception{
+		try{
+			return parse((String)NativeJSON.stringify(ctx, scope, js, null, null));
+		}catch(Exception e){
+			logger.severe(e.getMessage());
+			throw e;
+		}
 	}
 	
 	public static class Console{

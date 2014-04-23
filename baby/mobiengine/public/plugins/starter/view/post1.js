@@ -31,7 +31,7 @@ define(['UI','app'],function(UI, app){
 		Query=app.Query
 	return new (UI.Page.extend({
 		cmds:'<a href="#story"><span title="'+text("tell your baby's story")+'" class="icon story"/></a>\
-			<a href="#comments"><span title="'+text("comment")+'" class="icon comment"/></a>\
+			<a href="#comments"><span title="'+text("comment")+'" class="icon comment"/><span class="tag count"/></a>\
 			<a><span title="'+text("favorite")+'" class="icon star"/></a>\
 			<a><span title="'+text("plan for baby")+'" class="icon calendar"/></a>',
 		events:_.extend({},UI.Page.prototype.events,{
@@ -89,7 +89,8 @@ define(['UI','app'],function(UI, app){
 				this.taskOption.find('input[value="'+f.get('type')+'"]').click()
 			},this))
 			
-			this.$('footer span.comment').parent().attr('href','#comments/'+this.model.id)
+			this.model.has('comments') && this.$('span.tag.count').text(this.model.get('comments'))
+			this.$('footer span.comment').parent().attr('href','#comments/Post/'+this.model.id)
 			this.$('footer span.story').parent().attr('href','#story/'+this.model.id)
 			return this
 		},
@@ -153,6 +154,7 @@ define(['UI','app'],function(UI, app){
 		clear: function(){
 			this.$('a span.calendar').removeClass('tasked')
 			this.$('a span.star').removeClass('favorited')
+			this.$('span.tag.count').empty()
 			//this.taskOption.find('input[value="0"]').click()
 			return this._super().clear.apply(this,arguments)
 		}

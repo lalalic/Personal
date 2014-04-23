@@ -5,7 +5,6 @@
 define(['UI','app','tool/editor'],function(View, app,makeEditor){
 	var FormPage=View.FormPage, Post=app.Post, Tag=app.Tag, Favorit=app.Tag
 	return new (FormPage.extend({
-		model:new Post,
 		content:'\
 			<form>\
 				<fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"></div></fieldset>\
@@ -53,21 +52,18 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 		show: function(id,categoryName){
 			var me=this
 			switch(arguments.length){
-			case 1:
-				if(this.model.isNew())
-					break
+			case 0:
 				this.setModel(new Post())
 				break
-			case 2:
+			case 1:
 				if(_.isObject(id))
 					this.setModel(id)
-				else{
-					var model=new Post({id:parseInt(id)})
-					model.fetch()
-						.then(_.bind(function(){this.setModel(model)},this))
-				}
+				else
+					new Post({id:parseInt(id)})
+						.fetch()
+						.then(_.bind(function(model){this.setModel(model)},this))
 				break
-			case 3:
+			case 2:
 				this.setModel(new Post({
 					tags:_.chain(['Boy','Girl','30','Learning',categoryName])
 						.map(function(n){return Tag.all.findWhere({name:n}).id})

@@ -41,7 +41,7 @@ public class ApplicationService extends EntityService {
 	}
 	
 	@Override
-	public void beforeCreate(Entity app, JSONObject request){
+	public void beforeCreate(Entity app, JSONObject request, JSONObject response){
 		app.setProperty("author", user.getKey().getId());
 		app.setUnindexedProperty("authorName", user.getProperty("username"));
 		try {
@@ -57,7 +57,7 @@ public class ApplicationService extends EntityService {
 	}
 	
 	@Override 
-	public void beforeUpdate(Entity app, JSONObject request){
+	public void beforeUpdate(Entity app, JSONObject request, JSONObject response){
 		try {
 			if(user.getKey().getId()!=(Long)app.getProperty("author"))
 				throw new RuntimeException("Access Denied");
@@ -74,7 +74,7 @@ public class ApplicationService extends EntityService {
 	}
 	
 	@Override
-	public void afterCreate(Entity app,JSONObject response){
+	public void afterCreate(Entity app, JSONObject request, JSONObject response){
 		try{
 			NamespaceManager.set(app.getKey().getId()+"");
 			List<Entity> defaults=new ArrayList<Entity>();
@@ -164,8 +164,8 @@ public class ApplicationService extends EntityService {
 				}
 				
 				@Override
-				public void afterCreate(Entity app,JSONObject response){
-					super.afterCreate(app, response);
+				public void afterCreate(Entity app,JSONObject request, JSONObject response){
+					super.afterCreate(app, request, response);
 					TOP_NAMESPACE=app.getKey().getId()+"";
 				}
 				
