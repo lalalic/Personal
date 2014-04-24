@@ -27,7 +27,7 @@
 .icon.passed:before,.icon.correct:before{content:"\e60b"}
 .icon.failed:before,.icon.wrong:before{content:"\e60c"}
 .icon.filter:before{content:"\e60d"}
-.icon.edit:before{content:"\e60e"}
+.icon.test:before,.icon.edit:before{content:"\e60e"}
 .icon.camera:before{content:"\e612"}
 .icon.preview:before,.icon.test:before{content:"\e61c"}
 .icon.load:before,.icon.sync:before{content:"\e61d"}

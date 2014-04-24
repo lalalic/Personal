@@ -1,4 +1,4 @@
-define(['UI','Underscore'],function(UI, _){
+define(['UI'],function(UI){
 	var Page=UI.Page
 	return new (Page.extend({
 		content:_.template('#tmplEmpty')({

@@ -5,7 +5,7 @@
  * @requires Underscore 
  * @requires Backbone 
  */
-define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $, _, Backbone, DB){
+define(['module','jQuery','Underscore','Backbone'], function(module){
 	(function(){
 		$.os=$.extend($.os||{},{phonegap:_.has(window,'_cordovaNative')})
 		window.reject=function(p){return function(e){p.reject()}}
@@ -99,12 +99,6 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			return date
 		}
 		
-		var _debug=console.debug
-		console.debug=function(m){
-			if(app.debug)
-				_debug.apply(console,arguments)
-		}
-		
 		$.isOffline=function(){
 			if(location.protocol.match(/^file/))
 				return (Date.now()-$.isOffline.lastCheckAt)<5000
@@ -152,6 +146,15 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 				return _template(text,data,setting)
 		}
 		
+		_.mixin({
+			aop:function(f,wrap){return wrap(f)},
+			newClass: function (constructor, properties, classProperties) {
+				_.extend(constructor.prototype, Backbone.Events, properties)
+				_.extend(constructor, classProperties)
+				return constructor;
+			}
+		})
+		
 		/**
 		 *  shortcut to get a Model super class
 		 *  <br><b>Backbone.View</b> and <b>Backbone.Collection</b> have the same function
@@ -164,32 +167,16 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 				throw "no _super on this class";
 			return this.__proto__.constructor.__super__
 		}
-	
-			
-		var _setItem=localStorage.setItem,
-			_getItem=localStorage.getItem
-		localStorage.setItem=function(a,b){
-			return _setItem.call(this, "mobiengine/"+app.apiKey+"/"+a,b)
-		}
-		localStorage.getItem=function(a){
-			return _getItem.call(this, "mobiengine/"+app.apiKey+"/"+a)
-		}
 	})();
 	
-	var Model=DB.Model,
-		app=_.extend(/** @lends app*/{
+	define('specs',[],['spec/tool/uploader','spec/tool/offline']);
+	var router=new Backbone.Router
+	return _.extend(/** @lends app*/{
 			/**
 			* application title shown as title of page
 			*/
 			title:'Application',
-			/**
-			 *  service endpoint
-			 *  @type {string}
-			 *  @default http://localhost
-			 *  @example
-			 *  app.start({service:'http://a.com'})
-			 */
-			service: location.protocol=='file:' ? 'http://localhost/' : '/',
+			id:'mobiengine',
 			version:'0.01',
 			/**
 			 *  application public key distributed by service provider
@@ -197,7 +184,7 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			 *  @example 
 			 *  app.start({apiKey:"xxx"})
 			 */
-			apiKey:'',
+			apiKey:'default',
 			/**
 			 *  Plugins which should be loaded before application starts
 			 *  @type {string}
@@ -247,21 +234,25 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 					$('body').data('device',$.media)
 				}).resize()
 				
-				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),function(splash,i18n){
-					_.extend(this,module.config(),opt||{})
+				_.each([//route name, url, view name[,user]
+					'main,,view/main',
+					'account,account,view/user',
+					'test,test,view/test',
+					'features,features,view/features',
+					'syncOffline,sync,view/sync,true'],function(r){
+					this.route.apply(this,r.split(','))
+				},this)
 				
-					$.ajaxSetup({
-						dataType:'json',
-						headers: {"X-Application-Id": app.apiKey},
-						beforeSend: function(xhr, setting){
-							setting.url=app.service+setting.url
-							var data=setting.data
-							if(setting.data){
-								delete data.createdAt
-								delete data.updatedAt
-							}
-						}
-					})
+				var app=this
+				
+				console.debug=_.aop(console.debug,function(_debug){
+					return function(m){
+						app.debug && _debug.apply(console,arguments)
+					}
+				})
+				
+				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),_.bind(function(splash,i18n){
+					_.extend(this,module.config(),opt||{})
 					/**
 					 * translate string to local string
 					 * @global
@@ -269,34 +260,54 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 					window.text=function(a, b){
 						return  a ? (((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)) : ''
 					}
-					app.title=document.title=text(app.title)
-					splash.show()
-					var _start=function(){
-							Backbone.history.start()
-							splash.remove()
-						},
-						p=app.init()
+					this.title=document.title=text(this.title)
+					
+					_.extend(localStorage,{
+						setItem:_.aop(localStorage.setItem,function(_raw){
+							return function(a,b){
+								_raw.call(this, app.id+'/'+app.apiKey+'/'+a, b)
+							}
+						}),
+						getItem: _.aop(localStorage.getItem,function(_raw){
+							return function(a){
+								return _raw.call(this,app.id+'/'+app.apiKey+'/'+a)
+							}
+						})
+					})
+					
+					this.startUI(splash)
+				},this))
+			},
+			/**
+			 *  startUI
+			 */
+			startUI: function(splash){
+				splash.show()
+				var _start=function(){
+						Backbone.history.start()
+						splash.remove()
+					},
+					p=this.init()
 
-					app.asideView && (p=p.then(function(){
-						var p=new $.Deferred()
-						require([app.asideView],function(aside){
-							aside[$.media=='tablet' ? 'show' : 'hide']()
-							p.resolve()
-						})
-						return p
-					}))
-					
-					
-					app.shortcutView && (p=p.then(function(){
-						var p=new $.Deferred()
-						require([app.shortcutView],function(){
-							p.resolve()
-						})
-						return p
-					}))
-					
-					p.then(_start,_start)
-				})
+				this.asideView && (p=p.then(_.bind(function(){
+					var p=new $.Deferred()
+					require([this.asideView],function(aside){
+						aside[$.media=='tablet' ? 'show' : 'hide']()
+						p.resolve()
+					})
+					return p
+				},this)))
+				
+				
+				this.shortcutView && (p=p.then(_.bind(function(){
+					var p=new $.Deferred()
+					require([this.shortcutView],function(){
+						p.resolve()
+					})
+					return p
+				},this)))
+				
+				p.then(_start,_start)
 			},
 			/**
 			 *  initialize application
@@ -304,25 +315,18 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			 *  @returns {Promise}
 			 */
 			init: function(){
-				var user=this.User.current()
-				return user ? this.init4User(user) : $.when(this)
+				return $.when(this)
 			},
-			/**
-			 *  initialize user specific stuff
-			 *  @protected 
-			 *  @returns {Promise}
-			 */
-			init4User: function(user){
-				return user.verify()
-			},
-			
 			/**
 			 *  @method
 			 */
 			isLoggedIn: function(){
-				return this.User.current()!=null
+				return true
 			},
 			
+			logout: function(){
+				
+			},			
 			/**
 			 *  add UI route
 			 *  @param {string} name - route name
@@ -331,15 +335,15 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			 *  @param {boolean} needLogin - show login page if true and isLoggedIn returns false
 			 */
 			route: function(name, url, view, needLogin){
-				router.route(url, name, function(){
-					if(needLogin && !app.isLoggedIn())
+				router.route(url, name, _.bind(function(){
+					if(needLogin && !this.isLoggedIn())
 						require(['view/user'],function(page){(page['prototype'] ? new page() : page).show('signin')})
 					else{
 						var args=_.toArray(arguments)
 						args[args.length-1]==null && args.pop()
 						require([view],function(page){(page=(page['prototype'] ? new page() : page)).show.apply(page,args)})
 					}
-				})
+				},this))
 			},
 			
 			/**
@@ -349,61 +353,6 @@ define(['module','jQuery','Underscore','Backbone', 'model'], function(module, $,
 			 */
 			navigate:function(url, opt){
 				router.navigate(url, opt)
-			},
-			
-			/**
-			 *  create new kind of entity
-			 *  @param {object:Model} schema - entity schema with name and fields properties, field is with name,type,[searchable,and unique] properties
-			 *  @param {object} [properties] - instance properties
-			 *  @param {object} [classProperties] - class properties
-			 *  @returns {app.Model}
-			 */
-			createKind:function(schema, properties, classProperties){
-				return Model.extend(properties||{className:schema.get('name')}, classProperties).setSchema(schema)
-			},
-			/**
-			 *  Base Model, all kinds of entity must be extends from this base model
-			 *  @class
-			 *  @augments Backbone.Model
-			 *  @see {@link http://backbonejs.org#Model}
-			 */
-			Model:Model,
-			/**
-			 *  User Model
-			 *  @augments app.Model
-			 *  @class
-			 */
-			User: DB.User,
-			/**
-			 *  Role Model
-			 *  @augments app.Model
-			 *  @class
-			 */
-			Role: DB.Role,
-			/**
-			 *  Schema Model
-			 *  @augments app.Model
-			 *  @class
-			 */
-			Schema: DB.Schema,
-			/**
-			 *  class Query to search models from server
-			 *  @augments app.Query
-			 *  @class
-			 */
-			Query: DB.Query
+			}
 		},Backbone.Events)
-		
-	
-	//router
-	var router=new Backbone.Router
-	_.each([//route name, url, view name[,user]
-		'main,,view/main',
-		'account,account,view/user',
-		'test,test,view/test',
-		'features,features,view/features',
-		'syncOffline,sync,view/sync,true'],function(r){
-		app.route.apply(app,r.split(','))
-	})
-	return app
 })

@@ -1,4 +1,4 @@
-define(['Plugin', 'app'],function(Plugin, app){
+define(['Plugin', 'app', 'appengine'],function(Plugin, app){
 	return Plugin.extend({
 		description:"help play with your children",
 		init:function(){

@@ -43,26 +43,29 @@ require.config(/** @lends requireJSConf*/{
 		$(function () {app.start()})
 	},
 	shim:{
-		'Backbone': {
+		Backbone: {
             deps: ['Underscore', 'jQuery'],
             exports: 'Backbone'
         },
-        'Underscore': {
+        Underscore: {
             exports: '_'
         },
-		'jQuery':{
+		jQuery:{
 			exports:'jQuery'
+		},
+		jasmine:{
+			exports:'jasmine'
 		}
 	},
 	paths:{
-		"JSZip":"libs/jszip.min",
-		"jQuery":"libs/jquery-2.1.0.min",
-		"Underscore":"libs/underscore-min",
-		"Backbone":"libs/backbone-min",
-		"i18n":"libs/i18n",
-		"Jasmine":"libs/jasmin",
+		JSZip:"libs/jszip.min",
+		jQuery:"libs/jquery-2.1.0.min",
+		Underscore:"libs/underscore-min",
+		Backbone:"libs/backbone-min",
+		i18n:"libs/i18n",
+		jasmine:"libs/jasmine",
 		
-		"Phonegap":"file:///android_asset/www/phonegap.js",
+		Phonegap:"file:///android_asset/www/phonegap.js",
 	},
 	waitSeconds:30,
 	urlArgs: "v=0.1"

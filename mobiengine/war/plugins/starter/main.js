@@ -2,7 +2,7 @@
  * starter plugin to config app, routes, and extend models
  * @module starter
  */
-define(['Plugin', 'app'],function(Plugin, app){
+define(['Plugin', 'app', 'appengine'],function(Plugin, app){
 	return Plugin.extend({
 		description:'manage applications',
 		init: function(){

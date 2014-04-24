@@ -3,7 +3,7 @@
  * @module Test
  * @requires UI
  */
-define(['spec','UI','jasmine'],function(Specs,View){
+define(['UI','jasmine','specs'],function(UI, jasmine, specs){
 	window.asyncIt=function(p,msgTimeout,more,timeout){
 		if(_.isFunction(msgTimeout)){
 			more=msgTimeout
@@ -96,23 +96,38 @@ define(['spec','UI','jasmine'],function(Specs,View){
 		}
 	});
 	
-	var Page=View.Page, ready=new $.Deferred
-	return new (Page.extend({
+	var ready=new $.Deferred
+	var tmplSpecs=_.template('\
+		<span class="checkable open" onclick="$(this).toggleClass(\'open\')">\
+			<span>{{title}}</span>\
+			<%_.each(specs,function(o){%>\
+			<input type="checkbox" name="spec" value="{{o}}" class="outview">\
+			<span onclick="$(this).prev(\'input\').click()">{{o}}</span>\
+			<%})%>\
+		</span>')
+	return new (UI.Page.extend({
 		title:'Test',
 		content:'<ul><li><textarea style="width:100%;height:100px"></textarea><div class="specs"></div></li></ul>',
 		cmds:'<a class="passed" status="passed"><span class="icon passed"/><span class="tag count"/></a>\
 			<a class="failed" status="failed"><span class="icon failed"/><span class="tag count"/></a>\
-			<a class="skipped" status="skipped"><span class="icon filter"/><span class="tag count"/></a>',
-		events: _.extend({},Page.prototype.events,{'change textarea':'debug'}),
-		initialize: function(){
-			this._super().initialize.apply(this,arguments)
+			<a class="skipped" status="skipped"><span class="icon filter"/><span class="tag count"/></a>\
+			<a><span class="icon test"/></a>',
+		events: _.extend({},UI.Page.prototype.events,{
+			'change textarea':'debug',
+			'click span.test':'onTest',
+		}),
+		render:function(){
+			this._super().render.apply(this,arguments)
 			var env= this.jasmin = jasmine.getEnv();
 			env.updateInterval = 1000;
 			env.addReporter(new Reporter(this.$('ul'), this.$el))
 			this.$('article').addClass('list')
-			this.addStyles()
-			this.$el.find('div.specs')
-				.append(_.template('#tmplSpecs',{title:'Specs',specs:Specs}))
+			this.refresh()
+		},
+		refresh: function(){
+			this.$el.find('div.specs').empty()
+				.append(tmplSpecs({title:'Specs',specs:specs}))
+			return
 		},
 		debug: function(e){
 			new Function("",e.srcElement.value).call(this)
@@ -130,29 +145,16 @@ define(['spec','UI','jasmine'],function(Specs,View){
 			return ready
 		},
 		test1: function(spec){
-			var me=this, spec='spec/'+spec
-			require([spec],function(suite){
-				me.jasmin.execute()
+			require([spec],_.bind(function(suite){
+				this.jasmin.execute()
 				require.undef(spec)
-			})
-		},
-		addStyles: function(){
-			var styles=[], delta=20
-			for(var i=2;i<7;i++)
-				styles.push('.level'+i+'{padding-left:'+(delta*(i-1))+'px!important}')
-			styles.push('.testing{color:yellow}')
-			styles.push('.passed{color:green}')
-			styles.push('.failed{color:red}')
-			styles.push('.skipped{color:gray}')
-			styles.push('.log{color:blue}')
-			styles.push('div.level2{margin-bottom:10px}')
-			this.$el.append('<style>'+styles.join('\n')+'</style>')
+			},this))
 		},
 		clear: function(){
 			this.$el.find('.spec,.suite').remove()
 			return this
 		},
-		refresh: function(){
+		onTest: function(){
 			var me=this
 			this.clear()
 			this.$el.find('.specs input:checked')
@@ -161,5 +163,19 @@ define(['spec','UI','jasmine'],function(Specs,View){
 				})
 			return this
 		}
+	},{
+		STYLE:'\
+			.testing{color:yellow}\
+			.passed{color:green}\
+			.failed{color:red}\
+			.skipped{color:gray}\
+			.log{color:blue}\
+			div.level2{margin-bottom:10px}\
+			'+(function(){
+				var styles=[], delta=20
+				for(var i=2;i<7;i++)
+					styles.push('.level'+i+'{padding-left:'+(20*(i-1))+'px!important}')
+				return styles.join('\n')
+			})()
 	}))
 })

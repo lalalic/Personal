@@ -67,9 +67,9 @@ define(['UI','app'],function(UI, app){
 				.fetch()
 				.then(_.bind(function(stories){
 					var $storyList=this.$('#stories')
-					_.each(stories, function(story){
+					_.each(stories, _.bind(function(story){
 						$storyList.append(this.tmplStory(story))
-					})
+					},this))
 				},this))
 			return this._super().show.apply(this,arguments)
 		},

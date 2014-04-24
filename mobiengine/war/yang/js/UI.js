@@ -4,7 +4,7 @@
  * @requires app
  * @requires jQuery
  */
-define(['app',"jQuery", "Underscore"],function(app, $, _){
+define(['app'],function(app){
 	$(document).ajaxSend(function(){
 		var a=$('section.show span.refresh').parent().addClass('doing')
 		$(document).one('ajaxComplete',function(){
@@ -14,19 +14,18 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 		alert(jqXHR.responseText||statusText)
 	})
 	
-	var _extend=Backbone.View.extend
-	Backbone.View.extend=function(properties,classProperties){
-		var aView=_extend.apply(this,arguments)
-		aView.STYLE && $('head').append("<style>"+aView.STYLE+"</style>") && (delete aView.STYLE)
-		aView.TEMPLATE && $('body').append(aView.TEMPLATE) && (delete aView.TEMPLATE)
-		return aView
-	}
-		
+	Backbone.View.extend=_.aop(Backbone.View.extend,function(_extend){
+		return function(properties,classProperties){
+			var aView=_extend.apply(this,arguments)
+			aView.STYLE && $('head').append("<style>"+aView.STYLE+"</style>") && (delete aView.STYLE)
+			aView.TEMPLATE && $('body').append(aView.TEMPLATE) && (delete aView.TEMPLATE)
+			return aView
+		}
+	})		
 	var tmplPage='<header><h1 class="title centered">{{title}}</h1><nav>{{navs}}</nav></header>\
 				<article class="active scroll">{{content}}</article>\
 				<footer><nav>{{cmds}}</nav></footer>'
-	var User=app.User,
-		currentPage={section:null,aside:null},
+	var currentPage={section:null,aside:null},
 		/**
 		 * initialize->render->template, close/hide->clear->detach el
 		 * @class Page
@@ -83,8 +82,7 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 					}).data('direction','in')
 					
 				currentPage[this.tagName]=this
-				if(User.current())
-					this.$el.find('header .user').addClass('signout')
+				app.isLoggedIn() &&	this.$el.find('header .user').addClass('signout')
 				this.$el.find('header .home,header .back')[(location.hash==''||location.hash=='#') ? 'hide' : 'show']()
 				return this
 			},
@@ -111,14 +109,14 @@ define(['app',"jQuery", "Underscore"],function(app, $, _){
 				return this
 			},
 			user: function(){
-				if(!User.current()){
+				if(!app.isLoggedIn()){
 					require(['view/user'],function(user){
 						user.show('signin')
 					})
 				}
 			},
 			signout: function(){
-				User.logOut()
+				app.logout()
 				this.reload()
 				return false
 			},

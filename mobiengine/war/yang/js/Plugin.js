@@ -1,13 +1,71 @@
-define(["JSZip", "module"], function(JSZip,module){
+define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 	var regI18N=/^i18n!/, 
 		cfg=module.config()||{},
-		byFile=location.protocol=='file:' || !cfg.zipped
+		byFile=location.protocol=='file:' || !cfg.zipped,
+		Parser=_.newClass(function(data){
+				this.raw=data
+				this.zip=new JSZip(data)
+			},{
+				define:"function define(a,b){a.splice(_.indexOf(a,'Plugin'),1,require('Plugin'));return b.apply(null,a)};",
+				info:function(){
+					return this._info ? this._info : 
+						(this._info=new Backbone.Model(eval(this.define+this.zip.file('main.js').asText())))
+				},
+				cloud: function(){
+					return this.zip.file('cloud/main.js').asText()
+				}
+			})
+	
+	JSZip.prototype.save2Local=function(){
 		
-	var plugin={
+	}
+	
+	return {
 		version:'0.1',
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
+		parse: function(data){return new Parser(data)},
 		features:new Backbone.Collection,
+		_onModuleLoad: function(m,name,onload,root){
+			m.id=m.name=name
+			m.root=root
+			m.init()
+			this.features.add(_.omit(m,_.functions(m)))
+			if(m.specs && m.specs.length){
+				for(var i in m.specs)
+					m.specs[i]=m.module(m.specs[i])
+				m.specs.splice(0,0,Specs.length,0)
+				Specs.splice.apply(Specs,m.specs)
+				m.specs.splice(0,2)				
+			}
+			onload(m)
+		},
+		_loadFromURL: function(name, parentRequire, onload, config){
+			var root=this.root+name+'/'
+			config.paths[name]=root+'main'
+			require([name],_.bind(function(a){
+				this._onModuleLoad(a,name,onload,root)
+			},this))
+		},
+		_loadFromZip: function(name, parentRequire, onload, config){
+			var root=this.root+name+'/'
+			$.ajax({
+				url:config.baseUrl+'/'+this.root+name+".zip",
+				dataType:'arraybuffer',
+				mimeType:'text/plain; charset=x-user-defined',
+				dataFilter:_.bind(function(data,type){
+					var zip=new JSZip(data)
+					onload.fromText(zip.file("main.js").asText())
+					require([name],_.bind(function(a){
+						a.zip=zip
+						this._onModuleLoad(a,name,onload,root)
+					},this))
+				},this)
+			})
+		},
+		load: function(){
+			byFile? this._loadFromURL.apply(this,arguments) : this._loadFromZip.apply(this,arguments)
+		},
 		extend: function(more){
 			var newPlugin=$.extend({
 				extend:this.extend,
@@ -20,6 +78,7 @@ define(["JSZip", "module"], function(JSZip,module){
 				version:'0.1',
 				description:'A plugin',
 				depends:[],
+				specs: [],
 				init:function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, parentRequire, onload, config){
@@ -70,41 +129,4 @@ define(["JSZip", "module"], function(JSZip,module){
 			return newPlugin
 		}
 	}
-	
-	if(byFile){
-		plugin.load=function(name, parentRequire, onload, config){
-			var root=this.root+name+'/'
-			config.paths[name]=root+'main'
-			require([name],function(a){
-				a.id=a.name=name
-				a.root=root
-				onload(a)
-				a.init()
-				plugin.features.add(_.omit(a,_.functions(a)))
-			})
-		}
-	}else{
-		plugin.load=function(name, parentRequire, onload, config){
-			var root=this.root+name+'/'
-			$.ajax({
-				url:config.baseUrl+'/'+plugin.root+name+".zip",
-				dataType:'arraybuffer',
-				mimeType:'text/plain; charset=x-user-defined',
-				dataFilter:function(data,type){
-					var zip=new JSZip(data)
-					onload.fromText(zip.file("main.js").asText())
-					require([name],function(a){
-						a.id=a.name=name
-						a.root=root
-						a.zip=zip
-						onload(a)
-						a.init()
-						plugin.features.add(_.omit(a,_.functions(a)))
-					})
-				}
-			})
-		}
-	}
-	
-	return plugin
 })
