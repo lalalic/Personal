@@ -1,5 +1,5 @@
 define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
-	var regI18N=/^i18n!/, 
+	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,
 		Parser=_.newClass(function(data){
@@ -15,9 +15,63 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 					return this.zip.file('cloud/main.js').asText()
 				}
 			})
+	/*
+	(function(requestFileSystem){
+		requestFileSystem(TEMPORARY,1024,function(fs){
+			var DirectoryEntry=fs.root.constructor
+			_.extend(DirectoryEntry.prototype,{
+				getDirectory:_.aop(DirectoryEntry.prototype.getDirectory,function(_raw){
+					return function(name, o, success, fail){
+						var p=new $.Deferred()
+						_raw.call(this,name,o,function(d){
+								success&&success(d)
+								p.resolve(d)
+							},function(e){
+								fail&&fail(e)
+								p.fail(e)
+							})
+						return p
+					}
+				}),
+				getFile: _.aop(DirectoryEntry.prototype.getFile,function(_raw){
+					return function(name, o, success, fail){
+						
+						var p=new $.Deferred()
+						_raw.call(this,name,o,function(d){p.resolve(d)},function(e){p.fail(e)})
+						return p
+					}
+				})
+			})
+		})
+	})(requestFileSystem||webkitRequestFileSystem);*/
 	
-	JSZip.prototype.save2Local=function(){
-		
+	JSZip.prototype.save2Local=function(root,first){
+		var zip=this, p=new $.Deferred(), me=this
+		var requestFileSystem=requestFileSystem||webkitRequestFileSystem;
+		requestFileSystem(TEMPORARY,1024*1024,function(fs){
+			fs.root.getDirectory(root,{create:true},function(rootPath){
+				first && rootPath.getFile(first, {create:true},function(fileEntry){
+					fileEntry.onwriteend=function(){
+						p.resolve(rootPath.toURL())
+					}
+					fileEntry.createWriter(function(writer){
+						writer.write(new Blob([me.file(first).asArrayBuffer()]))
+					})
+					
+				});
+				/*
+				zip.filter(function(path, data){
+					data.isPath() ? 
+						rootPath.getDirectory(path,{create:true}) : 
+						rootPath.getFile(path, {create:true}, function(fileEntry){
+							fileEntry.createWriter(function(writer){
+								writer.write(data.asArrayBuffer())
+							})
+						})
+				})*/
+			})
+		})
+		return p
 	}
 	
 	return {
@@ -48,23 +102,36 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 			},this))
 		},
 		_loadFromZip: function(name, parentRequire, onload, config){
-			var root=this.root+name+'/'
+			var root=name
 			$.ajax({
-				url:config.baseUrl+'/'+this.root+name+".zip",
-				dataType:'arraybuffer',
+				url:parentRequire.toUrl(this.root+name),
 				mimeType:'text/plain; charset=x-user-defined',
+				processData:false,
 				dataFilter:_.bind(function(data,type){
-					var zip=new JSZip(data)
+					(new JSZip(data)).save2Local(root,"main.js")
+						.then(function(rootUrl){
+							config.paths[name]=rootUrl+'/main'
+							require([name],_.bind(function(a){
+								this._onModuleLoad(a,name.replace('.zip',''),onload,rootUrl)
+								define(name.replace('.zip',''),a)
+								require.undef(name)
+							},this))
+						})
+					/*
 					onload.fromText(zip.file("main.js").asText())
 					require([name],_.bind(function(a){
 						a.zip=zip
 						this._onModuleLoad(a,name,onload,root)
-					},this))
+					},this))*/
+					return null
 				},this)
 			})
 		},
-		load: function(){
-			byFile? this._loadFromURL.apply(this,arguments) : this._loadFromZip.apply(this,arguments)
+		load: function(name){
+			if(/\.zip$/.test(name))
+				this._loadFromZip.apply(this,arguments)
+			else
+				this._loadFromURL.apply(this,arguments)
 		},
 		extend: function(more){
 			var newPlugin=$.extend({
@@ -82,7 +149,7 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 				init:function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, parentRequire, onload, config){
-					if(byFile)
+					//if(byFile)
 						return parentRequire([name],onload)
 					var file=this.zip.file(this.fileName+".js")
 					if(file==null)

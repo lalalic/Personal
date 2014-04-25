@@ -169,7 +169,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 		}
 	})();
 	
-	define('specs',[],['spec/tool/uploader','spec/tool/offline']);
+	define('specs',[],['spec/plugin','spec/tool/uploader','spec/tool/offline']);
 	var router=new Backbone.Router
 	return _.extend(/** @lends app*/{
 			/**
