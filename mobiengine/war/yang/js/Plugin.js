@@ -13,72 +13,101 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 				},
 				cloud: function(){
 					return this.zip.file('cloud/main.js').asText()
-				}
-			})
-	/*
-	(function(requestFileSystem){
-		requestFileSystem(TEMPORARY,1024,function(fs){
-			var DirectoryEntry=fs.root.constructor
-			_.extend(DirectoryEntry.prototype,{
-				getDirectory:_.aop(DirectoryEntry.prototype.getDirectory,function(_raw){
-					return function(name, o, success, fail){
-						var p=new $.Deferred()
-						_raw.call(this,name,o,function(d){
-								success&&success(d)
-								p.resolve(d)
-							},function(e){
-								fail&&fail(e)
-								p.fail(e)
-							})
-						return p
-					}
-				}),
-				getFile: _.aop(DirectoryEntry.prototype.getFile,function(_raw){
-					return function(name, o, success, fail){
-						
-						var p=new $.Deferred()
-						_raw.call(this,name,o,function(d){p.resolve(d)},function(e){p.fail(e)})
-						return p
-					}
-				})
-			})
-		})
-	})(requestFileSystem||webkitRequestFileSystem);*/
-	
-	JSZip.prototype.save2Local=function(root,first){
-		var zip=this, p=new $.Deferred(), me=this
-		var requestFileSystem=requestFileSystem||webkitRequestFileSystem;
-		requestFileSystem(TEMPORARY,1024*1024,function(fs){
-			fs.root.getDirectory(root,{create:true},function(rootPath){
-				first && rootPath.getFile(first, {create:true},function(fileEntry){
-					fileEntry.onwriteend=function(){
-						p.resolve(rootPath.toURL())
-					}
-					fileEntry.createWriter(function(writer){
-						writer.write(new Blob([me.file(first).asArrayBuffer()]))
-					})
+				},
+				schema: function(){
+					return this.zip.file('data/schema.js').asText()
+				},
+				data: function(){
+					return this.zip.file('data/data.json').asText()
+				},
+				save: function(){
 					
-				});
-				/*
-				zip.filter(function(path, data){
-					data.isPath() ? 
-						rootPath.getDirectory(path,{create:true}) : 
-						rootPath.getFile(path, {create:true}, function(fileEntry){
-							fileEntry.createWriter(function(writer){
-								writer.write(data.asArrayBuffer())
-							})
+				}
+			});
+		
+	(function(requestFileSystem){
+		requestFileSystem(TEMPORARY,1024)
+			.then(function(fs){
+				var DirectoryEntry=fs.root.constructor
+				_.extend(DirectoryEntry.prototype,{
+					getDirectory:_.aopromise(DirectoryEntry.prototype.getDirectory,4),
+					getFile: _.aopromise(DirectoryEntry.prototype.getFile,4)
+				})
+				_.extend(DirectoryEntry.prototype,{
+					getDirectory:_.aop(DirectoryEntry.prototype.getDirectory,function(_raw){
+						return function(name,o,a,b){
+							var paths=_.compact(name.split('/'))
+							if(paths.length==1)
+								return _raw.apply(this,arguments)
+							else{
+								var last=paths.pop()
+								return this.getDirectory(paths.join('/'),o)
+									.then(function(d){return _raw.call(d,last,o,a,b)})
+							}
+						}
+					}),
+					getFile:_.aop(DirectoryEntry.prototype.getFile,function(_raw){
+						return function(name,o,a,b){
+							var paths=_.compact(name.split('/'))
+							if(paths.length==1)
+								return _raw.apply(this,arguments)
+							var file=paths.pop()
+							return this.getDirectory(paths.join('/'),o)
+								.then(function(d){return _raw.call(d,file,o,a,b)})
+						}
+					})
+				})
+				fs.root.getFile('x',{create:true})
+					.then(function(file){
+						var FileEntry=file.constructor
+						_.extend(FileEntry.prototype,{
+							createWriter: _.aopromise(FileEntry.prototype.createWriter,2)
 						})
-				})*/
+					})
 			})
-		})
-		return p
-	}
+	
+		JSZip.prototype.save2Local=function(root,first){
+			var zip=this, isDir=/\/$/, createOpt={create:true}
+			return requestFileSystem(TEMPORARY,1024*1024)
+				.then(function(fs){
+					var p=fs.root.getDirectory(root,{create:true})
+					p.then(function(rootPath){
+						zip.filter(function(path, data){
+							isDir.test(path) ? 
+								rootPath.getDirectory(path,createOpt) : 
+								rootPath.getFile(path, createOpt)
+									.then(function(fileEntry){
+										fileEntry.createWriter(function(writer){
+											writer.write(new Blob([zip.file(first).asArrayBuffer()]))
+										})
+									})
+						})
+					})
+					return p
+				}).then(function(rootPath){
+					return rootPath.getFile(first,createOpt)
+						.then(function(firstFile){
+							return firstFile.createWriter()
+								.then(function(writer){
+									var p=new $.Deferred()
+									writer.onwriteend=function(){p.resolve(rootPath.toURL())}
+									writer.onerror=function(e){p.fail(e)}
+									writer.write(new Blob([zip.file(first).asArrayBuffer()]))
+									return p
+								})
+						})
+				})
+		}
+	})(window.requestFileSystem=_.aopromise(window.requestFileSystem||window.webkitRequestFileSystem,4))
+	
 	
 	return {
 		version:'0.1',
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
-		parse: function(data){return new Parser(data)},
+		Parser: Parser,
+		parse: function(data){return new this.Parser(data)},
+		
 		features:new Backbone.Collection,
 		_onModuleLoad: function(m,name,onload,root){
 			m.id=m.name=name
@@ -102,29 +131,24 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 			},this))
 		},
 		_loadFromZip: function(name, parentRequire, onload, config){
-			var root=name
+			var root=name,me=this
 			$.ajax({
 				url:parentRequire.toUrl(this.root+name),
 				mimeType:'text/plain; charset=x-user-defined',
 				processData:false,
-				dataFilter:_.bind(function(data,type){
-					(new JSZip(data)).save2Local(root,"main.js")
+				dataFilter:function(data,type){
+					(new JSZip(data))
+						.save2Local(root,"main.js")
 						.then(function(rootUrl){
-							config.paths[name]=rootUrl+'/main'
-							require([name],_.bind(function(a){
-								this._onModuleLoad(a,name.replace('.zip',''),onload,rootUrl)
-								define(name.replace('.zip',''),a)
+							var pluginName=name.replace('.zip','')
+							config.paths[pluginName]=rootUrl+'/main'
+							require([pluginName],function(a){
+								me._onModuleLoad(a,pluginName,onload,rootUrl)
 								require.undef(name)
-							},this))
+							})
 						})
-					/*
-					onload.fromText(zip.file("main.js").asText())
-					require([name],_.bind(function(a){
-						a.zip=zip
-						this._onModuleLoad(a,name,onload,root)
-					},this))*/
 					return null
-				},this)
+				}
 			})
 		},
 		load: function(name){
@@ -148,49 +172,8 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 				specs: [],
 				init:function(){},
 				module:function(name){return this.name+"!"+name},
-				load:function(name, parentRequire, onload, config){
-					//if(byFile)
-						return parentRequire([name],onload)
-					var file=this.zip.file(this.fileName+".js")
-					if(file==null)
-						return console.error(this.fileName+" doesn't exist in plugin "+this.name)
-					var _define=window.define,
-						pluginName=this.name,
-						fileName=this.fileName
-					window.define=function(moduleName, deps, callback) {
-						var paths=fileName.split('/')
-						paths.pop()
-						var ds=($.isArray(moduleName)&&moduleName)||($.isArray(deps)&&deps)
-						ds && $.each(ds,function(i,dep){
-							var bI18N=regI18N.test(dep)
-							bI18N && (dep=dep.substr(5))
-							if(dep.substr(0,1)!=='.')
-								return;
-							var currentPaths=dep.split('/'),realPath=[]
-							currentPaths=paths.concat(currentPaths)
-							
-							for(var len=currentPaths.length,k=len-1,p;k>-1;k--){
-								if((p=currentPaths[k]).substr(0,1)=='.')
-									k=k-p.length+1;
-								else
-									realPath.unshift(p)
-							}
-							ds[i]=(bI18N ? 'i18n!' : '')+pluginName+"!"+realPath.join('/')
-						})
-						ds && console.debug(name + "("+fileName+".js) depends on "+ds.join(","))
-						_define.apply(null, arguments)
-					}
-					try{
-						onload.fromText(name, file.asText())
-					}finally{
-						window.define=_define
-					}
-					require([name],onload)							
-				},
-				normalize:function(name){
-					this.fileName=name;
-					return this.root+name;
-				}
+				load:function(name, require, onload){return require([name],onload)},
+				normalize:function(name){return this.root+name}
 			},more||{});
 			this.depends && (newPlugin.depends=_.uniq(_.union(this.depends,newPlugin.depends||[])));
 			return newPlugin

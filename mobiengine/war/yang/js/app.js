@@ -148,6 +148,18 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 		
 		_.mixin({
 			aop:function(f,wrap){return wrap(f)},
+			aopromise: function(_raw,lenP){
+				return function(){
+					var p=$.Deferred(),
+						args=_.toArray(arguments)
+					lenP>args.length && args.splice(args.length,lenP-args.length,undefined)
+					var success=args[lenP-2],fail=args[lenP-1]
+					args[lenP-2]=function(a){success && success(a); p.resolve(a)}
+					args[lenP-1]=function(a){fail && fail(a); p.fail(a)}
+					_raw.apply(this,args)
+					return p
+				}
+			},
 			newClass: function (constructor, properties, classProperties) {
 				_.extend(constructor.prototype, Backbone.Events, properties)
 				_.extend(constructor, classProperties)

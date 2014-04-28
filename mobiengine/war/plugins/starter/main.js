@@ -20,6 +20,7 @@ define(['Plugin', 'app', 'appengine'],function(Plugin, app){
 			app.route('analytics','analytics',this.module('view/analytics'),true)
 			app.route('cloudcode','cloudcode',this.module('view/cloudcode'),true)
 			
+			require(['Plugin!Test.zip'])	
 			var User=app.User,
 				currentApp, 
 				prevApp,
@@ -130,6 +131,7 @@ define(['Plugin', 'app', 'appengine'],function(Plugin, app){
 				this.Application.all=this.Application.collection()
 				return _init.apply(this,arguments)
 			}
+		
 		}
 	})
 })

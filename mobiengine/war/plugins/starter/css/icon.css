@@ -1,0 +1,8 @@
+@font-face{font-family:'icon';src:url("icon.ttf") format('truetype');font-weight:normal;font-style:normal}
+.icon:before{font-family:'icon';font-weight:normal !important}
+.icon.app:before{content:"\e606"}
+.icon.apps:before{content:"\e61e"}
+.icon.schema:before{}
+.icon.data:before{content:"\e617"}
+
+
