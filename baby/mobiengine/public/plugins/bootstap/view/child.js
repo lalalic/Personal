@@ -4,7 +4,7 @@
  * @requires UI
  * @requires uploader
  */
-define(['UI','app','tool/uploader'],function(UI,app,uploader){
+define(['UI','app','tool/ImageUploader'],function(UI,app,uploader){
 	var tmplChild='\
 		<form>\
 			<fieldset><input type="text" name="name" placeholder="'+text('baby name')+'"></fieldset>\

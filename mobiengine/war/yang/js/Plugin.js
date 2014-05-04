@@ -1,3 +1,8 @@
+/**
+ *  To support plugin with a plugin data Parser, and extension interface
+ *  It support load plugin from files, or from a zip
+ *  @module Plugin
+ */
 define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
@@ -101,8 +106,11 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 	})(window.requestFileSystem=_.aopromise(window.requestFileSystem||window.webkitRequestFileSystem,4))
 	
 	
-	return {
+	return /**@lends Plugin*/{
 		version:'0.1',
+		/**
+		 *  the plugin root path, which supports configuration from require
+		 */
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
 		Parser: Parser,

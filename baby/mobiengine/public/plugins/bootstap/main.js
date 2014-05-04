@@ -1,4 +1,4 @@
-define(['Plugin', 'app', 'appengine'],function(Plugin, app){
+define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 	return Plugin.extend({
 		description:"help play with your children",
 		init:function(){
@@ -11,10 +11,10 @@ define(['Plugin', 'app', 'appengine'],function(Plugin, app){
 			
 			//route configuration
 			app.route('main','',this.module('view/categories'))
-			app.route('child','child/:id/:name',this.module('view/child'),true)
+			app.route('child','child(/:id/:name)',this.module('view/child'),true)
 			app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
 			//app.route('search','posts/:query',this.module('view/main'))
-			app.route('post','create/:catId/:catname',this.module('view/post'),true)
+			app.route('post','create(/:catId/:catname)',this.module('view/post'),true)
 			app.route('update','update/:id',this.module('view/post'),true)
 			app.route('showpost','show/:id',this.module('view/post1'))
 			app.route('comments','comments/:kind/:id',this.module('view/comments'))

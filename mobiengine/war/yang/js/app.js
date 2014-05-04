@@ -204,7 +204,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 			 *  //pluginA, PluginB, and pluginC must be loaded before application starts
 			 *  app.start({plugins:"pluginA,pluginB,pluginC"})
 			 */
-			plugins:'starter',
+			plugins:'bootstap',
 			/**
 			 *  debug switch
 			 *  @type {boolean}

@@ -1,12 +1,4 @@
-/**
-{
-	bind:function(img,{}){},
-	click:function(){}
-}
-
-String.prototype.toImageDataURL,toImageData
-*/
-define(function(){
+define(['app'],function(app){
 	var IMAGE_DATA_SCHEME="data:image/jpeg;base64,",
 		IMAGE_DATA_PATTERN=new RegExp('<img\s+src="data:image/jpeg;base64,(.*?)"\s*>', "gim")
 	_.extend(String.prototype,{
@@ -56,10 +48,10 @@ define(function(){
 					size=this.opt.size,
 					file=this.files[0]
 				reader.onloadend=function(e){
-					var data={base64:e.target.result.toImageData(size)}
-						f=new Parse.File(file.name,data,file.type),
+					var data=e.target.result.toImageData(size),
+						f=new app.File({name:file.name,data:atob(data),type:file.type}),
 						needSave=true
-					onSave && (needSave=onSave(f, IMAGE_DATA_SCHEME+data.base64))
+					onSave && (needSave=onSave(f, IMAGE_DATA_SCHEME+data))
 					needSave!==false && f.save().then(onSaved)
 				}
 				reader.readAsDataURL(file)
@@ -96,7 +88,7 @@ define(function(){
 			click: function(){
 				var p=new Promise,onSave=this.opt['onSave'],onSaved=this.opt.onSaved
 				p.then(function(data64){
-					var data={base64:data64},f=new Parse.File("a.jpg",data),
+					var data=data64,f=new app.File({name:"a.jpg",data:atob(data)}),
 						needSave=true
 					onSave && (needSave=onSave(f, IMAGE_DATA_SCHEME+data.base64))
 					needSave!==false && f.save().then(onSaved)

@@ -316,10 +316,29 @@ define(['app'],function(app){
 				className:"_file",
 				urlRoot:function(){
 					return this.version+"/files"
+				},
+				save: function(){
+					var data=new FormData()
+					data.append(this.get('name'),this.get('data'))
+					return $.ajax({
+							url: $.ajax(this.urlRoot()+'/want2upload',{async:false}).responseText,
+							context:this,
+							data:data,
+							cache: false,
+							contentType: false,
+							processData: false,
+							type: 'POST',
+						}).then(function(data){
+							this.set('url',data)
+							this.unset('data')
+							this.unset('name')
+							return this
+						})
+				},
+				url: function(){
+					return this.get('url')
 				}
-			},{
-			
-		}),
+			}),
 		Query=root.Query=_.newClass(function (objectClass) {
 				this.objectClass = objectClass;
 				this._where = {};
@@ -708,7 +727,7 @@ define(['app'],function(app){
 						dataType:'json',
 						headers: {"X-Application-Id": this.apiKey},
 						beforeSend: function(xhr, setting){
-							root.service && (setting.url=root.service+setting.url)
+							root.service && !(/^https?\:/i.test(setting.url)) && (setting.url=root.service+setting.url)
 							var data=setting.data
 							if(setting.data){
 								delete data.createdAt
@@ -757,5 +776,5 @@ define(['app'],function(app){
 				this.User.logout()
 			}
 		})
-	})(app);
+	})(app)
 })

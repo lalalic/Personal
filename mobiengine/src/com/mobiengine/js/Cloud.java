@@ -232,7 +232,7 @@ public class Cloud{
 		    ctx.evaluateReader(sharedScope, getJSFileReader("underscore-min.js"), "underscore-min.js", 1, null);
 		    ctx.evaluateReader(sharedScope, getJSFileReader("promise.js"), "promise.js", 1, null);
 			ctx.evaluateReader(sharedScope, getJSFileReader("backbone-min.js"), "backbone-min.js", 1, null);
-			ctx.evaluateReader(sharedScope, getJSFileReader("appengine.js"), "appengine.js", 1, null);			
+			ctx.evaluateReader(sharedScope, getJSFileReader("model.js"), "model.js", 1, null);			
 			sharedScope.sealObject();
 		}catch(Exception e){
 			logger.severe(e.getMessage());
