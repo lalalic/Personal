@@ -128,7 +128,8 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 		//check offline status
 		$.isOffline.lastCheckAt=0
 		$.ajax=_.aop($.ajax,function(_raw){
-			return function(options){
+			return function(url,options){
+				options=_.isString(url) ? _.extend(options||{},{url:url}) : url
 				return _raw.call(this,_.extend(options,{
 						error: _.aop(options.error,function(_error){
 							return function(xhr){
@@ -386,6 +387,9 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 			 */
 			navigate:function(url, opt){
 				router.navigate(url, opt)
+			},
+			localPath: function(){
+				return ""
 			}
 		},Backbone.Events)
 })
