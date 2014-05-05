@@ -362,16 +362,12 @@ define(['app','UI'],function(app,UI){
 			reader.readAsText(e.target.files[0])
 		},
 		backupSchema:function(){
-			var schema={}
-			this.collection.each(function(a){
-				var fields=schema[a.get('name')]={}
-				_.chain(a.get('fields'))
-					.reject(function(a){return internal_fields.indexOf(a.name)!=-1})
-					.each(function(a){fields[a.name]=_.omit(a,'name')})
-			})
-			UI.util.save(btoa(JSON.stringify(schema,null, "\t")),
-				"schema.js",
-				"application/json")
+			this.app.exportSchema(this.collection).
+				then(function(schema){
+					UI.util.save(btoa(JSON.stringify(schema,null, "\t")),
+						"schema.js",
+						"application/json")
+				})
 			return this
 		},
 		backupData:function(){

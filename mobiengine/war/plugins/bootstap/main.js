@@ -2,12 +2,12 @@
  * starter plugin to config app, routes, and extend models
  * @module starter
  */
-define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
+define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, specs, JSZip){
 	return Plugin.extend({
 		description:'manage applications',
 		init: function(){
 			$.extend(app,{
-				apiKey:'aglub19hcHBfaWRyCgsSBF9hcHAYAQw',
+				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgIAKDA',
 				title:'Mobile Engine',
 				asideView:this.module('view/menu'),
 				shortcutView:this.module('view/applist')
@@ -20,7 +20,8 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 			app.route('analytics','analytics',this.module('view/analytics'),true)
 			app.route('cloudcode','cloudcode',this.module('view/cloudcode'),true)
 			
-			require(['Plugin!Test.zip'])	
+			specs.push(this.module('spec/application'))
+			
 			var User=app.User,
 				currentApp, 
 				prevApp,
@@ -49,6 +50,64 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 						var r=this._super().save.apply(this,arguments)
 						cloudCode && (this.attributes['cloudCode']=cloudCode)
 						return r
+					},
+					upload: function(file){
+						return (new FileReader()).readAsArrayBuffer(file).then(_.bind(function(){
+							var zip=new JSZip(data)
+							var cloudCode=zip.file('cloud/main.js').asText()
+							var schema=zip.file('data/schema.js').asText()
+							var data=zip.file('data/data.json').asText()
+							zip.remove('cloud')
+							zip.remove('data')
+							
+							$.ajax({
+								url:this.urlRoot()+'/upload',
+								data:false,
+								
+							})
+						},this))
+					},
+					download: function(){
+						var p=$.Deferred;
+						$.ajax({
+							context:this,
+							url:this.urlRoot()+'/download',
+							mimeType:'text/plain; charset=x-user-defined',
+							processData:false,
+							dataFilter:function(data){
+								(new JSZip(data)).save2Local('app/'+this.get('url'),'main.js')
+								.then(function(root){
+									p.resolve(root)
+								})
+							}
+						})
+						return p
+					},
+					exportSchema: function(schemas){
+						return (schemas ? $.Deferred().resolve() : ((schemas=app.Schema.collection())&&schemas.fetch()))
+							.then(function(){
+								var schema={},
+									internal_fields="id,createdAt,updatedAt,ACL".split(',')
+								schemas.each(function(a){
+									var fields=schema[a.get('name')]={}
+									_.chain(a.get('fields'))
+										.reject(function(a){return internal_fields.indexOf(a.name)!=-1})
+										.each(function(a){fields[a.name]=_.omit(a,'name')})
+								})
+								return $.Deferred().resolve(schema)
+							})
+					},
+					exportData: function(table){
+						table=app.Model.extend({className:table}).collection()
+						return table.fetch().then(function(){
+							return $.Deferred().resolve(table)
+						})
+					},
+					importSchema: function(){
+					
+					},
+					importData: function(){
+					
 					}
 				},/** @lends app.Application */{
 					/** 
@@ -97,6 +156,12 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 							}
 						}
 						return app.Model.collection.apply(this,arguments)
+					},
+					download: function(){
+					
+					},
+					upload: function(){
+					
 					}
 				});
 
@@ -115,23 +180,26 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 				return app.Model.collection.apply(this,arguments)
 			}
 			
-			var _init4User=app.init4User
-			app.init4User=function(){
-				return _init4User.apply(this,arguments)
-					.then(function(){
-						return Application.all.fetch()
-							.then(function(){
-								Application.current(Application.all.first())
-							})
-					})
-			}
 			
-			var _init=app.init
-			app.init=function(){
-				this.Application.all=this.Application.collection()
-				return _init.apply(this,arguments)
-			}
-		
+			_.extend(app,{
+				init4User:_.aop(app.init4User, function(_init4User){
+					return function(){
+						return _init4User.apply(this,arguments)
+						.then(function(){
+							return Application.all.fetch()
+								.then(function(){
+									Application.current(Application.all.first())
+								})
+						})
+					}
+				}),
+				init: _.aop(app.init,function(_init){
+					return function(){
+						this.Application.all=this.Application.collection()
+						return _init.apply(this,arguments)
+					}
+				})
+			})
 		}
 	})
 })

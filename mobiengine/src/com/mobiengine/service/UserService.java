@@ -42,9 +42,9 @@ public class UserService extends EntityService{
 	}
 	
 	@Override
-	public void beforeCreate(Entity user, JSONObject request, JSONObject response){
-		String name=(String)user.getProperty("username");
-		String password=(String)user.getProperty("password");
+	public void beforeCreate(Entity user, JSONObject request, JSONObject response)throws Exception{
+		String name=(String)request.get("username");
+		String password=(String)request.get("password");
 		
 		if (name == null || name.length() == 0)
 			throw new RuntimeException("user name can't be empty.");
@@ -54,12 +54,12 @@ public class UserService extends EntityService{
 		
 		if(this.exists("username", name))
 			throw new RuntimeException("user name has already been registered.");
-		
+		request.remove("password");
 		user.setUnindexedProperty("password", encrypt(password));
 	}
 	
 	@Override
-	public void afterCreate(Entity user, JSONObject request, JSONObject response){
+	public void afterCreate(Entity user, JSONObject request, JSONObject response)throws Exception{
 		try {
 			response.put("sessionToken", getSessionToken(user));
 		} catch (JSONException ex) {

@@ -398,7 +398,8 @@ define(['app'],function(app){
 			save:function(data, name, type){
 				var a=document.createElement("a")
 				document.body.appendChild(a)
-				a.href='data:'+(type||'text/plain')+';base64,'+data
+				a.href=_.isString(data ) ? ('data:'+(type||'text/plain')+';base64,'+data) : 
+					URL.createObjectURL(data.generate({type:'blob'}))
 				a.download=name||"document"
 				a.click()
 				document.body.removeChild(a)

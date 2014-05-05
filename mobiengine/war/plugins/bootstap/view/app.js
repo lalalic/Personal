@@ -1,4 +1,4 @@
-define(['app','UI'],function(App,View){
+define(['app','UI', 'JSZip'],function(App,View, JSZip){
 	var tmplApp='\
 		<form >\
 			<fieldset>\
@@ -14,7 +14,13 @@ define(['app','UI'],function(App,View){
 		</form>'
 	var FormPage=View.FormPage, Application=App.Application
 	return new (FormPage.extend({
-		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
+		cmds:'<a><button type="submit"><span class="icon save"/></button>save</a>\
+				<a>'+View.FileLoader+'upload</a>\
+				<a><span class="icon download">download</a>',
+		events:_.extend(FormPage.prototype.events,{
+			'change input[type=file]':'upload',
+			'click .download':'download',
+		}),
 		content:tmplApp,
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
@@ -39,6 +45,29 @@ define(['app','UI'],function(App,View){
 			if(!this.model.id)
 				Application.restoreCurrent()
 			return this._super().hide.apply(this,arguments)
+		},
+		download: function(){
+			var currentApp=this.model
+			return currentApp.download().then(function(zip){
+				zip.file("cloud/main.js", currentApp.get('cloudCode')||'//put your cloud code here')
+				currentApp.exportSchema().then(function(schema){
+					zip.file("data/schema.js",JSON.stringify(schema,null, "\t"))
+					var data={}
+					return $.when(_.chain(_.keys(schema)).map(function(table){
+						return currentApp.exportData(table)
+							.then(function(collection){
+								collection.length && (data[table]=collection)
+							})
+					}).value()).then(function(){
+						zip.file("data/data.json",JSON.stringify(data,null, "\t"))
+					})
+				}).then(function(){
+					View.util.save(zip, currentApp.get('name')+'.zip')
+				})
+			})
+		},
+		upload: function(){
+			
 		}
 	}))
 })

@@ -9,6 +9,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -33,6 +34,9 @@ public class ApplicationService extends EntityService {
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
 	
+	private ApplicationService(){
+		super((String)null,null,KIND);
+	}
 	public ApplicationService(@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId) {
 		super(sessionToken,appId,KIND);
@@ -155,12 +159,16 @@ public class ApplicationService extends EntityService {
 		}
 		
 		try {
-			ApplicationService service=new ApplicationService(null,null){
+			ApplicationService service=new ApplicationService(){
 				@Override 
 				protected void initService(){
 					this.schema=new Schema(){
 						protected void retrieve(){}
 					};
+				}
+				
+				public void beforeCreate(Entity app,JSONObject request, JSONObject response){
+					
 				}
 				
 				@Override
@@ -176,6 +184,17 @@ public class ApplicationService extends EntityService {
 			service.create(ob);
 		} catch (JSONException e) {
 			
+		}
+	}
+	
+	@Path("app")
+	public static class AppLoader{
+		
+		@GET
+		@Path("{name:.*}")
+		public Response get(@PathParam("name")String name){
+			
+			return null;
 		}
 	}
 }

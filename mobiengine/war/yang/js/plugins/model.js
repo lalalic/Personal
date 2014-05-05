@@ -315,11 +315,11 @@ define(['app'],function(app){
 		File=root.File=Model.extend({
 				className:"_file",
 				urlRoot:function(){
-					return this.version+"/files"
+					return this.version+'/files'
 				},
 				save: function(){
 					var data=new FormData()
-					data.append(this.get('name'),this.get('data'))
+					data.append('file',this.get('data'))
 					return $.ajax({
 							url: $.ajax(this.urlRoot()+'/want2upload',{async:false}).responseText,
 							context:this,

@@ -7,6 +7,26 @@
  */
 define(['module','jQuery','Underscore','Backbone'], function(module){
 	(function(){
+		_.mixin({
+			aop:function(f,wrap){return wrap(f)},
+			aopromise: function(_raw,lenP){
+				return function(){
+					var p=$.Deferred(),
+						args=_.toArray(arguments)
+					lenP>args.length && args.splice(args.length,lenP-args.length,undefined)
+					var success=args[lenP-2],fail=args[lenP-1]
+					args[lenP-2]=function(a){success && success(a); p.resolve(a)}
+					args[lenP-1]=function(a){fail && fail(a); p.fail(a)}
+					_raw.apply(this,args)
+					return p
+				}
+			},
+			newClass: function (constructor, properties, classProperties) {
+				_.extend(constructor.prototype, Backbone.Events, properties)
+				_.extend(constructor, classProperties)
+				return constructor;
+			}
+		})
 		$.os=$.extend($.os||{},{phonegap:_.has(window,'_cordovaNative')})
 		window.reject=function(p){return function(e){p.reject()}}
 		/**
@@ -107,63 +127,40 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 		
 		//check offline status
 		$.isOffline.lastCheckAt=0
-		var _$ajax=$.ajax,
-			fallback=function(e){
-				if(e.status==0)
-					$.isOffline.lastCheckAt=Date.now()
+		$.ajax=_.aop($.ajax,function(_raw){
+			return function(options){
+				return _raw.call(this,_.extend(options,{
+						error: _.aop(options.error,function(_error){
+							return function(xhr){
+								xhr.status==0 && ($.isOffline.lastCheckAt=Date.now())
+								_error && _error.apply(this,arguments)
+							}
+						})
+					}))
 			}
-		$.ajax=function(options){
-			if(options.error){
-				var _error=options.error
-				options.error=function(xhr){
-					fallback(xhr)
-					_error.apply(this,arguments)
-				}
-			}else
-				options.error=fallback
-			return _$ajax.apply(this,arguments)
-		}
+		})
 		
-		//extend _.template
-		_.templateSettings = {
-			evaluate    : /<%([\s\S]+?)%>/g,
-			interpolate : /\{\{([\s\S]+?)\}\}/g,
-			escape      : /\{\{\{([\s\S]+?)\}\}\}/g
-		  };
-		
-		var _template=_.template, templates={}
-		_.template=function(text,data,setting){//make template support id selector
-			if(text.charAt(0)=='#'){
-				var name=text.substr(1);
-				if(!(name in templates)){
-					templates[name]=_template($(text).html())
-					$(text).remove()
+		_.extend(_,{
+			template: _.aop(_.template,function(_raw){
+				var templates={}
+				return function(text,data,setting){//make template support id selector
+					if(text.charAt(0)=='#'){
+						var name=text.substr(1);
+						if(!(name in templates)){
+							templates[name]=_raw.call(this,$(text).html())
+							$(text).remove()
+						}
+						if(data!=undefined)
+							return templates[name](data,setting)
+						return templates[name]
+					}else
+						return _raw.apply(this,arguments)
 				}
-				if(data!=undefined)
-					return templates[name](data,setting)
-				return templates[name]
-			}else
-				return _template(text,data,setting)
-		}
-		
-		_.mixin({
-			aop:function(f,wrap){return wrap(f)},
-			aopromise: function(_raw,lenP){
-				return function(){
-					var p=$.Deferred(),
-						args=_.toArray(arguments)
-					lenP>args.length && args.splice(args.length,lenP-args.length,undefined)
-					var success=args[lenP-2],fail=args[lenP-1]
-					args[lenP-2]=function(a){success && success(a); p.resolve(a)}
-					args[lenP-1]=function(a){fail && fail(a); p.fail(a)}
-					_raw.apply(this,args)
-					return p
-				}
-			},
-			newClass: function (constructor, properties, classProperties) {
-				_.extend(constructor.prototype, Backbone.Events, properties)
-				_.extend(constructor, classProperties)
-				return constructor;
+			}),
+			templateSettings : {
+				evaluate    : /<%([\s\S]+?)%>/g,
+				interpolate : /\{\{([\s\S]+?)\}\}/g,
+				escape      : /\{\{\{([\s\S]+?)\}\}\}/g
 			}
 		})
 		
@@ -179,6 +176,30 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 				throw "no _super on this class";
 			return this.__proto__.constructor.__super__
 		}
+		
+		_.each('ArrayBuffer,BinaryString,DataURL,Text'.split(','),function(type){
+			FileReader.prototype['readAs'+type]=_.aop(FileReader.prototype['readAs'+type],function(_raw){
+				return function(){
+					var p=$.Deferred();
+					_.extend(this,{
+						onloadend:_.aop(this.onloadend,function(_rawOn){
+							return function(a){
+								_rawOn && _rawOn.apply(this,arguments)
+								p.resolve(a.target.result)
+							}
+						}),
+						onerror: _.aop(this.onerror, function(_rawOn){
+							return function(a){
+								_rawOn && _rawOn.apply(this,arguments)
+								p.fail(a)
+							}
+						})
+					})
+					_raw.apply(this,arguments)
+					return p
+				}
+			})
+		})
 	})();
 	
 	define('specs',[],['spec/plugin','spec/tool/uploader','spec/tool/offline']);

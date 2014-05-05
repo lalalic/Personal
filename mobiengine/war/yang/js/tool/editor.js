@@ -1,4 +1,4 @@
-define(['tool/uploader'],function(uploader){
+define(['tool/ImageUploader'],function(uploader){
 	HTMLImageElement.prototype.isData=function(){return this.src.isImageData()}
 	var TRIM_TAG=/<\/?\s*(\w*?)\s*\/?>/g,TRIM_LINE=/\n{3,}/gm
 	

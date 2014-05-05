@@ -42,19 +42,17 @@ define(['app'],function(app){
 				return this			
 			},
 			save:function(){
-				var reader=new FileReader(), 
-					onSave=this.opt['onSave'], 
+				var onSave=this.opt['onSave'], 
 					onSaved=this.opt.onSaved,
 					size=this.opt.size,
 					file=this.files[0]
-				reader.onloadend=function(e){
-					var data=e.target.result.toImageData(size),
+				(new FileReader()).readAsDataURL(file).then(function(dataUrl){
+					var data=dataUrl.toImageData(this.size),
 						f=new app.File({name:file.name,data:atob(data),type:file.type}),
 						needSave=true
 					onSave && (needSave=onSave(f, IMAGE_DATA_SCHEME+data))
 					needSave!==false && f.save().then(onSaved)
-				}
-				reader.readAsDataURL(file)
+				})
 			}
 		})
 		return _uploader
@@ -88,7 +86,7 @@ define(['app'],function(app){
 			click: function(){
 				var p=new Promise,onSave=this.opt['onSave'],onSaved=this.opt.onSaved
 				p.then(function(data64){
-					var data=data64,f=new app.File({name:"a.jpg",data:atob(data)}),
+					var data=data64,f=new app.File({name:"a.jpg",data:atob(data),type:'image/jpeg'}),
 						needSave=true
 					onSave && (needSave=onSave(f, IMAGE_DATA_SCHEME+data.base64))
 					needSave!==false && f.save().then(onSaved)
