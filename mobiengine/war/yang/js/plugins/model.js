@@ -317,23 +317,37 @@ define(['app'],function(app){
 				urlRoot:function(){
 					return this.version+'/files'
 				},
-				save: function(){
-					var data=new FormData()
-					data.append('file',this.get('data'))
+				save: function(callback){
+					var me=this,
+						data=new FormData();
+					data.append('file',this.toBlob())
 					return $.ajax({
-							url: $.ajax(this.urlRoot()+'/want2upload',{async:false}).responseText,
-							context:this,
+							url: $.ajax(this.urlRoot()+'/want2upload/'+(callback||''),{async:false,dataType:'text'}).responseText,
 							data:data,
 							cache: false,
-							contentType: false,
+							contentType : false,
 							processData: false,
 							type: 'POST',
-						}).then(function(data){
-							this.set('url',data)
-							this.unset('data')
-							this.unset('name')
-							return this
+							dataFilter:function(data,type){
+								me.set('url',data)
+								me.unset('data')
+								me.unset('name')
+								return null
+							}
+						}).then(function(){
+							return me
 						})
+				},
+				toArrayBuffer: function(){
+					var data=this.get('data'),
+						buffer=new ArrayBuffer(data.length),
+						bufferView=new Uint8Array(buffer);
+					for(var i=0, len=data.length; i<len;i++)
+						bufferView[i]=data.charCodeAt(i)
+					return buffer
+				},
+				toBlob: function(){
+					return new Blob([this.toArrayBuffer()],{type:this.get('type')})
 				},
 				url: function(){
 					return this.get('url')

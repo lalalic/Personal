@@ -45,7 +45,7 @@ define(['app'],function(app){
 				var onSave=this.opt['onSave'], 
 					onSaved=this.opt.onSaved,
 					size=this.opt.size,
-					file=this.files[0]
+					file=this.files[0];
 				(new FileReader()).readAsDataURL(file).then(function(dataUrl){
 					var data=dataUrl.toImageData(this.size),
 						f=new app.File({name:file.name,data:atob(data),type:file.type}),

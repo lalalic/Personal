@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.yy.snb" version="0.1" xmlns="http://www.w3.org/ns/widgets" 
+	xmlns:cdv="http://cordova.apache.org/ns/1.0"
+	xmlns:gap="http://phonegap.com/ns/1.0">
+    <name>Super Daddy</name>
+    <description></description>
+    <author email="lalalic@gmail.com" href="http://cordova.io">Null Tech</author>
+    <access origin="*" />
+	<feature name="http://api.phonegap.com/1.0/device" />
+	<preference name="permissions" value="none" />
+    <preference name="orientation" value="portrait" />
+    <preference name="target-device" value="universal" />
+    <preference name="fullscreen" value="false" />
+    <preference name="webviewbounce" value="true" />
+    <preference name="prerendered-icon" value="true" />
+    <preference name="stay-in-webview" value="false" />
+    <preference name="ios-statusbarstyle" value="black-opaque" />
+    <preference name="detect-data-types" value="true" />
+    <preference name="exit-on-suspend" value="true" />
+    <preference name="show-splash-screen-spinner" value="true" />
+    <preference name="auto-hide-splash-screen" value="true" />
+    <preference name="disable-cursor" value="false" />
+    <preference name="android-minSdkVersion" value="7" />
+    <preference name="android-installLocation" value="auto" />
+	
+	<icon gap:density="ldpi" gap:platform="android" src="res/icon/android/icon.png" />
+    <icon gap:density="mdpi" gap:platform="android" src="res/icon/android/icon.png" />
+    <icon gap:density="hdpi" gap:platform="android" src="res/icon/android/icon.png" />
+    <icon gap:density="xhdpi" gap:platform="android" src="res/icon/android/icon.png" />
+	<gap:splash gap:density="ldpi" gap:platform="android" src="res/screen/android/screen.png" />
+    <gap:splash gap:density="mdpi" gap:platform="android" src="res/screen/android/screen.png" />
+    <gap:splash gap:density="hdpi" gap:platform="android" src="res/screen/android/screen.png" />
+    <gap:splash gap:density="xhdpi" gap:platform="android" src="res/screen/android/screen.png" />
+
+	<preference name="phonegap-version" value="3.1.0" />
+	<gap:platform name="android" />
+	<gap:plugin name="org.apache.cordova.camera"/>
+	<feature name="http://api.phonegap.com/1.0/camera"/>
+	<gap:plugin name="org.apache.cordova.file"/>
+	<gap:plugin name="org.apache.cordova.file-transfer"/>
+	<feature name="http://api.phonegap.com/1.0/file"/>
+	<gap:plugin name="org.apache.cordova.network-information"/>
+	<feature name="http://api.phonegap.com/1.0/connection"/>
+	
+	<!--content src="file:///android_asset/www/mobile.html" /-->
+	<content src="file:///storage/sdcard0/work/snb/mobile.html" />
+</widget>

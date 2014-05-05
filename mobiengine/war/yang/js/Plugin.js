@@ -139,14 +139,14 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 			},this))
 		},
 		_loadFromZip: function(name, parentRequire, onload, config){
-			var root=name,me=this
+			var me=this
 			$.ajax({
 				url:parentRequire.toUrl(this.root+name),
 				mimeType:'text/plain; charset=x-user-defined',
 				processData:false,
 				dataFilter:function(data,type){
 					(new JSZip(data))
-						.save2Local(root,"main.js")
+						.save2Local(app.localPath()+"/plugins/"+name,"main.js")
 						.then(function(rootUrl){
 							var pluginName=name.replace('.zip','')
 							config.paths[pluginName]=rootUrl+'/main'

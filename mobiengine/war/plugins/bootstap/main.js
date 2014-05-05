@@ -52,6 +52,7 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 						return r
 					},
 					upload: function(file){
+						var me=this
 						return (new FileReader()).readAsArrayBuffer(file).then(_.bind(function(){
 							var zip=new JSZip(data)
 							var cloudCode=zip.file('cloud/main.js').asText()
@@ -59,12 +60,11 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 							var data=zip.file('data/data.json').asText()
 							zip.remove('cloud')
 							zip.remove('data')
-							
-							$.ajax({
-								url:this.urlRoot()+'/upload',
-								data:false,
-								
-							})
+							(new app.File({data:zip.generate({type:'string'})}))
+								.save(me.urlRoot()+"/data")
+								.then(function(f){
+									me.set('data',f.get('url'))
+								})
 						},this))
 					},
 					download: function(){
@@ -75,10 +75,12 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 							mimeType:'text/plain; charset=x-user-defined',
 							processData:false,
 							dataFilter:function(data){
-								(new JSZip(data)).save2Local('app/'+this.get('url'),'main.js')
-								.then(function(root){
-									p.resolve(root)
-								})
+								(new JSZip(data))
+									.save2Local(app.localPath(),'main.js')
+									.then(function(root){
+										p.resolve(root)
+									})
+								return null
 							}
 						})
 						return p
@@ -108,6 +110,9 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 					},
 					importData: function(){
 					
+					},
+					localPath: function(){
+						return 'app/'+this.get('url')
 					}
 				},/** @lends app.Application */{
 					/** 
@@ -162,6 +167,9 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 					},
 					upload: function(){
 					
+					},
+					localPath: function(){
+						this.current().localPath()
 					}
 				});
 
@@ -198,7 +206,10 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 						this.Application.all=this.Application.collection()
 						return _init.apply(this,arguments)
 					}
-				})
+				}),
+				localPath: return function(){
+					return Application.localPath()
+				}
 			})
 		}
 	})
