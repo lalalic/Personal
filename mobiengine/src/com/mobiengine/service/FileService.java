@@ -1,6 +1,8 @@
 package com.mobiengine.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +52,12 @@ public class FileService extends EntityService {
 	@Path("want2upload/{callback:.*}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String createUploadUrl(@Context UriInfo uri, String callback) {
-		return BlobstoreServiceFactory.getBlobstoreService()
-				.createUploadUrl("/"+uri.getPath()+"/"+callback, option);
+		try {
+			return BlobstoreServiceFactory.getBlobstoreService()
+					.createUploadUrl("/"+uri.getPath()+"/"+URLDecoder.decode(callback,"UTF-8"), option);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 	
 	@POST
@@ -67,19 +73,18 @@ public class FileService extends EntityService {
 		BlobstoreService service = BlobstoreServiceFactory.getBlobstoreService();
 		Map<String, List<BlobInfo>> uploads = service.getBlobInfos(request);
 		for (BlobInfo file : uploads.get("file")) 
-			urls.add("/"+ImageService.Image_Path.build(file.getBlobKey().getKeyString()).toASCIIString());			
+			urls.add("/"+LoadService.PATH.build(file.getBlobKey().getKeyString()).toASCIIString());			
 		return urls.get(0);
 	}
 
 	
-	@Path(Service.VERSION+"/image")
+	@Path(Service.VERSION+"/file")
 	@Singleton
-	public static class ImageService{
-		static UriBuilder Image_Path=UriBuilder.fromResource(ImageService.class).path(ImageService.class, "show");
+	public static class LoadService{
+		static UriBuilder PATH=UriBuilder.fromResource(LoadService.class).path(LoadService.class, "get");
 		@GET
-		@Path("{key}.jpg")
-		@Produces("image/*")
-		public String show(@PathParam("key") String key,
+		@Path("{key}")
+		public String get(@PathParam("key") String key,
 				@Context HttpServletResponse res) {
 			try {
 				BlobstoreServiceFactory.getBlobstoreService().serve(

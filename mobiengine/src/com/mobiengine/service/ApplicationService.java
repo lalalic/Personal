@@ -2,6 +2,7 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -31,6 +33,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import com.mobiengine.service.SchemaService.Schema;
 import com.mobiengine.service.SchemaService.TYPES;
+import com.sun.jersey.multipart.FormDataParam;
 
 @Path(Service.VERSION+"/apps")
 public class ApplicationService extends EntityService {
@@ -119,17 +122,57 @@ public class ApplicationService extends EntityService {
 		//2. remove app
 	}
 	
+	@SuppressWarnings("unchecked")
 	@POST
-	@Path("data")
+	@Path("upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response changeData(@Context HttpServletRequest request){
+	public Response upload(@Context HttpServletRequest request,
+			@FormDataParam("cloudCode") String cloudCode,
+			@FormDataParam("schema") JSONObject schema,
+			@FormDataParam("data") JSONObject data){
 		if(user.getKey().getId()!=(Long)app.getProperty("author"))
 			throw new RuntimeException("Access Denied");
-		String url=FileService.getUploadedURL(request);
-		this.app.setUnindexedProperty("data", url);
-		DatastoreServiceFactory.getAsyncDatastoreService().put(this.app);
-		return Response.ok(url).build();
+		try{
+			String url=FileService.getUploadedURL(request);
+			this.app.setUnindexedProperty("clientDataUrl", url);
+			this.app.setUnindexedProperty("cloudCode", SchemaService.TYPES.String.asEntityValue(cloudCode));
+			DatastoreServiceFactory.getAsyncDatastoreService().put(this.app);
+			
+			if(schema!=null){
+				SchemaService schemaService=new SchemaService(this.app,this.user);
+				Iterator<String> it=schema.keys();
+				while(it.hasNext()){
+					String tableName=it.next();
+					JSONObject newSchema=new JSONObject();
+					JSONObject tableSchema = schema.getJSONObject(tableName);
+					Iterator<String> it1=tableSchema.keys();
+					JSONArray fields=new JSONArray();
+					while(it1.hasNext())
+						fields.put(tableSchema.getJSONObject(it1.next()));
+					newSchema.put("name", tableName);
+					newSchema.put("fields", fields);
+					schemaService.create(newSchema);
+				}
+			}
+			
+			if(data!=null){
+				EntityService entityService=new EntityService(this.app,this.user, null);
+				Iterator<String> it=data.keys();
+				while(it.hasNext()){
+					JSONArray records=data.getJSONArray(it.next());
+					if(records!=null && records.length()>0){
+						entityService.kind=it.next();
+						for(int i=0, len=records.length();i<len;i++)
+							entityService.create(records.getJSONObject(i));
+					}
+				}
+			}
+
+			return Response.ok(url).build();
+		}catch(Exception ex){
+			throw new RuntimeException(ex.getMessage());
+		}
 	}
 	
 	@GET
