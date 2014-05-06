@@ -1,22 +1,22 @@
-define(['app','UI', 'JSZip'],function(App,View, JSZip){
+define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 	var tmplApp='\
 		<form >\
 			<fieldset>\
-				<label>'+text('applicaiton name')+':</label>\
+				<label>'+i18n('applicaiton name')+':</label>\
 				<input type="text" name="name">\
-				<label>'+text('url')+':</label>\
+				<label>'+i18n('url')+':</label>\
 				<input type="text" name="url">\
 			</fieldset>\
 			<fieldset>\
-				<label>'+text('Applicaiton Key')+':</label>\
+				<label>'+i18n('Applicaiton Key')+':</label>\
 				<input type="text" name="apiKey" readonly="readonly">\
 			</fieldset>\
 		</form>'
 	var FormPage=View.FormPage, Application=App.Application
 	return new (FormPage.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button>save</a>\
-				<a>'+View.FileLoader+'upload</a>\
-				<a><span class="icon download">download</a>',
+				<a>'+View.FileLoader+i18n('upload')+'</a>\
+				<a><span class="icon download">'+i18n('download')+'</a>',
 		events:_.extend(FormPage.prototype.events,{
 			'change input[type=file]':'upload',
 			'click .download':'download',
@@ -28,7 +28,7 @@ define(['app','UI', 'JSZip'],function(App,View, JSZip){
 		},
 		setModel:function(m){
 			this._super().setModel.call(this, m || new Application)
-			this.setTitle(this.model.id ? this.model.get('name') : text("create new application"))
+			this.setTitle(this.model.id ? this.model.get('name') : i18n("create new application"))
 			return this
 		},
 		show: function(){

@@ -1,4 +1,4 @@
-define(['UI','app'],function(View,app){
+define(['UI','app','i18n!../nls/i18n'],function(View,app,i18n){
 	var tmplPosts='\
 			<li class="thumb" id="_{{id}}">\
 				<img src="{{get("thumbnail")}}">\
@@ -13,13 +13,13 @@ define(['UI','app'],function(View,app){
 		tmplSearch='\
 			<div class="popup hide">\
 				<div>\
-					{{_.template("#tmplCheckable",({title:text("shortcut"),name:"shortcut",type:"radio",options:["All","Mine","Smart"]}))}}\
-					{{_.template("#tmplCheckable",({title:text("category"),name:"category",type:"radio",options:Tag.grouped.category}))}}\
+					{{_.template("#tmplCheckable",({title:'+i18n("shortcut")+',name:"shortcut",type:"radio",options:["All","Mine","Smart"]}))}}\
+					{{_.template("#tmplCheckable",({title:'+i18n("category")+',name:"category",type:"radio",options:Tag.grouped.category}))}}\
 				</div>\
 				<div>\
-					{{_.template("#tmplCheckable",({title:text("gender"),name:"tags",type:"checkbox",options:Tag.grouped.gender}))}}\
-					{{_.template("#tmplCheckable",({title:text("duration"),name:"tags",type:"checkbox",options:Tag.grouped.duration}))}}\
-					{{_.template("#tmplCheckable",({title:text("goal"),name:"tags",type:"checkbox",options:Tag.grouped.goal}))}}\
+					{{_.template("#tmplCheckable",({title:'+i18n("gender")+',name:"tags",type:"checkbox",options:Tag.grouped.gender}))}}\
+					{{_.template("#tmplCheckable",({title:'+i18n("duration")+',name:"tags",type:"checkbox",options:Tag.grouped.duration}))}}\
+					{{_.template("#tmplCheckable",({title:'+i18n("goal")+',name:"tags",type:"checkbox",options:Tag.grouped.goal}))}}\
 				</div>\
 			</div>'
 	var ListPage=View.ListPage, Post=app.Post, Tag=app.Tag
@@ -46,7 +46,7 @@ define(['UI','app'],function(View,app){
 			this.collection.query.equalTo('category',catId)
 			this._super().show.apply(this,arguments)
 			this.$('footer .plus').parent().attr('href','#create/'+catId+"/"+catName)
-			this.setTitle(text(catName))
+			this.setTitle(i18n(catName))
 			return this
 		},
 		refresh: function(){

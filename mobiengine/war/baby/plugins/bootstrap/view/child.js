@@ -4,17 +4,17 @@
  * @requires UI
  * @requires uploader
  */
-define(['UI','app','tool/ImageUploader'],function(UI,app,uploader){
+define(['UI','app','tool/ImageUploader','i18n!../nls/i18n'],function(UI,app,uploader,i18n){
 	var tmplChild='\
 		<form>\
-			<fieldset><input type="text" name="name" placeholder="'+text('baby name')+'"></fieldset>\
+			<fieldset><input type="text" name="name" placeholder="'+i18n('baby name')+'"></fieldset>\
 			<fieldset>\
 				<select name="gender">\
-					<option value=0>'+text('Boy')+'</option>\
-					<option value=1>'+text('Girl')+'</option>\
+					<option value=0>'+i18n('Boy')+'</option>\
+					<option value=1>'+i18n('Girl')+'</option>\
 				</select>\
 			</fieldset>\
-			<fieldset><input type="date" name="birthday" placeholder="'+text('birthday')+'"></fieldset>\
+			<fieldset><input type="date" name="birthday" placeholder="'+i18n('birthday')+'"></fieldset>\
 			<fieldset>\
 				<div name="photo" style="width:150px;height:150px;border:1px solid;display:block;margin:0px auto;background-repeat:no-repeat;background-position:center center"/>\
 			</fieldset>\

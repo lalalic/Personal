@@ -1,8 +1,8 @@
-define(['app','UI'],function(app,View){
+define(['app','UI','i18n!../nls/l10n'],function(app,View,i18n){
 	var Application=app.Application, 
 		FormPage=View.FormPage
 	return new (FormPage.extend({
-		title:text('Cloud Code'),
+		title:i18n('Cloud Code'),
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>\
 			<a><span class="icon load" onclick="$(this).next().click()"/><input class="outview" type="file" onchange=""></a>',
 		events: _.extend({},FormPage.prototype.events,{

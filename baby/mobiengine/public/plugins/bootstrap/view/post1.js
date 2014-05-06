@@ -2,7 +2,7 @@
  *  Show Post
  *  @module Post1
  */
-define(['UI','app'],function(UI, app){
+define(['UI','app','i18n!../nls/i18n'],function(UI, app,i18n){
 	var Tag=app.Tag
 	var tmplPost='\
 		<div style="padding:10px">\
@@ -30,10 +30,10 @@ define(['UI','app'],function(UI, app){
 		User=app.User,
 		Query=app.Query
 	return new (UI.Page.extend({
-		cmds:'<a href="#story"><span title="'+text("tell your baby's story")+'" class="icon story"/></a>\
-			<a href="#comments"><span title="'+text("comment")+'" class="icon comment"/><span class="tag count"/></a>\
-			<a><span title="'+text("favorite")+'" class="icon star"/></a>\
-			<a><span title="'+text("plan for baby")+'" class="icon calendar"/></a>',
+		cmds:'<a href="#story"><span title="'+i18n("tell your baby's story")+'" class="icon story"/></a>\
+			<a href="#comments"><span title="'+i18n("comment")+'" class="icon comment"/><span class="tag count"/></a>\
+			<a><span title="'+i18n("favorite")+'" class="icon star"/></a>\
+			<a><span title="'+i18n("plan for baby")+'" class="icon calendar"/></a>',
 		events:_.extend({},UI.Page.prototype.events,{
 			'click span.star':'toggleFavorite',
 			'click span.calendar':'showTaskOption',
@@ -48,9 +48,9 @@ define(['UI','app'],function(UI, app){
 			this.taskOption=this.$('#taskOption')
 			var options=$('<span class="checkable vertical open"><span/></>').appendTo(this.taskOption)
 			_.each("Today,Tomorrow,This week, This month, This year".split(','),function(name,i){
-				this.append('<input type="radio" name="_to" value="'+(i+1)+'" class="outview"><span onclick="$(this).prev().click()">'+text(name)+'</span>')
+				this.append('<input type="radio" name="_to" value="'+(i+1)+'" class="outview"><span onclick="$(this).prev().click()">'+i18n(name)+'</span>')
 			},options)
-			options.append('<input type="radio" name="_to" value="0" class="outview" checked><span onclick="$(this).prev().click()">'+text('No Plan')+'</span>')
+			options.append('<input type="radio" name="_to" value="0" class="outview" checked><span onclick="$(this).prev().click()">'+i18n('No Plan')+'</span>')
 			return this
 		},
 		show: function(id){

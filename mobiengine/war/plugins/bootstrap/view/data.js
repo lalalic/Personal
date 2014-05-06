@@ -1,7 +1,7 @@
-define(['app','UI'],function(app,UI){
+define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 	var tmplColumn='\
 			<fieldset>\
-				<input placeholder="'+text('name')+'" name="name" type="text">\
+				<input placeholder="'+i18n('name')+'" name="name" type="text">\
 			</fieldset>\
 			<fieldset>\
 				<label class="select">\
@@ -13,15 +13,15 @@ define(['app','UI'],function(app,UI){
 				</label>\
 			</fieldset>\
 			<fieldset>\
-				<label class="anchor">'+text("Searchable?")+'</label>\
+				<label class="anchor">'+i18n("Searchable?")+'</label>\
 				<input name="searchable" unchecked="unchecked" type="checkbox">\
 			</fieldset>\
 			<fieldset>\
-				<label class="anchor">'+text("Unique?")+'</label>\
+				<label class="anchor">'+i18n("Unique?")+'</label>\
 				<input name="unique" unchecked="unchecked" type="checkbox">\
 			</fieldset>\
-			<button class="anchor create" data-callback="accept">'+text('Create Column')+'</button>\
-			<button class="anchor cancel" data-callback="cancel">'+text('Cannel')+'</button>'
+			<button class="anchor create" data-callback="accept">'+i18n('Create Column')+'</button>\
+			<button class="anchor cancel" data-callback="cancel">'+i18n('Cannel')+'</button>'
 	var internal_tables="_user,_role,_schema".split(',')
 	var internal_fields="id,createdAt,updatedAt,ACL".split(',')
 	var ListPage=UI.ListPage,
@@ -176,7 +176,7 @@ define(['app','UI'],function(app,UI){
 	return new (ListPage.extend({
 		newID:0,
 		collection:Schema.collection(),
-		title:text('Data Browser'),
+		title:i18n('Data Browser'),
 		cmds:'<a class="schema">'+UI.FileLoader+'<span class="icon download"/>schema</a>\
 			<a class="table">'+UI.FileLoader+'<span class="icon download"/><span class="icon remove"/>table</a>\
 			<a class="row"><span class="icon plus"/><span class="icon remove"/>row</a>\
@@ -264,7 +264,7 @@ define(['app','UI'],function(app,UI){
 		},
 		onNewTable:function(){
 			var me=this
-			prompt(text('please input the table name'),'table'+(this.newID++))
+			prompt(i18n('please input the table name'),'table'+(this.newID++))
 				.then(function(name){
 					var table=new Schema()
 					table.set('name',name,{validate:true})

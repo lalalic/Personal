@@ -5,7 +5,7 @@
  * @requires Underscore 
  * @requires Backbone 
  */
-define(['module','jQuery','Underscore','Backbone'], function(module){
+define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18n, module){
 	(function(){
 		_.mixin({
 			aop:function(f,wrap){return wrap(f)},
@@ -67,7 +67,7 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 				else
 					return -parseInt(delta/60/60)+"h"
 			}else if (delta<aday*2)
-				return text('yesterday')
+				return i18n('yesterday')
 			else{
 				var n
 				switch((n=now.getFullYear()-this.getFullYear())){
@@ -285,16 +285,13 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 					}
 				})
 				
-				require(['view/splash','i18n!nls/all'].add('Plugin!',this.plugins),_.bind(function(splash,i18n){
+				require(['view/splash'].add('Plugin!',this.plugins),_.bind(function(splash){
 					_.extend(this,module.config(),opt||{})
 					/**
 					 * translate string to local string
 					 * @global
 					 */
-					window.text=function(a, b){
-						return  a ? (((b=a.toLowerCase()) in i18n) ? i18n[b] : (i18n[b]=a)) : ''
-					}
-					this.title=document.title=text(this.title)
+					this.title=document.title=i18n(this.title)
 					
 					_.extend(localStorage,{
 						setItem:_.aop(localStorage.setItem,function(_raw){

@@ -1,4 +1,4 @@
-define(['UI','app','tool/editor'],function(View, app, makeEditor){
+define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app, makeEditor,i18n){
 	var FormPage=View.FormPage, 
 		Story=app.Story, 
 		Favorite=app.Favorite, 
@@ -22,7 +22,7 @@ define(['UI','app','tool/editor'],function(View, app, makeEditor){
 				return this
 			if(this.model.has('content'))
 				this.editor.setContent(this.model.get('content'))
-			this.setTitle(text(this.model.isNew() ? "Tell new story" : "Tell more story"))
+			this.setTitle(i18n(this.model.isNew() ? "Tell new story" : "Tell more story"))
 			return this
 		},
 		show: function(post,id){

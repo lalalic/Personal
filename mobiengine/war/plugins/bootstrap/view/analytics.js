@@ -1,5 +1,5 @@
-define(['app','UI'],function(app,View){
+define(['app','UI', 'i18n!../nls/l10n'],function(app,View, i18n){
 	return new (View.Page.extend({
-		title:text('Analytics')
+		title:i18n('Analytics')
 	}))
 }) 

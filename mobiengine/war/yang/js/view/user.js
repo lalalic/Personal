@@ -3,19 +3,19 @@
  * @module User
  * @requires UI
  */
-define(['UI','app'],function(View,app){
+define(['UI','app', 'i18n!nls/all'],function(View,app,i18n){
 	var tmplUser='\
 			<form id="signin">\
-				<fieldset><input name="username" type="text" placeholder="'+text('user name')+'"></fieldset>\
-				<fieldset><input name="password" type="password" placeholder="'+text('password')+'"></fieldset>\
+				<fieldset><input name="username" type="text" placeholder="'+i18n('user name')+'"></fieldset>\
+				<fieldset><input name="password" type="password" placeholder="'+i18n('password')+'"></fieldset>\
 			</form>\
 			<form id="signup">\
-				<fieldset><input name="username" type="text" placeholder="'+text('user name')+'"></fieldset>\
-				<fieldset><input name="email" type="email" placeholder="'+text('email address where reset password will be sent')+'"></fieldset>\
-				<fieldset><input name="password" type="text" placeholder="'+text('password')+'"></fieldset>\
+				<fieldset><input name="username" type="text" placeholder="'+i18n('user name')+'"></fieldset>\
+				<fieldset><input name="email" type="email" placeholder="'+i18n('email address where reset password will be sent')+'"></fieldset>\
+				<fieldset><input name="password" type="text" placeholder="'+i18n('password')+'"></fieldset>\
 			</form>\
 			<form id="password">\
-				<fieldset><input name="email" type="text" placeholder="'+text('email address where new password would send')+'"></fieldset>\
+				<fieldset><input name="email" type="text" placeholder="'+i18n('email address where new password would send')+'"></fieldset>\
 			</form>'
 	var Page=View.Page, User=app.User
 

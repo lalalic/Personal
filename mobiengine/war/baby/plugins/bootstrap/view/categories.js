@@ -1,9 +1,9 @@
-define(['app','UI'],function(app,UI){
+define(['app','UI','i18n!../nls/i18n'],function(app,UI,i18n){
 	var tmplCates='\
 		<li class="thumb" id="_{{id}}">\
 			<img src="{{getUrl("thumbnail")}}">\
 			<div>\
-				<strong><a href="#category/{{id}}/{{get("name")}}">{{text(get("name"))}}</a></strong>\
+				<strong><a href="#category/{{id}}/{{get("name")}}">{{get("name")}}</a></strong>\
 				<small>{{get("desc")}}</small>\
 				<a class="on-right" href="#create/{{id}}/{{get("name")}}" style="cursor:pointer">\
 					<span class="icon plus"/></a>\
