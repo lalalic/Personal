@@ -3,7 +3,7 @@
  *  It support load plugin from files, or from a zip
  *  @module Plugin
  */
-define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
+define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,
@@ -171,7 +171,7 @@ define(["JSZip", 'specs', "module"], function(JSZip,Specs, module){
 				root: this.root,
 				icon: "app",
 				author:{
-					name:'your name',
+					name:'Raymond Li',
 					email:'your email'
 				},
 				version:'0.1',

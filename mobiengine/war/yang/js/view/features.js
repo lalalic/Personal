@@ -1,9 +1,8 @@
 define(["UI","Plugin","app"],function(UI,Plugin, app){
 	var tmplFeature='<li>\
 		<span class="icon {{get("icon")}}"/><strong>{{get("title")||get("name")}}</strong>\
-		<span>by {{get("author").name}} for {{get("version")}}</span>\
-		<small>{{get("description")}}</small>\
-		<small></small>\
+		<small>by {{get("author").name}} for {{get("version")}}</small>\
+		<span>{{get("description")}}</span>\
 		<button class="small on-right test" data-plugin-id="{{id}}">Test</button>\
 		</li>'
 	return new (UI.ListPage.extend({

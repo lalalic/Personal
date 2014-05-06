@@ -33,7 +33,7 @@
 	<span>{{title}}</span>
 	<%_.each(options,function(o){with(o){%>
 	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : id}}" class="outview">
-	<span onclick="$(this).prev('input').click()">{{text(_.isString(o) ? o : get('name'))}}</span>
+	<span onclick="$(this).prev('input').click()">{{_.isString(o) ? o : get('name')}}</span>
 	<%}})%>
 </span>
 </script>

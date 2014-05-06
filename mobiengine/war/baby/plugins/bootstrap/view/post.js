@@ -2,13 +2,13 @@
  *  create and update post
  *  @module Post
  */
-define(['UI','app','tool/editor'],function(View, app,makeEditor){
+define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app,makeEditor,i18n){
 	var FormPage=View.FormPage, Post=app.Post, Tag=app.Tag, Favorit=app.Tag
 	return new (FormPage.extend({
 		content:'\
 			<form>\
-				<fieldset><input type="text" placeholder='+text("title")+' name="title" style="text-align:center"><div class="tags"></div></fieldset>\
-				<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+text("content")+'/>\
+				<fieldset><input type="text" placeholder='+i18n("title")+' name="title" style="text-align:center"><div class="tags"></div></fieldset>\
+				<div name="content" style="min-height:1000px" class="editor" contenteditable="true" placeholder='+i18n("content")+'/>\
 			</form>',
 		cmds:'<a><span class="icon picture"/></a>\
 			<a><span class="icon link-picture"/></a>\
@@ -21,9 +21,9 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 			this._super().render.apply(this,arguments)
 			this.editor=makeEditor(this.$('form [contenteditable]').get(0))
 			var tagHolder=this.$('div.tags'), t=_.template('#tmplCheckable')
-			tagHolder.append(t({title:text('gender'),name:'tags',type:'checkbox',options:Tag.grouped.gender}))
-			tagHolder.append(t({title:text('duration'),name:'duration',type:'radio',options:Tag.grouped.duration}))
-			tagHolder.append(t({title:text('goal'),name:'tags',type:'checkbox',options:Tag.grouped.goal}))
+			tagHolder.append(t({title:i18n('gender'),name:'tags',type:'checkbox',options:Tag.grouped.gender}))
+			tagHolder.append(t({title:i18n('duration'),name:'duration',type:'radio',options:Tag.grouped.duration}))
+			tagHolder.append(t({title:i18n('goal'),name:'tags',type:'checkbox',options:Tag.grouped.goal}))
 			return this
 		},
 		setModel: function(m){
@@ -42,11 +42,11 @@ define(['UI','app','tool/editor'],function(View, app,makeEditor){
 				
 			if(this.model.isNew()){
 				var a
-				this.setTitle(text("Create New ")
-					+text((a=this.model.get('category'))&&Tag.all.get(this.model.get('category')).get('name')
+				this.setTitle(i18n("Create New ")
+					+i18n((a=this.model.get('category'))&&Tag.all.get(this.model.get('category')).get('name')
 						||'Theme'))
 			}else
-				this.setTitle(text("Update"))
+				this.setTitle(i18n("Update"))
 			return this
 		},
 		show: function(id,categoryName){

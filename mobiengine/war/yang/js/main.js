@@ -63,6 +63,7 @@ require.config(/** @lends requireJSConf*/{
 		Underscore:"libs/underscore-min",
 		Backbone:"libs/backbone-min",
 		i18n:"libs/i18n",
+		Text:"libs/text",
 		jasmine:"libs/jasmine",
 		
 		Phonegap:"file:///android_asset/www/phonegap.js",
