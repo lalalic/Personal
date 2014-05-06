@@ -107,7 +107,7 @@
                     suffix = match[5],
                     parts = locale.split("-"),
                     toLoad = [],
-                    value = {},
+                    value = function(a, b){return  a ? (((b=a.toLowerCase()) in value) ? value[b] : (value[b]=a)) : ''},
                     i, part, current = "";
 
                 //If match[5] is blank, it means this is the top bundle definition,
@@ -177,7 +177,11 @@
                         });
                     });
                 }
-            }
-        };
+            },
+			normalize:function(name){
+				return name
+			}
+			
+		};
     });
 }());
