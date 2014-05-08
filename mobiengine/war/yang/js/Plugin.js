@@ -106,20 +106,21 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 	})(window.requestFileSystem=_.aopromise(window.requestFileSystem||window.webkitRequestFileSystem,4))
 	
 	
-	return /**@lends Plugin*/{
+	var Plugin= _.extend(/**@lends Plugin*/{
 		version:'0.1',
 		/**
 		 *  the plugin root path, which supports configuration from require
 		 */
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
+		installOnLoad:true,
 		Parser: Parser,
 		parse: function(data){return new this.Parser(data)},
 		features:new Backbone.Collection,
+		featuresLoaded: function(){return $.Deferred().resolve()},
 		_onModuleLoad: function(m,name,onload,root){
 			m.id=m.name=name
-			m.root=root
-			m.install()
+			m.root=root;
 			this.features.add(_.omit(m,_.functions(m)))
 			if(m.specs && m.specs.length){
 				for(var i in m.specs)
@@ -128,6 +129,7 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 				Specs.splice.apply(Specs,m.specs)
 				m.specs.splice(0,2)				
 			}
+			this.installOnLoad && m.install()
 			onload(m)
 		},
 		_loadFromURL: function(name, parentRequire, onload, config){
@@ -165,9 +167,11 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 				this._loadFromURL.apply(this,arguments)
 		},
 		extend: function(more){
-			var newPlugin=$.extend({
+			var newPlugin=_.extend({
 				extend:this.extend,
 				root: this.root,
+				installed:false,
+				refcount:0,
 				icon: "app",
 				author:{
 					name:'Raymond Li',
@@ -181,10 +185,50 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 				uninstall: function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, require, onload){return require([name],onload)},
-				normalize:function(name){return this.root+name}
+				normalize:function(name){return this.root+name},
+				getDepends: function(){
+					return _.uniq(_.flatten(_.map(this.depends,function(a,plugin){
+						var ds=((require.defined(a) && (plugin=require(a))) && plugin.getDepends() || [])
+						ds.push(a)
+						return ds
+					})))
+				}
 			},more||{});
-			this.depends && (newPlugin.depends=_.uniq(_.union(this.depends,newPlugin.depends||[])));
+			_.extend(newPlugin,{
+				install:_.aop(newPlugin.install,function(_raw){
+					return function(){
+						_.each(this.getDepends(),function(a){
+							require.defined(a) && require(a).install()
+						})
+						
+						if(!this.installed){
+							_raw&&_raw.apply(this,arguments)
+							this.installed=true
+							Plugin.trigger('install',this.id)
+						}
+						this.refcount<0 && (this.refcount=0)
+						this.refcount++
+					}
+				}),
+				uninstall: _.aop(newPlugin.uninstall,function(_raw){
+					return function(){
+						_.each(this.getDepends(),function(a){
+							require.defined(a) && require(a).uninstall()
+						})
+						this.refcount--
+						this.refcount<0 && (this.refcount=0)
+						if(this.refcount==0 && this.installed){
+							_raw&&_raw.apply(this,arguments)
+							this.installed=false
+							Plugin.trigger('uninstall',this.id)
+						}
+						return true
+					}
+				})
+			})
 			return newPlugin
-		}
-	}
+		},
+		upload: function(){}
+	},Backbone.Events);
+	return Plugin
 })
