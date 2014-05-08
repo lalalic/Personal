@@ -1,7 +1,7 @@
 define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 	return Plugin.extend({
 		description:"help play with your children",
-		init:function(){
+		install:function(){
 			//application configuration
 			$.extend(app,{
 				title:'Super Daddy',

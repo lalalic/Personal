@@ -115,12 +115,11 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 		description:'Plugin specification',
 		Parser: Parser,
 		parse: function(data){return new this.Parser(data)},
-		
 		features:new Backbone.Collection,
 		_onModuleLoad: function(m,name,onload,root){
 			m.id=m.name=name
 			m.root=root
-			m.init()
+			m.install()
 			this.features.add(_.omit(m,_.functions(m)))
 			if(m.specs && m.specs.length){
 				for(var i in m.specs)
@@ -178,7 +177,8 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 				description:'A plugin',
 				depends:[],
 				specs: [],
-				init:function(){},
+				install:function(){},
+				uninstall: function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, require, onload){return require([name],onload)},
 				normalize:function(name){return this.root+name}

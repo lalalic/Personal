@@ -5,7 +5,7 @@
 define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, specs, JSZip){
 	return Plugin.extend({
 		description:'manage applications',
-		init: function(){
+		install: function(){
 			$.extend(app,{
 				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgIAKDA',
 				title:'Mobile Engine',
