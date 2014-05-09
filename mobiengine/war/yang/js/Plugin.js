@@ -1,7 +1,21 @@
 /**
  *  To support plugin with a plugin data Parser, and extension interface
  *  It support load plugin from files, or from a zip
- *  @module Plugin
+ *  <p>the folder structure of plugin:</p>
+ *  <ul>
+ *  <li>main.js[required]--plugin entry, to install/uninstall this plugin</li>
+ *  <li>cloud[optional]<ul><li>main.js : cloud functions</li></ul></li>
+ *  <li>...</li>
+ *  </ul>
+ *  @class Plugin
+ *  @example
+ *  //save the following content to main.js to create a plugin
+ *  Plugin.extend({
+ *  	title:'my feature',
+ *  	description:'it's a test feature',
+ *  	install:function(){},
+ *  	uninstall: function(){}
+ *  })
  */
 define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 	var regI18N=/^i18n!/,
@@ -113,10 +127,28 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 		 */
 		root: cfg.root||'plugins/',
 		description:'Plugin specification',
+		/**
+		 *  the plugin will be installed right after it's loaded if it's true
+		 */
 		installOnLoad:true,
+		/**
+		 *  @class Plugin.Parser
+		 *  A class to parse local zipped plugin to get plugin information
+		 */
 		Parser: Parser,
+		/**
+		 *  a shortcut to parse local zipped plugin
+		 */
 		parse: function(data){return new this.Parser(data)},
+		/**
+		 *  all loaded features in current session
+		 *  @type {module:Backbone.Collection}
+		 */
 		features:new Backbone.Collection,
+		/**
+		 *  a status function to return if all features already loaded
+		 *  @return {Promise}
+		 */
 		featuresLoaded: function(){return $.Deferred().resolve()},
 		_onModuleLoad: function(m,name,onload,root){
 			m.id=m.name=name
@@ -166,26 +198,67 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 			else
 				this._loadFromURL.apply(this,arguments)
 		},
+		/**
+		 *  to create new plugin
+		 *  @example
+		 *  Plugin.extend({})
+		 */
 		extend: function(more){
-			var newPlugin=_.extend({
+			var newPlugin=_.extend(/**@lends Plugin.prototype*/{
 				extend:this.extend,
 				root: this.root,
+				/**
+				 *  a status to indicate if this plugin is installed
+				 */
 				installed:false,
 				refcount:0,
+				/**
+				 *  a font icon for the plugin, which will be shown in #feature page
+				 *  @default app
+				 */
 				icon: "app",
+				/**
+				 *  author information
+				 *  @example
+				 *  {name:"Raymond", email:"raymond@emc.com"}
+				 */
 				author:{
 					name:'Raymond Li',
 					email:'your email'
 				},
+				/**
+				 *  version of plugin
+				 */
 				version:'0.1',
+				/**
+				 *  plugin description, which will be shown in #feature page
+				 */
 				description:'A plugin',
+				/**
+				 *  what modules are the plugin depended on
+				 *  @type external:Array
+				 */
 				depends:[],
+				/**
+				 *  Bahavior test driven specification modules
+				 *  @example
+				 *  [this.module("spec/plugin"),this.module("spec/imageloader")]
+				 */
 				specs: [],
+				/**
+				 *  how to install the plugin
+				 */
 				install:function(){},
+				/**
+				 *  how to uninstall the plugin
+				 */
 				uninstall: function(){},
 				module:function(name){return this.name+"!"+name},
 				load:function(name, require, onload){return require([name],onload)},
 				normalize:function(name){return this.root+name},
+				/**
+				 *  get all dependents of the plugin
+				 */
 				getDepends: function(){
 					return _.uniq(_.flatten(_.map(this.depends,function(a,plugin){
 						var ds=((require.defined(a) && (plugin=require(a))) && plugin.getDepends() || [])

@@ -4,7 +4,7 @@
     },
     "source": {
 		"include":["main.js", "app.js", "UI.js", "Plugin.js", 
-			"view/user.js", "view/test.js", "view/splash.js"],
+			"view/user.js", "view/test.js", "view/splash.js", "view/test.js"],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
