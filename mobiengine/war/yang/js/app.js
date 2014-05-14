@@ -22,8 +22,14 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 				}
 			},
 			newClass: function (constructor, properties, classProperties) {
-				_.extend(constructor.prototype, Backbone.Events, properties)
-				_.extend(constructor, classProperties)
+				if(!_.isFunction(constructor)){
+					classProperties=properties
+					properties=constructor
+					constructor=function(){}
+				}
+				_.extend(constructor.prototype, Backbone.Events, properties||{})
+				classProperties && _.extend(constructor, classProperties)
+				constructor.extend=Backbone.Model.extend
 				return constructor;
 			}
 		})
@@ -205,6 +211,13 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 	
 	define('specs',[],['spec/plugin','spec/tool/uploader','spec/tool/offline']);
 	var router=new Backbone.Router
+	function routerPage(page){
+		if(page['prototype']){
+			page=new page()
+			page.close=page.remove
+		}
+		return page
+	}
 	return _.extend(/** @lends app*/{
 			/**
 			* application title shown as title of page
@@ -368,11 +381,11 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 			route: function(name, url, view, needLogin){
 				router.route(url, name, _.bind(function(){
 					if(needLogin && !this.isLoggedIn())
-						require(['view/user'],function(page){(page['prototype'] ? new page() : page).show('signin')})
+						require(['view/user'],function(page){routerPage(page).show('signin')})
 					else{
 						var args=_.toArray(arguments)
 						args[args.length-1]==null && args.pop()
-						require([view],function(page){(page=(page['prototype'] ? new page() : page)).show.apply(page,args)})
+						require([view],function(page){(page=routerPage(page)).show.apply(page,args)})
 					}
 				},this))
 			},

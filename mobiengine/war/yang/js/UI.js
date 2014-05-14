@@ -88,12 +88,12 @@ define(['app'],function(app){
 			},
 			close: function(){
 				this.clear()
+				return this.hide()
+			},
+			hide: function(){
 				this.$el.removeClass('show')
 				this.$el.detach()
 				return this
-			},
-			hide: function(){
-				return this.close()
 			},
 			/**clear content when close page*/
 			clear: function(){

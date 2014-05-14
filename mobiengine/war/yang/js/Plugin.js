@@ -301,7 +301,8 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 			})
 			return newPlugin
 		},
-		upload: function(){}
+		upload: function(name,file){},
+		download: function(name){}
 	},Backbone.Events);
 	return Plugin
 })

@@ -1,12 +1,15 @@
-mobile application engine
+an application engine
 =========================
-A appengine framework to help create mobile app quickly on google appengine with datastore support. 
+A appengine framework to help create app quickly. 
 
 how to start
 ------------
-You should start from <a href="module-requireJSConf.html">requireJSConf module</a> and <a href="app.html">app namespace</a>.
+<p>The bootstrap plugin is main entry for application, whose api is usually on <a href="../plugins/bootstrap/api"><b>here</b></a></p>
 
-you can start from following html file.
+<p>You should start from <a href="module-requireJSConf.html">requireJSConf module</a> and <a href="app.html">app namespace</a> to learn the framework.<p>
+
+
+you can start from following html file for both desktop and mobile.
 <pre><code>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -15,7 +18,7 @@ you can start from following html file.
 	&lt;meta name="format-detection" content="telephone=no" /&gt;
 	&lt;!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 --&gt;
 	&lt;meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" /&gt;
-	&lt;title&gt;Mobile Engine&lt;/title&gt;
+	&lt;title&gt;xPression App Engine&lt;/title&gt;
 	&lt;link rel="stylesheet" href="css/icon.css"&gt;
 	&lt;link rel="stylesheet" href="css/lungo.css"&gt;
 	&lt;link rel="stylesheet" href="css/lungo.theme.css"&gt;

@@ -17,6 +17,6 @@
         }
     },
 	"opts":{
-		"destination": "../api/"
+		"destination": "../../api/"
 	}
 }
