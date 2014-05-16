@@ -17,7 +17,7 @@
  *  	uninstall: function(){}
  *  })
  */
-define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
+define(['app',"JSZip", "module"], function(app, JSZip,Specs, module){
 	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,
@@ -142,6 +142,7 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 			m.root=root;
 			this.features.add(_.omit(m,_.functions(m)))
 			if(m.specs && m.specs.length){
+				var Specs=require('specs')
 				for(var i in m.specs)
 					m.specs[i]=m.module(m.specs[i])
 				m.specs.splice(0,0,Specs.length,0)

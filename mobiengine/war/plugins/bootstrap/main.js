@@ -1,5 +1,6 @@
 /**
  * starter plugin to config app, routes, and extend models
+ * test
  * @module starter
  */
 define(['Plugin', 'app', 'specs','JSZip','plugins/model','UI'],function(Plugin, app, specs, JSZip,UI){
@@ -63,7 +64,7 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model','UI'],function(Plugin, 
 							zip.remove('data')
 							form.append('file',zip.generate({type:'blob'}))
 							return $.ajax({
-								url: app.File.want2upload("/"+this.urlRoot()+"/upload")),
+								url: app.File.want2upload("/"+this.urlRoot()+"/upload"),
 								data:form,
 								contentType : false,
 								processData: false,
