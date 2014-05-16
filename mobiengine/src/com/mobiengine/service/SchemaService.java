@@ -42,7 +42,7 @@ public class SchemaService extends EntityService{
 	private static final Map<String, Schema> schemas= new ConcurrentHashMap<String,Schema>();
 	private static final String INTERNAL_FIELDS=",createdAt,updatedAt,ACL,id,";
 	
-	public static Entity makeSchema(String kind,EmbeddedEntity ... fieldSchemas){
+	static Entity makeSchema(String kind,EmbeddedEntity ... fieldSchemas){
 		Entity schema=new Entity(KIND);
 		schema.setUnindexedProperty("name", kind);
 		List<EmbeddedEntity> fields=new ArrayList<EmbeddedEntity>();
@@ -56,7 +56,7 @@ public class SchemaService extends EntityService{
 		return schema;
 	}
 	
-	public static void addField(Entity schema, EmbeddedEntity ... fieldSchemas){
+	static void addField(Entity schema, EmbeddedEntity ... fieldSchemas){
 		@SuppressWarnings("unchecked")
 		List<EmbeddedEntity> fields=(List<EmbeddedEntity>)schema.getProperty("fields");
 		int index=fields.size()-3;
@@ -64,7 +64,7 @@ public class SchemaService extends EntityService{
 			fields.add(index++,fieldSchema);
 	}
 	
-	public static EmbeddedEntity makeFieldSchema(String name, TYPES type, boolean searchable, boolean unique){
+	static EmbeddedEntity makeFieldSchema(String name, TYPES type, boolean searchable, boolean unique){
 		EmbeddedEntity field=new EmbeddedEntity();
 		field.setProperty("name", name);
 		if(type==null)
@@ -124,6 +124,8 @@ public class SchemaService extends EntityService{
 			entity.setUnindexedProperty("fields", UserService.makeSchema().getProperty("fields"));
 		else if(RoleService.KIND.equals(newKind))
 			entity.setUnindexedProperty("fields", RoleService.makeSchema().getProperty("fields"));
+		else if(PluginService.KIND.equals(newKind))
+			entity.setUnindexedProperty("fields", PluginService.makeSchema().getProperty("fields"));
 		else
 			entity.setUnindexedProperty("fields", makeSchema("a").getProperty("fields"));
 		

@@ -53,6 +53,8 @@ public class FileService extends EntityService {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String createUploadUrl(@Context UriInfo uri, String callback) {
 		try {
+			if(callback==null || callback.trim().isEmpty())
+				return createUploadUrl(uri);
 			return BlobstoreServiceFactory.getBlobstoreService()
 					.createUploadUrl("/"+uri.getPath()+"/"+URLDecoder.decode(callback,"UTF-8"), option);
 		} catch (UnsupportedEncodingException e) {

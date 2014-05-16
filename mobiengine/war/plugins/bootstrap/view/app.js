@@ -13,10 +13,10 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 			</fieldset>\
 		</form>'
 	var FormPage=View.FormPage, Application=App.Application
-	return new (FormPage.extend({
+	return FormPage.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button>save</a>\
-				<a>'+View.FileLoader+i18n('upload')+'</a>\
-				<a><span class="icon download">'+i18n('download')+'</a>',
+				<a>'+View.FileLoader+i18n('upload code')+'</a>\
+				<a><span class="icon download"/>'+i18n('download code')+'</a>',
 		events:_.extend(FormPage.prototype.events,{
 			'change input[type=file]':'upload',
 			'click .download':'download',
@@ -42,7 +42,7 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 			return this
 		},
 		hide: function(){
-			if(!this.model.id)
+			if(!this.model || !this.model.id)
 				Application.restoreCurrent()
 			return this._super().hide.apply(this,arguments)
 		},
@@ -66,8 +66,12 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 				})
 			})
 		},
-		upload: function(){
-			
+		upload: function(e){
+			this.model.upload(e.target.files[0])
+				.then(function(data){
+					this.model.set(data)
+				})
+			e.target.value=""
 		}
-	}))
+	})
 })

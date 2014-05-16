@@ -55,13 +55,16 @@ public class UserService extends EntityService{
 		if(this.exists("username", name))
 			throw new RuntimeException("user name has already been registered.");
 		request.remove("password");
+		super.beforeCreate(user, request, response);
 		user.setUnindexedProperty("password", encrypt(password));
 	}
 	
 	@Override
 	public void afterCreate(Entity user, JSONObject request, JSONObject response)throws Exception{
 		try {
+			super.beforeCreate(user, request, response);
 			response.put("sessionToken", getSessionToken(user));
+			
 		} catch (JSONException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -71,7 +74,7 @@ public class UserService extends EntityService{
 		return new String(Base64.encode(user.getKey().getId()+"-"+user.getProperty("username")));
 	}
 	
-	public static Entity resolvSessionToken(String token) throws EntityNotFoundException{
+	static Entity resolvSessionToken(String token) throws EntityNotFoundException{
 		String[] infos=Base64.base64Decode(token).split("-");
 		if(infos.length!=2)
 			throw new RuntimeException("token error");
@@ -103,7 +106,7 @@ public class UserService extends EntityService{
 		}
 	}
 	
-	public static Entity makeSchema(){
+	static Entity makeSchema(){
 		return SchemaService.makeSchema(KIND, 
 				SchemaService.makeFieldSchema("username", TYPES.String, true, true),
 				SchemaService.makeFieldSchema("password",TYPES.String, false, false),

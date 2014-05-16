@@ -2,7 +2,7 @@
  *  @module Database Schema
  *  @requires Backbone 
  */
-define(['app'],function(app){
+define(['app','Plugin','JSZip','UI'],function(app,Plugin,JSZip,UI){
 	(function(root){
 		Backbone.Collection.prototype.url=function(){
 			if(this.model){
@@ -214,6 +214,8 @@ define(['app'],function(app){
 			 *  @returns {Promise}
 			 */
 			verify:function(){
+				if(!localStorage.getItem('sessionToken'))
+					return
 				return $.ajax({
 					context:this,
 					timeout:20000,
@@ -322,7 +324,7 @@ define(['app'],function(app){
 						data=new FormData();
 					data.append('file',this.toBlob())
 					return $.ajax({
-							url: $.ajax(this.urlRoot()+'/want2upload/'+(callback||''),{async:false,dataType:'text'}).responseText,
+							url: File.want2upload(callback),
 							data:data,
 							cache: false,
 							contentType : false,
@@ -347,12 +349,67 @@ define(['app'],function(app){
 					return buffer
 				},
 				toBlob: function(){
-					return new Blob([this.toArrayBuffer()],{type:this.get('type')})
+					var data=this.get('data')
+					return _.isString(data) 
+						? new Blob([this.toArrayBuffer()],{type:this.get('type')})
+						: data
 				},
 				url: function(){
 					return this.get('url')
+				},
+				download: function(){
+					var p=new $.Deferred
+					$.ajax({
+						url:this.url(),
+						mimeType:'text/plain; charset=x-user-defined',
+						processData:false,
+						dataFilter:function(data,type){
+							p.resolve(data)
+							return null
+						}
+					})
+					return p
+				}
+			},{
+				want2upload: function(callback){
+					return $.ajax((new app.File()).urlRoot()
+									+'/want2upload'+(callback && encodeURIComponent(("/"+callback).replace('//','/'))),
+									{async:false,dataType:'text'}).responseText
 				}
 			}),
+		PluginModel=root.Plugin=Model.extend({
+			className:'_plugin',
+			urlRoot: function(){
+				return this.version+'/plugins'
+			},
+			save: function(){
+				if(this._clientCode){
+					return new File({data:this._clientCode})
+						.save()
+						.then(_.bind(function(f){
+							this.set('clientCode',f.url())
+							delete this._clientCode
+							return this._super().save.call(this)
+						},this))
+				}else
+					return this._super().save.apply(this,arguments)
+			},
+			setClientCode: function(code){
+				this._clientCode=code
+			},
+			setCloudCode: function(code){
+				this.set('cloudCode',code,{silent:true})
+			},
+			download: function(){
+				(new File({url:this.get('clientCode')}))
+				.download()
+				.then(_.bind(function(data){
+					var zip=new JSZip(data)
+					zip.file("cloud/main.js",this.get('cloudCode'),{type:'text'})
+					UI.util.save(zip,this.get('name')+".zip","application/zip")
+				},this))	
+			}
+		}),
 		Query=root.Query=_.newClass(function (objectClass) {
 				this.objectClass = objectClass;
 				this._where = {};
@@ -741,7 +798,7 @@ define(['app'],function(app){
 						dataType:'json',
 						headers: {"X-Application-Id": this.apiKey},
 						beforeSend: function(xhr, setting){
-							root.service && !(/^https?\:/i.test(setting.url)) && (setting.url=root.service+setting.url)
+							root.service && !(/^https?\:/i.test(setting.url)) && (setting.url=(root.service+setting.url).replace('//','/'))
 							var data=setting.data
 							if(setting.data){
 								delete data.createdAt

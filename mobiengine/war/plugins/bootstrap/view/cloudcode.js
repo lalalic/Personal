@@ -1,11 +1,10 @@
-define(['app','UI','i18n!../nls/l10n'],function(app,View,i18n){
-	var Application=app.Application, 
-		FormPage=View.FormPage
-	return new (FormPage.extend({
+define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
+	var Application=app.Application
+	return UI.FormPage.extend({
 		title:i18n('Cloud Code'),
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>\
 			<a><span class="icon load" onclick="$(this).next().click()"/><input class="outview" type="file" onchange=""></a>',
-		events: _.extend({},FormPage.prototype.events,{
+		events: _.extend({},UI.FormPage.prototype.events,{
 			"change input[type=file]": "upload"
 		}),
 		content:"<form><fieldset><textarea name='cloudCode' spellcheck='false' placeholder='write your cloud code'></textarea></fieldset></form>",
@@ -33,5 +32,5 @@ define(['app','UI','i18n!../nls/l10n'],function(app,View,i18n){
 			}
 			reader.readAsText(e.target.files[0])
 		}
-	}))
+	})
 })

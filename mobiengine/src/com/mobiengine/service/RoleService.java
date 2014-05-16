@@ -18,9 +18,11 @@ public class RoleService extends EntityService {
 		super(app,user, KIND);
 	}
 
-	public static Entity makeSchema(){
+	static Entity makeSchema(){
 		return SchemaService.makeSchema(KIND,
 				SchemaService.makeFieldSchema("name", TYPES.String, true, true),
+				SchemaService.makeFieldSchema("author", TYPES.Integer, true, false),
+				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false),
 				SchemaService.makeFieldSchema("roles",TYPES.Array, false, false),
 				SchemaService.makeFieldSchema("users",TYPES.Array, false, false));
 	}

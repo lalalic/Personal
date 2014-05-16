@@ -1,6 +1,6 @@
-define(['UI','app'],function(View,app){
-	var ListPage=View.ListPage,Application=app.Application
-	return new (ListPage.extend({
+define(['UI','app'],function(UI,app){
+	var Application=app.Application
+	return new (UI.ListPage.extend({
 		className:'applist',
 		collection: Application.all,
 		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{get("name")}}</a></li>'),

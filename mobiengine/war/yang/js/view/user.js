@@ -3,7 +3,7 @@
  * @module User
  * @requires UI
  */
-define(['UI','app', 'i18n!nls/all'],function(View,app,i18n){
+define(['UI','app', 'i18n!nls/all'],function(UI,app,i18n){
 	var tmplUser='\
 			<form id="signin">\
 				<fieldset><input name="username" type="text" placeholder="'+i18n('user name')+'"></fieldset>\
@@ -17,12 +17,11 @@ define(['UI','app', 'i18n!nls/all'],function(View,app,i18n){
 			<form id="password">\
 				<fieldset><input name="email" type="text" placeholder="'+i18n('email address where new password would send')+'"></fieldset>\
 			</form>'
-	var Page=View.Page, User=app.User
-
-	return new (Page.extend({
+	var User=app.User
+	return UI.Page.extend({
 		cmds:'<a><button type="submit"><span class="icon save"/></button></a>',
 		content:tmplUser,
-		events:_.extend({},Page.prototype.events,{
+		events:_.extend({},UI.Page.prototype.events,{
 			'submit form#signin':'signin',
 			'submit form#signup':'signup',
 			'submit form#password':'password',
@@ -68,5 +67,5 @@ define(['UI','app', 'i18n!nls/all'],function(View,app,i18n){
 			User.requestPasswordReset(this.$('form#signup').get(0).email.value)
 			return false
 		}
-	}))
+	})
 })

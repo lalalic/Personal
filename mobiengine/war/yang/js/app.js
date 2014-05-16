@@ -211,18 +211,11 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 	
 	define('specs',[],['spec/plugin','spec/tool/uploader','spec/tool/offline']);
 	var router=new Backbone.Router
-	function routerPage(page){
-		if(page['prototype']){
-			page=new page()
-			page.close=page.remove
-		}
-		return page
-	}
 	return _.extend(/** @lends app*/{
 			/**
 			* application title shown as title of page
 			*/
-			title:'Application',
+			title:'',
 			id:'mobiengine',
 			version:'0.01',
 			/**
@@ -305,17 +298,16 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 					 * @global
 					 */
 					this.title=document.title=i18n(this.title)
-					
+					function myKey(k){return app.id+'/'+app.apiKey+'/'+k}
 					_.extend(localStorage,{
 						setItem:_.aop(localStorage.setItem,function(_raw){
-							return function(a,b){
-								_raw.call(this, app.id+'/'+app.apiKey+'/'+a, b)
-							}
+							return function(a,b){_raw.call(this, myKey(a), b)}
 						}),
 						getItem: _.aop(localStorage.getItem,function(_raw){
-							return function(a){
-								return _raw.call(this,app.id+'/'+app.apiKey+'/'+a)
-							}
+							return function(a){return _raw.call(this,myKey(a))}
+						}),
+						removeItem: _.aop(localStorage.removeItem, function(_raw){
+							return function(a){return _raw.call(this,myKey(a))}
 						})
 					})
 					
@@ -381,11 +373,20 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 			route: function(name, url, view, needLogin){
 				router.route(url, name, _.bind(function(){
 					if(needLogin && !this.isLoggedIn())
-						require(['view/user'],function(page){routerPage(page).show('signin')})
+						require(['view/user'],function(page){new page().show('signin')})
 					else{
 						var args=_.toArray(arguments)
 						args[args.length-1]==null && args.pop()
-						require([view],function(page){(page=routerPage(page)).show.apply(page,args)})
+						require([view],function(page){
+							if(page['prototype']){
+								page=new page()
+								page.close=_.aop(page.close, function(_raw){
+									return function(){_raw.apply(this,arguments);page.remove()}
+								})
+							}
+							page.show.apply(page,args)
+							page._emptivible()
+						})
 					}
 				},this))
 			},

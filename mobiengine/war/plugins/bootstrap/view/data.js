@@ -173,7 +173,7 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				this.$('input[name=unique]').prop('checked',this.model.unique)
 			}
 		}))
-	return new (ListPage.extend({
+	return ListPage.extend({
 		newID:0,
 		collection:Schema.collection(),
 		title:i18n('Data Browser'),
@@ -207,32 +207,30 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
 				.click(_.bind(this.onNewTable,this))
 			this.$list=this.$('article')
-		},
-		changeApp:function(m){
-			if(this.app==m)
-				return
-			this.app=m
-			this.$createTable.siblings().remove()
-			this.$list.empty()
-			this.collection.fetch()
+			Application.all.on('current',this.refresh,this)
 		},
 		show: function(table){
 			$(document).on('ajaxSend', switchAppKey)
-			this.changeApp(Application.current())
-			Application.all.on('current',this.changeApp,this)
+			table=table||'_user'
+			this.collection.once('sync',_.bind(function(){
+				this.$('#__'+table).click()
+			},this))
 			this._super().show.apply(this,arguments)
-			table && this.$('#__'+table).click()
+			this.$('#__'+table).click()
 			return this
+		},
+		refresh: function(){
+			if(this.app==Application.current())
+				return
+			this.app=Application.current()
+			this.$createTable.siblings().remove()
+			this.$list.empty()
+			return this._super().refresh.apply(this,arguments)
 		},
 		close: function(){
 			this._super().close.apply(this,arguments)
 			Application.all.off('current',this.changeApp,this)
 			$(document).off('ajaxSend', switchAppKey)
-			return this
-		},
-		refresh: function(){
-			if(this.$el.is('.show'))
-				return this._super().refresh.apply(this,arguments)
 			return this
 		},
 		addOne:function(model){
@@ -450,7 +448,8 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 					currentSchema.splice(currentSchema.indexOf(currentField),1,newField)
 				})
 			changed && current.model.save()
-		}
+		},
+		_isEmpty:function(){return false}
 	},{
 		STYLE:
 			"table.data{width:100%;table-layout:fixed}\
@@ -463,5 +462,5 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			table.data thead th:nth-child(2){width:5em}\
 			table.data input[type=checkbox]{margin-left:1px}\
 			table.data input.a{width:100%;height:100%;border:0;}"
-	}))
+	})
 })

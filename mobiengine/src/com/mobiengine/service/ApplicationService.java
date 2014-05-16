@@ -2,7 +2,6 @@ package com.mobiengine.service;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +19,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -40,6 +38,7 @@ public class ApplicationService extends EntityService {
 	public static String TOP_NAMESPACE=null;
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
+	final static String PLUGIN="_plugin";
 	
 	private ApplicationService(){
 		super((String)null,null,KIND);
@@ -99,7 +98,11 @@ public class ApplicationService extends EntityService {
 			entity.setProperty("createdAt", now);
 			entity.setProperty("updatedAt", now);
 			
-			DatastoreServiceFactory.getAsyncDatastoreService().put(defaults);
+			defaults.add(entity=PluginService.makeSchema());
+			entity.setProperty("createdAt", now);
+			entity.setProperty("updatedAt", now);
+			
+			DatastoreServiceFactory.getDatastoreService().put(defaults);
 			response.put("apiKey", getApiKey(app));
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage());
@@ -122,7 +125,6 @@ public class ApplicationService extends EntityService {
 		//2. remove app
 	}
 	
-	@SuppressWarnings("unchecked")
 	@POST
 	@Path("upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -135,10 +137,16 @@ public class ApplicationService extends EntityService {
 			throw new RuntimeException("Access Denied");
 		try{
 			String url=FileService.getUploadedURL(request);
-			this.app.setUnindexedProperty("clientDataUrl", url);
-			this.app.setUnindexedProperty("cloudCode", SchemaService.TYPES.String.asEntityValue(cloudCode));
-			DatastoreServiceFactory.getAsyncDatastoreService().put(this.app);
+			this.app.setUnindexedProperty("clientCode", url);
+			if(cloudCode!=null)
+				this.app.setUnindexedProperty("cloudCode", SchemaService.TYPES.String.asEntityValue(cloudCode));
+			else
+				this.app.removeProperty("cloudCode");
+			Date now=new Date();
+			this.app.setProperty("modifiedDate", now);
+			DatastoreServiceFactory.getDatastoreService().put(this.app);
 			
+			/*
 			if(schema!=null){
 				SchemaService schemaService=new SchemaService(this.app,this.user);
 				Iterator<String> it=schema.keys();
@@ -168,8 +176,11 @@ public class ApplicationService extends EntityService {
 					}
 				}
 			}
-
-			return Response.ok(url).build();
+			*/
+			JSONObject response=new JSONObject();
+			response.put("clientCode", url);
+			response.put("modifiedDate", now);
+			return Response.ok(this.app).build();
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage());
 		}
@@ -198,15 +209,16 @@ public class ApplicationService extends EntityService {
 		return r;
 	}
 	
-	public static Entity makeSchema(){
+	static Entity makeSchema(){
 		return SchemaService.makeSchema(KIND,
 				SchemaService.makeFieldSchema("name", TYPES.String, true, false),
 				SchemaService.makeFieldSchema("url", TYPES.String, true, true),
 				SchemaService.makeFieldSchema("author", TYPES.Integer, true, false),
 				SchemaService.makeFieldSchema("authorName", TYPES.String, false, false),
-				SchemaService.makeFieldSchema("cloudCode", TYPES.String, false, false));
+				SchemaService.makeFieldSchema("cloudCode", TYPES.String, false, false),
+				SchemaService.makeFieldSchema("clientCode", TYPES.String, false, false));
 	}
-
+	
 	// initialize the whole system
 	public static void initSystem(){
 		NamespaceManager.set(null);
@@ -227,9 +239,7 @@ public class ApplicationService extends EntityService {
 					};
 				}
 				
-				public void beforeCreate(Entity app,JSONObject request, JSONObject response){
-					
-				}
+				public void beforeCreate(Entity app,JSONObject request, JSONObject response){}
 				
 				@Override
 				public void afterCreate(Entity app,JSONObject request, JSONObject response){

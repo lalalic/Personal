@@ -35,14 +35,14 @@ define(['app'],function(app){
 		Page=Backbone.View.extend(/** @lends module:UI.Page.prototype*/{
 			tagName:'section',
 			/**Page Title*/
-			title:app.title,
+			title:'',
 			/**html navigation buttons in header*/
 			navs:'<a><span class="icon left-sign back"/></a>\
 				<a href="#"><span class="icon home"/></a>\
 				<a class="on-right"><span class="icon user"/></a>\
 				<a class="on-right"><span class="icon refresh"/></a>',
 			/** html content in body*/
-			content:'Loading...',
+			content:'',
 			/** html commands buttons in footer*/
 			cmds:'',
 			/** template function to render page */
@@ -130,6 +130,42 @@ define(['app'],function(app){
 				$(document).one('click',function(e){
 					el.hide()
 				})
+			},
+			/**
+			 *  protected function to check if empty content should be shown
+			 */
+			_isEmpty: function(){
+				return this.$('article').is(':empty')
+			},
+			/**
+			 *  internal called by router just after every show
+			 */
+			_emptivible: function(){
+				if(this._isEmpty())
+					this.$('article').append(_.template('#tmplEmpty',this.EMPTY))
+				else
+					this.$('article>.empty').remove()
+			},
+			/**
+			 *  empty content parameters
+			 */
+			EMPTY:/** @lends module:UI.Page.prototype.EMPTY*/{
+				/**
+				 *  ICON type
+				 */
+				type:'user',
+				/**
+				 *  title for empty content
+				 */
+				title:'NO CONTENT',
+				/**
+				 *  description for empty content
+				 */
+				description:'',
+				/**
+				 *  actions/buttons/links for shortcut
+				 */
+				action:''
 			}
 		},/** @lends module:UI.Page*/{
 			/**css styles used by this UI class*/
@@ -221,6 +257,7 @@ define(['app'],function(app){
 				this.collection.on('add', this.addOne, this)
 				this.collection.on('remove', this.removeOne, this)
 				this.collection.on('change', this.changeOne, this)
+				this.collection.on('sync', this._emptivible, this)
 			},
 			renderAllItems:function(){
 				this.$list.empty()
@@ -241,11 +278,21 @@ define(['app'],function(app){
 			},
 			show: function(){
 				Page.prototype.show.apply(this,arguments)
-				return this.refresh()
+				if(this.collection && this.collection.length>0)
+					return this.renderAllItems()
+				else
+					return this.refresh()
 			},
 			refresh: function(){
 				this.collection && this.collection.fetch()
 				return this
+			},
+			_isEmpty: function(){
+				return this.$list.is(':empty')
+			},
+			_emptivible: function(){
+				if(arguments.length)
+					return Page.prototype._emptivible.apply(this,arguments)
 			}
 		}),
 		/**
@@ -319,7 +366,8 @@ define(['app'],function(app){
 			 */
 			setDefault: function(){
 				return this
-			}
+			},
+			_isEmpty:function(){return false}
 		}),
 		/**
 		 * @class Popup
@@ -377,6 +425,17 @@ define(['app'],function(app){
 				this.$('input').val('')
 				this.close()
 			}
+		})),
+		Alert=new (Popup.extend(/** @lends module:UI.Alert.prototype*/{
+			events:{
+				'click button.ok':'close'
+			},
+			content:'<h6>Alert</h6><p/><center><button class="ok">OK</button></center>',
+			show:function(value){
+				Popup.prototype.show.apply(this,arguments)
+				this.$('p').text(value||'')
+				return this
+			}
 		}))
 	/**
 	 * override default prompt
@@ -387,6 +446,15 @@ define(['app'],function(app){
 	window.prompt=function(title,defaultValue){
 		return Prompt.show(title)
 	}
+	
+	/**
+	 *  override default alert
+	 *  @global
+	 *  @function
+	 */
+	 window.alert=function(message){
+		Alert.show(message)
+	 }
 	
 	return {
 		Page:Page,

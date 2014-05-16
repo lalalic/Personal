@@ -22,26 +22,13 @@ define(['app',"JSZip", 'specs', "module"], function(app, JSZip,Specs, module){
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,
 		Parser=_.newClass(function(data){
-				this.raw=data
 				this.zip=new JSZip(data)
+				this.info=eval(this.define+this.zip.file('main.js').asText())
+				this.cloudCode=this.zip.file('cloud/main.js').asText()
+				this.zip.remove('cloud')
+				this.clientCode=this.zip.generate({type:'blob',compression:'DEFLATE'})
 			},{
-				define:"function define(a,b){a.splice(_.indexOf(a,'Plugin'),1,require('Plugin'));return b.apply(null,a)};",
-				info:function(){
-					return this._info ? this._info : 
-						(this._info=new Backbone.Model(eval(this.define+this.zip.file('main.js').asText())))
-				},
-				cloud: function(){
-					return this.zip.file('cloud/main.js').asText()
-				},
-				schema: function(){
-					return this.zip.file('data/schema.js').asText()
-				},
-				data: function(){
-					return this.zip.file('data/data.json').asText()
-				},
-				save: function(){
-					
-				}
+				define:"function define(a,b){a.splice(_.indexOf(a,'Plugin'),1,require('Plugin'));return b.apply(null,a)};"
 			});
 		
 	(function(requestFileSystem){

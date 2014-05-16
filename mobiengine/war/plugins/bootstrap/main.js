@@ -2,7 +2,7 @@
  * starter plugin to config app, routes, and extend models
  * @module starter
  */
-define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, specs, JSZip){
+define(['Plugin', 'app', 'specs','JSZip','plugins/model','UI'],function(Plugin, app, specs, JSZip,UI){
 	return Plugin.extend({
 		description:'manage applications',
 		install: function(){
@@ -19,6 +19,7 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 			app.route('schema','data(/:table)',this.module('view/data'),true)
 			app.route('analytics','analytics',this.module('view/analytics'),true)
 			app.route('cloudcode','cloudcode',this.module('view/cloudcode'),true)
+			app.route('plugins','plugins',this.module('view/plugins'),true)
 			
 			specs.push(this.module('spec/application'))
 			
@@ -54,28 +55,47 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 					upload: function(file){
 						var me=this
 						return (new FileReader()).readAsArrayBuffer(file).then(function(){
-							var zip=new JSZip(data),temp, form=new FormData();
-							(temp=zip.file('cloud/main.js')) && form.append('cloudCode',temp.asText());
+							var zip=new JSZip(data),temp, form=new FormData(), cloudCode;
+							(cloudCode=zip.file('cloud/main.js')) && form.append('cloudCode',(cloudCode=cloudCode.asText()));
 							(temp=zip.file('data/schema.js')) && form.append('schema',temp.asText());
 							(temp=zip.file('data/data.json')) && form.append('data',temp.asText());
 							zip.remove('cloud')
 							zip.remove('data')
 							form.append('file',zip.generate({type:'blob'}))
 							return $.ajax({
-								url: $.ajax((new app.File()).urlRoot()+'/want2upload/'+encodeURIComponent(this.urlRoot()+"/upload"),
-									{async:false,dataType:'text'}).responseText,
+								url: app.File.want2upload("/"+this.urlRoot()+"/upload")),
 								data:form,
 								contentType : false,
 								processData: false,
 								type: 'POST',
 								dataFilter:function(data,type){
-									currentApp.fetch()
+									me.set('cloudCode',cloudCode)
 									return null
 								}
 							}).then(function(){
 								return me
 							})
 						})
+					},
+					download: function(){
+						return new File({url:this.get('clientCode')}).then(_.bind(function(data){
+							var zip=new JSZip(data),currentApp=this;
+							zip.file("cloud/main.js", this.get('cloudCode')||'//put your cloud code here')
+							this.exportSchema().then(function(schema){
+								zip.file("data/schema.js",JSON.stringify(schema,null, "\t"))
+								var data={}
+								return $.when(_.chain(_.keys(schema)).map(function(table){
+									return currentApp.exportData(table)
+										.then(function(collection){
+											collection.length && (data[table]=collection)
+										})
+								}).value()).then(function(){
+									zip.file("data/data.json",JSON.stringify(data,null, "\t"))
+								})
+							}).then(function(){
+								UI.util.save(zip, currentApp.get('name')+'.zip')
+							})
+						},this))
 					},
 					exportSchema: function(schemas){
 						return (schemas ? $.Deferred().resolve() : ((schemas=app.Schema.collection())&&schemas.fetch()))
@@ -110,7 +130,10 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model'],function(Plugin, app, 
 						case undefined:
 							if(currentApp!=null)
 								return currentApp
-							return (m=localStorage.getItem('currentApp')) && (m=Application.all.get(parseInt(m))) &&  this.current(m) || null
+							return (m=localStorage.getItem('currentApp')) 
+								&& (m=Application.all.get(parseInt(m))) 
+								&&  this.current(m) 
+								|| null
 						case null:
 							prevApp=currentApp
 							localStorage.removeItem('currentApp')

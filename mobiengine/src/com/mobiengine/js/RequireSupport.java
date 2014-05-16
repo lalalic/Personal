@@ -12,6 +12,7 @@ import org.mozilla.javascript.json.JsonParser;
 
 import com.google.appengine.api.datastore.Entity;
 import com.mobiengine.service.EntityService;
+import com.mobiengine.service.PluginService;
 import com.mobiengine.service.RoleService;
 import com.mobiengine.service.SchemaService;
 import com.mobiengine.service.Service;
@@ -174,6 +175,11 @@ public class RequireSupport extends ScriptableObject {
 				@Override
 				EntityService createService(Entity app, Entity user){
 					return new RoleService(app,user);
+				}
+			},plugins{
+				@Override
+				EntityService createService(Entity app, Entity user){
+					return new PluginService(app,user);
 				}
 			},schemas{
 				@Override
