@@ -33,13 +33,9 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.SortDirection;
-import com.google.appengine.api.datastore.Text;
-import com.mobiengine.js.Cloud;
 
 @Path(Service.VERSION+"/classes/{kind:\\w+}")
-public class EntityService extends Service{
-	private Cloud cloud;
-	
+public class EntityService extends Service{	
 	public EntityService(
 			@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
@@ -220,14 +216,6 @@ public class EntityService extends Service{
 	
 	public void populate(Entity entity, JSONObject ob) throws Exception{
 		this.schema.populate(entity, ob);
-	}
-	
-	public Cloud getCloud(){
-		if(cloud!=null)
-			return cloud;
-		Entity app=getApp();
-		
-		return cloud=new Cloud(this,app.hasProperty("cloudCode") ? ((Text)app.getProperty("cloudCode")).getValue() : "");
 	}
 	
 	public void beforeCreate(Entity entity, JSONObject request, JSONObject response) throws Exception{

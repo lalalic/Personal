@@ -12,6 +12,7 @@ import org.mozilla.javascript.json.JsonParser;
 
 import com.google.appengine.api.datastore.Entity;
 import com.mobiengine.service.EntityService;
+import com.mobiengine.service.FunctionService;
 import com.mobiengine.service.PluginService;
 import com.mobiengine.service.RoleService;
 import com.mobiengine.service.SchemaService;
@@ -65,7 +66,7 @@ public class RequireSupport extends ScriptableObject {
 			if(rawData instanceof NativeArray)
 				data=new JSONArray(cloud.stringify(rawData));
 			else if(rawData!=null)
-				data=new JSONObject((String)rawData);
+				data=new JSONObject(cloud.stringify(rawData));
 				
 			Object r=http.execute(data);
 			return new JsonParser(ctx,scope).parseValue(cloud.stringify(r));
@@ -74,7 +75,7 @@ public class RequireSupport extends ScriptableObject {
 		class URIInfo{
 			KIND kind;
 			String[] info;
-			long id=0;
+			String extra;
 			URIInfo(String url){
 				info=url.split("/");
 				int i=0;
@@ -86,17 +87,21 @@ public class RequireSupport extends ScriptableObject {
 				kind=KIND.valueOf(info[++i]);
 				if(kind==KIND.classes)
 					kind.setKind(info[++i]);
-				
-				if(info.length-1==i+1)
-					id=Long.parseLong(info[++i]);
+				else if(info.length-1==i+1)
+					extra=info[++i];
 			}
 			
 		}
 		enum HTTP{
 			POST{
 				@Override
-				Object execute(JSONObject data) {
-					return service.create(data).getEntity();
+				Object execute(JSONObject data) throws Exception{
+					if(service instanceof EntityService)
+						return ((EntityService)service).create(data).getEntity();
+					else if(service instanceof FunctionService){
+						return ((FunctionService)service).service(uri.extra, data).getEntity();
+					}
+					return null;
 				}
 
 				@Override
@@ -109,12 +114,12 @@ public class RequireSupport extends ScriptableObject {
 
 				@Override
 				Object execute(JSONObject data) {
-					return service.update(uri.id, data).getEntity();
+					return ((EntityService)service).update(Long.parseLong(uri.extra), data).getEntity();
 				}
 
 				@Override
 				Object execute(JSONArray data) {
-					return service.update(data).getEntity();
+					return ((EntityService)service).update(data).getEntity();
 				}
 	
 				
@@ -122,10 +127,10 @@ public class RequireSupport extends ScriptableObject {
 
 				@Override
 				Object execute(JSONObject data)  throws Exception{
-					if(uri.id!=0)
-						return service.get(uri.id).getEntity();
+					if(uri.extra!=null)
+						return ((EntityService)service).get(Long.parseLong(uri.extra)).getEntity();
 					else
-						return service.get(data!=null ? data.getJSONObject("where") : null, 
+						return ((EntityService)service).get(data!=null ? data.getJSONObject("where") : null, 
 								data!=null ? data.getString("order") : null, 
 								data!=null ? data.getInt("limit") : -1, 
 								data!=null ? data.getInt("skip") : -1, 
@@ -143,17 +148,15 @@ public class RequireSupport extends ScriptableObject {
 
 				@Override
 				Object execute(JSONObject data){
-					 return service.remove(uri.id).getEntity();
+					 return ((EntityService)service).remove(Long.parseLong(uri.extra)).getEntity();
 				}
 
 				@Override
 				Object execute(JSONArray data) {
 					return null;
 				}
-	
-				
 			};
-			EntityService service;
+			Service service;
 			URIInfo uri;
 			Object execute(Object data) throws Exception{
 				if(data==null || data instanceof JSONObject)
@@ -195,8 +198,12 @@ public class RequireSupport extends ScriptableObject {
 				EntityService createService(Entity app, Entity user){
 					return new EntityService(app,user,kind);
 				}
+			},functions{
+				FunctionService createService(Entity app, Entity user){
+					return new FunctionService(app,user);
+				}
 			};
-			abstract EntityService createService(Entity app, Entity user);
+			abstract Service createService(Entity app, Entity user);
 			void setKind(String kind){}
 		}
 	}

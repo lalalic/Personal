@@ -1,8 +1,5 @@
 package com.mobiengine.service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,17 +7,18 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
 import com.google.appengine.api.blobstore.BlobInfo;
@@ -28,11 +26,14 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.blobstore.UploadOptions;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Path(Service.VERSION+"/files")
 public class FileService extends EntityService {
-	private final static String KIND="_file";
+	private final static String KIND="__BlobInfo__";
 	private final static String BUCKET=AppIdentityServiceFactory.getAppIdentityService().getDefaultGcsBucketName();
 	private final static UploadOptions option=UploadOptions.Builder.withMaxUploadSizeBytes(1024*1024*5).googleStorageBucketName(BUCKET);
 	public FileService(@HeaderParam("X-Session-Token") String sessionToken,
@@ -43,27 +44,13 @@ public class FileService extends EntityService {
 	@GET
 	@Path("want2upload")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String createUploadUrl(@Context UriInfo uri) {
+	public String createUploadUrl(@QueryParam("callback") @DefaultValue("/"+Service.VERSION+"/files/directReturn") String callback) {
 		return BlobstoreServiceFactory.getBlobstoreService()
-				.createUploadUrl("/"+uri.getPath()+"DirectReturn", option);
-	}
-	
-	@GET
-	@Path("want2upload/{callback:.*}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String createUploadUrl(@Context UriInfo uri, String callback) {
-		try {
-			if(callback==null || callback.trim().isEmpty())
-				return createUploadUrl(uri);
-			return BlobstoreServiceFactory.getBlobstoreService()
-					.createUploadUrl("/"+uri.getPath()+"/"+URLDecoder.decode(callback,"UTF-8"), option);
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e.getMessage());
-		}
+				.createUploadUrl(callback.replaceAll("//", "/"), option);
 	}
 	
 	@POST
-	@Path("want2uploadDirectReturn")
+	@Path("directReturn")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response uploadedUrls(@Context HttpServletRequest request){
@@ -74,9 +61,23 @@ public class FileService extends EntityService {
 		List<String> urls=new ArrayList<String>();
 		BlobstoreService service = BlobstoreServiceFactory.getBlobstoreService();
 		Map<String, List<BlobInfo>> uploads = service.getBlobInfos(request);
-		for (BlobInfo file : uploads.get("file")) 
+		for (BlobInfo file : uploads.get("file"))
 			urls.add("/"+LoadService.PATH.build(file.getBlobKey().getKeyString()).toASCIIString());			
 		return urls.get(0);
+	}
+	
+	public static Entity get(String pathOrKey) throws Exception{
+		String key=pathOrKey.replaceFirst("/"+Service.VERSION+"file/", "");
+		return DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, key));
+	}
+	
+	public static void delete(String pathOrKey){
+		try {
+			String key=pathOrKey.replaceFirst("/"+Service.VERSION+"file/", "");
+			BlobstoreServiceFactory.getBlobstoreService().delete(new BlobKey(key));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	
@@ -89,10 +90,12 @@ public class FileService extends EntityService {
 		public String get(@PathParam("key") String key,
 				@Context HttpServletResponse res) {
 			try {
-				BlobstoreServiceFactory.getBlobstoreService().serve(
-						new BlobKey(key), res);
-			} catch (IOException e) {
-
+				Entity blob=FileService.get(key);
+				res.setContentType((String)blob.getProperty("content_type"));
+				BlobstoreServiceFactory.getBlobstoreService().serve(new BlobKey(key), res);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 			return "";
 		}

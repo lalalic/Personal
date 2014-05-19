@@ -373,7 +373,7 @@ define(['app','Plugin','JSZip','UI'],function(app,Plugin,JSZip,UI){
 			},{
 				want2upload: function(callback){
 					return $.ajax((new app.File()).urlRoot()
-									+'/want2upload'+(callback && encodeURIComponent(("/"+callback).replace('//','/'))),
+									+'/want2upload'+(callback ? "?callback=/"+callback :""),
 									{async:false,dataType:'text'}).responseText
 				}
 			}),

@@ -24,6 +24,8 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Text;
+import com.mobiengine.js.Cloud;
 import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
@@ -34,6 +36,8 @@ public class Service{
 	String appId;
 	Entity user;
 	Entity app;
+	
+	Cloud cloud;
 	
 	public Service(
 			@HeaderParam("X-Session-Token") String sessionToken,
@@ -187,5 +191,13 @@ public class Service{
 	
 	public String getKind(){
 		return this.kind;
+	}
+	
+	public Cloud getCloud(){
+		if(cloud!=null)
+			return cloud;
+		if(app!=null)
+			return cloud=new Cloud(this,app.hasProperty("cloudCode") ? ((Text)app.getProperty("cloudCode")).getValue() : "");
+		return null;
 	}
 }

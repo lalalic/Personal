@@ -17,7 +17,7 @@
  *  	uninstall: function(){}
  *  })
  */
-define(['app',"JSZip", "module"], function(app, JSZip,Specs, module){
+define(['app',"JSZip", "module"], function(app, JSZip, module){
 	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,

@@ -47,30 +47,10 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 			return this._super().hide.apply(this,arguments)
 		},
 		download: function(){
-			var currentApp=this.model
-			return currentApp.download().then(function(zip){
-				zip.file("cloud/main.js", currentApp.get('cloudCode')||'//put your cloud code here')
-				currentApp.exportSchema().then(function(schema){
-					zip.file("data/schema.js",JSON.stringify(schema,null, "\t"))
-					var data={}
-					return $.when(_.chain(_.keys(schema)).map(function(table){
-						return currentApp.exportData(table)
-							.then(function(collection){
-								collection.length && (data[table]=collection)
-							})
-					}).value()).then(function(){
-						zip.file("data/data.json",JSON.stringify(data,null, "\t"))
-					})
-				}).then(function(){
-					View.util.save(zip, currentApp.get('name')+'.zip')
-				})
-			})
+			return this.model && this.model.download()
 		},
 		upload: function(e){
 			this.model.upload(e.target.files[0])
-				.then(function(data){
-					this.model.set(data)
-				})
 			e.target.value=""
 		}
 	})

@@ -23,7 +23,7 @@ import org.mozilla.javascript.json.JsonParser;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.mobiengine.provider.JSONObjectMapper;
-import com.mobiengine.service.EntityService;
+import com.mobiengine.service.Service;
 import com.mobiengine.service.UserService;
 
 
@@ -38,13 +38,14 @@ public class Cloud{
 	
 	protected Context ctx;
 	protected ScriptableObject scope;
-	protected EntityService service;
+	protected Service service;
 	protected Response response;
+	HashMap<String, Function> functions=new HashMap<String,Function>();
 	HashMap<String, HashMap<Integer,List<Function>>> codes=new HashMap<String, HashMap<Integer,List<Function>>>();
 	HashSet<String> ran=new HashSet<String>();
 	ScriptableObject jsUser;
 	
-	public Cloud(EntityService service, String code) {
+	public Cloud(Service service, String code) {
 		ctx=Context.enter();
 		scope=(ScriptableObject)ctx.newObject(sharedScope);
 		scope.setPrototype(sharedScope);
@@ -68,6 +69,33 @@ public class Cloud{
 		}
 		response=new Response();
 	}
+	
+	public void define(String path, Function callback){
+		functions.put(path, callback);
+	}
+	
+	public Object callFunction(String path, String params){
+		if(!functions.containsKey(path)){
+			logger.warning("Not support cloud function "+path);
+			throw new RuntimeException("Not support cloud function "+path);
+		}
+		Function f=functions.get(path);
+		NativeObject request=new NativeObject();
+		try {
+			request.put("params", request, new JsonParser(ctx,scope).parseValue(params));
+			request.put("user", request, jsUser);
+			response.object=new NativeObject();
+			f.call(ctx, scope, null, new Object[]{request, response});
+			return toJSON(response.object);
+		} catch (Exception e) {
+			logger.severe("Cloud:"+e.getMessage());
+			throw new RuntimeException(e);
+		}
+	}
+	public Object callFunction(String path, JSONObject params) throws Exception{
+		return callFunction(path, this.stringify(params));
+	}
+	
 	
 	public void beforeSave(String kind, Function callback){
 		getFunctionList(kind,BEFORE_SAVE).add(callback);

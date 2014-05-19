@@ -3,7 +3,44 @@
  * test
  * @module starter
  */
-define(['Plugin', 'app', 'specs','JSZip','plugins/model','UI'],function(Plugin, app, specs, JSZip,UI){
+define(['Plugin', 'app', 'specs','JSZip','UI','plugins/model'],function(Plugin, app, specs, JSZip,UI){
+var defaultAppMain=function(name, key){
+return function(Plugin,app){
+	return Plugin.extend({
+		name:"bootstrap",
+		install:function(){
+			//configure application
+			_.extend(app,{
+				name:"_name_",
+				title:"[application title]",
+				version:"[application version]",
+				description:"[describe your application]",
+				apiKey:"_key_"
+			});
+			/**
+			 *  route configuration
+			 *  @example
+			 *  app.route('main','',this.module('view/main'))
+			 */
+			 
+			 /**
+			  *  more extensions, such as extending models, change app.init, and etc
+			  *  @example
+			  *  var Post=app.Post=app.createKind(new Backbone.Model({name : 'Post' }))
+			  *  app.init4User=_.aop(app.init4User,function(_raw){
+			  *  	console.debug("start initializing for user")
+			  *  	var r=_raw.apply(this,arguments)
+			  *  	console.debug("initialized for user")
+			  *  	return r
+			  *  })
+			  */
+		},
+		uninstall:function(){
+			
+		}
+	})
+}.toString().replace('_name_',name).replace('_key_',key);
+}
 	return Plugin.extend({
 		description:'manage applications',
 		install: function(){
@@ -55,32 +92,59 @@ define(['Plugin', 'app', 'specs','JSZip','plugins/model','UI'],function(Plugin, 
 					},
 					upload: function(file){
 						var me=this
-						return (new FileReader()).readAsArrayBuffer(file).then(function(){
-							var zip=new JSZip(data),temp, form=new FormData(), cloudCode;
-							(cloudCode=zip.file('cloud/main.js')) && form.append('cloudCode',(cloudCode=cloudCode.asText()));
-							(temp=zip.file('data/schema.js')) && form.append('schema',temp.asText());
-							(temp=zip.file('data/data.json')) && form.append('data',temp.asText());
+						function switchAppKey(e,xhr){
+							var current=app.Application.current()
+							current && xhr.setRequestHeader("X-Application-Id", current.get('apiKey'))
+						}
+						$(document).on('ajaxSend', switchAppKey)
+						return (new FileReader()).readAsArrayBuffer(file).then(function(data){
+							var zip=new JSZip(data),temp, 
+								form=new FormData(), cloudCode;
+							(cloudCode=zip.file('cloud/main.js')) && 
+								form.append('cloudCode',(cloudCode=cloudCode.asText()));
+							if(temp=zip.file('data/schema.js')){
+								var _user, _role, _plugin
+								temp=_.map(JSON.parse(temp.asText()),function(table,tableName, a){
+									_.each(table,function(field, fieldName){
+										this.fields.push(_.extend(field,{name:fieldName}))
+									},(a={name:tableName,fields:[]}))
+									return a
+								})
+								form.append('schema',JSON.stringify(temp))
+							}
+							
+							//(temp=zip.file('data/data.json')) && form.append('data',temp.asText());
 							zip.remove('cloud')
 							zip.remove('data')
 							form.append('file',zip.generate({type:'blob'}))
 							return $.ajax({
-								url: app.File.want2upload("/"+this.urlRoot()+"/upload"),
+								url: app.File.want2upload(me.urlRoot()+"/upload"),
 								data:form,
+								dataType:'json',
+								cache: false,
 								contentType : false,
 								processData: false,
 								type: 'POST',
 								dataFilter:function(data,type){
 									me.set('cloudCode',cloudCode)
+									me.set(JSON.parse(data))
 									return null
+								},
+								complete: function(){
+									$(document).off('ajaxSend', switchAppKey)
 								}
-							}).then(function(){
+							}).then(function(data){
 								return me
 							})
 						})
 					},
 					download: function(){
-						return new File({url:this.get('clientCode')}).then(_.bind(function(data){
+						return (this.has('clientCode') ? new app.File({url:this.get('clientCode')}).download() : $.Deferred().resolve())
+						.then(_.bind(function(data){
 							var zip=new JSZip(data),currentApp=this;
+							if(!zip.file('main.js'))
+								zip.file('main.js','define(["Plugin","app"],'+defaultAppMain(this.get('name'),this.get('apiKey'))+')',{type:"text/script"})
+								
 							zip.file("cloud/main.js", this.get('cloudCode')||'//put your cloud code here')
 							this.exportSchema().then(function(schema){
 								zip.file("data/schema.js",JSON.stringify(schema,null, "\t"))

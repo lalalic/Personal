@@ -38,7 +38,7 @@ import com.google.appengine.api.search.GeoPoint;
 
 @Path(Service.VERSION+"/schemas")
 public class SchemaService extends EntityService{
-	private static final String KIND="_schema";
+	static final String KIND="_schema";
 	private static final Map<String, Schema> schemas= new ConcurrentHashMap<String,Schema>();
 	private static final String INTERNAL_FIELDS=",createdAt,updatedAt,ACL,id,";
 	
@@ -211,6 +211,7 @@ public class SchemaService extends EntityService{
 	public static class Schema{
 		protected ConcurrentHashMap<String, ConcurrentHashMap<String, EmbeddedEntity>> types=
 			new ConcurrentHashMap<String,ConcurrentHashMap<String, EmbeddedEntity>>();
+		protected ConcurrentHashMap<String, Long> typesID=new ConcurrentHashMap<String,Long>();
 		
 		Schema(){
 			retrieve();
@@ -236,6 +237,11 @@ public class SchemaService extends EntityService{
 			for(EmbeddedEntity field: (List<EmbeddedEntity>)kind.getProperty("fields"))
 				fields.put(field.getProperty("name").toString(), field);
 			types.put(name, fields);
+			typesID.put(name,kind.getKey().getId());
+		}
+		
+		protected long getId(String name){
+			return typesID.get(name);
 		}
 		
 		@SuppressWarnings("deprecation")
