@@ -2,8 +2,26 @@
  *  @module Database Schema
  *  @requires Backbone 
  */
-define(['app','Plugin','JSZip','UI'],function(app,Plugin,JSZip,UI){
+ 
+(typeof(define)=='undefined' ? function(a,f){f(this)} : define)(['app'],function(app){
 	(function(root){
+		!_.has(_,'aop') && 
+		_.mixin({
+			aop:function(f,wrap){return wrap(f)},
+			newClass: function (constructor, properties, classProperties) {
+				_.extend(constructor.prototype, Backbone.Events, properties)
+				_.extend(constructor, classProperties)
+				return constructor;
+			}
+		});
+		
+		!_.has(Backbone.Model.prototype,'_super') && 
+		(Backbone.Model.prototype._super=function(a){
+			if(this.__proto__==this.__proto__.constructor.__super__)
+				throw "no _super on this class";
+			return this.__proto__.constructor.__super__
+		});
+	
 		Backbone.Collection.prototype.url=function(){
 			if(this.model){
 				var root=this.model.prototype.urlRoot
@@ -404,9 +422,9 @@ define(['app','Plugin','JSZip','UI'],function(app,Plugin,JSZip,UI){
 				(new File({url:this.get('clientCode')}))
 				.download()
 				.then(_.bind(function(data){
-					var zip=new JSZip(data)
+					var JSZip=require('JSZip'),	zip=new JSZip(data);
 					zip.file("cloud/main.js",this.get('cloudCode'),{type:'text'})
-					UI.util.save(zip,this.get('name')+".zip","application/zip")
+					require('UI').util.save(zip,this.get('name')+".zip","application/zip")
 				},this))	
 			}
 		}),

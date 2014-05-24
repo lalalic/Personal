@@ -111,7 +111,7 @@ define(['app'],function(app){
 			user: function(){
 				if(!app.isLoggedIn()){
 					require(['view/user'],function(user){
-						user.show('signin')
+						new user().show('signin')
 					})
 				}
 			},
@@ -141,9 +141,10 @@ define(['app'],function(app){
 			 *  internal called by router just after every show
 			 */
 			_emptivible: function(){
-				if(this._isEmpty())
-					this.$('article').append(_.template('#tmplEmpty',this.EMPTY))
-				else
+				if(this._isEmpty()){
+					if(this.$('article>.empty').length==0)
+						this.$('article').append(_.template('#tmplEmpty',this.EMPTY))
+				}else
 					this.$('article>.empty').remove()
 			},
 			/**

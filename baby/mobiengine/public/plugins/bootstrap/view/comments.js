@@ -8,7 +8,7 @@ define(['UI','app'],function(UI, app){
 				</div>\
 			</li>';
 	var Comment=app.Comment
-	return new (UI.ListPage.extend({
+	return UI.ListPage.extend({
 		title:'Comments',
 		cmds:'<a><form id="_comment">\
 			<textarea name="content" \
@@ -43,5 +43,5 @@ define(['UI','app'],function(UI, app){
 				},this))
 			return false
 		}
-	}))
+	})
 })

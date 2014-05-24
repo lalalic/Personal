@@ -13,23 +13,26 @@ define(['UI','app','i18n!../nls/i18n'],function(View,app,i18n){
 		tmplSearch='\
 			<div class="popup hide">\
 				<div>\
-					{{_.template("#tmplCheckable",({title:'+i18n("shortcut")+',name:"shortcut",type:"radio",options:["All","Mine","Smart"]}))}}\
-					{{_.template("#tmplCheckable",({title:'+i18n("category")+',name:"category",type:"radio",options:Tag.grouped.category}))}}\
+					{{_.template("#tmplCheckable",({title:"'+i18n("shortcut")+'",name:"shortcut",type:"radio",options:["All","Mine","Smart"]}))}}\
+					{{_.template("#tmplCheckable",({title:"'+i18n("category")+'",name:"category",type:"radio",options:Tag.grouped.category}))}}\
 				</div>\
 				<div>\
-					{{_.template("#tmplCheckable",({title:'+i18n("gender")+',name:"tags",type:"checkbox",options:Tag.grouped.gender}))}}\
-					{{_.template("#tmplCheckable",({title:'+i18n("duration")+',name:"tags",type:"checkbox",options:Tag.grouped.duration}))}}\
-					{{_.template("#tmplCheckable",({title:'+i18n("goal")+',name:"tags",type:"checkbox",options:Tag.grouped.goal}))}}\
+					{{_.template("#tmplCheckable",({title:"'+i18n("gender")+'",name:"tags",type:"checkbox",options:Tag.grouped.gender}))}}\
+					{{_.template("#tmplCheckable",({title:"'+i18n("duration")+'",name:"tags",type:"checkbox",options:Tag.grouped.duration}))}}\
+					{{_.template("#tmplCheckable",({title:"'+i18n("goal")+'",name:"tags",type:"checkbox",options:Tag.grouped.goal}))}}\
 				</div>\
 			</div>'
 	var ListPage=View.ListPage, Post=app.Post, Tag=app.Tag
-	return new (ListPage.extend({
+	return ListPage.extend({
 		itemTemplate:_.template(tmplPosts),
 		cmds:'<a href="#create"><span class="icon plus"/></a><a><span class="icon search"/></a>',
-		collection:Post.collection(),
 		events: _.extend({},ListPage.prototype.events,{
 			'click span.search':'showSearchWidget'
 		}),
+		initialize: function(){
+			this.collection=Post.collection()
+			this._super().initialize.apply(this,arguments)
+		},
 		render:function(){
 			this._super().render.apply(this,arguments)
 			this.$search=this.$el.css({position:'relative'})
@@ -57,5 +60,5 @@ define(['UI','app','i18n!../nls/i18n'],function(View,app,i18n){
 			this.popup(this.$search,e)
 			this.$search.find('.checkable').addClass('open')
 		}
-	}))
+	})
 })

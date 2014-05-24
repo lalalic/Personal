@@ -1,11 +1,15 @@
 package com.mobiengine.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -29,6 +33,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Text;
 import com.mobiengine.service.SchemaService.Schema;
 import com.mobiengine.service.SchemaService.TYPES;
@@ -207,16 +212,6 @@ public class ApplicationService extends EntityService {
 		}
 	}
 	
-	@Path("my")
-	public static class AppLoader{
-		@GET
-		@Path("{name:.*}")
-		public Response get(@PathParam("name")String name){
-			
-			return null;
-		}
-	}
-	
 	@Path(Service.VERSION+"/apps/upload")
 	public static class AppUploader extends EntityService{
 		public AppUploader(@HeaderParam("X-Session-Token") String sessionToken,
@@ -280,6 +275,55 @@ public class ApplicationService extends EntityService {
 				return Response.ok(response).build();
 			}catch(Exception ex){
 				throw new RuntimeException(ex.getMessage());
+			}
+		}
+	}
+
+	
+	
+	@Path("my/{app}")
+	@Singleton
+	public static class AppBootstrap{
+		private static byte[] INDEX_DATA=new byte[1024*32];
+		private static int len;
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public Response index(
+				@Context HttpServletRequest request,
+				@Context HttpServletResponse response) throws Exception{
+			byte[] NDEX_DATA=new byte[1024*32];
+			int len=0;            
+			if(len==0){
+				synchronized(this){
+					InputStream is=request.getSession().getServletContext()
+						.getResourceAsStream("/yang/app.html");
+					len=is.read(INDEX_DATA);
+					is.close();
+				}
+			}
+			
+			response.setContentType("text/html");
+			response.getOutputStream().write(INDEX_DATA,0,len);
+			response.getOutputStream().flush();
+			return null;
+		}
+
+		@GET
+		@Path("bootstrap")
+		public String bootstrap(@PathParam("app")String app,
+				@Context HttpServletResponse response) throws IOException{
+			String rawNS=NamespaceManager.get();
+			try{
+				NamespaceManager.set(TOP_NAMESPACE);
+				@SuppressWarnings("deprecation")
+				Entity appEntity=DatastoreServiceFactory.getDatastoreService()
+					.prepare(new Query(KIND).addFilter("name", FilterOperator.EQUAL, app))
+					.asSingleEntity();
+				FileService.LoadService.serveDirect((String)appEntity.getProperty("clientCode"),response);
+				response.getOutputStream().flush();
+				return "";
+			}finally{
+				NamespaceManager.set(rawNS);
 			}
 		}
 	}

@@ -183,7 +183,7 @@ return function(Plugin,app){
 						})
 					},
 					localPath: function(){
-						return 'app/'+this.get('url')
+						return 'app/'+this.get('name')
 					}
 				},/** @lends app.Application */{
 					/** 

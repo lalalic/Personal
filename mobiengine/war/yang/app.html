@@ -6,10 +6,58 @@
 	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
 	<title></title>
-	<link rel="stylesheet" href="css/icon.css">
-	<link rel="stylesheet" href="css/app.css">
-	<link rel="stylesheet" href="css/app.theme.css">
-	<script data-main="js/main" src="js/libs/require.js"></script>
+	<link rel="stylesheet" href="/yang/css/icon.css">
+	<link rel="stylesheet" href="/yang/css/app.css">
+	<link rel="stylesheet" href="/yang/css/app.theme.css">
+	<script src="/yang/js/libs/require.js"></script>
+	<script>
+	require.config(/** @lends requireJSConf*/{
+		baseUrl:'/yang/js',
+		config:{
+			Plugin:{
+				root:"/1/plugins/",//use path replative to ./js
+				zipped:true
+			},
+			app:{
+				plugins:'/my/'+location.pathname.replace(/\/$/,'').split('/').pop()+'/bootstrap',
+				name:location.pathname.split('/').pop()
+			}
+		},
+		deps:['jQuery', 'app'],
+		callback: function($, app){
+			//start application
+			$(function () {app.start()})
+		},
+		shim:{
+			Backbone: {
+				deps: ['Underscore', 'jQuery'],
+				exports: 'Backbone'
+			},
+			Underscore: {
+				exports: '_'
+			},
+			jQuery:{
+				exports:'jQuery'
+			},
+			jasmine:{
+				exports:'jasmine'
+			}
+		},
+		paths:{
+			JSZip:"libs/jszip.min",
+			jQuery:"libs/jquery-2.1.0.min",
+			Underscore:"libs/underscore-min",
+			Backbone:"libs/backbone-min",
+			i18n:"libs/i18n",
+			Text:"libs/text",
+			jasmine:"libs/jasmine",
+			
+			Phonegap:"file:///android_asset/www/phonegap.js",
+		},
+		waitSeconds:30,
+		urlArgs: "v=0.1"
+	})
+	</script>
 </head>
 <body data-device="phone" data-position="absolute">
 <section id="splash" class="show">

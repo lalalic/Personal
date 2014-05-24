@@ -29,7 +29,7 @@ define(['UI','app','i18n!../nls/i18n'],function(UI, app,i18n){
 		Story=app.Story,
 		User=app.User,
 		Query=app.Query
-	return new (UI.Page.extend({
+	return UI.Page.extend({
 		cmds:'<a href="#story"><span title="'+i18n("tell your baby's story")+'" class="icon story"/></a>\
 			<a href="#comments"><span title="'+i18n("comment")+'" class="icon comment"/><span class="tag count"/></a>\
 			<a><span title="'+i18n("favorite")+'" class="icon star"/></a>\
@@ -163,5 +163,5 @@ define(['UI','app','i18n!../nls/i18n'],function(UI, app,i18n){
 			#taskOption{padding:5px; line-height:3em;cursor:default;list-style:none}\
 			.favorited,.tasked{color:yellow}\
 			.stat{position:relative;height:300px;background-color:black}"
-	}))
+	})
 })

@@ -4,7 +4,7 @@
  */
 define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app,makeEditor,i18n){
 	var FormPage=View.FormPage, Post=app.Post, Tag=app.Tag, Favorit=app.Tag
-	return new (FormPage.extend({
+	return FormPage.extend({
 		content:'\
 			<form>\
 				<fieldset><input type="text" placeholder='+i18n("title")+' name="title" style="text-align:center"><div class="tags"></div></fieldset>\
@@ -102,5 +102,5 @@ define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app,makeEdit
 			$(this.editor).empty()
 			return this._super().clear.apply(this,arguments)
 		}
-	}))
+	})
 })

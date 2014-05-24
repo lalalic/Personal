@@ -10,14 +10,14 @@ define(['app','UI','i18n!../nls/i18n'],function(app,UI,i18n){
 			</div>\
 		</li>'
 	var Tag=app.Tag
-	return new (UI.ListPage.extend({
+	return UI.ListPage.extend({
 		cmds:'<a href="#favorites"><span class="icon star"/></a>\
 			<a href="#tasks"><span class="icon tasks"/></a>\
 			<a href="#features"><span class="icon apps"/></a>\
 			<a href="#sync"><span class="icon sync"/><span class="tag count"/></a>\
 			<a href="#test"><span class="icon test"/></a>',
 		itemTemplate:_.template(tmplCates),
-		collection:new Tag.collection(),
+		collection:Tag.collection(),
 		initialize: function(){
 			UI.ListPage.prototype.initialize.apply(this,arguments)
 			this.$list.addClass('indented')
@@ -29,5 +29,5 @@ define(['app','UI','i18n!../nls/i18n'],function(app,UI,i18n){
 		}
 	},{
 		STYLE:".stat{position:relative;height:300px;background-color:black}"
-	}))
+	})
 })

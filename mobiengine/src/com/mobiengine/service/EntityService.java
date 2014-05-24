@@ -87,12 +87,13 @@ public class EntityService extends Service{
 			Entity entity = db.get(key);
 			if (entity == null)
 				throw new Exception("Entity Not Exist");
+			entity.setProperty("updatedAt", new Date());
+			
 			JSONObject response = new JSONObject();
 			request.put("id", entity.getKey().getId());
 			beforeUpdate(entity, request, response);
 			
 			populate(entity, request);
-			entity.setProperty("updatedAt", new Date());
 			db.put(entity);
 			
 			response.put("updatedAt", entity.getProperty("updatedAt"));

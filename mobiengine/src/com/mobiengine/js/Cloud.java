@@ -305,7 +305,7 @@ public class Cloud{
 	
 	public static class Console{
 		public void debug(Object msg){
-			logger.finest(msg.toString());
+			logger.config(msg.toString());
 		}
 		public void info(Object msg){
 			logger.info(msg.toString());

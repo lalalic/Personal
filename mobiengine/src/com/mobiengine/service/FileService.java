@@ -1,5 +1,6 @@
 package com.mobiengine.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobKey;
@@ -67,17 +69,19 @@ public class FileService extends EntityService {
 	}
 	
 	public static Entity get(String pathOrKey) throws Exception{
-		String key=pathOrKey.replaceFirst("/"+Service.VERSION+"file/", "");
-		return DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, key));
+		return DatastoreServiceFactory.getDatastoreService().get(KeyFactory.createKey(KIND, getKey(pathOrKey)));
 	}
 	
 	public static void delete(String pathOrKey){
 		try {
-			String key=pathOrKey.replaceFirst("/"+Service.VERSION+"file/", "");
-			BlobstoreServiceFactory.getBlobstoreService().delete(new BlobKey(key));
+			BlobstoreServiceFactory.getBlobstoreService().delete(new BlobKey(getKey(pathOrKey)));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static String getKey(String pathOrKey){
+		return pathOrKey.replaceFirst("/"+Service.VERSION+"/file/", "");
 	}
 
 	
@@ -87,17 +91,34 @@ public class FileService extends EntityService {
 		static UriBuilder PATH=UriBuilder.fromResource(LoadService.class).path(LoadService.class, "get");
 		@GET
 		@Path("{key}")
-		public String get(@PathParam("key") String key,
+		public static String get(@PathParam("key") String key,
 				@Context HttpServletResponse res) {
+			String rawNS=NamespaceManager.get();
 			try {
-				Entity blob=FileService.get(key);
-				res.setContentType((String)blob.getProperty("content_type"));
-				BlobstoreServiceFactory.getBlobstoreService().serve(new BlobKey(key), res);
+				NamespaceManager.set(null);
+				try {
+					Entity blob=FileService.get(key);
+					res.setContentType((String)blob.getProperty("content_type"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				BlobstoreServiceFactory.getBlobstoreService().serve(new BlobKey(getKey(key)), res);
+				return "";
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new RuntimeException(e);
+			}finally{
+				NamespaceManager.set(rawNS);
 			}
-			return "";
+		}
+		
+		public static void serveDirect(String key, HttpServletResponse res){
+			try {
+				BlobstoreServiceFactory.getBlobstoreService().serve(new BlobKey(getKey(key)), res);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }

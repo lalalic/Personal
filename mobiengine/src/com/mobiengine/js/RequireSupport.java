@@ -4,7 +4,6 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -61,14 +60,7 @@ public class RequireSupport extends ScriptableObject {
 			http.uri=new URIInfo((String) Context.jsToJava(request.get("url"),String.class));
 			
 			http.service=http.uri.kind.createService(cloud.service.getApp(), cloud.service.getUser());
-			Object rawData=request.get("data");
-			Object data=null;
-			if(rawData instanceof NativeArray)
-				data=new JSONArray(cloud.stringify(rawData));
-			else if(rawData!=null)
-				data=new JSONObject(cloud.stringify(rawData));
-				
-			Object r=http.execute(data);
+			Object r=http.execute(request.has("data", request) ? new JSONObject((String)request.get("data")) : null);
 			return new JsonParser(ctx,scope).parseValue(cloud.stringify(r));
 		}
 		
@@ -87,7 +79,7 @@ public class RequireSupport extends ScriptableObject {
 				kind=KIND.valueOf(info[++i]);
 				if(kind==KIND.classes)
 					kind.setKind(info[++i]);
-				else if(info.length-1==i+1)
+				if(info.length-1==i+1)
 					extra=info[++i];
 			}
 			

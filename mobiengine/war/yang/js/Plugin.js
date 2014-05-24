@@ -21,6 +21,7 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 	var regI18N=/^i18n!/,
 		cfg=module.config()||{},
 		byFile=location.protocol=='file:' || !cfg.zipped,
+		zipped=cfg.zipped,
 		Parser=_.newClass(function(data){
 				this.zip=new JSZip(data)
 				this.info=eval(this.define+this.zip.file('main.js').asText())
@@ -84,7 +85,7 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 								rootPath.getFile(path, createOpt)
 									.then(function(fileEntry){
 										fileEntry.createWriter(function(writer){
-											writer.write(new Blob([zip.file(first).asArrayBuffer()]))
+											writer.write(new Blob([zip.file(path).asArrayBuffer()]))
 										})
 									})
 						})
@@ -96,7 +97,7 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 							return firstFile.createWriter()
 								.then(function(writer){
 									var p=new $.Deferred()
-									writer.onwriteend=function(){p.resolve(rootPath.toURL())}
+									writer.onwriteend=function(){p.resolve(rootPath.toURL()+"/")}
 									writer.onerror=function(e){p.fail(e)}
 									writer.write(new Blob([zip.file(first).asArrayBuffer()]))
 									return p
@@ -104,9 +105,15 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 						})
 				})
 		}
-	})(window.requestFileSystem=_.aopromise(window.requestFileSystem||window.webkitRequestFileSystem,4))
-	
-	
+	})(window.requestFileSystem=_.aopromise(window.requestFileSystem||window.webkitRequestFileSystem,4));
+
+	require.load=_.aop(require.load,function(_raw){
+		return function(context, moduleName, url){
+			if(/^filesystem:/.test(url)&&url.indexOf('.js?')==-1)
+				url=url.replace('?','.js?')
+			return _raw.call(this,context,moduleName,url)
+		}
+	})
 	var Plugin= _.extend(/**@lends Plugin*/{
 		version:'0.1',
 		/**
@@ -160,19 +167,20 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 			},this))
 		},
 		_loadFromZip: function(name, parentRequire, onload, config){
-			var me=this
+			var me=this,
+				pluginName=name.split('/').pop().replace('.zip','')
 			$.ajax({
-				url:parentRequire.toUrl(this.root+name),
+				url:name.charAt(0)=='/' ? name : parentRequire.toUrl(this.root+name),
 				mimeType:'text/plain; charset=x-user-defined',
 				processData:false,
 				dataFilter:function(data,type){
 					(new JSZip(data))
-						.save2Local(app.localPath()+"/plugins/"+name,"main.js")
+						.save2Local(app.localPath()+"/plugins/"+pluginName,"main.js")
 						.then(function(rootUrl){
-							var pluginName=name.replace('.zip','')
-							config.paths[pluginName]=rootUrl+'/main'
+							config.paths[pluginName]=rootUrl+'main'
 							require([pluginName],function(a){
 								me._onModuleLoad(a,pluginName,onload,rootUrl)
+								a.zipped=true
 								require.undef(name)
 							})
 						})
@@ -181,7 +189,7 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 			})
 		},
 		load: function(name){
-			if(/\.zip$/.test(name))
+			if(zipped || /\.zip$/.test(name))
 				this._loadFromZip.apply(this,arguments)
 			else
 				this._loadFromURL.apply(this,arguments)
@@ -242,8 +250,12 @@ define(['app',"JSZip", "module"], function(app, JSZip, module){
 				 */
 				uninstall: function(){},
 				module:function(name){return this.name+"!"+name},
-				load:function(name, require, onload){return require([name],onload)},
-				normalize:function(name){return this.root+name},
+				load:function(name, require, onload){
+					return require([name],onload)
+				},
+				normalize:function(name){
+					return this.root+name
+				},
 				/**
 				 *  get all dependents of the plugin
 				 */

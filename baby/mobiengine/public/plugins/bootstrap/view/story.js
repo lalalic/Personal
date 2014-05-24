@@ -1,13 +1,12 @@
-define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app, makeEditor,i18n){
-	var FormPage=View.FormPage, 
-		Story=app.Story, 
+define(['UI','app','tool/editor','i18n!../nls/i18n'],function(UI, app, makeEditor,i18n){
+	var Story=app.Story, 
 		Favorite=app.Favorite, 
 		Post=app.Post, 
 		Child=app.Child
-	return new (FormPage.extend({
-		content:'<form class="layout"><div name="content" data-layout="middle" class="editor" contenteditable="true" placeholder='+text("content")+'/></form>',
+	return UI.FormPage.extend({
+		content:'<form class="layout"><div name="content" data-layout="middle" class="editor" contenteditable="true" placeholder='+i18n("content")+'/></form>',
 		cmds:'<a><span class="icon picture"/></a><a><span class="icon link-picture"/></a><a><button type="submit"><span class="icon save"/></button></a>',
-		events:_.extend({},FormPage.prototype.events,{
+		events:_.extend({},UI.FormPage.prototype.events,{
 			'click span.picture':'insertPicture',
 			'click span.link-picture':'linkPicture'
 		}),
@@ -27,11 +26,7 @@ define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app, makeEdi
 		},
 		show: function(post,id){
 			var me=this
-			switch(arguments.length){
-			case 1:
-				this.setModel(new Story({post:parseInt(post)}))
-				break
-			case 2:
+			if(id){
 				if(_.isObject(id))
 					this.setModel(id)
 				else{
@@ -39,9 +34,9 @@ define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app, makeEdi
 						.fetch()
 						.then(_.bind(function(s){this.setModel(s)},this))
 				}
-				break
-			}
-			return FormPage.prototype.show.apply(this,arguments)
+			}else
+				this.setModel(new Story({post:parseInt(post)}))
+			return this._super().show.apply(this,arguments)
 		},
 		insertPicture:function(){
 			this.editor.insertImage()
@@ -55,11 +50,11 @@ define(['UI','app','tool/editor','i18n!../nls/i18n'],function(View, app, makeEdi
 			this.model.set('content',this.editor.getContent())
 			this.model.set('child',Child.current().id)
 			this.model.set('childName',Child.current().get("name"))
-			return FormPage.prototype.save.apply(this,arguments)
+			return this._super().save.apply(this,arguments)
 		},
 		setDefault: function(){
 			$(this.editor).empty()
 			return this._super().setDefault.apply(this,arguments)
 		}
-	}))
+	})
 })

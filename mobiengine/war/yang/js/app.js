@@ -216,7 +216,7 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 			* application title shown as title of page
 			*/
 			title:'',
-			id:'mobiengine',
+			name:'mobiengine',
 			version:'0.01',
 			/**
 			 *  application public key distributed by service provider
@@ -267,6 +267,8 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 			 *  })
 			 */
 			start: function(opt){
+				_.extend(this,module.config(),opt||{})
+				
 				$(window).bind('resize',function(){
 					if($('#media').length==0)
 						$('body').append('<div id="media" class="outview"></div>')
@@ -292,13 +294,12 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 				})
 				
 				require(['view/splash'].add('Plugin!',this.plugins),_.bind(function(splash){
-					_.extend(this,module.config(),opt||{})
 					/**
 					 * translate string to local string
 					 * @global
 					 */
 					this.title=document.title=i18n(this.title)
-					function myKey(k){return app.id+'/'+app.apiKey+'/'+k}
+					function myKey(k){return app.name+'/'+app.apiKey+'/'+k}
 					_.extend(localStorage,{
 						setItem:_.aop(localStorage.setItem,function(_raw){
 							return function(a,b){_raw.call(this, myKey(a), b)}
@@ -400,7 +401,7 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 				router.navigate(url, opt)
 			},
 			localPath: function(){
-				return ""
+				return this.name||""
 			}
 		},Backbone.Events)
 })

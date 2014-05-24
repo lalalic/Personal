@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="pre-build" default="main" basedir=".">
+	<target name="main">
+		<copy todir="./src/libs" file="./war/yang/js/plugins/model.js"/>
+	</target>
+</project>

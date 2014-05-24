@@ -4,9 +4,10 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 		install:function(){
 			//application configuration
 			$.extend(app,{
+				name:'baby',
 				title:'Super Daddy',
 				shortcutView:this.module('view/children'),
-				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgMAKDKIBEDU2Mjk0OTk1MzQyMTMxMjA'
+				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgMAJDKIBEDU2Mjk0OTk1MzQyMTMxMjA'
 			})
 			
 			//route configuration

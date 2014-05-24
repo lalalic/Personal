@@ -21,7 +21,7 @@ define(['UI','app','tool/ImageUploader','i18n!../nls/i18n'],function(UI,app,uplo
 		</form>'
 	
 	var Child=app.Child
-	return new (UI.FormPage.extend({
+	return UI.FormPage.extend({
 		model:new Child,
 		collection: Child.all,
 		content:tmplChild,
@@ -72,5 +72,5 @@ define(['UI','app','tool/ImageUploader','i18n!../nls/i18n'],function(UI,app,uplo
 				},this))
 			return this
 		}
-	}))
+	})
 })
