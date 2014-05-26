@@ -5,7 +5,7 @@
  * @requires Underscore 
  * @requires Backbone 
  */
-define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18n, module){
+define(['module','jQuery','Underscore','Backbone'], function(module){
 	(function(){
 		_.mixin({
 			aop:function(f,wrap){return wrap(f)},
@@ -73,7 +73,7 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 				else
 					return -parseInt(delta/60/60)+"h"
 			}else if (delta<aday*2)
-				return i18n('yesterday')
+				return require('i18n!nls/all')('yesterday')
 			else{
 				var n
 				switch((n=now.getFullYear()-this.getFullYear())){
@@ -293,7 +293,7 @@ define(['i18n!nls/all', 'module','jQuery','Underscore','Backbone'], function(i18
 					}
 				})
 				
-				require(['view/splash'].add('Plugin!',this.plugins),_.bind(function(splash){
+				require(['i18n!nls/all', 'view/splash'].add('Plugin!',this.plugins),_.bind(function(i18n,splash){
 					/**
 					 * translate string to local string
 					 * @global

@@ -1,1 +1,0 @@
-java -Xss8M -cp %WORK%\tools\js.jar;%WORK%\tools\compiler.jar;%WORK%\tools r -o build.js

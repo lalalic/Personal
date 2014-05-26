@@ -1,5 +1,6 @@
 package com.mobiengine.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -284,28 +285,30 @@ public class ApplicationService extends EntityService {
 	@Path("my/{app}")
 	@Singleton
 	public static class AppBootstrap{
-		private static byte[] INDEX_DATA=new byte[1024*32];
-		private static int len;
+		private static byte[] INDEX_DATA=null;
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public Response index(
 				@Context HttpServletRequest request,
 				@Context HttpServletResponse response) throws Exception{
-			byte[] NDEX_DATA=new byte[1024*32];
-			int len=0;            
-			if(len==0){
+			if(INDEX_DATA==null){
 				synchronized(this){
+					byte[] buffer=new byte[1024*100];
+					int len;
 					InputStream is=request.getSession().getServletContext()
-						.getResourceAsStream("/yang/app.html");
-					len=is.read(INDEX_DATA);
+						.getResourceAsStream("/yang/app.gz.html");
+					ByteArrayOutputStream bos=new ByteArrayOutputStream(1024*100);
+					while((len=is.read(buffer))!=-1)
+						bos.write(buffer, 0, len);
 					is.close();
+					bos.close();
+					INDEX_DATA=bos.toByteArray();
 				}
 			}
-			
-			response.setContentType("text/html");
-			response.getOutputStream().write(INDEX_DATA,0,len);
-			response.getOutputStream().flush();
-			return null;
+			return Response.ok(INDEX_DATA)
+				.header("Vary", "Accept-Encoding")
+				.header("Content-Encoding", "gzip")
+				.build();
 		}
 
 		@GET

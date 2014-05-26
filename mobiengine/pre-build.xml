@@ -2,5 +2,65 @@
 <project name="pre-build" default="main" basedir=".">
 	<target name="main">
 		<copy todir="./src/libs" file="./war/yang/js/plugins/model.js"/>
+		<antcall target="compiler"/>
+		<antcall target="mergejs"/>
+		<antcall target="mergecss"/>
+		<antcall target="app.html"/>
+	</target>
+	
+	<target name="compiler">
+		<java classname="org.mozilla.javascript.tools.jsc.Main">
+			<arg value="-d"/>
+			<arg value="./build"/>
+			<arg value="-o"/>
+			<arg value="r.class"/>
+			<arg value="./war/yang/js/libs/r.js"/>
+			<classpath>
+				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="mergejs">
+		<java dir="./war/yang" classname="r">
+			<jvmarg value="-Xss8M"/>
+			<arg value="-o"/>
+			<arg value="./war/yang/build.js"/>
+			<arg value="out=./build/bootstrap.js"/>
+			<classpath>
+				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+				<pathelement path="./build"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="mergecss">
+		<java dir="./war/yang" classname="r">
+			<jvmarg value="-Xss8M"/>
+			<arg value="-o"/>
+			<arg value="cssIn=./war/yang/build.css"/>
+			<arg value="out=./build/bootstrap.css"/>
+			<classpath>
+				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+				<pathelement path="./build"/>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="app.html">
+		<loadfile property="requirejs" srcfile="./war/yang/js/libs/require.js"/>
+		<loadfile property="css" srcfile="./build/bootstrap.css"/>
+		<loadfile property="js" srcfile="./build/bootstrap.js"/>
+		<copy file="./war/yang/build.html" tofile="./build/app.html">
+			<filterchain>
+				<replacetokens>
+					<token key="STYLE" value="${css}"/>
+					<token key="REQUIREJS" value="${requirejs}"/>
+					<token key="SCRIPT" value="${js}"/>
+					<token key="SERVICE.VERSION" value="1"/>
+				</replacetokens>
+			</filterchain>
+		</copy>
+		<gzip src="./build/app.html" destfile="./war/yang/app.gz.html"/>
 	</target>
 </project>

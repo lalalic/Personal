@@ -23,12 +23,11 @@
 		i18n:"libs/i18n",
 		Text:"libs/text",
 		jasmine:"libs/jasmine",
-		requireLib:"libs/require",
 		
 		Phonegap:"file:///android_asset/www/phonegap.js"
 	},
 	optimize:'uglify2',
-	include:["requireLib","Plugin","UI"],
-	name:'main',
-	out:'app-build.js'
+	include:["UI","Plugin"],
+	name:'app',
+	preserveLicenseComments:false
 })
