@@ -255,7 +255,7 @@ public class Cloud{
 			sharedScope = ctx.initStandardObjects(new RequireSupport(), true);
 			sharedScope.defineFunctionProperties(new String[]{"load","ajax"}, sharedScope.getClass(), ScriptableObject.DONTENUM);
 		    sharedScope.defineProperty("arguments", ctx.newArray(sharedScope, new Object[] {}), ScriptableObject.DONTENUM);
-		    sharedScope.defineProperty("console", new Console(), ScriptableObject.READONLY);;
+		    sharedScope.defineProperty("console", new Console(), ScriptableObject.READONLY);
 
 		    ctx.evaluateReader(sharedScope, getJSFileReader("underscore-min.js"), "underscore-min.js", 1, null);
 		    ctx.evaluateReader(sharedScope, getJSFileReader("promise.js"), "promise.js", 1, null);

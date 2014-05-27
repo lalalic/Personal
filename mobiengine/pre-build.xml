@@ -2,7 +2,14 @@
 <project name="pre-build" default="main" basedir=".">
 	<target name="main">
 		<copy todir="./src/libs" file="./war/yang/js/plugins/model.js"/>
-		<antcall target="compiler"/>
+		<java classname="org.mozilla.javascript.tools.jsc.Main">
+			<arg value="-d"/>
+			<arg value="./build"/>
+			<arg value="./war/yang/js/libs/r.js"/>
+			<classpath>
+				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+			</classpath>
+		</java>
 		<antcall target="mergejs"/>
 		<antcall target="mergecss"/>
 		<antcall target="app.html"/>
@@ -11,10 +18,13 @@
 	<target name="compiler">
 		<java classname="org.mozilla.javascript.tools.jsc.Main">
 			<arg value="-d"/>
-			<arg value="./build"/>
-			<arg value="-o"/>
-			<arg value="r.class"/>
-			<arg value="./war/yang/js/libs/r.js"/>
+			<arg value="./war/WEB-INF/classes"/>
+			<arg value="-package"/>
+			<arg value="libs.compiled"/>
+			<arg value="./src/libs/underscore-min.js"/>
+			<arg value="./src/libs/backbone-min.js"/>
+			<arg value="./src/libs/promise.js"/>
+			<arg value="./src/libs/model.js"/>
 			<classpath>
 				<pathelement location="./war/WEB-INF/lib/js.jar"/>
 			</classpath>
