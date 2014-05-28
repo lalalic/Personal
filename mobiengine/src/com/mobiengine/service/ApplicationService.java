@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -54,8 +53,12 @@ public class ApplicationService extends EntityService {
 	public ApplicationService(@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId) {
 		super(sessionToken,appId,KIND);
-		if(user==null || !TOP_NAMESPACE.equals(NamespaceManager.get()))
+		if(user==null || !isManagement())
 			throw new RuntimeException("Access Denied");
+	}
+	
+	static boolean isManagement(){
+		return TOP_NAMESPACE.equals(NamespaceManager.get());
 	}
 	
 	@Override
@@ -112,6 +115,7 @@ public class ApplicationService extends EntityService {
 			entity.setProperty("updatedAt", now);
 			
 			DatastoreServiceFactory.getDatastoreService().put(defaults);
+			new Schema(NamespaceManager.get(),defaults);
 			response.put("apiKey", getApiKey(app));
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage());
@@ -160,6 +164,8 @@ public class ApplicationService extends EntityService {
 		Response r=super.get(ob, order, limit, skip, keys, count);
 		@SuppressWarnings("unchecked")
 		List<Entity> apps=(List<Entity>)((Map<String,Object>)r.getEntity()).get("results");
+		if(user.getKey().getId()==(Long)this.app.getProperty("owner"))
+			apps.add(this.app);
 		for(Entity app : apps)
 			app.setProperty("apiKey", getApiKey(app));
 		return r;
@@ -186,31 +192,26 @@ public class ApplicationService extends EntityService {
 			return;
 		}
 		
-		try {
-			ApplicationService service=new ApplicationService(){
-				@Override 
-				protected void initService(){
-					this.schema=new Schema(){
-						protected void retrieve(){}
-					};
-				}
-				
-				public void beforeCreate(Entity app,JSONObject request, JSONObject response){}
-				
-				@Override
-				public void afterCreate(Entity app,JSONObject request, JSONObject response){
-					super.afterCreate(app, request, response);
-					TOP_NAMESPACE=app.getKey().getId()+"";
-				}
-				
-			};
-			JSONObject ob=new JSONObject();
-			ob.put("name", MAIN_APP);
-			ob.put("url", MAIN_APP);
-			service.create(ob);
-		} catch (JSONException e) {
+		new ApplicationService(){
+			@Override 
+			protected void initService(){
+				this.schema=new Schema(){
+					protected void retrieve(){}
+				};
+			}
 			
-		}
+			public void beforeCreate(Entity app,JSONObject request, JSONObject response){
+				app.setProperty("name", MAIN_APP);
+				app.setProperty("url", MAIN_APP);
+			}
+			
+			@Override
+			public void afterCreate(Entity app,JSONObject request, JSONObject response){
+				super.afterCreate(app, request, response);
+				TOP_NAMESPACE=app.getKey().getId()+"";
+			}
+			
+		}.create(new JSONObject());
 	}
 	
 	@Path(Service.VERSION+"/apps/upload")
@@ -283,7 +284,6 @@ public class ApplicationService extends EntityService {
 	
 	
 	@Path("my/{app}")
-	@Singleton
 	public static class AppBootstrap{
 		private static byte[] INDEX_DATA=null;
 		@GET

@@ -63,6 +63,10 @@ public class UserService extends EntityService{
 	public void afterCreate(Entity user, JSONObject request, JSONObject response)throws Exception{
 		try {
 			super.beforeCreate(user, request, response);
+			if(ApplicationService.isManagement() && !this.app.hasProperty("owner")){
+				this.app.setProperty("owner", user.getKey().getId());
+				DatastoreServiceFactory.getDatastoreService().put(this.app);
+			}
 			response.put("sessionToken", getSessionToken(user));
 			
 		} catch (JSONException ex) {

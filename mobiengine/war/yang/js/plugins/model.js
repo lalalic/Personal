@@ -246,7 +246,7 @@
 					$.ajaxSetup({headers:{"X-Session-Token":localStorage.getItem('sessionToken')}})
 					return currentUser=this
 				},function(e){
-					this.logOut()
+					this.logout()
 					return e
 				})
 			},
@@ -264,7 +264,7 @@
 			/**
 			 *  @instance
 			 */
-			logOut: function(){
+			logout: function(){
 				currentUser=null
 				localStorage.removeItem('currentUser')
 				localStorage.removeItem('sessionToken')
@@ -287,8 +287,8 @@
 			/**
 			 *  @returns {Promise}
 			 */
-			logOut:function(){
-				return User.current().logOut()
+			logout:function(){
+				return User.current().logout()
 			},
 			/**
 			 *  @returns {Promise}
@@ -835,7 +835,9 @@
 			 *  @returns {app.Model}
 			 */
 			createKind:function(schema, properties, classProperties){
-				return Model.extend(properties||{className:schema.get('name')}, classProperties).setSchema(schema)
+				var kind=schema.get('name')||properties.className
+				return (DEFINES[kind] || (DEFINES[kind]=Model.extend(properties||{className:kind}, classProperties)))
+					.setSchema(schema)
 			},
 			/**
 			 *  initialize application

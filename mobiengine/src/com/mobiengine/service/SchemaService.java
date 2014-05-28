@@ -216,6 +216,11 @@ public class SchemaService extends EntityService{
 		Schema(){
 			retrieve();
 		}
+		Schema(String appId, List<Entity> kinds){
+			for(Entity kind : kinds)
+				this.add(kind);
+			schemas.put(appId, this);
+		}
 
 		protected void retrieve() {
 			Query query=new Query(KIND);

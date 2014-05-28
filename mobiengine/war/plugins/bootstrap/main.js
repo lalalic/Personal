@@ -45,7 +45,7 @@ return function(Plugin,app){
 		description:'manage applications',
 		install: function(){
 			$.extend(app,{
-				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgIAKDA',
+				apiKey:'agl3d3d6aXB3ZWJyEQsSBF9hcHAYgICAgICAgAoM',
 				title:'Mobile Engine',
 				asideView:this.module('view/menu'),
 				shortcutView:this.module('view/applist')
