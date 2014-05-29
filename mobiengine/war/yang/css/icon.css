@@ -1,4 +1,4 @@
-@font-face{font-family:'icon';src:url("/yang/css/icon.ttf") format('truetype');font-weight:normal;font-style:normal}
+@font-face{font-family:'icon';src:url("icon.ttf") format('truetype');font-weight:normal;font-style:normal}
 .icon:before{font-family:'icon';font-weight:normal !important}
 .icon.home:before{content:"\e600"}
 .icon.back:before{content:"\e603"}

@@ -5,7 +5,7 @@
  * @requires Underscore 
  * @requires Backbone 
  */
-define(['module','jQuery','Underscore','Backbone'], function(module){
+define(['module','jQuery','Underscore','Backbone','specs'], function(module){
 	(function(){
 		_.mixin({
 			aop:function(f,wrap){return wrap(f)},
@@ -209,7 +209,6 @@ define(['module','jQuery','Underscore','Backbone'], function(module){
 		})
 	})();
 	
-	define('specs',[],['spec/plugin','spec/tool/uploader','spec/tool/offline']);
 	var router=new Backbone.Router
 	return _.extend(/** @lends app*/{
 			/**
