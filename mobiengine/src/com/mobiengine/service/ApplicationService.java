@@ -41,14 +41,9 @@ import com.sun.jersey.multipart.FormDataParam;
 
 @Path(Service.VERSION+"/apps")
 public class ApplicationService extends EntityService {
-	public static String TOP_NAMESPACE=null;
 	private final static String MAIN_APP="www";
 	final static String KIND="_app";
 	final static String PLUGIN="_plugin";
-	
-	private ApplicationService(){
-		super((String)null,null,KIND);
-	}
 	
 	public ApplicationService(@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId) {
@@ -124,7 +119,7 @@ public class ApplicationService extends EntityService {
 		}
 	}
 	
-	private String getApiKey(Entity app){
+	private static String getApiKey(Entity app){
 		return  KeyFactory.keyToString(app.getKey());
 	}
 	
@@ -181,6 +176,9 @@ public class ApplicationService extends EntityService {
 				SchemaService.makeFieldSchema("clientCode", TYPES.String, false, false));
 	}
 	
+	private ApplicationService(){
+		super((Entity)null,null,KIND);
+	}
 	// initialize the whole system
 	public static void initSystem(){
 		NamespaceManager.set(null);
@@ -189,18 +187,13 @@ public class ApplicationService extends EntityService {
 			.asSingleEntity();
 		if(www!=null){
 			TOP_NAMESPACE=www.getKey().getId()+"";
+			TOP_APPKEY=getApiKey(www);
 			return;
 		}
-		
+
 		new ApplicationService(){
-			@Override 
-			protected void initService(){
-				this.schema=new Schema(){
-					protected void retrieve(){}
-				};
-			}
-			
-			public void beforeCreate(Entity app,JSONObject request, JSONObject response){
+			@Override
+			public void beforeCreate(Entity app, JSONObject request, JSONObject response){
 				app.setProperty("name", MAIN_APP);
 				app.setProperty("url", MAIN_APP);
 			}
@@ -209,8 +202,8 @@ public class ApplicationService extends EntityService {
 			public void afterCreate(Entity app,JSONObject request, JSONObject response){
 				super.afterCreate(app, request, response);
 				TOP_NAMESPACE=app.getKey().getId()+"";
+				TOP_APPKEY=getApiKey(app);
 			}
-			
 		}.create(new JSONObject());
 	}
 	

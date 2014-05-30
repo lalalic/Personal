@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="pre-build" default="main" basedir=".">
+<project name="pre-build" default="main">
+	<property name="root" value="${ant.file}/.."/>
 	<target name="main">
-		<copy todir="./src/libs" file="./war/yang/js/plugins/model.js"/>
+		<copy todir="${root}/src/libs" file="${root}/war/yang/js/plugins/model.js"/>
 		<java classname="org.mozilla.javascript.tools.jsc.Main">
 			<arg value="-d"/>
-			<arg value="./build"/>
-			<arg value="./war/yang/js/libs/r.js"/>
+			<arg value="${root}/build"/>
+			<arg value="${root}/war/yang/js/libs/r.js"/>
 			<classpath>
-				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+				<pathelement location="${root}/war/WEB-INF/lib/js.jar"/>
 			</classpath>
 		</java>
 		<antcall target="mergejs"/>
@@ -18,50 +19,56 @@
 	<target name="compiler">
 		<java classname="org.mozilla.javascript.tools.jsc.Main">
 			<arg value="-d"/>
-			<arg value="./war/WEB-INF/classes"/>
+			<arg value="${root}/war/WEB-INF/classes"/>
 			<arg value="-package"/>
 			<arg value="libs.compiled"/>
-			<arg value="./src/libs/underscore-min.js"/>
-			<arg value="./src/libs/backbone-min.js"/>
-			<arg value="./src/libs/promise.js"/>
-			<arg value="./src/libs/model.js"/>
+			<arg value="${root}/src/libs/underscore-min.js"/>
+			<arg value="${root}/src/libs/backbone-min.js"/>
+			<arg value="${root}/src/libs/promise.js"/>
+			<arg value="${root}/src/libs/model.js"/>
 			<classpath>
-				<pathelement location="./war/WEB-INF/lib/js.jar"/>
+				<pathelement location="${root}/war/WEB-INF/lib/js.jar"/>
 			</classpath>
 		</java>
 	</target>
 	
 	<target name="mergejs">
-		<java dir="./war/yang" classname="r">
+		<java dir="${root}/war/yang" classname="r">
 			<jvmarg value="-Xss8M"/>
 			<arg value="-o"/>
-			<arg value="./war/yang/build.js"/>
-			<arg value="out=./build/bootstrap.js"/>
+			<arg value="${root}/war/yang/build.js"/>
+			<arg value="out=${root}/build/bootstrap.js"/>
 			<classpath>
-				<pathelement location="./war/WEB-INF/lib/js.jar"/>
-				<pathelement path="./build"/>
+				<pathelement location="${root}/war/WEB-INF/lib/js.jar"/>
+				<pathelement path="${root}/build"/>
 			</classpath>
 		</java>
 	</target>
 	
 	<target name="mergecss">
-		<java dir="./war/yang" classname="r">
+		<java dir="${root}/war/yang" classname="r">
 			<jvmarg value="-Xss8M"/>
 			<arg value="-o"/>
-			<arg value="cssIn=./war/yang/build.css"/>
-			<arg value="out=./build/bootstrap.css"/>
+			<arg value="cssIn=${root}/war/yang/build.css"/>
+			<arg value="out=${root}/build/bootstrap.css"/>
 			<classpath>
-				<pathelement location="./war/WEB-INF/lib/js.jar"/>
-				<pathelement path="./build"/>
+				<pathelement location="${root}/war/WEB-INF/lib/js.jar"/>
+				<pathelement path="${root}/build"/>
 			</classpath>
 		</java>
 	</target>
 	
 	<target name="app.html">
-		<loadfile property="requirejs" srcfile="./war/yang/js/libs/require.js"/>
-		<loadfile property="css" srcfile="./build/bootstrap.css"/>
-		<loadfile property="js" srcfile="./build/bootstrap.js"/>
-		<copy file="./war/yang/build.html" tofile="./build/app.html">
+		<loadfile property="requirejs" srcfile="${root}/war/yang/js/libs/require.js"/>
+		<loadfile property="css" srcfile="${root}/build/bootstrap.css">
+			<filterchain>
+				<tokenfilter>
+					<replacestring from="url(css/" to="url(/yang/css/"/>
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+		<loadfile property="js" srcfile="${root}/build/bootstrap.js"/>
+		<copy file="${root}/war/yang/build.html" tofile="${root}/build/app.html">
 			<filterchain>
 				<replacetokens>
 					<token key="STYLE" value="${css}"/>
@@ -71,6 +78,7 @@
 				</replacetokens>
 			</filterchain>
 		</copy>
-		<gzip src="./build/app.html" destfile="./war/yang/app.gz.html"/>
+		<gzip src="${root}/build/app.html" destfile="${root}/war/yang/app.gz.html"/>
+		<move file="${root}/build/app.html" tofile="${root}/war/yang/app.html"/>
 	</target>
 </project>

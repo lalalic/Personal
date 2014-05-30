@@ -18,7 +18,6 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -29,11 +28,14 @@ import com.mobiengine.js.Cloud;
 import com.mobiengine.service.SchemaService.Schema;
 
 public class Service{
+	private static String TOP_APPID="agl3d3d6aXB3ZWJyEQsSBF9hcHAYgICAgICAgAoM";
 	public static final String VERSION="1";
+	static String TOP_NAMESPACE=null;
+	static String TOP_APPKEY=null;
+
 	Schema schema;
 
 	String kind;
-	String appId;
 	Entity user;
 	Entity app;
 	
@@ -42,46 +44,33 @@ public class Service{
 	public Service(
 			@HeaderParam("X-Session-Token") String sessionToken,
 			@HeaderParam("X-Application-Id") String appId, @PathParam("kind") String kind) {
-		this.appId = appId;
+		if(TOP_NAMESPACE==null)
+			throw new RuntimeException("System is not initialized");
+		if(TOP_APPID.equals(appId))
+			appId=TOP_APPKEY;	
+		
 		this.kind = kind;
-		initService();
-		try{
+		try {
+			String id=Long.toString(KeyFactory.stringToKey(appId).getId());
+			if(!ApplicationService.TOP_NAMESPACE.equals(id))
+				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
+			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
+			NamespaceManager.set(id);
+			schema = Schema.get(id);
 			if(sessionToken!=null)
 				user=UserService.resolvSessionToken(sessionToken);
-		}catch(EntityNotFoundException ex){
-			//maybe it's app owner
-			String namespace=NamespaceManager.get();
-			try{
-				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
-				user=UserService.resolvSessionToken(sessionToken);
-			}catch(Exception e){
-				
-			}finally{
-				NamespaceManager.set(namespace);
-			}
-			
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	
 	public Service(Entity app, Entity user, String kind){
 		this.app=app;
 		this.user=user;
-		this.appId=app.getKey().getId()+"";
 		this.kind=kind;
-		NamespaceManager.set(this.appId);
-		schema = Schema.get(this.appId);
-	}
-	
-	protected void initService(){
-		try {
-			String id=Long.toString(KeyFactory.stringToKey(this.appId).getId());
-			if(!ApplicationService.TOP_NAMESPACE.equals(id))
-				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
-			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
-			NamespaceManager.set(id);
-			schema = Schema.get(id);
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
+		if(app!=null){
+			NamespaceManager.set(this.app.getKey().getId()+"");
+			schema = Schema.get(NamespaceManager.get());
 		}
 	}
 	
