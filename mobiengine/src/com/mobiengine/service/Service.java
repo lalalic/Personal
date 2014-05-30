@@ -18,6 +18,7 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
@@ -52,16 +53,30 @@ public class Service{
 		this.kind = kind;
 		try {
 			String id=Long.toString(KeyFactory.stringToKey(appId).getId());
-			if(!ApplicationService.TOP_NAMESPACE.equals(id))
-				NamespaceManager.set(ApplicationService.TOP_NAMESPACE);
+			if(!TOP_NAMESPACE.equals(id))
+				NamespaceManager.set(TOP_NAMESPACE);
 			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
 			NamespaceManager.set(id);
 			schema = Schema.get(id);
-			if(sessionToken!=null)
+			
+			try {
+				if(sessionToken!=null)
+					user=UserService.resolvSessionToken(sessionToken);
+			} catch (EntityNotFoundException e) {
+				/**
+				 * when mobiengine proxy application to retrieve data
+				 * User is from mobiengine application
+				 */
+				String rawNS=NamespaceManager.get();
+				NamespaceManager.set(TOP_NAMESPACE);
 				user=UserService.resolvSessionToken(sessionToken);
+				NamespaceManager.set(rawNS);
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
 		}
+		
+		
 	}
 	
 	public Service(Entity app, Entity user, String kind){

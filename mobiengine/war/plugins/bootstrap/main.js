@@ -52,7 +52,7 @@ return function(Plugin,app){
 			})
 
 			app.route('main','',this.module('view/main'),true)
-			app.route('createApp','app',this.module('view/app'),true)
+			app.route('application','app',this.module('view/app'),true)
 			app.route('settings','settings',this.module('view/app'),true)
 			app.route('schema','data(/:table)',this.module('view/data'),true)
 			app.route('analytics','analytics',this.module('view/analytics'),true)

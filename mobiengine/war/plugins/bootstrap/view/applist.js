@@ -6,7 +6,7 @@ define(['UI','app'],function(UI,app){
 		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{get("name")}}</a></li>'),
 		events:{
 			'click .applist .app': 'onClickApp',
-			'click ul.extra .create>a':'onCreate'
+			'click ul.extra .create':'onCreate'
 		},
 		initialize: function(){
 			this._super().initialize.apply(this,arguments)
@@ -18,12 +18,13 @@ define(['UI','app'],function(UI,app){
 		render: function(){
 			this._super().render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
-				.append('<li class="create thumb"><a href="#app"><span class="icon plus"/></a></li>')
+				.append('<li class="create thumb"><a><span class="icon plus"/></a></li>')
 				.append('<li class="thumb"><a href="javascript:void"><span class="icon signout"/></a></li>')			
 			return this
 		},
 		onCreate:function(){
 			Application.current(null)
+			app.navigate("#app")
 		},
 		onClickApp:function(e){
 			Application.current(Application.all.get(parseInt(this.id.substr(1))))
