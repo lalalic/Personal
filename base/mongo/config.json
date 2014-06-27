@@ -1,0 +1,16 @@
+{
+	"db": {
+		"port": 27017,
+		"host": "localhost",
+	},
+	"server": {
+		"port": 80,
+		"address": "127.0.0.1"
+	},
+	"accessControl": {
+		"allowOrigin": "*",
+		"allowMethods": "GET,POST,PUT,DELETE,HEAD,OPTIONS"
+	},
+	"flavor": "nounderscore",
+	"debug": true
+}

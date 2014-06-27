@@ -1,0 +1,42 @@
+{
+  "name": "mobiengine",
+  "description": "mobiengine",
+  "version": "1.0.0",
+  "author": {
+    "name": "Raymond Li",
+    "email": "lalalic@139.com"
+  },
+  "dependencies": {
+    "express": "4.x",
+	"body-parser":"latest",
+	"cookie-parser":"latest",
+	"cookie-session":"latest",
+    "mongodb": ">= 0.9.2",
+	"promise":"latest",
+	"underscore":"latest"
+  },
+  "keywords": [
+    "mongodb",
+    "mongo",
+    "db",
+    "web",
+    "rest",
+    "restful",
+	"mobile",
+	"app"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mariano-fiorentino/amid"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "engines": {
+    "node": ">= 0.4.4"
+  },
+  "scripts": {
+    "start": "node --debug server.js"
+  },
+  "readme":"mobiengine"
+}
