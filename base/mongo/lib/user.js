@@ -64,7 +64,7 @@ module.exports=Super.extend({
 			user.sessionToken=this.createSessionToken(user)
 			this.send(res, user)
 		},
-		"get /requestPasswordReset": function(req, res){
+		"put /requestPasswordReset": function(req, res){
 			this.send(res,"not support yet")
 		}
 	},
