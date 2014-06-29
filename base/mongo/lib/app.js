@@ -5,6 +5,6 @@ module.exports=require("./entity").extend({
 		
 	},
 	resolveAppKey: function(Accesskey){
-		return {dbName:"supernaiba"}
+		return {dbName:Accesskey||"test"}
 	}
 })

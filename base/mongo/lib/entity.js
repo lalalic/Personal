@@ -10,6 +10,31 @@ module.exports = Super.extend({
 			req.params.collection && (this.kind = req.params.collection)
 			this.db = new mongo.Db(this.app.dbName, this.getMongoServer())
 		},
+		run: function(command){
+			var p = new Promise;
+			this.db.open(_.bind(function(error, db){
+				db.command(command,function(error,result){
+					error ? p.reject(error) : p.resolve(result)
+					db.close()
+				})
+			},this))
+			return p;
+		},
+		reset: function(docs){
+			var p = new Promise;
+			this.db.open(_.bind(function(error, db){
+				db.command({drop:this.kind},_.bind(function(error,result){
+					if(error && error.errmsg=='ns not found')
+						error=null;
+					if(error) return p.reject(error)
+					db.command({insert:this.kind,documents: docs}, function(error, result){
+						error ? p.reject(error) : p.resolve(result)
+						db.close()
+					})
+				},this))
+			},this))
+			return p;
+		},
 		get : function (query, options) {
 			var p = new Promise;
 			this.db.open(_.bind(function (error, db) {
@@ -28,22 +53,21 @@ module.exports = Super.extend({
 			}, this))
 			return p
 		},
-		beforeCreate: function(doc){},
-		afterCreate: function(doc){},
+		beforeCreat: function(collection, doc){},
+		afterCreat: function(collection, doc){},
 		post : function (doc) {
 			var p = new Promise;
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					doc._id=new ObjectID()
-					doc["id"]==null && delete doc["id"];
-					this.beforeInsert(doc)
-					doc.createdAt=doc.modifiedAt=new Date()
+					!doc._id && (doc._id=new ObjectID())
+					this.beforeCreat(collection, doc)
+					doc.createdAt=doc.updatedAt=new Date()
 					doc.author={_id:this.user._id, name:this.user.name}
-					collection.insert(doc, _.bind(function (error, doc) {
+					collection.insert(doc, _.bind(function (error) {
 						if(error) return p.reject(error)
-						this.afterInsert(doc)
+						this.afterCreat(collection, doc)
 						p.resolve(doc)
 						db.close()
 					},this))
@@ -51,22 +75,20 @@ module.exports = Super.extend({
 			}, this))
 			return p
 		},
-		beforeUpdate: function(doc){},
-		afterUpdate: function(doc){},
+		beforeUpdate: function(collection, doc){},
+		afterUpdate:function(collection, doc){},
 		put: function(id, doc){
 			var p = new Promise;
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					doc._id=new ObjectID()
-					doc["id"]==null && delete doc["id"];
-					this.beforeUpdate(doc)
-					doc.modifiedAt=new Date()
+					this.beforeUpdate(collection, doc)
+					doc.updatedAt=new Date()
 					doc.lastModifier={_id:this.user._id, name:this.user.name}
-					collection.update({_id:id},doc, _.bind(function (error, doc) {
+					collection.update({_id:id},doc, _.bind(function (error) {
 						if(error) return p.reject(error)
-						this.afterUpdate(doc)
+						this.afterUpdate(collection, doc)
 						p.resolve(doc)
 						db.close()
 					},this))
@@ -74,19 +96,19 @@ module.exports = Super.extend({
 			}, this))
 			return p
 		},
-		beforeDelete: function(id){},
-		afterDelete: function(id){},
+		beforeDelete: function(collection, id){},
+		afterDelete: function(collection, id){},
 		delete: function(id){
 			var p = new Promise;
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeDelete(id);
-					collection.remove({_id:id},_.bind(function (error, num) {
+					this.beforeDelete(collection, id);
+					collection.remove({_id:id},_.bind(function (error) {
 						if(error) return p.reject(error)
-						this.afterDelete(id);
-						p.resolve(doc)
+						this.afterDelete(collection, id);
+						p.resolve()
 						db.close()
 					},this))
 				},this))
@@ -96,7 +118,14 @@ module.exports = Super.extend({
 	}, {
 		url : "/:collection",
 		routes : {
-			"get /:id?" : function (req, res) {
+			"get reset": function(req, res){
+				var service=new this(req,res);
+				service.reset(require("../test/data/"+service.kind+".json"))
+					.then(_.bind(function(result){
+						this.send(res, result)
+					},this))
+			},
+			"get :id?" : function (req, res) {
 				var query = req.query.query ? JSON.parse(req.query.query, function (key, value) {
 						var a;
 						if (typeof value === 'string') {
@@ -112,7 +141,7 @@ module.exports = Super.extend({
 				// Providing an id overwrites giving a query in the URL
 				if (req.params.id) {
 					query = {
-						'_id' : new ObjectID(req.params.id)
+						'_id' : ObjectID.isValid(req.params.id) ? new ObjectID(req.params.id) : req.params.id 
 					};
 				}
 				var options = req.params.options || {};
@@ -140,24 +169,23 @@ module.exports = Super.extend({
 				new this(req, res)
 					.post(req.body)
 					.then(_.bind(function(doc){
-						this.send(res, doc)
+						this.send(res, _.pick(doc,'createdAt', 'updatedAt', '_id'))
 					},this))
 			},
-			"put /:id": function(req, res){
+			"put :id": function(req, res){
 				if(!req.body) return this.send();
 				new this(req, res)
-					.post(req.params.id, req.body)
+					.put(req.params.id, req.body)
 					.then(_.bind(function(doc){
-						this.send()
+						this.send(res, _.pick(doc,'updatedAt'))
 					},this))
 			},
-			"delete /:id": function(req, res){
+			"delete :id": function(req, res){
 				new this(req, res)
 					.delete(req.params.id)
 					.then(_.bind(function(num){
-						this.send()
+						this.send(res, true)
 					},this))
-			}
-		}
+			}		}
 	})
 

@@ -1,7 +1,7 @@
 var _=require("underscore"),
 	mongo=require("mongodb");
 
-module.exports=_.extend(function(request, response){
+var service=module.exports=_.extend(function(request, response){
 		this.app=require("./app").resolveAppKey(request.header('X-Application-Id'))
 		this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
 	},{
@@ -48,11 +48,20 @@ module.exports=_.extend(function(request, response){
 				return new mongo.Server(config.db.host, config.db.port, {'auto_reconnect':true})
 			}
 		
-		_.each(this.routes,function(value, key){
+		_.each(this.routes,function(handler, key){
 			var info=key.split(" "),
 				verb=info[0],
-				url=info.length>1 ? info[1] :"";
-			app[verb]((this.prototype.kind ? "/"+this.prototype.kind : this.url)+url,_.bind(value,this))
+				path=info.length>1 ? info[1] :"",
+				root=(this.prototype.kind ? "/"+this.prototype.kind : this.url)||"",
+				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
+			app[verb](url,_.bind(function(req, res, next){
+				try{
+					handler.apply(this,arguments)
+				}catch(error){
+					next(error)
+				}
+			},this))
+			console.log("added route: "+verb+" "+url)
 		},this)
 	},
 	send: function(res, data){

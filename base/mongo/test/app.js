@@ -1,4 +1,4 @@
-describe("Application Service", function(){
+xdescribe("Application Service", function(){
 	describe("management", function(){
 		it("can create new application", function(){
 		

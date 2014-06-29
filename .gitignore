@@ -68,3 +68,4 @@ editor\war
 phonegap/
 LongSitNoDie/
 build/
+node_modules/
