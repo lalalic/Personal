@@ -10,7 +10,7 @@ return function(Plugin,app){
 		name:"bootstrap",
 		install:function(){
 			//configure application
-			_.extend(app,{
+			$.extend(app,{
 				name:"_name_",
 				title:"[application title]",
 				version:"[application version]",
@@ -45,7 +45,7 @@ return function(Plugin,app){
 		description:'manage applications',
 		install: function(){
 			$.extend(app,{
-				apiKey:'agl3d3d6aXB3ZWJyEQsSBF9hcHAYgICAgICAgAoM',
+				apiKey:'admin',
 				title:'Mobile Engine',
 				asideView:this.module('view/menu'),
 				shortcutView:this.module('view/applist')
@@ -263,8 +263,8 @@ return function(Plugin,app){
 			}
 			
 			
-			_.extend(app,{
-				init4User:_.aop(app.init4User, function(_init4User){
+			$.extend(app,{
+				init4User:$.aop(app.init4User, function(_init4User){
 					return function(){
 						return _init4User.apply(this,arguments)
 						.then(function(){
@@ -275,7 +275,7 @@ return function(Plugin,app){
 						})
 					}
 				}),
-				init: _.aop(app.init,function(_init){
+				init: $.aop(app.init,function(_init){
 					return function(){
 						this.Application.all=this.Application.collection()
 						return _init.apply(this,arguments)
