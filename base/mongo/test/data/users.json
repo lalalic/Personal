@@ -1,4 +1,4 @@
-{ "_id" : "user0" }
+[{ "_id" : "user0" }
 { "_id" : "user1" }
 { "_id" : "user2" }
 { "_id" : "user3" }
@@ -7,4 +7,4 @@
 { "_id" : "user6" }
 { "_id" : "user7" }
 { "_id" : "user8" }
-{ "_id" : "user9" }
+{ "_id" : "user9" }]

@@ -12,7 +12,8 @@
 	"cookie-session":"latest",
     "mongodb": ">= 0.9.2",
 	"node-promise":"latest",
-	"underscore":"latest"
+	"underscore":"latest",
+	"morgan":"*"
   },
   "keywords": [
     "mongodb",

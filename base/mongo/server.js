@@ -42,13 +42,25 @@ if (false && cluster.isMaster) {
 	var bodyParser = require("body-parser");
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({extended : true}));
+	app.use(require("morgan")("dev"));
 	//app.use(require('cookie-session')({secret:"iamLalalic", name:"session"}));
+	
+	app.all("*",function(req,res,next){
+		res.header({
+			"Access-Control-Allow-Headers":"X-Application-Id,Request,X-Requested-With,Content-Type,Accept,X-Session-Token",
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Methods":"GET,POST,PUT,DELETE"
+		});
+		next();
+	});
+	
 	app.use("/test",express.static(__dirname+'/test'));
 	
 	require("./lib/user").init(app,config)
-	//require("./lib/app").init(app,config)
-	//require("./lib/plugin").init(app,config)
-	//require("./lib/function").init(app,config)
+	require("./lib/role").init(app,config)
+	require("./lib/app").init(app,config)
+	require("./lib/plugin").init(app,config)
+	require("./lib/schema").init(app,config)
 	require("./lib/entity").init(app,config)
 	
 	// Bind to a port

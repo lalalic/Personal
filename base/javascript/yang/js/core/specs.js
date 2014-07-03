@@ -1,0 +1,1 @@
+define([],['spec/plugin','spec/tool/uploader','spec/tool/offline'])

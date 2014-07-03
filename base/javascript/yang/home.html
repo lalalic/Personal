@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="format-detection" content="telephone=no" />
+	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
+	<title></title>
+	<link rel="stylesheet" href="css/icon.css">
+	<link rel="stylesheet" href="css/app.css">
+	<link rel="stylesheet" href="css/app.theme.css">
+	<script data-main="js/main" src="js/libs/require.js"></script>
+</head>
+<body data-device="phone" data-position="absolute">
+<section id="splash" class="show">
+	<style>
+	.slides{position:absolute;height:100%;background-color:black}
+	.slides>div{display:table-cell;background-repeat:no-repeat;background-position:center center}
+	</style>
+	<article class="active">
+		<div class="slides">
+			<div style="text-align:center;vertical-align:middle">
+				<a  style="position:absolute" class="doing"><span class="icon refresh" style="color:white"/></a>
+			</div>
+		</div>
+	</article>
+</section>
+
+<script type="text/tmpl" id="tmplCheckable">
+<span class="checkable" onclick="$(this).siblings().removeClass('open'); $(this).toggleClass('open')">
+	<span>{{title}}</span>
+	<%_.each(options,function(o){with(o){%>
+	<input type="{{type}}" name="{{name}}" value="{{_.isString(o) ? o : id}}" class="outview">
+	<span onclick="$(this).prev('input').click()">{{_.isString(o) ? o : get('name')}}</span>
+	<%}})%>
+</span>
+</script>
+
+<script type="text/tmpl" id="tmplEmpty">
+	<div class="empty">
+		<span class="icon {{type}}"></span>
+		<strong>{{title}}</strong>
+		<small>{{description}}</small>
+		<div>{{action}}</div>
+	</div>
+</script>
+
+<datalist id="Boolean">
+	<option value="true">
+	<option value="false">
+</datalist>
+</body>
+</html>

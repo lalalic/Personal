@@ -1,5 +1,8 @@
-module.exports=require("./service").extend({
-	kind:"user"
+module.exports=require("./entity").extend({
+	kind:"plugins"
 },{
-
+	schema:{
+		_id: "plugins", 
+		fields:{_id:"String",createdAt:"Date",updatedAt:"Date",author:"String", ACL:"Object"}
+	}
 })

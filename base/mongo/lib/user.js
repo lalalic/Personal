@@ -1,54 +1,45 @@
-var Super=require("./entity");
+var Super=require("./entity"), _=require("underscore");
 module.exports=Super.extend({
 	kind:"users",
 	encrypt: function(text){
-		var hasher=require("cypto").creatHash("MD5")
+		var hasher=require("crypto").createHash("MD5")
 		hasher.update(text)
 		return hasher.digest("base64")
 	},
-	beforeCreate: function(collection, user){
-		var name=user.username
-		if (name == null || name.length() == 0)
-			throw new Error("user name can't be empty.");
-		var password=user.password
-		if (password == null || password.length() == 0)
-			throw new Error("password can't be empty.");
-		
-		if(this.exists("username", name))
-			throw new Error("user name has already been registered.");
-		
-		user.password=this.encrypt(password)
+	beforeCreate: function(doc, collection, db){
+		return Super.prototype.beforeCreate.apply(this,arguments)
+			.then(_.bind(function(){
+				if (!doc._id || !doc.password)
+					throw new Error("user/password can't be empty.");
+				doc.password=this.encrypt(doc.password);
+			},this))
 	},
 	login: function(name, password){
-		if (name == null || name.length() == 0)
-			throw new Error("user name can't be empty.");
+		if (!name || !password)
+			throw new Error("name or password can't be empty.");
 		
-		if (password == null || password.length() == 0)
-			throw new Error("password can't be empty.");
-		
-		return this.get({username: name}, {limit:1})
-			.then(_.bind(function(user){
-				if(user==null)
+		return this.get({_id: name})
+			.then(_.bind(function(doc){
+				if(doc==null)
 					throw new Error("username or password is not correct.");
 				
-				if (this.encrypt(password)==user.password))
-					return user
+				if (this.encrypt(password)==doc.password)
+					return doc
 				
 				throw new Error("username or password is not correct.");
 			},this))
 		
 	}
 },{
+	beforePost: function(doc){
+		doc._id=doc.username;
+		delete doc.username;
+		return doc
+	},
+	afterPost: function(doc){
+		return _.extend(Super.afterCreate(doc),{sessionToken:this.createSessionToken(user)})
+	},
 	routes:{
-		"post" : function(req, res){
-			if(!req.body) return this.send();
-			new this(req, res)
-				.post(req.body)
-				.then(_.bind(function(user){
-					this.send(res, _.extend(_.pick(doc,'createdAt', 'updatedAt', '_id'),{
-						sessionToken:this.createSessionToken(user)}))
-				},this))
-		},
 		"get /login": function(req, res){
 			new this(req,res)
 				.login(req.query.username, req.query.password)
@@ -56,7 +47,7 @@ module.exports=Super.extend({
 					delete user.password
 					user.sessionToken=this.createSessionToken(user)
 					this.send(res,user)
-				},this))
+				},this),this.error(res))
 		},
 		"get /me": function(req, res){
 			var user=new this(req,res).user
@@ -65,7 +56,7 @@ module.exports=Super.extend({
 			this.send(res, user)
 		},
 		"put /requestPasswordReset": function(req, res){
-			this.send(res,"not support yet")
+			res.send(400, "not support yet")
 		}
 	},
 	resolvSessionToken: function(token){
@@ -73,5 +64,10 @@ module.exports=Super.extend({
 	},
 	createSessionToken: function(user){
 		return user._id
+	},
+	schema:{
+		_id: "users", 
+		fields:{_id:"String",createdAt:"Date",updatedAt:"Date",ACL:"Object"},
+		indexs:{author:1}
 	}
 })

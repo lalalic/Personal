@@ -1,18 +1,21 @@
 var _ = require("underscore"),
 	mongo = require("mongodb"),
-	Promise = require("node-promise").Promise,
+	promise = require("node-promise"),
+	Promise = promise.Promise,
 	ObjectID = mongo.ObjectID,
 	Super = require("./service");
 
 module.exports = Super.extend({
 		constructor : function (req, res) {
-			Super.apply(this,arguments);
-			req.params.collection && (this.kind = req.params.collection)
-			this.db = new mongo.Db(this.app.dbName, this.getMongoServer())
+			Super.call(this,req,res);
+			req && req.header && req.params.collection && (this.kind = req.params.collection)
+			this.app && (this.db = new mongo.Db(this.app._id, this.getMongoServer(),{w:0}))
 		},
 		run: function(command){
 			var p = new Promise;
 			this.db.open(_.bind(function(error, db){
+				var convertNodeAsyncFunction = promise.convertNodeAsyncFunction
+				var runCommand=convertNodeAsyncFunction(db.command)
 				db.command(command,function(error,result){
 					error ? p.reject(error) : p.resolve(result)
 					db.close()
@@ -41,7 +44,7 @@ module.exports = Super.extend({
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					collection[query._id ? 'findOne' : 'find'](query, options, function (error, result) {
+					collection[query._id ? 'findOne' : 'find'](query, options||{}, function (error, result) {
 						if(error) return p.reject(error);
 						query._id ? p.resolve(result) :
 							result.toArray(function (error, docs) {
@@ -53,77 +56,121 @@ module.exports = Super.extend({
 			}, this))
 			return p
 		},
-		beforeCreat: function(collection, doc){},
-		afterCreat: function(collection, doc){},
-		post : function (doc) {
-			var p = new Promise;
+		asPromise: function(){
+			var p=new Promise()
+			p.resolve()
+			return p
+		},
+		beforeCreate: function(doc,collection,db){
+			return this.asPromise()
+		},
+		afterCreate: function(doc,collection,db){
+			return this.asPromise()
+		},
+		create : function (docs) {
+			var p = new Promise,
+				_error=function(error){	p.reject(error)};
+			docs=_.isArray(docs) ? docs: [docs];
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					!doc._id && (doc._id=new ObjectID())
-					this.beforeCreat(collection, doc)
-					doc.createdAt=doc.updatedAt=new Date()
-					doc.author={_id:this.user._id, name:this.user.name}
-					collection.insert(doc, _.bind(function (error) {
-						if(error) return p.reject(error)
-						this.afterCreat(collection, doc)
-						p.resolve(doc)
-						db.close()
-					},this))
+					
+					promise.all(_.map(docs, function(doc){
+						var p0 = new Promise,
+							_error0=function(error){p0.reject(error)};
+						!doc._id && (doc._id=new ObjectID())
+						this.user && this.user._id && (doc.author=this.user._id)
+						this.beforeCreate(doc,collection,db).then(_.bind(function(){
+							doc.createdAt=doc.updatedAt=new Date()
+							collection.insert(doc, _.bind(function (error) {
+								if(error) return p0.reject(error)
+								this.afterCreate(doc,collection,db).then(function(){
+									p0.resolve(doc)
+									db.close()
+								}, _error0)
+							},this))
+						},this), _error0)
+						return p0
+					},this)).then(function(docs){
+						p.resolve(docs.length==1 ? docs[0] : docs)
+					},_error)
+					
 				},this))
 			}, this))
 			return p
 		},
-		beforeUpdate: function(collection, doc){},
-		afterUpdate:function(collection, doc){},
-		put: function(id, doc){
-			var p = new Promise;
+		beforeUpdate: function(doc,collection,db){
+			return this.asPromise()
+		},
+		afterUpdate:function(doc,collection,db){
+			return this.asPromise()
+		},
+		update: function(id, doc){
+			var p = new Promise,
+				_error=function(error){	p.reject(error)};
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeUpdate(collection, doc)
 					doc.updatedAt=new Date()
-					doc.lastModifier={_id:this.user._id, name:this.user.name}
-					collection.update({_id:id},doc, _.bind(function (error) {
-						if(error) return p.reject(error)
-						this.afterUpdate(collection, doc)
-						p.resolve(doc)
-						db.close()
-					},this))
+					doc.lastModifier=this.user._id
+					this.beforeUpdate(doc,collection,db).then(_.bind(function(){
+						collection.update({_id:id},doc, _.bind(function (error) {
+							if(error) return p.reject(error)
+							this.afterUpdate(doc,collection,db).then(function(){
+								p.resolve(doc)
+								db.close()
+							},_error)
+						},this))
+					},this),_error);
 				},this))
 			}, this))
 			return p
 		},
-		beforeDelete: function(collection, id){},
-		afterDelete: function(collection, id){},
+		beforeDelete: function(id,collection,db){
+			return this.asPromise()
+		},
+		afterDelete: function(id,collection,db){
+			return this.asPromise()
+		},
 		delete: function(id){
-			var p = new Promise;
+			var p = new Promise,
+				_error=function(error){	p.reject(error)};
 			this.db.open(_.bind(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, _.bind(function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeDelete(collection, id);
-					collection.remove({_id:id},_.bind(function (error) {
-						if(error) return p.reject(error)
-						this.afterDelete(collection, id);
-						p.resolve()
-						db.close()
-					},this))
+					this.beforeDelete(id,collection,db).then(_.bind(function(){
+						collection.remove({_id:id},_.bind(function (error) {
+							if(error) return p.reject(error)
+							this.afterDelete(id,collection,db).then(function(){
+								p.resolve()
+								db.close()
+							},_error)
+						},this))
+					},this),_error)
 				},this))
 			}, this))
 			return p
 		}
 	}, {
-		url : "/:collection",
+		url : "/classes/:collection",
+		beforePost:function(doc){
+			if(_.isArray(doc))
+				throw Error("Don't support post array!")
+			return doc
+		},
+		afterPost:function(doc){
+			return _.pick(doc,'createdAt', 'updatedAt', '_id')
+		},
 		routes : {
 			"get reset": function(req, res){
 				var service=new this(req,res);
 				service.reset(require("../test/data/"+service.kind+".json"))
 					.then(_.bind(function(result){
 						this.send(res, result)
-					},this))
+					},this),this.error(res))
 			},
 			"get :id?" : function (req, res) {
 				var query = req.query.query ? JSON.parse(req.query.query, function (key, value) {
@@ -162,30 +209,31 @@ module.exports = Super.extend({
 				.get(query, options)
 				.then(_.bind(function (data) {
 						this.send(res, query._id ? data : {results:data})
-					}, this))
+					}, this),this.error(res))
 			},
 			"post" : function(req, res){
 				if(!req.body) return this.send();
 				new this(req, res)
-					.post(req.body)
+					.create(this.beforePost(req.body))
 					.then(_.bind(function(doc){
-						this.send(res, _.pick(doc,'createdAt', 'updatedAt', '_id'))
-					},this))
+						this.send(res, this.afterPost(doc))
+					},this),this.error(res))
 			},
 			"put :id": function(req, res){
 				if(!req.body) return this.send();
 				new this(req, res)
-					.put(req.params.id, req.body)
+					.update(req.params.id, req.body)
 					.then(_.bind(function(doc){
 						this.send(res, _.pick(doc,'updatedAt'))
-					},this))
+					},this),this.error(res))
 			},
 			"delete :id": function(req, res){
 				new this(req, res)
 					.delete(req.params.id)
 					.then(_.bind(function(num){
 						this.send(res, true)
-					},this))
-			}		}
+					},this),this.error(res))
+			}
+		}
 	})
 

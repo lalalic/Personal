@@ -1,15 +1,17 @@
 var _=require("underscore"),
 	mongo=require("mongodb");
 
-var service=module.exports=_.extend(function(request, response){
-		this.app=require("./app").resolveAppKey(request.header('X-Application-Id'))
-		this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
-	},{
-	routes:{
-		"get /version": function(req, res){
-			res.send("1.0")
+_.extend((module.exports=_.extend(function(request, response){
+		if(!(request && request.header)){
+			this.app=request;
+			this.user=response;
+		}else{
+			this.app=require("./app").resolveAppKey(request.header('X-Application-Id'))
+			this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
 		}
-	},
+	},{
+	version:"1",
+	routes:{},
 	extend: function(protoProps, staticProps) {
 		var parent = this;
 		var child;
@@ -43,18 +45,15 @@ var service=module.exports=_.extend(function(request, response){
 		return child;
 	  },
 	init: function(app, config){
-		if(!this.prototype.getMongoServer)
-			this.prototype.getMongoServer=function(){
-				return new mongo.Server(config.db.host, config.db.port, {'auto_reconnect':true})
-			}
-		
+		this.prototype.config=config;
+		this.prototype.app=app;
 		_.each(this.routes,function(handler, key){
 			var info=key.split(" "),
 				verb=info[0],
 				path=info.length>1 ? info[1] :"",
-				root=(this.prototype.kind ? "/"+this.prototype.kind : this.url)||"",
+				root=this.prototype.kind ? "/"+this.prototype.kind : this.url,
 				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
-			app[verb](url,_.bind(function(req, res, next){
+			app[verb]("/"+this.version+url,_.bind(function(req, res, next){
 				try{
 					handler.apply(this,arguments)
 				}catch(error){
@@ -67,6 +66,15 @@ var service=module.exports=_.extend(function(request, response){
 	send: function(res, data){
 		res.header('Content-Type', 'application/json');
 		res.send(data)
+	},
+	error: function(res){
+		return function(error){
+			res.send(400,error.message);	
+		}
+	}
+})).prototype,{
+	getMongoServer: function(){
+		return new mongo.Server(this.config.db.host, this.config.db.port, {'auto_reconnect':true,safe:true})
 	}
 })
 
