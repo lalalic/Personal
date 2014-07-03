@@ -60,7 +60,6 @@ if (false && cluster.isMaster) {
 	require("./lib/role").init(app,config)
 	require("./lib/app").init(app,config)
 	require("./lib/plugin").init(app,config)
-	require("./lib/schema").init(app,config)
 	require("./lib/entity").init(app,config)
 	
 	// Bind to a port

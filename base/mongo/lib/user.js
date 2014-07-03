@@ -37,7 +37,7 @@ module.exports=Super.extend({
 		return doc
 	},
 	afterPost: function(doc){
-		return _.extend(Super.afterCreate(doc),{sessionToken:this.createSessionToken(user)})
+		return _.extend(Super.afterPost.call(this,doc),{sessionToken:this.createSessionToken(doc)})
 	},
 	routes:{
 		"get /login": function(req, res){
@@ -64,10 +64,5 @@ module.exports=Super.extend({
 	},
 	createSessionToken: function(user){
 		return user._id
-	},
-	schema:{
-		_id: "users", 
-		fields:{_id:"String",createdAt:"Date",updatedAt:"Date",ACL:"Object"},
-		indexs:{author:1}
 	}
 })
