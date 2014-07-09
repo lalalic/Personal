@@ -83,60 +83,22 @@ return function(Plugin,app){
 							this.set(r,{parse:true})
 						})
 					},
-					save: function(a){
-						var cloudCode=this.attributes['cloudCode']
-						delete this.attributes['cloudCode']
-						var r=this._super().save.apply(this,arguments)
-						cloudCode && (this.attributes['cloudCode']=cloudCode)
-						return r
-					},
 					upload: function(file){
-						var me=this
-						function switchAppKey(e,xhr){
-							var current=app.Application.current()
-							current && xhr.setRequestHeader("X-Application-Id", current.get('apiKey'))
-						}
-						$(document).on('ajaxSend', switchAppKey)
-						return (new FileReader()).readAsArrayBuffer(file).then(function(data){
-							var zip=new JSZip(data),temp, 
-								form=new FormData(), cloudCode;
-							(cloudCode=zip.file('cloud/main.js')) && 
-								form.append('cloudCode',(cloudCode=cloudCode.asText()));
-							if(temp=zip.file('data/schema.js')){
-								var _user, _role, _plugin
-								temp=_.map(JSON.parse(temp.asText()),function(table,tableName, a){
-									_.each(table,function(field, fieldName){
-										this.fields.push(_.extend(field,{name:fieldName}))
-									},(a={name:tableName,fields:[]}))
-									return a
-								})
-								form.append('schema',JSON.stringify(temp))
-							}
-							
-							//(temp=zip.file('data/data.json')) && form.append('data',temp.asText());
-							zip.remove('cloud')
-							zip.remove('data')
-							form.append('file',zip.generate({type:'blob'}))
-							return $.ajax({
-								url: app.File.want2upload(me.urlRoot()+"/upload"),
-								data:form,
-								dataType:'json',
-								cache: false,
-								contentType : false,
-								processData: false,
-								type: 'POST',
-								dataFilter:function(data,type){
-									me.set('cloudCode',cloudCode)
-									me.set(JSON.parse(data))
-									return null
-								},
-								complete: function(){
-									$(document).off('ajaxSend', switchAppKey)
-								}
-							}).then(function(data){
-								return me
-							})
-						})
+						return (new FileReader()).readAsArrayBuffer(file)
+							.then(_.bind(function(data){
+								var zip=new JSZip(data), 
+									cloudCode=zip.file('cloud/main.js');
+								cloudCode=cloudCode && cloudCode.asText() || ''
+								zip.remove('cloud')
+								return (new app.File({data:zip.generate({type:'blob'}), name:this.id+".zip"}))
+									.save().then(_.bind(function(file){
+										this.set('clientCode', file.url())
+										this.set('cloudCode', cloudCode||'')
+										return this.save()
+									},this)).then(_.bind(function(){
+										return this
+									},this))
+							},this))
 					},
 					download: function(){
 						return (this.has('clientCode') ? new app.File({url:this.get('clientCode')}).download() : $.Deferred().resolve())

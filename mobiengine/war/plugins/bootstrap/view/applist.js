@@ -3,7 +3,7 @@ define(['UI','app'],function(UI,app){
 	return new (UI.ListPage.extend({
 		className:'applist',
 		collection: Application.all,
-		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{get("name")}}</a></li>'),
+		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{id}}</a></li>'),
 		events:{
 			'click .applist .app': 'onClickApp',
 			'click ul.extra .create':'onCreate'
@@ -52,17 +52,12 @@ define(['UI','app'],function(UI,app){
 					Application.current(null)
 			}
 		},
-		changeOne: function(item){
-			var li=this.$('#_'+item.id)
-			if(item.hasChanged('name'))
-				li.find('a').text(item.get('name'))
-		},
 		onAttached:function(){
 			var app=Application.current()
 			if(app){
 				this.$('.create').show()
 				this.$menuHolder.removeAttr('href').empty()
-					.html('<span>'+app.get('name')+'</span>')
+					.html('<span>'+app.id+'</span>')
 					.find('span').click(_.bind(this.show,this))
 			}else{
 				this.$('.create').hide()

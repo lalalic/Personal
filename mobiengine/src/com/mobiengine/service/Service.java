@@ -14,19 +14,9 @@ import javax.ws.rs.PathParam;
 
 import org.codehaus.jettison.json.JSONObject;
 
-import com.google.appengine.api.NamespaceManager;
-import com.google.appengine.api.datastore.Blob;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.google.appengine.api.datastore.Text;
 import com.mobiengine.js.Cloud;
 import com.mobiengine.service.SchemaService.Schema;
+import com.mongodb.BasicDBObject;
 
 public class Service{
 	private static String TOP_APPID="agl3d3d6aXB3ZWJyEQsSBF9hcHAYgICAgICAgAoM";
@@ -37,8 +27,8 @@ public class Service{
 	Schema schema;
 
 	String kind;
-	Entity user;
-	Entity app;
+	BasicDBObject user;
+	BasicDBObject app;
 	
 	Cloud cloud;
 	
@@ -52,8 +42,7 @@ public class Service{
 		
 		this.kind = kind;
 		try {
-			String id=Long.toString(KeyFactory.stringToKey(appId).getId());
-			if(!TOP_NAMESPACE.equals(id))
+			if(!TOP_NAMESPACE.equals(appId))
 				NamespaceManager.set(TOP_NAMESPACE);
 			app=(DatastoreServiceFactory.getDatastoreService().get(KeyFactory.stringToKey(appId)));
 			NamespaceManager.set(id);
@@ -140,48 +129,6 @@ public class Service{
 			return pq.countEntities(FetchOptions.Builder.withLimit(1)) == 1;
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
-		}
-	}
-
-	public static Blob serialize(Object ob) {
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		ObjectOutputStream oo = null;
-		try {
-			oo = new ObjectOutputStream(bos);
-			oo.writeObject(ob);
-			return new Blob(bos.toByteArray());
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		} finally {
-			try {
-				if (oo != null)
-					oo.close();
-				if (bos != null)
-					bos.close();
-			} catch (IOException e) {
-
-			}
-		}
-	}
-
-	public static Object deserialize(Blob blob) {
-		ByteArrayInputStream bis = null;
-		ObjectInput in = null;
-		try {
-			bis = new ByteArrayInputStream(blob.getBytes());
-			in = new ObjectInputStream(bis);
-			return in.readObject();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		} finally {
-			try {
-				if (bis != null)
-					bis.close();
-				if (in != null)
-					in.close();
-			} catch (IOException e) {
-
-			}
 		}
 	}
 

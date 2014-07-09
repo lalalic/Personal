@@ -3,7 +3,7 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 		<form >\
 			<fieldset>\
 				<label>'+i18n('applicaiton name')+':</label>\
-				<input type="text" name="name">\
+				<input type="text" name="_id">\
 				<label>'+i18n('url')+':</label>\
 				<input type="text" name="url">\
 			</fieldset>\
@@ -28,7 +28,7 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 		},
 		setModel:function(m){
 			this._super().setModel.call(this, m || new Application)
-			this.setTitle(this.model.id ? this.model.get('name') : i18n("create new application"))
+			this.setTitle(this.model.isNew() ? this.model.id : i18n("create new application"))
 			return this
 		},
 		show: function(){

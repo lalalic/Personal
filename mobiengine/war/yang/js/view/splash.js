@@ -3,8 +3,7 @@
  * @module Splash
  */
 define(['UI'],function(View){
-	var Page=View.Page
-	return new (Page.extend({
+	return new (View.Page.extend({
 		el:'#splash',
 		current:0,
 		initialize:function(){
@@ -36,5 +35,5 @@ define(['UI'],function(View){
 				this.current=index
 			this.current=this.current%this.length
 		}
-	}))
+	}))();
 })

@@ -37,36 +37,59 @@ require.config(/** @lends requireJSConf*/{
 			zipped:false
 		}
 	},
-	deps:['jQuery', 'app'],
+	deps:['jquery','app'],
 	callback: function($, app){
 		//start application
 		$(function () {app.start()})
 	},
 	shim:{
-		Backbone: {
-            deps: ['Underscore', 'jQuery'],
-            exports: 'Backbone'
-        },
-        Underscore: {
-            exports: '_'
-        },
-		jQuery:{
-			exports:'jQuery'
-		},
 		jasmine:{
 			exports:'jasmine'
+		},
+		Phonegap: {
+			exports: '_cordovaNative',
+			init:function(){
+				$.os=$.extend($.os||{},{phonegap:true})
+				
+				$.isOffline=function(){
+					if(location.protocol.match(/^file/))
+						return (Date.now()-$.isOffline.lastCheckAt)<5000
+					return false
+				}
+				
+				//check offline status
+				$.isOffline.lastCheckAt=0
+				$.ajax=$.aop($.ajax,function(_raw){
+					return function(url,options){
+						options=$.isString(url) ? $.extend(options||{},{url:url}) : url
+						return _raw.call(this,$.extend(options,{
+								error: $.aop(options.error,function(_error){
+									return function(xhr){
+										xhr.status==0 && ($.isOffline.lastCheckAt=Date.now())
+										_error && _error.apply(this,arguments)
+									}
+								})
+							}))
+					}
+				})
+			}
 		}
 	},
 	paths:{
 		JSZip:"libs/jszip.min",
-		jQuery:"libs/jquery-2.1.0.min",
-		Underscore:"libs/underscore-min",
-		Backbone:"libs/backbone-min",
+		jquery:"libs/jquery-2.1.0.min",
 		i18n:"libs/i18n",
 		Text:"libs/text",
 		jasmine:"libs/jasmine",
 		
+		Backbone:"libs/backbone-min",
+		underscore:"libs/underscore-min",
 		Phonegap:"file:///android_asset/www/phonegap.js",
+		
+		app:"core/app",
+		UI:"core/UI",
+		Plugin:"core/Plugin",
+		specs:"core/specs"
 	},
 	waitSeconds:30,
 	urlArgs: "v=0.1"

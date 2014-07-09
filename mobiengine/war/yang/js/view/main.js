@@ -1,5 +1,5 @@
 define(['UI','i18n!nls/all'],function(UI,i18n){
-	return new UI.Page.extend({
+	return UI.Page.extend({
 		EMPTY:_.extend({},UI.Page.prototype.EMPTY,{
 				type:'user',
 				title:i18n('Empty'),
