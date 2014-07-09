@@ -37,7 +37,9 @@ module.exports=Super.extend({
 		return doc
 	},
 	afterPost: function(doc){
-		return _.extend(Super.afterPost.call(this,doc),{sessionToken:this.createSessionToken(doc)})
+		return _.extend(Super.afterPost.call(this,doc),{
+			sessionToken:this.createSessionToken(doc)
+		})
 	},
 	routes:{
 		"get /login": function(req, res){

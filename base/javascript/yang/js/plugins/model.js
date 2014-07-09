@@ -28,7 +28,11 @@ define(['app'],function(app){
 	var currentUser, DEFINES={},
 	Model=app.Model=Backbone.Model.extend(/** @lends app.Model.prototype */{
 		version:'1',
+		idAttribute:"_id",
 		className:'_unknown',
+		isNew: function(){
+			return !this.has('createdAt')
+		},
 		validate: function(attrs){
 			var error={}, failed=false
 			_.each(attrs,function(key,value){
@@ -320,24 +324,22 @@ define(['app'],function(app){
 			urlRoot:function(){
 				return this.version+'/files'
 			},
-			save: function(callback){
-				var me=this,
-					data=new FormData();
+			save: function(opt){
+				var me=this,data=new FormData();
 				data.append('file',this.toBlob())
+				data.append('key',this.get('name'))
+				data.append('token', File.want2upload(opt))
 				return $.ajax({
-						url: File.want2upload(callback),
+						url: this.urlRoot(),//"http://up.qiniu.com",
 						data:data,
 						cache: false,
 						contentType : false,
 						processData: false,
-						type: 'POST',
-						dataFilter:function(data,type){
-							me.set('url',data)
-							me.unset('data')
-							me.unset('name')
-							return null
-						}
-					}).then(function(){
+						type: 'POST'
+					}).then(function(data){
+						me.set('url',data.key)
+						me.unset('data')
+						me.unset('name')
 						return me
 					})
 			},
@@ -351,12 +353,14 @@ define(['app'],function(app){
 			},
 			toBlob: function(){
 				var data=this.get('data')
-				return _.isString(data) 
+				data=_.isString(data) 
 					? new Blob([this.toArrayBuffer()],{type:this.get('type')})
-					: data
+					: data;
+				this.has('name') && (data.name=this.get('name'))
+				return data;
 			},
 			url: function(){
-				return this.get('url')
+				return "http://127.0.0.1/mobiengine/"+this.get('url')
 			},
 			download: function(){
 				var p=new $.Deferred
@@ -373,8 +377,7 @@ define(['app'],function(app){
 			}
 		},{
 			want2upload: function(callback){
-				return $.ajax((new app.File()).urlRoot()
-								+'/want2upload'+(callback ? "?callback=/"+callback :""),
+				return $.ajax((new app.File()).urlRoot()+'/want2upload',
 								{async:false,dataType:'text'}).responseText
 			}
 		}),

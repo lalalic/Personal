@@ -44,15 +44,16 @@ _.extend((module.exports=_.extend(function(request, response){
 		
 		return child;
 	  },
-	init: function(app, config){
-		this.prototype.config=config;
-		this.prototype.app=app;
+	init: function(){
+		var app=require("../server").app;
 		_.each(this.routes,function(handler, key){
 			var info=key.split(" "),
 				verb=info[0],
 				path=info.length>1 ? info[1] :"",
 				root=this.prototype.kind ? "/"+this.prototype.kind : this.url,
 				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
+			if(!_.isFunction(handler))
+				handler=function(req,res){this.send(res,req.path)}.bind(this);
 			app[verb]("/"+this.version+url,_.bind(function(req, res, next){
 				try{
 					handler.apply(this,arguments)
@@ -74,7 +75,8 @@ _.extend((module.exports=_.extend(function(request, response){
 	}
 })).prototype,{
 	getMongoServer: function(){
-		return new mongo.Server(this.config.db.host, this.config.db.port, {'auto_reconnect':true,safe:true})
+		var config=require("../server").config
+		return new mongo.Server(config.db.host, config.db.port, {'auto_reconnect':true,safe:true})
 	}
 })
 

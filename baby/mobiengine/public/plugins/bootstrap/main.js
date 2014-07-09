@@ -1,4 +1,4 @@
-define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
+define(['Plugin', 'app'],function(Plugin, app){
 	return Plugin.extend({
 		description:"help play with your children",
 		install:function(){
@@ -7,24 +7,62 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 				name:'baby',
 				title:'Super Daddy',
 				shortcutView:this.module('view/children'),
-				apiKey:'agp3d3ctemlwd2VichELEgRfYXBwGICAgICAgMAJDKIBEDU2Mjk0OTk1MzQyMTMxMjA'
+				init:$.aop(app.init, function(_init){
+					return function(){
+						//route configuration
+						app.route('main','',this.module('view/categories'))
+						app.route('child','child(/:id/:name)',this.module('view/child'),true)
+						app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
+						//app.route('search','posts/:query',this.module('view/main'))
+						app.route('post','create(/:catId/:catname)',this.module('view/post'),true)
+						app.route('update','update/:id',this.module('view/post'),true)
+						app.route('showpost','show/:id',this.module('view/post1'))
+						app.route('comments','comments/:kind/:id',this.module('view/comments'))
+						app.route('story','story/:post(/:id)',this.module('view/story'),true)
+
+						Child.all = Child.collection()
+						Favorite.all = Favorite.collection()
+						Task.all = Task.collection()
+						
+						var args = arguments
+						return (Tag.all = Tag.collection())
+							.fetch()
+							.then(function () {
+								Tag.grouped=Tag.all.groupBy('category')
+							}).then(function () {
+								return _init.apply(app, args)
+							})
+					}
+				}),
+				init4User:$.aop(app.init4User,function(_init4User){
+					return function (user) {
+						return _init4User.apply(this,arguments).then(function(){
+							return $.when(
+								new Query(Child).equalTo('author',user.id).fetch()
+									.then(function(children){
+										Child.all.reset(children)
+										Child.current(Child.all.first())
+									}),
+								new Query(Favorite).equalTo('author',user.id).fetch()
+									.then(function(favorites){
+										Favorite.all.reset(favorites)
+									}),
+							
+								new Query(Task).equalTo('author',user.id).fetch()
+									.then(function(tasks){
+										Task.all.reset(tasks)
+									})
+								)
+						})
+					}
+				})
 			})
-			
-			//route configuration
-			app.route('main','',this.module('view/categories'))
-			app.route('child','child(/:id/:name)',this.module('view/child'),true)
-			app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
-			//app.route('search','posts/:query',this.module('view/main'))
-			app.route('post','create(/:catId/:catname)',this.module('view/post'),true)
-			app.route('update','update/:id',this.module('view/post'),true)
-			app.route('showpost','show/:id',this.module('view/post1'))
-			app.route('comments','comments/:kind/:id',this.module('view/comments'))
-			app.route('story','story/:post(/:id)',this.module('view/story'),true)
-			
+
 			//extends models
-			_.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','), function (o) {
-				this[o] = app.createKind(new Backbone.Model({name : o }))
-			}, app)
+			$.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','),
+				function(index,o){
+					app[o]=Backbone.Model.extend(o.toLowerCase())
+				})
 
 			var Tag = app.Tag,
 				Post = app.Post,
@@ -58,46 +96,6 @@ define(['Plugin', 'app', 'plugins/model'],function(Plugin, app){
 			Post.prototype.getTags=function(){
 				return _.map(this.get('tags'),function(id){return Tag.all.get(id).get('name')})
 			}
-			
-			var _init = app.init
-			app.init = function () {
-				Child.all = Child.collection()
-				Favorite.all = Favorite.collection()
-				Task.all = Task.collection()
-				
-				var args = arguments
-				return (Tag.all = Tag.collection())
-					.fetch()
-					.then(function () {
-						Tag.grouped=Tag.all.groupBy('category')
-					})
-					.then(function () {
-						return _init.apply(app, args)
-					})
-			}
-
-			var _init4User = app.init4User
-			app.init4User = function (user) {
-				return _init4User.apply(this,arguments).then(function(){
-					return $.when(
-						new Query(Child).equalTo('author',user.id).fetch()
-							.then(function(children){
-								Child.all.reset(children)
-								Child.current(Child.all.first())
-							}),
-						new Query(Favorite).equalTo('author',user.id).fetch()
-							.then(function(favorites){
-								Favorite.all.reset(favorites)
-							}),
-					
-						new Query(Task).equalTo('author',user.id).fetch()
-							.then(function(tasks){
-								Task.all.reset(tasks)
-							})
-						)
-				})
-			}
-			app.Model.prototype.getUrl=function(){return ''}
 		}
 	})
 })

@@ -4,7 +4,7 @@ var _ = require("underscore"),
 	Promise = promise.Promise,
 	ObjectID = mongo.ObjectID,
 	Super = require("./service");
-
+	
 module.exports = Super.extend({
 		constructor : function (req, res) {
 			Super.call(this,req,res);
@@ -62,10 +62,10 @@ module.exports = Super.extend({
 			return p
 		},
 		beforeCreate: function(doc,collection,db){
-			return this.asPromise()
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		afterCreate: function(doc,collection,db){
-			return this.asPromise()
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		create : function (docs) {
 			var p = new Promise,
@@ -101,10 +101,10 @@ module.exports = Super.extend({
 			return p
 		},
 		beforeUpdate: function(doc,collection,db){
-			return this.asPromise()
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		afterUpdate:function(doc,collection,db){
-			return this.asPromise()
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		update: function(id, doc){
 			var p = new Promise,
@@ -128,11 +128,11 @@ module.exports = Super.extend({
 			}, this))
 			return p
 		},
-		beforeDelete: function(id,collection,db){
-			return this.asPromise()
+		beforeDelete: function(doc,collection,db){
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
-		afterDelete: function(id,collection,db){
-			return this.asPromise()
+		afterDelete: function(doc,collection,db){
+			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		delete: function(id){
 			var p = new Promise,
@@ -153,6 +153,23 @@ module.exports = Super.extend({
 				},this))
 			}, this))
 			return p
+		},
+		cloudCode: function(){
+			if(this._cloud)
+				return this._cloud;
+				
+			var Module=module.constructor,
+				appModule=Module._cache[id],
+				id=__dirname+"/_app/"+this.app._id+".js";
+			if(!appModule || appModule.updatedAt!=this.app.updatedAt){
+				var Cloud=require("Cloud");
+				appModule=new Module(".");
+				appModule._compile("module.exports=function(Cloud){"+this.app.cloudCode+"; return Cloud;}", {filename: id});
+				appModule.id=id;
+				appModule.updatedAt=this.app.updatedAt;
+				appModule.exports=appModule.exports(new Cloud());
+			}
+			return this._cloud=appModule.exports.asKindCallback(this.kind)
 		}
 	}, {
 		url : "/classes/:collection",
@@ -163,6 +180,9 @@ module.exports = Super.extend({
 		},
 		afterPost:function(doc){
 			return _.pick(doc,'createdAt', 'updatedAt', '_id')
+		},
+		afterGet: function(doc){
+			return doc
 		},
 		routes : {
 			"get reset": function(req, res){
@@ -208,11 +228,13 @@ module.exports = Super.extend({
 				new this(req, res)
 				.get(query, options)
 				.then(_.bind(function (data) {
+						data=this.afterGet(data)
 						this.send(res, query._id ? data : {results:data})
 					}, this),this.error(res))
 			},
 			"post" : function(req, res){
-				if(!req.body) return this.send();
+				if(!req.body) 
+					return this.send();
 				new this(req, res)
 					.create(this.beforePost(req.body))
 					.then(_.bind(function(doc){

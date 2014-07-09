@@ -1,9 +1,8 @@
-var fs = require("fs");
 var cluster = require('cluster');
 var http = require('http');
 var numCPUs = require('os').cpus().length;
 
-var config = {
+var config = module.exports.config={
 	"db" : {
 		'port' : 27017,
 		'host' : "localhost"
@@ -14,16 +13,13 @@ var config = {
 		'timeout' : 120,
 		'address' : "0.0.0.0"
 	},
-	'flavor' : "regular",
-	'debug' : true
+	qiniu:{
+		ACCESS_KEY:"1o_JaGUUb8nVxRpDGoAYB9tjLT10WD7PBFVtMmVT",
+		SECRET_KEY:"r2nd182ZXzuCiCN7ZLoJPFVPZHqCxaUaE73RjKaW",
+		bucket:"mobiengine",
+	},
+	debug:true
 };
-
-try {
-	config = JSON.parse(fs.readFileSync(process.cwd() + "/config.json"));
-} catch (e) {
-	// ignore
-}
-module.exports.config = config;
 
 if (false && cluster.isMaster) {
 	// Fork workers.
@@ -43,7 +39,6 @@ if (false && cluster.isMaster) {
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({extended : true}));
 	app.use(require("morgan")("dev"));
-	//app.use(require('cookie-session')({secret:"iamLalalic", name:"session"}));
 	
 	app.all("*",function(req,res,next){
 		res.header({
@@ -52,15 +47,19 @@ if (false && cluster.isMaster) {
 			"Access-Control-Allow-Methods":"GET,POST,PUT,DELETE"
 		});
 		next();
-	});
+	})
 	
-	app.use("/test",express.static(__dirname+'/test'));
+	require("./lib/file").init()
+	require("./lib/user").init()
+	require("./lib/role").init()
+	require("./lib/app").init()
+	require("./lib/plugin").init()
+	require("./lib/entity").init()
 	
-	require("./lib/user").init(app,config)
-	require("./lib/role").init(app,config)
-	require("./lib/app").init(app,config)
-	require("./lib/plugin").init(app,config)
-	require("./lib/entity").init(app,config)
+	if(config.debug){
+		app.use("/test",express.static(__dirname+'/test'));
+		app.use("/"+config.qiniu.bucket,express.static(__dirname+'/upload/'+config.qiniu.bucket));
+	}
 	
 	// Bind to a port
 	app.listen(config.server.port, config.server.address);

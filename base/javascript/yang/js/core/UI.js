@@ -357,8 +357,10 @@ define(['app'],function(app){
 				this.clear()
 				this.model=model
 				model && this.$('form :input[name]').filter(':not(:checkbox,:radio)').each(function(){
-					model.has(this.name) &&
-						$(this).val(model.get(this.name))
+					if(model.has(this.name)){
+						$(this).val(model.get(this.name)||'')
+						this.name==model.idAttribute&& $(this).attr('readonly',model.id&&true)
+					}
 				})
 				return this
 			},
