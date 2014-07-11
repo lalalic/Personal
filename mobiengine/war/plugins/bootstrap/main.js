@@ -5,42 +5,42 @@
  */
 define(['Plugin', 'app', 'specs','JSZip','UI','plugins/model'],function(Plugin, app, specs, JSZip,UI){
 var defaultAppMain=function(name, key){
-return function(Plugin,app){
-	return Plugin.extend({
-		name:"bootstrap",
-		install:function(){
-			//configure application
-			$.extend(app,{
-				name:"_name_",
-				title:"[application title]",
-				version:"[application version]",
-				description:"[describe your application]",
-				apiKey:"_key_"
-			});
-			/**
-			 *  route configuration
-			 *  @example
-			 *  app.route('main','',this.module('view/main'))
-			 */
-			 
-			 /**
-			  *  more extensions, such as extending models, change app.init, and etc
-			  *  @example
-			  *  var Post=app.Post=app.createKind(new Backbone.Model({name : 'Post' }))
-			  *  app.init4User=_.aop(app.init4User,function(_raw){
-			  *  	console.debug("start initializing for user")
-			  *  	var r=_raw.apply(this,arguments)
-			  *  	console.debug("initialized for user")
-			  *  	return r
-			  *  })
-			  */
-		},
-		uninstall:function(){
-			
-		}
-	})
-}.toString().replace('_name_',name).replace('_key_',key);
-}
+		return function(Plugin,app){
+			return Plugin.extend({
+				name:"bootstrap",
+				install:function(){
+					//configure application
+					$.extend(app,{
+						name:"_name_",
+						title:"[application title]",
+						version:"[application version]",
+						description:"[describe your application]",
+						apiKey:"_key_"
+					});
+					/**
+					 *  route configuration
+					 *  @example
+					 *  app.route('main','',this.module('view/main'))
+					 */
+					 
+					 /**
+					  *  more extensions, such as extending models, change app.init, and etc
+					  *  @example
+					  *  var Post=app.Post=app.Model.extend({className : 'Post' })
+					  *  app.init4User=_.aop(app.init4User,function(_raw){
+					  *  	console.debug("start initializing for user")
+					  *  	var r=_raw.apply(this,arguments)
+					  *  	console.debug("initialized for user")
+					  *  	return r
+					  *  })
+					  */
+				},
+				uninstall:function(){
+					
+				}
+			})
+		}.toString().replace('_name_',name).replace('_key_',key);
+	}
 	return Plugin.extend({
 		description:'manage applications',
 		install: function(){
@@ -223,7 +223,7 @@ return function(Plugin,app){
 				}
 				return app.Model.collection.apply(this,arguments)
 			}
-			
+			app.Schema.prototype.idAttribute="name"
 			
 			$.extend(app,{
 				init4User:$.aop(app.init4User, function(_init4User){

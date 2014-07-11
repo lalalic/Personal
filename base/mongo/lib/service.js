@@ -54,13 +54,13 @@ _.extend((module.exports=_.extend(function(request, response){
 				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
 			if(!_.isFunction(handler))
 				handler=function(req,res){this.send(res,req.path)}.bind(this);
-			app[verb]("/"+this.version+url,_.bind(function(req, res, next){
+			app[verb]("/"+this.version+url,function(req, res, next){
 				try{
 					handler.apply(this,arguments)
 				}catch(error){
-					next(error)
+					this.error(res)(error)
 				}
-			},this))
+			}.bind(this))
 			console.log("added route: "+verb+" "+url)
 		},this)
 	},

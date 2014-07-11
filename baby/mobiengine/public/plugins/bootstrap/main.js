@@ -1,25 +1,14 @@
-define(['Plugin', 'app'],function(Plugin, app){
+define(['Plugin', 'app','plugins/model'],function(Plugin, app){
 	return Plugin.extend({
 		description:"help play with your children",
 		install:function(){
 			//application configuration
 			$.extend(app,{
-				name:'baby',
+				apiKey:'baby',
 				title:'Super Daddy',
 				shortcutView:this.module('view/children'),
 				init:$.aop(app.init, function(_init){
 					return function(){
-						//route configuration
-						app.route('main','',this.module('view/categories'))
-						app.route('child','child(/:id/:name)',this.module('view/child'),true)
-						app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
-						//app.route('search','posts/:query',this.module('view/main'))
-						app.route('post','create(/:catId/:catname)',this.module('view/post'),true)
-						app.route('update','update/:id',this.module('view/post'),true)
-						app.route('showpost','show/:id',this.module('view/post1'))
-						app.route('comments','comments/:kind/:id',this.module('view/comments'))
-						app.route('story','story/:post(/:id)',this.module('view/story'),true)
-
 						Child.all = Child.collection()
 						Favorite.all = Favorite.collection()
 						Task.all = Task.collection()
@@ -58,10 +47,22 @@ define(['Plugin', 'app'],function(Plugin, app){
 				})
 			})
 
+			//route configuration
+			app.route('main','',this.module('view/categories'))
+			app.route('child','child(/:id/:name)',this.module('view/child'),true)
+			app.route('categoryPost','category/:id/:name',this.module('view/posts'),false)
+			//app.route('search','posts/:query',this.module('view/main'))
+			app.route('post','create(/:catId/:catname)',this.module('view/post'),true)
+			app.route('update','update/:id',this.module('view/post'),true)
+			app.route('showpost','show/:id',this.module('view/post1'))
+			app.route('comments','comments/:kind/:id',this.module('view/comments'))
+			app.route('story','story/:post(/:id)',this.module('view/story'),true)
+
+			
 			//extends models
 			$.each("Tag,Child,Comment,Favorite,Post,Story,Task".split(','),
-				function(index,o){
-					app[o]=Backbone.Model.extend(o.toLowerCase())
+				function(index,kind){
+					app[kind]=app.Model.extend({className:kind})
 				})
 
 			var Tag = app.Tag,

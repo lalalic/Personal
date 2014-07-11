@@ -1,271 +1,233 @@
 {
-	"_user": {
-		"username": {
-			"unique": true,
-			"type": "String",
-			"searchable": true
+	users: {
+		_id: String,
+		password: String,
+		email: {type: String, unique:true},
+		posts: Number,
+		stories: Number,
+		comments: Number,
+		score: Number,
+		duration: Number,
+		dayBeat: Number,
+		weekBeat: Number,
+		monthBeat: Number,
+		yearBeat: Number,
+		allBeat: Number
+	},
+	roels: {
+		_id: String,
+		roles: [roles],
+		users: [users]
+	},
+	Tag: {
+		category: {
+			type: String,
+			searchable: true
 		},
-		"password": {
-			"type": "String"
+		name: {
+			type: String,
+			searchable: true
 		},
-		"email": {
-			"unique": true,
-			"type": "String",
-			"searchable": true
+		posts: {
+			type: Integer,
+			searchable: true
 		},
-		"comments": {
-			"type": "Integer"
+		time: {
+			type: Integer,
+			searchable: true
 		},
-		"post": {
-			"type": "Integer"
+		stories:{
+			type: Integer
 		},
-		"score": {
-			"type": "Integer"
+		dayBeat:{
+			type: Integer
 		},
-		"duration": {
-			"type": "Integer"
+		weekBeat:{
+			type: Integer
 		},
-		"stories": {
-			"type": "Integer"
+		monthBeat:{
+			type: Integer
 		},
-		"dayBeat":{
-			"type": "Integer"
+		yearBeat:{
+			type: Integer
 		},
-		"weekBeat":{
-			"type": "Integer"
-		},
-		"monthBeat":{
-			"type": "Integer"
-		},
-		"yearBeat":{
-			"type": "Integer"
-		},
-		"allBeat":{
-			"type": "Integer"
+		allBeat:{
+			type: Integer
 		}
 	},
-	"_role": {
-		"name": {
-			"unique": true,
-			"type": "String",
-			"searchable": true
+	Child: {
+		author: {
+			type: Integer,
+			searchable: true
 		},
-		"roles": {
-			"type": "Array"
+		authorName: {
+			type: String,
+			searchable: true
 		},
-		"users": {
-			"type": "Array"
+		birthday: {
+			type: Date,
+			searchable: true
+		},
+		gender: {
+			type: Integer,
+			searchable: true
+		},
+		name: {
+			type: String,
+			searchable: true
+		},
+		photo: {
+			type: File,
+			searchable: true
 		}
 	},
-	"Tag": {
-		"category": {
-			"type": "String",
-			"searchable": true
+	Post: {
+		author: {
+			type: Integer,
+			searchable: true
 		},
-		"name": {
-			"type": "String",
-			"searchable": true
+		authorName: {
+			type: String,
+			searchable: true
 		},
-		"posts": {
-			"type": "Integer",
-			"searchable": true
+		content: {
+			type: String,
+			searchable: true
 		},
-		"time": {
-			"type": "Integer",
-			"searchable": true
+		comments: {
+			type: Integer,
+			searchable: true
 		},
-		"stories":{
-			"type": "Integer"
+		category: {
+			type: Integer,
+			searchable: true
 		},
-		"dayBeat":{
-			"type": "Integer"
+		title: {
+			type: String,
+			searchable: true
 		},
-		"weekBeat":{
-			"type": "Integer"
+		duration: {
+			type: Integer,
+			searchable: true
 		},
-		"monthBeat":{
-			"type": "Integer"
+		tags: {
+			type: Array,
+			searchable: true
 		},
-		"yearBeat":{
-			"type": "Integer"
-		},
-		"allBeat":{
-			"type": "Integer"
+		thumbnail: {
+			type: String
 		}
 	},
-	"Child": {
-		"author": {
-			"type": "Integer",
-			"searchable": true
+	Comment: {
+		author: {
+			type: Integer,
+			searchable: true
 		},
-		"authorName": {
-			"type": "String",
-			"searchable": true
+		authorName: {
+			type: String
 		},
-		"birthday": {
-			"type": "Date",
-			"searchable": true
+		content: {
+			type: String
 		},
-		"gender": {
-			"type": "Integer",
-			"searchable": true
+		kind:{
+			type: String
 		},
-		"name": {
-			"type": "String",
-			"searchable": true
-		},
-		"photo": {
-			"type": "File",
-			"searchable": true
+		parent: {
+			searchable: true,
+			type: Integer
 		}
 	},
-	"Post": {
-		"author": {
-			"type": "Integer",
-			"searchable": true
+	Favorite: {
+		author: {
+			searchable: true,
+			unique: false,
+			type: Integer
 		},
-		"authorName": {
-			"type": "String",
-			"searchable": true
+		authorName: {
+			searchable: false,
+			unique: false,
+			type: String
 		},
-		"content": {
-			"type": "String",
-			"searchable": true
+		post: {
+			searchable: true,
+			unique: false,
+			type: Integer
 		},
-		"comments": {
-			"type": "Integer",
-			"searchable": true
-		},
-		"category": {
-			"type": "Integer",
-			"searchable": true
-		},
-		"title": {
-			"type": "String",
-			"searchable": true
-		},
-		"duration": {
-			"type": "Integer",
-			"searchable": true
-		},
-		"tags": {
-			"type": "Array",
-			"searchable": true
-		},
-		"thumbnail": {
-			"type": "String"
+		title: {
+			searchable: false,
+			unique: false,
+			type: String
 		}
 	},
-	"Comment": {
-		"author": {
-			"type": "Integer",
-			"searchable": true
+	Task: {
+		author: {
+			searchable: true,
+			unique: false,
+			type: Integer
 		},
-		"authorName": {
-			"type": "String"
+		authorName: {
+			searchable: false,
+			unique: false,
+			type: String
 		},
-		"content": {
-			"type": "String"
+		child: {
+			searchable: true,
+			unique: false,
+			type: Integer
 		},
-		"kind":{
-			"type": "String"
+		planAt: {
+			searchable: true,
+			unique: false,
+			type: Date
 		},
-		"parent": {
-			"searchable": true,
-			"type": "Integer"
+		post: {
+			searchable: true,
+			unique: false,
+			type: Integer
+		},
+		title: {
+			searchable: false,
+			unique: false,
+			type: String
+		},
+		status: {
+			searchable: true,
+			unique: false,
+			type: Integer
+		},
+		time: {
+			searchable: false,
+			unique: false,
+			type: Integer
 		}
 	},
-	"Favorite": {
-		"author": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
+	Story: {
+		author: {
+			searchable: true,
+			unique: false,
+			type: Integer
 		},
-		"authorName": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
+		authorName: {
+			searchable: false,
+			unique: false,
+			type: String
 		},
-		"post": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
+		content: {
+			searchable: false,
+			unique: false,
+			type: String
 		},
-		"title": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
-		}
-	},
-	"Task": {
-		"author": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
+		thumbnail: {
+			searchable: false,
+			unique: false,
+			type: String
 		},
-		"authorName": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
+		post:{
+			searchable: true,
+			type: Integer
 		},
-		"child": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
-		},
-		"planAt": {
-			"searchable": true,
-			"unique": false,
-			"type": "Date"
-		},
-		"post": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
-		},
-		"title": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
-		},
-		"status": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
-		},
-		"time": {
-			"searchable": false,
-			"unique": false,
-			"type": "Integer"
-		}
-	},
-	"Story": {
-		"author": {
-			"searchable": true,
-			"unique": false,
-			"type": "Integer"
-		},
-		"authorName": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
-		},
-		"content": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
-		},
-		"thumbnail": {
-			"searchable": false,
-			"unique": false,
-			"type": "String"
-		},
-		"post":{
-			"searchable": true,
-			"type": "Integer"
-		},
-		"comments":{
-			"type": "Integer"
+		comments:{
+			type: Integer
 		}
 	}
 }

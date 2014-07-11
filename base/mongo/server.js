@@ -7,6 +7,9 @@ var config = module.exports.config={
 		'port' : 27017,
 		'host' : "localhost"
 	},
+	getMongo: function(db){
+		return "mongodb://localhost/"+db;
+	},
 	'server' : {
 		'port' : 80,
 		'https' : 443,

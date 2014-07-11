@@ -19,7 +19,7 @@ module.exports=Super.extend({
 			throw new Error("name or password can't be empty.");
 		
 		return this.get({_id: name})
-			.then(_.bind(function(doc){
+			.then(function(doc){
 				if(doc==null)
 					throw new Error("username or password is not correct.");
 				
@@ -27,7 +27,7 @@ module.exports=Super.extend({
 					return doc
 				
 				throw new Error("username or password is not correct.");
-			},this))
+			}.bind(this))
 		
 	}
 },{

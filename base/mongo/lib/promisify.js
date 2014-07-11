@@ -1,6 +1,6 @@
-var convertNodeAsyncFunction=require("node-promise").convertNodeAsyncFunction,
+var promise=require("node-promise"),
 	_=require("underscore");
-
+	
 var mongo=require("mongodb");
 _.each("open,close,collection".split(','),function(f){
 	this[f]=convertNodeAsyncFunction(this[f])

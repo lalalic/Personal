@@ -1,34 +1,11 @@
 define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
-	var tmplColumn='\
-			<fieldset>\
-				<input placeholder="'+i18n('name')+'" name="name" type="text">\
-			</fieldset>\
-			<fieldset>\
-				<label class="select">\
-					<select name="type">\
-						<%_.each(require("app").Model.DATATYPE,function(o){%> \
-						<option value="{{o}}">{{o}}</option>\
-						<%})%>\
-					</select>\
-				</label>\
-			</fieldset>\
-			<fieldset>\
-				<label class="anchor">'+i18n("Searchable?")+'</label>\
-				<input name="searchable" unchecked="unchecked" type="checkbox">\
-			</fieldset>\
-			<fieldset>\
-				<label class="anchor">'+i18n("Unique?")+'</label>\
-				<input name="unique" unchecked="unchecked" type="checkbox">\
-			</fieldset>\
-			<button class="anchor create" data-callback="accept">'+i18n('Create Column')+'</button>\
-			<button class="anchor cancel" data-callback="cancel">'+i18n('Cannel')+'</button>'
-	var internal_tables="_user,_role,_schema".split(',')
-	var internal_fields="id,createdAt,updatedAt,ACL".split(',')
+	var internal_tables="users,roles".split(',')
+	var internal_fields="_id,createdAt,updatedAt,ACL".split(',')
 	var ListPage=UI.ListPage,
 		Schema=app.Schema,
 		Application=app.Application,
 		current,
-		readonlyFields='id,createdAt,updatedAt,password'.split(','),
+		readonlyFields='_id,createdAt,updatedAt,password'.split(','),
 		input=$(document.createElement('input')).addClass('a'),
 		switchAppKey=function(e,xhr){
 			var current=Application.current()
@@ -43,8 +20,8 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				var tr=document.createElement('tr')
 				var fields=this.model.get('fields')
 				var tds=_.map(fields, function(field){
-					var value=item.get(field.name)
-					if(_.indexOf(readonlyFields,field.name)!=-1)
+					var value=item.get(field)
+					if(_.indexOf(readonlyFields,field)!=-1)
 						return '<td class="readonly">'+(value||'')+"</td>"
 					return "<td>"+(value||'')+"</td>"
 				})
@@ -54,25 +31,15 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 						this.currentModel=item
 					},this))
 					
-				item.on('sync',function(m){
-					if(m.get('updatedAt').getTime()==m.get('createdAt').getTime()){
-						$('td:eq(1)',tr).text(m.id)
-						$('td:last-child',tr)
-							.prev().text(m.get('updatedAt'))
-							.prev().text(m.get('createdAt'))
-					}else
-						$('td:last-child',tr)
-							.prev().text(m.get('updatedAt'))
-				}).on('destroy',function(){
+				item.on('destroy',function(){
 					$(tr).remove()
 				})
 				return tr
 			},
 			initialize:function(){
-				this.collection=app.createKind(this.model).collection()	
+				this.collection=app.Model.extend({className:this.model.get('name')}).collection()	
 				this._super().initialize.apply(this,arguments)
 				this.model.on('destroy',this.remove,this)
-				this.model.on('sync', this.onChangeSchema,this)
 				this.$list.remove()
 				this.$list=this.$el
 				this.createHead()
@@ -104,14 +71,14 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			},
 			newField: function(field){
 				$(document.createElement('th'))
-					.text(field.name)
+					.text(field)
 					.insertBefore(this.$('thead th:last-child').prev().prev())
 				$('<td/>').insertBefore(this.$('tbody td:last-child').prev().prev())
 				return field
 			},
 			appendField: function(field){
 				var th=document.createElement('th')
-				this.thead.append($(th).text(field.name))
+				this.thead.append($(th).text(field))
 				return field
 			},
 			newModel: function(){
@@ -135,52 +102,14 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				this.$el.detach()
 				return this
 			}
-		}),
-		columnUI=new (UI.Popup.extend({
-			className:'form',
-			template:_.template(tmplColumn),
-			events:{
-				"click button.cancel":'close',
-				"click button.create":'create',
-				'change [name]':'change'
-			},
-			render: function(){
-				this.$el.html(this.template({}));
-				return this
-			},
-			show: function(){
-				this.model={searchable:true, unique: false, type: this.$('select[name=type]').val()}
-				this.$('input[name]').val('')
-				this.$('input[name=searchable]').prop('checked',this.model.searchable)
-				this.$('input[name=unique]').prop('checked',this.model.unique)
-				return this._super().show.apply(this,arguments)
-			},
-			change: function(e){
-				var el=e.target
-				switch(el.name){
-				case 'searchable':case 'unique':
-					this.model[el.name]=el.checked
-					break
-				default:
-					this.model[el.name]=el.value
-				}
-				return this
-			},
-			create: function(){
-				current.model.addColumn(this.model)
-				this.model={searchable:true, unique: false,  type: this.$('select[name=type]').val()}
-				this.$('input[name=searchable]').prop('checked',this.model.searchable)
-				this.$('input[name=unique]').prop('checked',this.model.unique)
-			}
-		}))
+		})
 	return ListPage.extend({
 		newID:0,
 		collection:Schema.collection(),
 		title:i18n('Data Browser'),
-		cmds:'<a class="schema">'+UI.FileLoader+'<span class="icon download"/>schema</a>\
+		cmds:'<a class="schema">'+UI.FileLoader+'<span class="icon download"/>index</a>\
 			<a class="table">'+UI.FileLoader+'<span class="icon download"/><span class="icon remove"/>table</a>\
-			<a class="row"><span class="icon plus"/><span class="icon remove"/>row</a>\
-			<a class="column"><span class="icon plus"/><span class="icon remove"/>column</a>',
+			<a class="row"><span class="icon remove"/>row</a>',
 
 		events:_.extend({},ListPage.prototype.events,{
 			'change a.schema input':'importSchema',
@@ -190,31 +119,17 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			'click a.table .remove': 'onRemoveTable',
 			'change a.table input':'importData',
 			
-			'click a.row .plus':'onNewRow',
-			'click a.row .remove':'removeSelectedRow',
-			
-			'click a.column .plus':'onNewColumn',
-			'click a.column .remove':'onRemoveColumn',
-			
-			'change input.a':'onChangeValue',
-			'blur input.a':'onBlurInput',
-			'keypress input.a':'onEnterInput',
-			'dblclick table.data tbody td:not(.readonly)':'switchInput'
+			'click a.row .remove':'removeSelectedRow'
 		}),
 		initialize:function(){
 			this._super().initialize.apply(this,arguments)
 			this.$tables=$('<nav data-control="groupbar"></nav>').insertBefore(this.$('article'))
-			this.$createTable=$('<a class="createTable"><span class="icon plus"/></a>').appendTo(this.$tables)
-				.click(_.bind(this.onNewTable,this))
 			this.$list=this.$('article')
 			Application.all.on('current',this.refresh,this)
 		},
 		show: function(table){
 			$(document).on('ajaxSend', switchAppKey)
-			table=table||'_user'
-			this.collection.once('sync',_.bind(function(){
-				this.$('#__'+table).click()
-			},this))
+			table=table||'users'
 			this._super().show.apply(this,arguments)
 			this.$('#__'+table).click()
 			return this
@@ -223,7 +138,7 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			if(this.app==Application.current())
 				return
 			this.app=Application.current()
-			this.$createTable.siblings().remove()
+			this.$tables.empty()
 			this.$list.empty()
 			return this._super().refresh.apply(this,arguments)
 		},
@@ -238,7 +153,7 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				$a=$('<a/>')
 					.text(model.get('name'))
 					.attr('id',"__"+model.get('name'))
-					.insertBefore(this.$createTable)
+					.appendTo(this.$tables)
 					.click(this.onSwitchTable(table))
 			
 			if(current==null)
@@ -260,104 +175,42 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				current.show()
 			}
 		},
-		onNewTable:function(){
-			var me=this
-			prompt(i18n('please input the table name'),'table'+(this.newID++))
-				.then(function(name){
-					var table=new Schema()
-					table.set('name',name,{validate:true})
-					table.save().then(function(){
-						me.newTable=table
-						me.collection.add(table)
-					})
-				})
-		},
-		onNewColumn: function(){
-			columnUI.show()
-		},
 		onRemoveTable: function(){
 			var tableName=current.model.get('name')
-			if(tableName==app.User.prototype.className || tableName==app.Role.prototype.className)
+			if(app[tableName])
 				return;
 			current.model.destroy()
-			.then(_.bind(function(){
-				this.$('#__'+tableName).remove()
-				this.$tables.find('a').first().click()
-			},this))
-		},
-		onNewRow: function(){
-			current.newModel()
-		},
-		switchInput:function(e, td){
-			var schema=current.model,
-				td=$(e.target),
-				i=$('td',td.parent()).index(td)-1,
-				field=schema.get('fields')[i],
-				type='text'
-			input.removeProp('list')
-			switch(field.type){
-			case 'Integer':
-			case 'Float':
-				type='number'
-				break
-			case 'Date':
-				type='date'
-				break
-			case 'Time':
-				type='time'
-				break
-			case 'DateTime':
-				type='datetime'
-				break
-			case 'File':
-				type='file'
-				break
-			case 'Boolean':
-				input.attr('list','Boolean')
-				break
-			}
-			input.prop('type',type)
-			input.val(td.text())
-				.width(td.width())
-				.appendTo(td.empty())
-				.focus()
-		},
-		onChangeValue: function(){
-			var schema=current.model,
-				model=current.currentModel,
-				td=input.parent(),
-				i=$('td',td.parent()).index(td)-1,
-				field=schema.get('fields')[i],
-				value=input.val(),
-				attrs={}
-			model.set(field.name,value, {validate:true})
-			attrs[field.name]=model.get(field.name)
-			model.save(null,{attrs:attrs})
-		},
-		onBlurInput: function(e,td){
-			if((td=input.parent()).length==0)
-				return;
-			try{input.detach()}catch(e){}
-			td.html(input.val())
-		},
-		onEnterInput: function(e){
-			e.which==13 &&	input.blur()
+				.then(_.bind(function(){
+					this.$('#__'+tableName).remove()
+					this.$tables.find('a').first().click()
+				},this))
 		},
 		removeSelectedRow: function(){
 			current.removeSelected()
 		},
 		importData:function(e){
-			var me=this, reader=new FileReader()
+			var me=this, reader=new FileReader(),
+				file=e.target.files[0],
+				name=file.name.split('.')[0];
 			reader.onloadend=function(a){
-				_.each(JSON.parse(a.target.result),function(o){
-					var m=new this.collection.model(o)
+				var tableModel=me.collection.get(name),
+					docs=JSON.parse(a.target.result);
+				if(!tableModel){
+					var fields=_.without(_.keys(docs[0]), '_id')
+					fields.unshift('_id')
+					fields.push('createdAt')
+					me.newTable=tableModel=new Schema({name:name, fields:fields})
+					me.collection.add(tableModel)
+				}
+				_.each(docs,function(doc){
+					var m=new this.collection.model(doc)
 					m.save().then(function(){
 						current.collection.add(m)
 					})
 				},current)
 				e.target.value=""
 			}
-			reader.readAsText(e.target.files[0])
+			reader.readAsText(file)
 		},
 		backupSchema:function(){
 			this.app.exportSchema(this.collection).
@@ -417,37 +270,6 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				e.target.value=""
 			}
 			reader.readAsText(e.target.files[0])
-		},
-		updateTableSchema:function(newSchema){
-			var me=this
-			var currentSchema=current.model.get('fields'),
-				currentFieldNames=_.difference(_.pluck(currentSchema,'name'),internal_fields)
-			var pendingSchema=newSchema.fields,
-				fieldNames=_.difference(_.pluck(pendingSchema,'name'),internal_fields)
-			var changed=false
-			//delete
-			_.chain(_.difference(currentFieldNames,fieldNames))
-				.each(function(name){
-					changed=true
-					currentSchema.splice(currentSchema.indexOf(_.findWhere(currentSchema,{name:name})),1)
-				})
-			//create
-			_.chain(_.difference(fieldNames,currentFieldNames))
-				.each(function(name){
-					changed=true
-					currentSchema.splice(currentSchema.length-3, 0, _.findWhere(pendingSchema,{name:name}))
-				})
-			//update
-			_.chain(_.intersection(fieldNames,currentFieldNames))
-				.each(function(name){
-					var currentField=_.findWhere(currentSchema,{name:name}),
-						newField=_.findWhere(pendingSchema,{name:name})
-					if(_.isEqual(_.extend({type:'String',searchable:false,unique:false},currentField),_.extend({type:'String',searchable:false,unique:false},newField)))
-						return
-					changed=true
-					currentSchema.splice(currentSchema.indexOf(currentField),1,newField)
-				})
-			changed && current.model.save()
 		},
 		_isEmpty:function(){return false}
 	},{

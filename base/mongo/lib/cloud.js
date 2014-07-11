@@ -3,7 +3,7 @@ module.exports=function(){
 	var callbacks={}, self=this;
 	_.each("before,after".split(","),function(a){
 		_.each("Create,Update,Delete".split(","),function(b){
-			self[a+b]=function(kind, callback, c){
+			this[a+b]=function(kind, callback, c){
 				c=callbacks[kind]||(callbacks[kind]={})
 				c=(c[a+b]||(c[a+b]=[]))
 				c.push(function(){return callback.apply(this,arguments)})
@@ -15,7 +15,7 @@ module.exports=function(){
 		var kindCallbacks=callbacks[kind]||{}, o={}
 		_.each("before,after".split(","),function(a){
 			_.each("Create,Update,Delete".split(","),function(b){
-				self[a+b]=function(){
+				this[a+b]=function(){
 					return promise.seq(kindCallbacks[a+b]||[])
 				}
 			},o)
@@ -26,4 +26,4 @@ module.exports=function(){
 	this.define=function(url, handler){
 		
 	}
-}
+}

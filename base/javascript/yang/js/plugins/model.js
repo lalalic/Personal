@@ -99,6 +99,9 @@ define(['app'],function(app){
 		save: function(){
 			return Backbone.Model.prototype.save.apply(this,arguments).then(_.bind(function(){return this},this))
 		},
+		getUrl: function(name){
+			return this.get(name)||""
+		},
 		schema:{
 			'createdAt':{type:'Date'},
 			'updatedAt':{type:'Date'},
@@ -108,17 +111,6 @@ define(['app'],function(app){
 		
 	},/** @lends app.Model */{
 		/**
-		 *  set schema
-		 */
-		setSchema: function(schema){
-			this.prototype.className=schema.get('name')
-			this.prototype.schema=_.clone(Model.prototype.schema)
-			_.each(schema.get('fields'),function(metadata){
-				this[metadata.name]=metadata
-			},this.prototype.schema)
-			return this
-		},
-		/**
 		 *  create collection of Model
 		 */
 		collection:function(models, options){
@@ -127,61 +119,23 @@ define(['app'],function(app){
 			var a=new this.Collection(models, options)
 			a.query=new Query(this)
 			return a
-		},
-		/**
-		 *  convert from string to type-safed value
-		 *  @readonly
-		 *  @enum {Function} 
-		 */
-		types:{//convert from input to javascript data
-			Integer: function(value){
-				return parseInt(value)
-			},
-			Float: function(value){
-				return parseFloat(value)
-			},
-			Boolean: function(value){
-				switch(value.toLowerCase()){
-				case 'true':
-					return true
-				case 'false':
-					return false
-				default:
-					return true && value
-				}
-			},
-			Date: function(value){
-				return Date.from(value)
-			},
-			Array: function(value){
-				return JSON.parse(value)
-			},
-			Object: function(value){
-				return JSON.parse(value)
-			}
-		},
-		/**
-		 *  supported data types
-		 *  @memberof app.Model
-		 *  @type {string[]}
-		 */
-		DATATYPE:'String,Integer,Float,Boolean,Date,File,GeoPoint,Array,Object,Pointer'.split(','),
-		create: function(kind,data,opt){
-			return new (DEFINES[kind] || (DEFINES[kind]=Model.extend({className:kind})))(data,opt)
 		}
 	})
 	
 	Model.extend=$.aop(Model.extend,function(_extend){
 		return function(instanceProperties, classProperties){
-			return DEFINES[instanceProperties.className]=_extend.apply(this,arguments)
+			return DEFINES[instanceProperties.className] || (DEFINES[instanceProperties.className]=_extend.apply(this,arguments))
 		}
 	})
 
-	var User=app.User=Model.extend(/** @lends app.User.prototype*/{
-		className:'_user',
-		urlRoot: function(){
-			return this.version+'/users'
-		},
+	var 
+	_internalModel=Model.extend({
+		urlRoot:function(){
+			return this.version+"/"+this.className
+		}
+	})
+	User=app.User=_internalModel.extend(/** @lends app.User.prototype*/{
+		className:'users',
 		parse: function(r){
 			var attrs=this._super().parse.apply(this,arguments)
 			if(_.has(attrs,'sessionToken')){
@@ -284,31 +238,11 @@ define(['app'],function(app){
 			return User.current().requestPasswordReset(email)
 		}
 	}),
-	Role=app.Role=Model.extend(/** @lends app.Role.prototype */{
-		className:'_role',
-		urlRoot: function(){
-			return this.version+'/roles'
-		}
+	Role=app.Role=_internalModel.extend(/** @lends app.Role.prototype */{
+		className:'roles'
 	}),
-	Schema=app.Schema=Model.extend(/** @lends app.Schema.prototype */{
-		className:'_schema',
-		urlRoot: function(){
-			return this.version+'/schemas'
-		},
-		/**
-		 *  @returns {Promise}
-		 */
-		addColumn:function(column){
-			return Backbone.sync('update',this, {
-				context:this,
-				url:this.urlRoot()+'/'+this.id+'/column',
-				attrs:column
-			}).then(function(){
-				var fields=this.get('fields'), i=fields.length-3
-				fields.splice(i,0,column)
-				this.trigger('addColumn',column, i)
-			})
-		}
+	Schema=app.Schema=_internalModel.extend(/** @lends app.Schema.prototype */{
+		className:'schemas'
 	},{
 		upload:function(data){
 			return $.ajax({
@@ -317,13 +251,11 @@ define(['app'],function(app){
 				contentType:'application/json;charset=UTF-8',
 				data:data
 			})
+			return this.version+'/'+this.className
 		}
 	}),
-	File=app.File=Model.extend({
-			className:"_file",
-			urlRoot:function(){
-				return this.version+'/files'
-			},
+	File=app.File=_internalModel.extend(/** @lends app.File.prototype*/{
+			className:"files",
 			save: function(opt){
 				var me=this,data=new FormData();
 				data.append('file',this.toBlob())
@@ -381,11 +313,8 @@ define(['app'],function(app){
 								{async:false,dataType:'text'}).responseText
 			}
 		}),
-	PluginModel=app.Plugin=Model.extend({
-		className:'_plugin',
-		urlRoot: function(){
-			return this.version+'/plugins'
-		},
+	PluginModel=app.Plugin=_internalModel.extend(/** @lends app.PluginModel.prototype*/{
+		className:'plugins',
 		save: function(){
 			if(this._clientCode){
 				return new File({data:this._clientCode})
@@ -455,7 +384,7 @@ define(['app'],function(app){
 		},
 		toURL:function(){
 			var q=this.toJSON()
-			q.where=JSON.stringify(q.where)
+			_.keys(q.where).length && (q.query=JSON.stringify(q.where))
 			return q
 		},
 		/**
@@ -814,18 +743,6 @@ define(['app'],function(app){
 				return _raw.apply(this,arguments)
 			}
 		}),
-		/**
-		 *  create new kind of entity
-		 *  @param {object:Model} schema - entity schema with name and fields properties, field is with name,type,[searchable,and unique] properties
-		 *  @param {object} [properties] - instance properties
-		 *  @param {object} [classProperties] - class properties
-		 *  @returns {app.Model}
-		 */
-		createKind:function(schema, properties, classProperties){
-			var kind=schema.get('name')||properties.className
-			return (DEFINES[kind] || (DEFINES[kind]=Model.extend(properties||{className:kind}, classProperties)))
-				.setSchema(schema)
-		},
 		/**
 		 *  initialize application
 		 *  @protected

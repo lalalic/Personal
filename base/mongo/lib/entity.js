@@ -4,7 +4,7 @@ var _ = require("underscore"),
 	Promise = promise.Promise,
 	ObjectID = mongo.ObjectID,
 	Super = require("./service");
-	
+
 module.exports = Super.extend({
 		constructor : function (req, res) {
 			Super.call(this,req,res);
@@ -12,35 +12,34 @@ module.exports = Super.extend({
 			this.app && (this.db = new mongo.Db(this.app._id, this.getMongoServer(),{w:0}))
 		},
 		run: function(command){
-			var p = new Promise;
+			var p = this.dbPromise();
 			this.db.open(_.bind(function(error, db){
 				var convertNodeAsyncFunction = promise.convertNodeAsyncFunction
-				var runCommand=convertNodeAsyncFunction(db.command)
+				var runCommand=convertNodeAsyncFunction(db.command).bind(db)
 				db.command(command,function(error,result){
 					error ? p.reject(error) : p.resolve(result)
-					db.close()
 				})
 			},this))
 			return p;
 		},
 		reset: function(docs){
-			var p = new Promise;
-			this.db.open(_.bind(function(error, db){
-				db.command({drop:this.kind},_.bind(function(error,result){
+			var p = this.dbPromise();
+			this.db.open(function(error, db){
+				if(error) return p.reject(error)
+				db.command({drop:this.kind},function(error,result){
 					if(error && error.errmsg=='ns not found')
 						error=null;
 					if(error) return p.reject(error)
 					db.command({insert:this.kind,documents: docs}, function(error, result){
 						error ? p.reject(error) : p.resolve(result)
-						db.close()
 					})
-				},this))
-			},this))
+				}.bind(this))
+			}.bind(this))
 			return p;
 		},
 		get : function (query, options) {
-			var p = new Promise;
-			this.db.open(_.bind(function (error, db) {
+			var p = this.dbPromise();
+			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
@@ -49,11 +48,16 @@ module.exports = Super.extend({
 						query._id ? p.resolve(result) :
 							result.toArray(function (error, docs) {
 								error ? p.reject(error) : p.resolve(docs)
-								db.close()
 							})
 					})
 				})
-			}, this))
+			}.bind(this))
+			return p
+		},
+		dbPromise: function(){
+			var p=new Promise(),
+				closeDB=function(){this.db.close()}.bind(this);
+			p.then(closeDB,closeDB)
 			return p
 		},
 		asPromise: function(){
@@ -71,9 +75,9 @@ module.exports = Super.extend({
 			var p = new Promise,
 				_error=function(error){	p.reject(error)};
 			docs=_.isArray(docs) ? docs: [docs];
-			this.db.open(_.bind(function (error, db) {
+			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
-				db.collection(this.kind, _.bind(function (error, collection) {
+				db.collection(this.kind,function (error, collection) {
 					if(error) return p.reject(error)
 					
 					promise.all(_.map(docs, function(doc){
@@ -81,23 +85,24 @@ module.exports = Super.extend({
 							_error0=function(error){p0.reject(error)};
 						!doc._id && (doc._id=new ObjectID())
 						this.user && this.user._id && (doc.author=this.user._id)
-						this.beforeCreate(doc,collection,db).then(_.bind(function(){
+						
+						this.beforeCreate(doc,collection,db).then(function(){
 							doc.createdAt=doc.updatedAt=new Date()
-							collection.insert(doc, _.bind(function (error) {
+							collection.insert(doc, function (error) {
 								if(error) return p0.reject(error)
 								this.afterCreate(doc,collection,db).then(function(){
 									p0.resolve(doc)
-									db.close()
 								}, _error0)
-							},this))
-						},this), _error0)
+							}.bind(this))
+						}.bind(this), _error0)
+						
 						return p0
-					},this)).then(function(docs){
+					},this))
+					.then(function(docs){
 						p.resolve(docs.length==1 ? docs[0] : docs)
 					},_error)
-					
-				},this))
-			}, this))
+				}.bind(this))
+			}.bind(this))
 			return p
 		},
 		beforeUpdate: function(doc,collection,db){
@@ -107,25 +112,24 @@ module.exports = Super.extend({
 			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		update: function(id, doc){
-			var p = new Promise,
+			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
-			this.db.open(_.bind(function (error, db) {
+			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
-				db.collection(this.kind, _.bind(function (error, collection) {
+				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
 					doc.updatedAt=new Date()
 					doc.lastModifier=this.user._id
-					this.beforeUpdate(doc,collection,db).then(_.bind(function(){
-						collection.update({_id:id},doc, _.bind(function (error) {
+					this.beforeUpdate(doc,collection,db).then(function(){
+						collection.update({_id:id},doc, function (error) {
 							if(error) return p.reject(error)
 							this.afterUpdate(doc,collection,db).then(function(){
 								p.resolve(doc)
-								db.close()
 							},_error)
-						},this))
-					},this),_error);
-				},this))
-			}, this))
+						}.bind(this))
+					}.bind(this),_error);
+				}.bind(this))
+			}.bind(this))
 			return p
 		},
 		beforeDelete: function(doc,collection,db){
@@ -135,23 +139,22 @@ module.exports = Super.extend({
 			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
 		delete: function(id){
-			var p = new Promise,
+			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
-			this.db.open(_.bind(function (error, db) {
+			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
-				db.collection(this.kind, _.bind(function (error, collection) {
+				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeDelete(id,collection,db).then(_.bind(function(){
-						collection.remove({_id:id},_.bind(function (error) {
+					this.beforeDelete(id,collection,db).then(function(){
+						collection.remove({_id:id},function (error) {
 							if(error) return p.reject(error)
 							this.afterDelete(id,collection,db).then(function(){
 								p.resolve()
-								db.close()
 							},_error)
-						},this))
-					},this),_error)
-				},this))
-			}, this))
+						}.bind(this))
+					}.bind(this),_error)
+				}.bind(this))
+			}.bind(this))
 			return p
 		},
 		cloudCode: function(){
@@ -162,12 +165,13 @@ module.exports = Super.extend({
 				appModule=Module._cache[id],
 				id=__dirname+"/_app/"+this.app._id+".js";
 			if(!appModule || appModule.updatedAt!=this.app.updatedAt){
-				var Cloud=require("Cloud");
+				var Cloud=require("./cloud");
 				appModule=new Module(".");
-				appModule._compile("module.exports=function(Cloud){"+this.app.cloudCode+"; return Cloud;}", {filename: id});
-				appModule.id=id;
+				appModule._compile("module.exports=function(Cloud){"+(this.app.cloudCode||'')+"; return Cloud;}", {filename: id});
+				appModule.filename=appModule.id=id;
 				appModule.updatedAt=this.app.updatedAt;
 				appModule.exports=appModule.exports(new Cloud());
+				Module._cache[id]=appModule; 
 			}
 			return this._cloud=appModule.exports.asKindCallback(this.kind)
 		}
@@ -179,7 +183,7 @@ module.exports = Super.extend({
 			return doc
 		},
 		afterPost:function(doc){
-			return _.pick(doc,'createdAt', 'updatedAt', '_id')
+			return _.isArray_.pick(doc,'createdAt', 'updatedAt', '_id')
 		},
 		afterGet: function(doc){
 			return doc
