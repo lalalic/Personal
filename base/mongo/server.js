@@ -7,9 +7,6 @@ var config = module.exports.config={
 		'port' : 27017,
 		'host' : "localhost"
 	},
-	getMongo: function(db){
-		return "mongodb://localhost/"+db;
-	},
 	'server' : {
 		'port' : 80,
 		'https' : 443,
@@ -21,7 +18,8 @@ var config = module.exports.config={
 		SECRET_KEY:"r2nd182ZXzuCiCN7ZLoJPFVPZHqCxaUaE73RjKaW",
 		bucket:"mobiengine",
 	},
-	debug:true
+	debug:true,
+	autoCreateIndex:false
 };
 
 if (false && cluster.isMaster) {

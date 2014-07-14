@@ -3,7 +3,7 @@ define(['UI','app'],function(UI,app){
 	return new (UI.ListPage.extend({
 		className:'applist',
 		collection: Application.all,
-		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{id}}</a></li>'),
+		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{name}}</a></li>'),
 		events:{
 			'click .applist .app': 'onClickApp',
 			'click ul.extra .create':'onCreate'
@@ -57,7 +57,7 @@ define(['UI','app'],function(UI,app){
 			if(app){
 				this.$('.create').show()
 				this.$menuHolder.removeAttr('href').empty()
-					.html('<span>'+app.id+'</span>')
+					.html('<span>'+app.get("name")+'</span>')
 					.find('span').click(_.bind(this.show,this))
 			}else{
 				this.$('.create').hide()

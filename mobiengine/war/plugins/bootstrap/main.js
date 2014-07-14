@@ -70,9 +70,9 @@ var defaultAppMain=function(name, key){
 				 *  @augments app.Model
 				 */
 				Application=app.Application=app._app=app.Model.extend({
-					className:'_app',
+					className:'apps',
 					urlRoot: function(){
-						return this.version+'/apps'
+						return this.version+'/'+this.className;
 					},
 					saveCloudCode: function(){
 						return Backbone.sync('update',this, {

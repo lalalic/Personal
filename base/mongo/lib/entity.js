@@ -9,7 +9,7 @@ module.exports = Super.extend({
 		constructor : function (req, res) {
 			Super.call(this,req,res);
 			req && req.header && req.params.collection && (this.kind = req.params.collection)
-			this.app && (this.db = new mongo.Db(this.app._id, this.getMongoServer(),{w:0}))
+			this.app && (this.db = new mongo.Db(this.app.name, this.getMongoServer(),{w:1}))
 		},
 		run: function(command){
 			var p = this.dbPromise();
@@ -114,6 +114,7 @@ module.exports = Super.extend({
 		update: function(id, doc){
 			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
+			ObjectID.isValid(id) && (id=new ObjectID(id));
 			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
@@ -141,6 +142,7 @@ module.exports = Super.extend({
 		delete: function(id){
 			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
+			ObjectID.isValid(id) && (id=new ObjectID(id));
 			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
@@ -183,7 +185,7 @@ module.exports = Super.extend({
 			return doc
 		},
 		afterPost:function(doc){
-			return _.isArray_.pick(doc,'createdAt', 'updatedAt', '_id')
+			return _.pick(doc,'createdAt', 'updatedAt', '_id')
 		},
 		afterGet: function(doc){
 			return doc
@@ -249,6 +251,14 @@ module.exports = Super.extend({
 				if(!req.body) return this.send();
 				new this(req, res)
 					.update(req.params.id, req.body)
+					.then(_.bind(function(doc){
+						this.send(res, _.pick(doc,'updatedAt'))
+					},this),this.error(res))
+			},
+			"patch :id": function(req, res){
+				if(!req.body) return this.send();
+				new this(req, res)
+					.update(req.params.id, {$set:req.body})
 					.then(_.bind(function(doc){
 						this.send(res, _.pick(doc,'updatedAt'))
 					},this),this.error(res))

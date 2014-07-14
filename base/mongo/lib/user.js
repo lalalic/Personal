@@ -9,7 +9,7 @@ module.exports=Super.extend({
 	beforeCreate: function(doc, collection, db){
 		return Super.prototype.beforeCreate.apply(this,arguments)
 			.then(_.bind(function(){
-				if (!doc._id || !doc.password)
+				if (!doc.username || !doc.password)
 					throw new Error("user/password can't be empty.");
 				doc.password=this.encrypt(doc.password);
 			},this))
@@ -18,7 +18,7 @@ module.exports=Super.extend({
 		if (!name || !password)
 			throw new Error("name or password can't be empty.");
 		
-		return this.get({_id: name})
+		return this.get({username: name})
 			.then(function(doc){
 				if(doc==null)
 					throw new Error("username or password is not correct.");
@@ -31,11 +31,6 @@ module.exports=Super.extend({
 		
 	}
 },{
-	beforePost: function(doc){
-		doc._id=doc.username;
-		delete doc.username;
-		return doc
-	},
 	afterPost: function(doc){
 		return _.extend(Super.afterPost.call(this,doc),{
 			sessionToken:this.createSessionToken(doc)
@@ -45,11 +40,11 @@ module.exports=Super.extend({
 		"get /login": function(req, res){
 			new this(req,res)
 				.login(req.query.username, req.query.password)
-				.then(_.bind(function(user){
+				.then(function(user){
 					delete user.password
 					user.sessionToken=this.createSessionToken(user)
 					this.send(res,user)
-				},this),this.error(res))
+				}.bind(this),this.error(res))
 		},
 		"get /me": function(req, res){
 			var user=new this(req,res).user
@@ -62,9 +57,9 @@ module.exports=Super.extend({
 		}
 	},
 	resolvSessionToken: function(token){
-		return {_id:token||"anonymouse"}
+		return {username:token}
 	},
 	createSessionToken: function(user){
-		return user._id
+		return user.username
 	}
 })

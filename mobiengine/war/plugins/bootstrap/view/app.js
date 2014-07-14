@@ -3,7 +3,7 @@ define(['app','UI', 'JSZip','i18n!../nls/l10n'],function(App,View, JSZip,i18n){
 		<form >\
 			<fieldset>\
 				<label>'+i18n('applicaiton name')+':</label>\
-				<input type="text" name="_id">\
+				<input type="text" name="name">\
 				<label>'+i18n('url')+':</label>\
 				<input type="text" name="url">\
 			</fieldset>\

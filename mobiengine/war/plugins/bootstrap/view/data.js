@@ -14,7 +14,10 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 		Table=ListPage.extend({
 			tagName:'table',
 			className:'data hidden',
-			events:{'change thead input':'onSelectorChange'},
+			events:{
+				'change thead input':'onSelectorChange',
+				'click th':'onSort',
+			},
 			template:function(){},
 			itemTemplate:function(item){
 				var tr=document.createElement('tr')
@@ -57,6 +60,15 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 				this.$el.empty()
 				this.createHead()
 				this.collection.fetch({reset:true})
+			},
+			onSort: function(e){
+				var fieldName=$(e.target).text()
+				if(this.collection.comparator==fieldName)
+					return this
+				this.collection.comparator=fieldName
+				this.collection.sort()
+				this.$el.find('tbody').remove()
+				return this.renderAllItems()
 			},
 			renderAllItems: function(){
 				this.collection.each(this.addOne,this)
@@ -107,7 +119,7 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 		newID:0,
 		collection:Schema.collection(),
 		title:i18n('Data Browser'),
-		cmds:'<a class="schema">'+UI.FileLoader+'<span class="icon download"/>index</a>\
+		cmds:'<a class="schema">'+UI.FileLoader+'index</a>\
 			<a class="table">'+UI.FileLoader+'<span class="icon download"/><span class="icon remove"/>table</a>\
 			<a class="row"><span class="icon remove"/>row</a>',
 
@@ -212,61 +224,17 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			}
 			reader.readAsText(file)
 		},
-		backupSchema:function(){
-			this.app.exportSchema(this.collection).
-				then(function(schema){
-					UI.util.save(btoa(JSON.stringify(schema,null, "\t")),
-						"schema.js",
-						"application/json")
-				})
-			return this
-		},
 		backupData:function(){
 			UI.util.save(btoa(JSON.stringify(current.collection,null,"\t")),
-				current.model.get('name')+'.js',
+				current.model.get('name')+'.json',
 				"application/json")
 			return this
 		},
 		importSchema:function(e){
 			var me=this, reader=new FileReader()
 			reader.onloadend=function(a){
-				var schema=JSON.parse(a.target.result),
-					tableNames=[],
-					tables=_.chain(_.keys(schema))
-						.map(function(name){
-							var table=null
-							tableNames.push(name)
-							return {name:name,
-								fields:_.chain(_.keys(table=schema[name]))
-									.map(function(f){
-										var field=table[f]
-										field.name=f
-										return field
-									}).value()}
-						}).value()
-						
-				var currentTables=me.collection.toJSON(),
-					currentTableNames=_.pluck(currentTables,'name')
-				//delete
-				_.chain(_.difference(currentTableNames,tableNames,internal_tables))
-					.each(function(table){
-						me.$('#__'+table).click()
-						me.onRemoveTable()
-					})
-				//create
-				_.chain(_.difference(tableNames,currentTableNames))
-					.each(function(name){
-						var table=new Schema(_.findWhere(tables,{name:name}))
-						table.save().then(function(){
-							me.collection.add(table)
-						})
-					})
-				//update
-				_.chain(_.intersection(tableNames,currentTableNames))
-					.each(function(name){
-						me.$('#__'+name).click()
-						me.updateTableSchema(_.findWhere(tables,{name:name}))
-					})
+				var schema=new Function("", "return "+a.target.result)();
+				new Schema(schema).save()
 				e.target.value=""
 			}
 			reader.readAsText(e.target.files[0])
@@ -274,12 +242,12 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 		_isEmpty:function(){return false}
 	},{
 		STYLE:
-			"table.data{width:100%;table-layout:fixed}\
+			"table.data{width:100%}\
 			table.data>tbody{background-color:white}\
 			table.data>tbody>tr:nth-child(even){background-color:aliceblue}\
 			table.data td:empty:before{content:'(undefined)';color:lightgray}\
 			table.data th{font-weight:700}\
-			table.data td{white-space:nowrap;overflow:hidden;text-overflow: ellipsis;}\
+			table.data td{white-space:nowrap;overflow:hidden;text-overflow: ellipsis; padding-right:7px}\
 			table.data thead td:first-child{width:1em}\
 			table.data thead th:nth-child(2){width:5em}\
 			table.data input[type=checkbox]{margin-left:1px}\

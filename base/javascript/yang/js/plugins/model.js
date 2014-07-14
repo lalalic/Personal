@@ -30,9 +30,6 @@ define(['app'],function(app){
 		version:'1',
 		idAttribute:"_id",
 		className:'_unknown',
-		isNew: function(){
-			return !this.has('createdAt')
-		},
 		validate: function(attrs){
 			var error={}, failed=false
 			_.each(attrs,function(key,value){
@@ -243,16 +240,6 @@ define(['app'],function(app){
 	}),
 	Schema=app.Schema=_internalModel.extend(/** @lends app.Schema.prototype */{
 		className:'schemas'
-	},{
-		upload:function(data){
-			return $.ajax({
-				url: this.prototype.version+'/schemas/import',
-				type:'post',
-				contentType:'application/json;charset=UTF-8',
-				data:data
-			})
-			return this.version+'/'+this.className
-		}
 	}),
 	File=app.File=_internalModel.extend(/** @lends app.File.prototype*/{
 			className:"files",
