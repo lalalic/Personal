@@ -3,9 +3,9 @@ define(['UI','app'],function(UI,app){
 	return new (UI.ListPage.extend({
 		className:'applist',
 		collection: Application.all,
-		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{name}}</a></li>'),
+		itemTemplate:_.template('<li><a id="_{{id}}" class="app">{{get("name")}}</a></li>'),
 		events:{
-			'click .applist .app': 'onClickApp',
+			'click .list .app': 'onClickApp',
 			'click ul.extra .create':'onCreate'
 		},
 		initialize: function(){
@@ -18,16 +18,15 @@ define(['UI','app'],function(UI,app){
 		render: function(){
 			this._super().render.apply(this,arguments)
 			$('<ul class="list extra">').appendTo(this.$('article'))
-				.append('<li class="create thumb"><a><span class="icon plus"/></a></li>')
+				.append('<li class="create thumb"><a href="#settings"><span class="icon plus"/></a></li>')
 				.append('<li class="thumb"><a href="javascript:void"><span class="icon signout"/></a></li>')			
 			return this
 		},
 		onCreate:function(){
 			Application.current(null)
-			app.navigate("#app")
 		},
 		onClickApp:function(e){
-			Application.current(Application.all.get(parseInt(this.id.substr(1))))
+			Application.current(Application.all.get(e.target.id.substr(1)))
 		},
 		changeCurrent:function(m){
 			m && this.$('#_'+m.id).addClass('active')
@@ -61,10 +60,11 @@ define(['UI','app'],function(UI,app){
 					.find('span').click(_.bind(this.show,this))
 			}else{
 				this.$('.create').hide()
-				this.$menuHolder.attr('href','#app').empty()
+				this.$menuHolder.attr('href','#settings').empty()
 					.html('<span class="icon plus"/>')
 					.find('span').click(_.bind(this.show,this))
 			}
+			this.delegateEvents()
 		}
 	}).asShortcut())
 })

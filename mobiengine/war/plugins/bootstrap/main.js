@@ -52,7 +52,6 @@ var defaultAppMain=function(name, key){
 			})
 
 			app.route('main','',this.module('view/main'),true)
-			app.route('application','app',this.module('view/app'),true)
 			app.route('settings','settings',this.module('view/app'),true)
 			app.route('schema','data(/:table)',this.module('view/data'),true)
 			app.route('analytics','analytics',this.module('view/analytics'),true)

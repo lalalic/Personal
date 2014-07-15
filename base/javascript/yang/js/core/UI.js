@@ -87,8 +87,8 @@ define(['app'],function(app){
 				return this
 			},
 			close: function(){
-				this.clear()
-				return this.hide()
+				this.hide()
+				this.remove()
 			},
 			hide: function(){
 				this.$el.removeClass('show')
