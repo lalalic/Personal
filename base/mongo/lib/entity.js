@@ -43,9 +43,10 @@ module.exports = Super.extend({
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					collection[query._id ? 'findOne' : 'find'](query, options||{}, function (error, result) {
+					var op=query._id||(options&&options.limit==1) ? 'findOne' : 'find';
+					collection[op](query, options||{}, function (error, result) {
 						if(error) return p.reject(error);
-						query._id ? p.resolve(result) :
+						op=='findOne' ? p.resolve(result) :
 							result.toArray(function (error, docs) {
 								error ? p.reject(error) : p.resolve(docs)
 							})
@@ -163,19 +164,7 @@ module.exports = Super.extend({
 			if(this._cloud)
 				return this._cloud;
 				
-			var Module=module.constructor,
-				appModule=Module._cache[id],
-				id=__dirname+"/_app/"+this.app._id+".js";
-			if(!appModule || appModule.updatedAt!=this.app.updatedAt){
-				var Cloud=require("./cloud");
-				appModule=new Module(".");
-				appModule._compile("module.exports=function(Cloud){"+(this.app.cloudCode||'')+"; return Cloud;}", {filename: id});
-				appModule.filename=appModule.id=id;
-				appModule.updatedAt=this.app.updatedAt;
-				appModule.exports=appModule.exports(new Cloud());
-				Module._cache[id]=appModule; 
-			}
-			return this._cloud=appModule.exports.asKindCallback(this.kind)
+			return this._cloud=this.getCloudCode().asKindCallback(this.kind)
 		}
 	}, {
 		url : "/classes/:collection",
@@ -249,6 +238,7 @@ module.exports = Super.extend({
 			},
 			"put :id": function(req, res){
 				if(!req.body) return this.send();
+				delete req.body._id;
 				new this(req, res)
 					.update(req.params.id, req.body)
 					.then(_.bind(function(doc){

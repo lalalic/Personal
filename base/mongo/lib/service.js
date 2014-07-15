@@ -77,6 +77,21 @@ _.extend((module.exports=_.extend(function(request, response){
 	getMongoServer: function(){
 		var config=require("../server").config
 		return new mongo.Server(config.db.host, config.db.port, {'auto_reconnect':true,safe:true})
+	},
+	getCloudCode: function(){
+		var Module=module.constructor,
+			appModule=Module._cache[id],
+			id=__dirname+"/_app/"+this.app._id+".js";
+		if(!appModule || appModule.updatedAt!=this.app.updatedAt){
+			var Cloud=require("./cloud");
+			appModule=new Module(".");
+			appModule._compile("module.exports=function(Cloud){"+(this.app.cloudCode||'')+"; return Cloud;}", {filename: id});
+			appModule.filename=appModule.id=id;
+			appModule.updatedAt=this.app.updatedAt;
+			appModule.exports=appModule.exports(new Cloud());
+			Module._cache[id]=appModule; 
+		}
+		return appModule.exports;
 	}
 })
 

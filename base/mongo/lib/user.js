@@ -18,7 +18,7 @@ module.exports=Super.extend({
 		if (!name || !password)
 			throw new Error("name or password can't be empty.");
 		
-		return this.get({username: name})
+		return this.get({username: name},{limit:1})
 			.then(function(doc){
 				if(doc==null)
 					throw new Error("username or password is not correct.");

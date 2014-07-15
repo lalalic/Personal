@@ -61,6 +61,7 @@ if (false && cluster.isMaster) {
 		app.use("/test",express.static(__dirname+'/test'));
 		app.use("/"+config.qiniu.bucket,express.static(__dirname+'/upload/'+config.qiniu.bucket));
 	}
+	app.use(express.static(__dirname+'/view'));
 	
 	// Bind to a port
 	app.listen(config.server.port, config.server.address);

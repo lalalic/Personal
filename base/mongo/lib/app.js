@@ -33,7 +33,7 @@ module.exports=Super.extend({
 	},
 	update: function(){
 		this.checkOwner();
-		return Super.update.call(this,arguments)
+		return Super.prototype.update.apply(this,arguments)
 	},
 	delete: function(){
 		this.checkOwner();
@@ -179,7 +179,14 @@ module.exports=Super.extend({
 	routes:{
 		"get /my/:app":function(req, res){this.send(res, req.path)},
 		"get /my/:app/bootstrap":function(req, res){this.send(res, req.path)},
-		"all /functions/:func":function(req, res){this.send(res, req.path)},
+		"all /functions/:func":function(req, res){
+			var me=this,service=new this(req,res);
+			service.getCloudCode()
+				.run(req.params.func, 
+					{params:req.body||{},user:service.user}, 
+					{success: function(o){me.send(o)},
+						error: function(error){me.error(res)(error)}})
+		},
 		"get /schemas": function(req, res){
 			(new this(req, res))
 				.getSchema()
