@@ -327,8 +327,10 @@ define(['app'],function(app){
 				return false
 			},
 			save: function(){
+				if(!this.model.hasChanged())
+					return this
 				var isUpdate=!this.model.isNew()
-				this.model.save()
+				this.model.save(this.model.changedAttributes(), {patch:true,wait:true})
 				.then(_.bind(function(){
 					this[isUpdate?'onChanged':'onAdded'](this.model)
 				},this))

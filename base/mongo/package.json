@@ -14,7 +14,9 @@
 	"underscore":"latest",
 	"morgan":"*",
 	"formidable":"*",
-	"qiniu":"*"
+	"qiniu":"*",
+	"log4j":"*",
+	"backbone":"*"
   },
   "keywords": [
     "mongodb",

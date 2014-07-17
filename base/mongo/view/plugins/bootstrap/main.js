@@ -75,17 +75,25 @@ var defaultAppMain=function(name, key){
 					},
 					upload: function(file){
 						return (new FileReader()).readAsArrayBuffer(file)
-							.then(_.bind(function(data){
-								var zip=new JSZip(data), 
+							.then(_.bind(function(raw){
+								var zip=new JSZip(raw), 
 									cloudCode=zip.file('cloud/main.js');
 								cloudCode=cloudCode && cloudCode.asText() || ''
 								zip.remove('cloud')
+								
+								var indexes=zip.file("data/indexes.js")
+								indexes=indexes&&new Function("","return "+indexes.asText())()
+								zip.remove('data/indexes.js')
+								
 								return (new app.File({data:zip.generate({type:'blob'}), name:this.id+".zip"}))
-									.save().then(_.bind(function(file){
-										this.set('clientCode', file.url())
-										this.set('cloudCode', cloudCode||'')
-										return this.save()
-									},this)).then(_.bind(function(){
+									.save()
+									.then(_.bind(function(file){
+										return this.save({'clientCode':file.url(), cloudCode:cloudCode||''},{patch:true})
+											.then(function(){
+												return !_.isEmpty(indexes) && new app.Schema(indexes).save()
+											})
+									},this))
+									.then(_.bind(function(){
 										return this
 									},this))
 							},this))
@@ -98,35 +106,15 @@ var defaultAppMain=function(name, key){
 								zip.file('main.js','define(["Plugin","app"],'+defaultAppMain(this.get('name'),this.get('apiKey'))+')',{type:"text/script"})
 								
 							zip.file("cloud/main.js", this.get('cloudCode')||'//put your cloud code here')
-							this.exportSchema().then(function(schema){
-								zip.file("data/schema.js",JSON.stringify(schema,null, "\t"))
-								var data={}
-								return $.when(_.chain(_.keys(schema)).map(function(table){
-									return currentApp.exportData(table)
-										.then(function(collection){
-											collection.length && (data[table]=collection)
-										})
-								}).value()).then(function(){
-									zip.file("data/data.json",JSON.stringify(data,null, "\t"))
-								})
+							this.exportIndexes().then(function(indexes){
+								zip.file("data/indexes.js",JSON.stringify(indexes,null, "\t"))
 							}).then(function(){
 								UI.util.save(zip, currentApp.get('name')+'.zip')
 							})
 						},this))
 					},
-					exportSchema: function(schemas){
-						return (schemas ? $.Deferred().resolve() : ((schemas=app.Schema.collection())&&schemas.fetch()))
-							.then(function(){
-								var schema={},
-									internal_fields="id,createdAt,updatedAt,ACL".split(',')
-								schemas.each(function(a){
-									var fields=schema[a.get('name')]={}
-									_.chain(a.get('fields'))
-										.reject(function(a){return internal_fields.indexOf(a.name)!=-1})
-										.each(function(a){fields[a.name]=_.omit(a,'name')})
-								})
-								return $.Deferred().resolve(schema)
-							})
+					exportIndexes: function(){
+						return $.get(this.version+"/indexes")
 					},
 					exportData: function(table){
 						table=app.Model.extend({className:table}).collection()

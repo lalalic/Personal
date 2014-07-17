@@ -19,10 +19,6 @@ define(['app','UI','i18n!../nls/l10n'],function(app,UI,i18n){
 			this.$('textarea').height(this.$('article').height()+"px")
 			return this
 		},
-		save: function(){
-			this.model.save()
-			return this
-		},
 		upload:function(e){
 			var me=this,
 				reader=new FileReader()

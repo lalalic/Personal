@@ -23,7 +23,16 @@ module.exports=function(){
 		return o
 	}
 	
+	var functions={}		
 	this.define=function(url, handler){
-		
+		functions[url]=handler
+	}
+	
+	this.run=function(url, req, res){
+		try{
+			functions[url](req, res)
+		}catch(error){
+			res.error(error)
+		}
 	}
 }

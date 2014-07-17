@@ -112,6 +112,9 @@ module.exports = Super.extend({
 		afterUpdate:function(doc,collection,db){
 			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
 		},
+		patch: function(id, doc){
+			return this.update(id, {$set:doc})
+		},
 		update: function(id, doc){
 			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
@@ -120,13 +123,15 @@ module.exports = Super.extend({
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					doc.updatedAt=new Date()
-					doc.lastModifier=this.user._id
-					this.beforeUpdate(doc,collection,db).then(function(){
+					var changes=doc['$set']||doc
+					delete changes._id
+					changes.updatedAt=new Date()
+					changes.lastModifier=this.user._id
+					this.beforeUpdate({_id:id,doc:doc},collection,db).then(function(){
 						collection.update({_id:id},doc, function (error) {
 							if(error) return p.reject(error)
-							this.afterUpdate(doc,collection,db).then(function(){
-								p.resolve(doc)
+							this.afterUpdate({_id:id,doc:doc},collection,db).then(function(){
+								p.resolve(changes)
 							},_error)
 						}.bind(this))
 					}.bind(this),_error);
@@ -178,6 +183,9 @@ module.exports = Super.extend({
 		},
 		afterGet: function(doc){
 			return doc
+		},
+		getAdminDB: function(option){
+			return new mongo.Db("admin", this.prototype.getMongoServer.call(),option||{w:0})
 		},
 		routes : {
 			"get reset": function(req, res){
@@ -248,7 +256,7 @@ module.exports = Super.extend({
 			"patch :id": function(req, res){
 				if(!req.body) return this.send();
 				new this(req, res)
-					.update(req.params.id, {$set:req.body})
+					.patch(req.params.id, req.body)
 					.then(_.bind(function(doc){
 						this.send(res, _.pick(doc,'updatedAt'))
 					},this),this.error(res))

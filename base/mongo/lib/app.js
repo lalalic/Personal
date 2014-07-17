@@ -16,7 +16,18 @@ module.exports=Super.extend({
 	afterCreate:function(){
 		return this.asPromise()
 	},
-	beforeUpdate:function(){
+	beforeUpdate:function(doc, collection, db){
+		var attr=doc.doc, changes=attr['$set']||attr,temp;
+		if((temp=changes.cloudCode)){
+			try{
+				this.compile(temp)
+			}catch(error){
+				var p=new promise.Promise()
+				p.reject(error);
+				return p
+			}
+		}
+		
 		return this.asPromise()
 	},
 	afterUpdate:function(){
@@ -28,10 +39,7 @@ module.exports=Super.extend({
 	afterDelete: function(){
 		return this.asPromise()
 	},
-	updateCloudCode: function(doc){
-		this.checkOwner();
-	},
-	update: function(){
+	update: function(id, doc){
 		this.checkOwner();
 		return Super.prototype.update.apply(this,arguments)
 	},
@@ -57,7 +65,7 @@ module.exports=Super.extend({
 			if(error) return p.reject(error)
 			collection.findOne({},function(error, doc){
 				if(error) return p.reject(error)
-				p.resolve(Object.keys(doc))
+				p.resolve(doc && Object.keys(doc) || [])
 			})
 		})
 		return p
@@ -154,6 +162,30 @@ module.exports=Super.extend({
 		})
 		
 		return p
+	},
+	getIndexes: function(){
+		var p=this.dbPromise()
+		this.db.open(function(error, db){
+			if(error) return p.reject(error)	
+			db.collection("system.indexes",function(error, collection){
+				collection.find({name:{$ne:"_id_"}}, function(error, info){
+					info.toArray(function(error, items){
+						if(error) return p.reject(error)	
+						var indexes={}
+						_.each(items, function(index){
+							var kind=index.ns.split('.')[1],
+								key=index.key;
+							(indexes[kind]=indexes[kind]||[]).push(key)
+							if(index.unique)
+								key['$option']={unique:true}
+						})
+						p.resolve(indexes)
+					})
+				})
+			})
+		})
+		
+		return p
 	}
 },{
 	afterPost: function(doc){
@@ -177,14 +209,17 @@ module.exports=Super.extend({
 		return {name:Accesskey||"baby", author:"lalalic"}
 	},
 	routes:{
-		"get /my/:app":function(req, res){this.send(res, req.path)},
+		"get /my/:app":function(req, res){
+			this.send(res, req.path)
+			
+		},
 		"get /my/:app/bootstrap":function(req, res){this.send(res, req.path)},
 		"all /functions/:func":function(req, res){
 			var me=this,service=new this(req,res);
 			service.getCloudCode()
 				.run(req.params.func, 
 					{params:req.body||{},user:service.user}, 
-					{success: function(o){me.send(o)},
+					{success: function(o){me.send(res, o)},
 						error: function(error){me.error(res)(error)}})
 		},
 		"get /schemas": function(req, res){
@@ -208,20 +243,21 @@ module.exports=Super.extend({
 					this.send(res)
 				}.bind(this),this.error(res))
 		},
-		"get /createIndex": function(req, res){
-			var service=new this(), mongo=require("mongodb")
-			service.db=new mongo.Db("admin", service.getMongoServer(),{w:1})
-			service.checkOwner=function(){return true}
-			service.makeSchema(require("../data/schema"))
+		"get /indexes": function(req, res){
+			(new this(req, res))
+				.getIndexes()
+				.then(function(indexes){
+					this.send(res, indexes)
+				}.bind(this), this.error(res))
 		}
 	},		
 	init: function(){
 		Super.init.apply(this,arguments)
-		if(require("../server").config.autoCreateIndex){
-			var service=new this(), mongo=require("mongodb")
-			service.db=new mongo.Db("admin", service.getMongoServer(),{w:0})
-			service.checkOwner=function(){return true}
+		var service=new this()
+		service.db=this.getAdminDB();
+		service.checkOwner=function(){return true}
+		//create admin db indexes
+		if(require("../server").config.autoCreateIndex)
 			service.makeSchema(require("../data/schema"))
-		}
 	}
 })

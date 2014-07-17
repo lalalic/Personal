@@ -39,17 +39,22 @@ if (false && cluster.isMaster) {
 	var bodyParser = require("body-parser");
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({extended : true}));
-	app.use(require("morgan")("dev"));
-	
-	app.all("*",function(req,res,next){
-		res.header({
-			"Access-Control-Allow-Headers":"X-Application-Id,Request,X-Requested-With,Content-Type,Accept,X-Session-Token",
-			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Methods":"GET,POST,PUT,DELETE"
-		});
-		next();
-	})
-	
+	if(config.debug){
+		app.all("*",function(req,res,next){
+			res.header({
+				"Access-Control-Allow-Headers":"X-Application-Id,Request,X-Requested-With,Content-Type,Accept,X-Session-Token",
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods":"GET,POST,PUT,PATCH,DELETE"
+			});
+			next();
+		})
+
+		app.use(require("morgan")("dev"));
+		
+		app.use("/test",express.static(__dirname+'/test'));
+		app.use("/"+config.qiniu.bucket,express.static(__dirname+'/upload/'+config.qiniu.bucket));
+	}
+
 	require("./lib/file").init()
 	require("./lib/user").init()
 	require("./lib/role").init()
@@ -57,10 +62,6 @@ if (false && cluster.isMaster) {
 	require("./lib/plugin").init()
 	require("./lib/entity").init()
 	
-	if(config.debug){
-		app.use("/test",express.static(__dirname+'/test'));
-		app.use("/"+config.qiniu.bucket,express.static(__dirname+'/upload/'+config.qiniu.bucket));
-	}
 	app.use(express.static(__dirname+'/view'));
 	
 	// Bind to a port

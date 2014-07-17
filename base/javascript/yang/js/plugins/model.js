@@ -30,29 +30,11 @@ define(['app'],function(app){
 		version:'1',
 		idAttribute:"_id",
 		className:'_unknown',
-		validate: function(attrs){
-			var error={}, failed=false
-			_.each(attrs,function(key,value){
-				if(value!=null && this.schema && this.schema[key]){
-					var dataType=this.schema[key].type
-					if(Model.types[dataType]){
-						try{
-							attrs[key]=Model.types[dataType](value)
-						}catch(e){
-							error[key]=e
-							failed=true
-						}
-					}
-				}
-			},this)
-			if(failed)
-				return error
-		},
 		urlRoot: function(){
 			return this.version+"/classes/"+this.className
 		},
 		parse:function(data){
-			_.each(this.schema,function(schema, name){
+			data && _.each(this.schema,function(schema, name){
 				if(data[name]!=undefined){
 				switch(schema.type){
 				case 'Date':
@@ -94,18 +76,15 @@ define(['app'],function(app){
 			return Backbone.Model.prototype.fetch.apply(this,arguments).then(_.bind(function(){ return this},this))
 		},
 		save: function(){
-			return Backbone.Model.prototype.save.apply(this,arguments).then(_.bind(function(){return this},this))
+			return Backbone.Model.prototype.save.apply(this,arguments).then(_.bind(function(){this.changed={};return this},this))
 		},
 		getUrl: function(name){
 			return this.get(name)||""
 		},
 		schema:{
 			'createdAt':{type:'Date'},
-			'updatedAt':{type:'Date'},
-			'id':{type:'Integer'},
-			'ACL':{type:'Object'}
+			'updatedAt':{type:'Date'}
 		}
-		
 	},/** @lends app.Model */{
 		/**
 		 *  create collection of Model
@@ -256,7 +235,7 @@ define(['app'],function(app){
 						processData: false,
 						type: 'POST'
 					}).then(function(data){
-						me.set('url',data.key)
+						me.set('key',data.key)
 						me.unset('data')
 						me.unset('name')
 						return me
@@ -279,7 +258,7 @@ define(['app'],function(app){
 				return data;
 			},
 			url: function(){
-				return "http://127.0.0.1/mobiengine/"+this.get('url')
+				return this.get('url') || ("http://127.0.0.1/mobiengine/"+this.get('key'))
 			},
 			download: function(){
 				var p=new $.Deferred
@@ -720,11 +699,6 @@ define(['app'],function(app){
 					beforeSend: function(xhr, setting){
 						app.service && !(/^https?\:/i.test(setting.url)) 
 							&& (setting.url=(app.service+setting.url).replace('//','/'))
-						var data=setting.data
-						if(setting.data){
-							delete data.createdAt
-							delete data.updatedAt
-						}
 					}
 				})
 				return _raw.apply(this,arguments)

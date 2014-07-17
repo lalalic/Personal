@@ -1,5 +1,6 @@
 var _=require("underscore"),
-	mongo=require("mongodb");
+	mongo=require("mongodb"),
+	parentRequire=require;
 
 _.extend((module.exports=_.extend(function(request, response){
 		if(!(request && request.header)){
@@ -66,7 +67,7 @@ _.extend((module.exports=_.extend(function(request, response){
 	},
 	send: function(res, data){
 		res.header('Content-Type', 'application/json');
-		res.send(data)
+		res.send(data||{})
 	},
 	error: function(res){
 		return function(error){
@@ -80,18 +81,41 @@ _.extend((module.exports=_.extend(function(request, response){
 	},
 	getCloudCode: function(){
 		var Module=module.constructor,
-			appModule=Module._cache[id],
-			id=__dirname+"/_app/"+this.app._id+".js";
+			filename=__dirname+"/_app/"+this.app.name+".js",
+			appModule=Module._cache[filename]=null;
 		if(!appModule || appModule.updatedAt!=this.app.updatedAt){
 			var Cloud=require("./cloud");
-			appModule=new Module(".");
-			appModule._compile("module.exports=function(Cloud){"+(this.app.cloudCode||'')+"; return Cloud;}", {filename: id});
-			appModule.filename=appModule.id=id;
+			var cloud=new Cloud();
+			this.app.cloudCode="Cloud.define('a', function(req, res){res.success()})";
+			try{
+				require("vm").runInNewContext(this.app.cloudCode, 
+					{
+						Cloud:cloud,
+						require: function(path){
+							var whitelist=['underscore','backbone','node-promise','express'];
+							if(whitelist.indexOf(path)==-1)
+								throw new Error(path+" module is not found.")
+							
+						},
+						exports:null,
+						module:null,
+						__dirname: null,
+						__filename: null,
+						root: null
+					}, filename);
+			}catch(error){
+				console.log(error)
+			}
+			appModule=new Module(filename);
+			appModule.exports=cloud;
+			appModule.filename=filename;
 			appModule.updatedAt=this.app.updatedAt;
-			appModule.exports=appModule.exports(new Cloud());
-			Module._cache[id]=appModule; 
+			Module._cache[filename]=appModule; 
 		}
 		return appModule.exports;
+	},
+	compile: function(code){
+		new Function("Cloud",code);
 	}
 })
 
