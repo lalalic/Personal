@@ -20,7 +20,7 @@ module.exports=Super.extend({
 		var attr=doc.doc, changes=attr['$set']||attr,temp;
 		if((temp=changes.cloudCode)){
 			try{
-				this.compile(temp)
+				require('./cloud').compile(temp)
 			}catch(error){
 				var p=new promise.Promise()
 				p.reject(error);
@@ -253,11 +253,12 @@ module.exports=Super.extend({
 	},		
 	init: function(){
 		Super.init.apply(this,arguments)
+
 		var service=new this()
 		service.db=this.getAdminDB();
 		service.checkOwner=function(){return true}
 		//create admin db indexes
-		if(require("../server").config.autoCreateIndex)
+		if(require('../server').config.autoCreateIndex)
 			service.makeSchema(require("../data/schema"))
 	}
 })

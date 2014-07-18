@@ -1,6 +1,5 @@
 var _=require("underscore"),
-	mongo=require("mongodb"),
-	parentRequire=require;
+	mongo=require("mongodb");
 
 _.extend((module.exports=_.extend(function(request, response){
 		if(!(request && request.header)){
@@ -84,28 +83,8 @@ _.extend((module.exports=_.extend(function(request, response){
 			filename=__dirname+"/_app/"+this.app.name+".js",
 			appModule=Module._cache[filename]=null;
 		if(!appModule || appModule.updatedAt!=this.app.updatedAt){
-			var Cloud=require("./cloud");
-			var cloud=new Cloud();
-			this.app.cloudCode="Cloud.define('a', function(req, res){res.success()})";
-			try{
-				require("vm").runInNewContext(this.app.cloudCode, 
-					{
-						Cloud:cloud,
-						require: function(path){
-							var whitelist=['underscore','backbone','node-promise','express'];
-							if(whitelist.indexOf(path)==-1)
-								throw new Error(path+" module is not found.")
-							
-						},
-						exports:null,
-						module:null,
-						__dirname: null,
-						__filename: null,
-						root: null
-					}, filename);
-			}catch(error){
-				console.log(error)
-			}
+			this.app.cloudCode="Cloud.define('a', function(req, res){res.success('ok')})";
+			var cloud=require("./cloud").load(this.app,filename);
 			appModule=new Module(filename);
 			appModule.exports=cloud;
 			appModule.filename=filename;
@@ -113,9 +92,6 @@ _.extend((module.exports=_.extend(function(request, response){
 			Module._cache[filename]=appModule; 
 		}
 		return appModule.exports;
-	},
-	compile: function(code){
-		new Function("Cloud",code);
 	}
 })
 

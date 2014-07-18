@@ -1,3 +1,7 @@
+var backbone=require('backbone');
+backbone.ajax=require('ajax')
+
+
 function isNewCreated(o){return o.get('createdAt').getTime()==o.get('updatedAt').getTime()}
 function pad(a,len){return "000000000".substring(0,len).substring(a+"".length,len)+a}
 var DATE=function(d){this._date=d||new Date()}

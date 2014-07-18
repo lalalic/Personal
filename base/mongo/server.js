@@ -19,8 +19,11 @@ var config = module.exports.config={
 		bucket:"mobiengine",
 	},
 	debug:true,
-	autoCreateIndex:false
+	autoCreateIndex:false,
+	sharedModules:"underscore,backbone,node-promise,ajax".split(",")
 };
+
+require("./lib/cloud").support()
 
 if (false && cluster.isMaster) {
 	// Fork workers.

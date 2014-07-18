@@ -85,8 +85,6 @@ module.exports = Super.extend({
 						var p0 = new Promise,
 							_error0=function(error){p0.reject(error)};
 						!doc._id && (doc._id=new ObjectID())
-						this.user && this.user._id && (doc.author=this.user._id)
-						
 						this.beforeCreate(doc,collection,db).then(function(){
 							doc.createdAt=doc.updatedAt=new Date()
 							collection.insert(doc, function (error) {
@@ -126,7 +124,6 @@ module.exports = Super.extend({
 					var changes=doc['$set']||doc
 					delete changes._id
 					changes.updatedAt=new Date()
-					changes.lastModifier=this.user._id
 					this.beforeUpdate({_id:id,doc:doc},collection,db).then(function(){
 						collection.update({_id:id},doc, function (error) {
 							if(error) return p.reject(error)
@@ -169,7 +166,7 @@ module.exports = Super.extend({
 			if(this._cloud)
 				return this._cloud;
 				
-			return this._cloud=this.getCloudCode().asKindCallback(this.kind)
+			return this._cloud=this.getCloudCode().asKindCallback(this)
 		}
 	}, {
 		url : "/classes/:collection",
@@ -187,6 +184,36 @@ module.exports = Super.extend({
 		getAdminDB: function(option){
 			return new mongo.Db("admin", this.prototype.getMongoServer.call(),option||{w:0})
 		},
+		parseQuery: function(id, query){
+			var filter = query.query ? JSON.parse(query.query, function (key, value) {
+					var a;
+					if (typeof value === 'string') {
+						a = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
+						if (a) {
+							return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
+									+a[5], +a[6]));
+						}
+					}
+					return value;
+				}) : {};
+			
+			id && filter={'_id' : ObjectID.isValid(id) ? new ObjectID(id) : id }
+		
+			var options = {};
+
+			var test = ['limit', 'sort', 'fields', 'skip', 'hint', 'explain', 'snapshot', 'timeout'];
+
+			for (o in query) {
+				if (test.indexOf(o) >= 0) {
+					try {
+						options[o] = JSON.parse(query[o]);
+					} catch (e) {
+						options[o] = query[o];
+					}
+				}
+			}
+			return [filter,options]
+		},
 		routes : {
 			"get reset": function(req, res){
 				var service=new this(req,res);
@@ -196,40 +223,8 @@ module.exports = Super.extend({
 					},this),this.error(res))
 			},
 			"get :id?" : function (req, res) {
-				var query = req.query.query ? JSON.parse(req.query.query, function (key, value) {
-						var a;
-						if (typeof value === 'string') {
-							a = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
-							if (a) {
-								return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
-										+a[5], +a[6]));
-							}
-						}
-						return value;
-					}) : {};
-
-				// Providing an id overwrites giving a query in the URL
-				if (req.params.id) {
-					query = {
-						'_id' : ObjectID.isValid(req.params.id) ? new ObjectID(req.params.id) : req.params.id 
-					};
-				}
-				var options = req.params.options || {};
-
-				var test = ['limit', 'sort', 'fields', 'skip', 'hint', 'explain', 'snapshot', 'timeout'];
-
-				for (o in req.query) {
-					if (test.indexOf(o) >= 0) {
-						try {
-							options[o] = JSON.parse(req.query[o]);
-						} catch (e) {
-							options[o] = req.query[o];
-						}
-					}
-				}
-
-				new this(req, res)
-				.get(query, options)
+				var service=new this(req, res)
+				service.get.apply(service, this.parseQuery(req.params.id,req.query))
 				.then(_.bind(function (data) {
 						data=this.afterGet(data)
 						this.send(res, query._id ? data : {results:data})
