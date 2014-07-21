@@ -197,7 +197,7 @@ module.exports = Super.extend({
 					return value;
 				}) : {};
 			
-			id && filter={'_id' : ObjectID.isValid(id) ? new ObjectID(id) : id }
+			id && (filter={'_id' : ObjectID.isValid(id) ? new ObjectID(id) : id })
 		
 			var options = {};
 
@@ -224,10 +224,11 @@ module.exports = Super.extend({
 			},
 			"get :id?" : function (req, res) {
 				var service=new this(req, res)
-				service.get.apply(service, this.parseQuery(req.params.id,req.query))
+				var query=this.parseQuery(req.params.id,req.query);
+				service.get.apply(service, query)
 				.then(_.bind(function (data) {
 						data=this.afterGet(data)
-						this.send(res, query._id ? data : {results:data})
+						this.send(res, query[0]._id ? data : {results:data})
 					}, this),this.error(res))
 			},
 			"post" : function(req, res){
