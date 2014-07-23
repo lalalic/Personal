@@ -26,7 +26,7 @@ _.extend((module.exports=_.extend(function(request, response){
 		}
 
 		// Add static properties to the constructor function, if supplied.
-		_.extend(child, parent, staticProps, {routes:_.extend({},this.routes,staticProps.routes||{})});
+		_.extend(child, parent, staticProps);
 
 		// Set the prototype chain to inherit from `parent`, without calling
 		// `parent`'s constructor function.
@@ -63,6 +63,7 @@ _.extend((module.exports=_.extend(function(request, response){
 			}.bind(this))
 			console.log("added route: "+verb+" "+url)
 		},this)
+		console.log("\n\r")
 	},
 	send: function(res, data){
 		res.header('Content-Type', 'application/json');
@@ -70,7 +71,7 @@ _.extend((module.exports=_.extend(function(request, response){
 	},
 	error: function(res){
 		return function(error){
-			res.send(400,error.message);	
+			res.send(400, error.message||error);	
 		}
 	}
 })).prototype,{

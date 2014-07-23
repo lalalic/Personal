@@ -7,12 +7,10 @@ module.exports=Super.extend({
 		return hasher.digest("base64")
 	},
 	beforeCreate: function(doc, collection, db){
+		if (!doc.username || !doc.password)
+				throw new Error("user/password can't be empty.");
+		doc.password=this.encrypt(doc.password);	
 		return Super.prototype.beforeCreate.apply(this,arguments)
-			.then(_.bind(function(){
-				if (!doc.username || !doc.password)
-					throw new Error("user/password can't be empty.");
-				doc.password=this.encrypt(doc.password);
-			},this))
 	},
 	login: function(name, password){
 		if (!name || !password)
@@ -29,14 +27,20 @@ module.exports=Super.extend({
 				throw new Error("username or password is not correct.");
 			}.bind(this))
 		
+	},
+	getUserInfo: function(){
+		return this.get(this.user,{limit:1})
 	}
 },{
 	afterPost: function(doc){
-		return _.extend(Super.afterPost.call(this,doc),{
+		delete doc.password
+		return _.extend(doc,{
 			sessionToken:this.createSessionToken(doc)
 		})
 	},
 	routes:{
+		"get reset4Test": Super.routes['get reset4Test'],	
+		"post": Super.routes['post'],
 		"get /login": function(req, res){
 			new this(req,res)
 				.login(req.query.username, req.query.password)
@@ -46,18 +50,24 @@ module.exports=Super.extend({
 					this.send(res,user)
 				}.bind(this),this.error(res))
 		},
-		"get /me": function(req, res){
-			var user=new this(req,res).user
-			delete user.password
-			user.sessionToken=this.createSessionToken(user)
-			this.send(res, user)
+		"get me": function(req, res){
+			new this(req,res).getUserInfo()
+				.then(function(user){
+					if(user){
+						delete user.password
+						user.sessionToken=this.createSessionToken(user)
+						this.send(res, user)	
+					}else
+						this.error(res)("Invalid Session")
+				}.bind(this),this.error(res))
+			
 		},
-		"put /requestPasswordReset": function(req, res){
-			res.send(400, "not support yet")
+		"post /requestPasswordReset": function(req, res){
+			this.error(res)("Not support yet")
 		}
 	},
 	resolvSessionToken: function(token){
-		return {username:token}
+		return {username:token||"test1"}
 	},
 	createSessionToken: function(user){
 		return user.username

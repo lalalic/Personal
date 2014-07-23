@@ -206,9 +206,13 @@ module.exports=Super.extend({
 		return doc.name
 	},
 	resolveAppKey: function(Accesskey){
-		return {name:Accesskey||"baby", author:"lalalic"}
+		return {name:Accesskey||"test", author:"lalalic"}
 	},
-	routes:{
+	routes:_.extend({},Super.routes,{
+		"get reset4Test": function(){
+			var service=new this(req, res);
+			this.send(res,{ok:1, n:0})
+		},
 		"get /my/:app":function(req, res){
 			this.send(res, req.path)
 			
@@ -250,7 +254,7 @@ module.exports=Super.extend({
 					this.send(res, indexes)
 				}.bind(this), this.error(res))
 		}
-	},		
+	}),		
 	init: function(){
 		Super.init.apply(this,arguments)
 

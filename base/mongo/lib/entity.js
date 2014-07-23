@@ -30,9 +30,13 @@ module.exports = Super.extend({
 					if(error && error.errmsg=='ns not found')
 						error=null;
 					if(error) return p.reject(error)
-					db.command({insert:this.kind,documents: docs}, function(error, result){
-						error ? p.reject(error) : p.resolve(result)
-					})
+					
+					if(docs){
+						db.command({insert:this.kind,documents: docs}, function(error, result){
+							error ? p.reject(error) : p.resolve(result)
+						})
+					}else
+						p.resolve({ok:1,n:0})
 				}.bind(this))
 			}.bind(this))
 			return p;
@@ -215,9 +219,18 @@ module.exports = Super.extend({
 			return [filter,options]
 		},
 		routes : {
-			"get reset": function(req, res){
-				var service=new this(req,res);
-				service.reset(require("../test/data/"+service.kind+".json"))
+			"get reset4Test": function(req, res){
+				var service=new this(req,res),
+					path=__dirname+"/../test/data/"+service.kind+".json",
+					fs=require('fs'),
+					exists=fs.existsSync(path),
+					content=exists ? require('fs').readFileSync(path, 'utf8') : null,
+					data=content ? JSON.parse(content) : null;
+					
+				if(service.db.databaseName!="test")
+					return this.error(res)("No hack");
+					
+				service.reset(data)
 					.then(_.bind(function(result){
 						this.send(res, result)
 					},this),this.error(res))
@@ -226,10 +239,10 @@ module.exports = Super.extend({
 				var service=new this(req, res)
 				var query=this.parseQuery(req.params.id,req.query);
 				service.get.apply(service, query)
-				.then(_.bind(function (data) {
+				.then(function (data) {
 						data=this.afterGet(data)
-						this.send(res, query[0]._id ? data : {results:data})
-					}, this),this.error(res))
+						this.send(res, _.isArray(data) ? {results:data} : data)
+					}.bind(this),this.error(res))
 			},
 			"post" : function(req, res){
 				if(!req.body) 

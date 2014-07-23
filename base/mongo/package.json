@@ -16,7 +16,8 @@
 	"formidable":"*",
 	"qiniu":"*",
 	"log4j":"*",
-	"backbone":"*"
+	"backbone":"*",
+	"jasmine-node":"1.14.5"
   },
   "keywords": [
     "mongodb",

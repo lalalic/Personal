@@ -154,7 +154,7 @@ define(['app'],function(app){
 			return $.ajax({
 				context:this,
 				timeout:20000,
-				url:this.version+'/me',
+				url:this.version+'/'+this.className+'/me',
 				method:'get',
 				headers:{"X-Session-Token":localStorage.getItem('sessionToken')}
 			}).then(function(user){
