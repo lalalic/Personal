@@ -2,7 +2,7 @@ var _=require("underscore"), promise=require("node-promise");
 function Cloud(){
 	var callbacks={}, self=this;
 	_.each("before,after".split(","),function(a){
-		_.each("Create,Update,Delete".split(","),function(b){
+		_.each("Create,Update,Remove".split(","),function(b){
 			this[a+b]=function(kind, callback, c){
 				c=callbacks[kind]||(callbacks[kind]={})
 				c=(c[a+b]||(c[a+b]=[]))
@@ -14,7 +14,7 @@ function Cloud(){
 	this.asKindCallback=function(service){
 		var kindCallbacks=callbacks[service.kind]||{}, o={}
 		_.each("before,after".split(","),function(a){
-			_.each("Create,Update,Delete".split(","),function(b){
+			_.each("Create,Update,Remove".split(","),function(b){
 				this[a+b]=function(){
 					return promise.all(kindCallbacks[a+b]||[])
 				}

@@ -67,12 +67,12 @@ describe("1/users", function(){
 		})
 		
 		it("get /me with header 'X-Session-Token' of not signedIn user to restore session without signin", function(done){
-			$.get(root+"/me",{headers:{'X-Session-Token':'test54'},error: function(error){
-					expect(error).toBe("Invalid Session")
-					done()
-				}})
+			$.get(root+"/me",{headers:{'X-Session-Token':'test54'},error: null})
 				.then(function(user){
 					expect(user).toBe(0)
+					done()
+				},function(error){
+					expect(error).toBe("Invalid Session")
 					done()
 				})
 		})
@@ -83,12 +83,12 @@ describe("1/users", function(){
 			type:"post",
 			url: host+"/requestPasswordReset",
 			data:{old:"123456",password:"aa"},
-			error: function(error){
-				expect(error).toBe("Not support yet")
-				done()
-			}
+			error: null
 		}).then(function(user){
 			expect(1).toBe(0)
+			done()
+		}, function(error){
+			expect(error).toBe("Not support yet")
 			done()
 		})
 	})

@@ -19,7 +19,7 @@ var config = module.exports.config={
 		bucket:"mobiengine",
 	},
 	debug:true,
-	autoCreateIndex:false,
+	autoCreateIndex:true,
 	sharedModules:"underscore,backbone,node-promise,ajax".split(",")
 };
 

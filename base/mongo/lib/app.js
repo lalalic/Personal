@@ -4,48 +4,56 @@ var Super=require("./entity"),
 	defaults=require('./schema');
   
 module.exports=Super.extend({
+	constructor:function(req, res){
+		Super.call(this,req,res);
+	},
 	kind:"apps",
 	checkOwner: function(){
 		return true
 		if(this.app.author!=this.user._id)
-			throw new Error("DON'T hack me. You are NOT the application owner.");
+			Super.noSupport();
 	},
 	beforeCreate:function(doc){
+		if(!doc.name){
+			var p=new promise.Promise()
+			p.reject(new Error("application name can't be empty"))
+			return p
+		}
 		return this.asPromise()
 	},
 	afterCreate:function(){
 		return this.asPromise()
 	},
-	beforeUpdate:function(doc, collection, db){
+	beforeUpdate:function(doc){
 		var attr=doc.doc, changes=attr['$set']||attr,temp;
 		if((temp=changes.cloudCode)){
 			try{
-				require('./cloud').compile(temp)
+				new Function("Cloud",temp)
 			}catch(error){
 				var p=new promise.Promise()
 				p.reject(error);
 				return p
 			}
 		}
-		
+		this.author=_.pick(this.user,"_id","username")
 		return this.asPromise()
 	},
 	afterUpdate:function(){
 		return this.asPromise() 
 	},
-	beforeDelete: function(){
+	beforeRemove: function(){
 		return this.asPromise()
 	},
-	afterDelete: function(){
+	afterRemove: function(){
 		return this.asPromise()
 	},
 	update: function(id, doc){
 		this.checkOwner();
 		return Super.prototype.update.apply(this,arguments)
 	},
-	delete: function(){
+	remove: function(){
 		this.checkOwner();
-		return Super.delete.call(this,arguments)
+		return Super.remove.call(this,arguments)
 	},
 	drop: function(name){
 		this.checkOwner();
@@ -134,7 +142,7 @@ module.exports=Super.extend({
 								});
 								return p0
 							}else
-								delete indexes[index.name]
+								delete indexes[kind][index.name]
 							return
 						}))).then(function(){
 							var tasks=[]
@@ -145,16 +153,18 @@ module.exports=Super.extend({
 										delete key['$option']
 									var p1=new promise.Promise()
 									tasks.push(p1)
-									db.createIndex(kind, key, option||{}, function(error){
-										if(error)
+									db.createIndex(kind, key, option||{}, function(error,indexName){
+										if(error || indexName==null)
 											p1.reject(error)
 										else
-											p1.resolve()
+											p1.resolve(kind+"."+name)
 									})
 								})
 							})
 							
-							promise.allOrNone(tasks).then(function(m){p.resolve(m)}, _error)
+							promise.allOrNone(tasks).then(function(m){
+								p.resolve(m)
+							}, _error)
 						}, _error)
 					})
 				})
@@ -169,6 +179,7 @@ module.exports=Super.extend({
 			if(error) return p.reject(error)	
 			db.collection("system.indexes",function(error, collection){
 				collection.find({name:{$ne:"_id_"}}, function(error, info){
+					if(error) return p.reject(error)
 					info.toArray(function(error, items){
 						if(error) return p.reject(error)	
 						var indexes={}
@@ -186,11 +197,32 @@ module.exports=Super.extend({
 		})
 		
 		return p
+	},
+	_reset: function(docs){
+		var p=this.dbPromise()
+		this.db.open(function(error, db){
+			if(error) return p.reject(error)	
+			db.collection(this.kind,function(error, collection){
+				if(error) return p.reject(error)
+				collection.remove({author:"_test"}, function(error){
+					if(error) return p.reject(error)
+					collection.remove({author:"__test"}, function(error){
+						if(error) return p.reject(error)
+						collection.insert(docs,function(error){
+							if(error) return p.reject(error)
+							p.resolve({ok:1,n:docs.length})
+						})
+					})
+				})
+			})
+		}.bind(this))
+		
+		return p
 	}
 },{
 	afterPost: function(doc){
 		var r=Super.afterPost.call(this,doc)
-		r.apiKey=this.createAppKey(r)
+		r.apiKey=this.createAppKey(doc)
 		return r;
 	},
 	afterGet: function(doc){
@@ -205,13 +237,27 @@ module.exports=Super.extend({
 	createAppKey: function(doc){
 		return doc.name
 	},
-	resolveAppKey: function(Accesskey){
-		return {name:Accesskey||"test", author:"lalalic"}
+	resolveAppKey: function(key){
+		var service=new this()
+		service.db=this.getAdminDB()
+		service.checkOwner=function(){return true}
+		return service.get({name:key},{limit:1})
 	},
 	routes:_.extend({},Super.routes,{
-		"get reset4Test": function(){
-			var service=new this(req, res);
-			this.send(res,{ok:1, n:0})
+		"get reset4Test": function(req, res){
+			var service=new this(req,res),
+				path=__dirname+"/../test/data/"+service.kind+".json",
+				fs=require('fs'),
+				exists=fs.existsSync(path),
+				content=exists ? require('fs').readFileSync(path, 'utf8') : null,
+				data=content ? JSON.parse(content) : null;
+				
+			service.db=this.getAdminDB();
+				
+			service._reset(data)
+				.then(_.bind(function(result){
+					this.send(res, result)
+				},this),this.error(res))
 		},
 		"get /my/:app":function(req, res){
 			this.send(res, req.path)
@@ -259,10 +305,15 @@ module.exports=Super.extend({
 		Super.init.apply(this,arguments)
 
 		var service=new this()
-		service.db=this.getAdminDB();
+		service.db=this.getAdminDB({w:1});
 		service.checkOwner=function(){return true}
 		//create admin db indexes
 		if(require('../server').config.autoCreateIndex)
-			service.makeSchema(require("../data/schema"))
+			service.makeSchema(JSON.parse(JSON.stringify(require("../data/schema"))))
+				.then(function(){
+					console.info("indexes are updated")
+				},function(error){
+					console.error(error.message)
+				})
 	}
 })

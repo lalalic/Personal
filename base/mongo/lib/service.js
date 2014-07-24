@@ -6,7 +6,7 @@ _.extend((module.exports=_.extend(function(request, response){
 			this.app=request;
 			this.user=response;
 		}else{
-			this.app=require("./app").resolveAppKey(request.header('X-Application-Id'))
+			this.app=request.application
 			this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
 		}
 	},{
@@ -55,11 +55,17 @@ _.extend((module.exports=_.extend(function(request, response){
 			if(!_.isFunction(handler))
 				handler=function(req,res){this.send(res,req.path)}.bind(this);
 			app[verb]("/"+this.version+url,function(req, res, next){
-				try{
-					handler.apply(this,arguments)
-				}catch(error){
-					this.error(res)(error)
-				}
+				require("./app").resolveAppKey(req.header('X-Application-Id'))
+					.then(function(app){
+						if(!app)
+							return this.error(res)("No hack")
+						req.application=app
+						try{
+							handler.call(this,req, res, next)
+						}catch(error){
+							this.error(res)(error)
+						}	
+					}.bind(this),this.error(res))
 			}.bind(this))
 			console.log("added route: "+verb+" "+url)
 		},this)
@@ -73,6 +79,9 @@ _.extend((module.exports=_.extend(function(request, response){
 		return function(error){
 			res.send(400, error.message||error);	
 		}
+	},
+	noSupport: function(){
+		throw new Error("No hack.")
 	}
 })).prototype,{
 	getMongoServer: function(){

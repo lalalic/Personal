@@ -13,16 +13,16 @@ module.exports = Super.extend({
 		},
 		run: function(command){
 			var p = this.dbPromise();
-			this.db.open(_.bind(function(error, db){
+			this.db.open(function(error, db){
 				var convertNodeAsyncFunction = promise.convertNodeAsyncFunction
 				var runCommand=convertNodeAsyncFunction(db.command).bind(db)
 				db.command(command,function(error,result){
 					error ? p.reject(error) : p.resolve(result)
 				})
-			},this))
+			}.bind(this))
 			return p;
 		},
-		reset: function(docs){
+		_reset: function(docs){
 			var p = this.dbPromise();
 			this.db.open(function(error, db){
 				if(error) return p.reject(error)
@@ -65,16 +65,16 @@ module.exports = Super.extend({
 			p.then(closeDB,closeDB)
 			return p
 		},
-		asPromise: function(){
+		asPromise: function(v){
 			var p=new Promise()
-			p.resolve()
+			p.resolve(v)
 			return p
 		},
-		beforeCreate: function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		beforeCreate: function(doc){
+			return this.cloudCode().beforeCreate(doc)
 		},
-		afterCreate: function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		afterCreate: function(doc){
+			return this.cloudCode().beforeCreate(doc)
 		},
 		create : function (docs) {
 			var p = new Promise,
@@ -85,15 +85,15 @@ module.exports = Super.extend({
 				db.collection(this.kind,function (error, collection) {
 					if(error) return p.reject(error)
 					
-					promise.all(_.map(docs, function(doc){
+					promise.allOrNone(_.map(docs, function(doc){
 						var p0 = new Promise,
 							_error0=function(error){p0.reject(error)};
 						!doc._id && (doc._id=new ObjectID())
-						this.beforeCreate(doc,collection,db).then(function(){
+						this.beforeCreate(doc).then(function(){
 							doc.createdAt=doc.updatedAt=new Date()
 							collection.insert(doc, function (error) {
 								if(error) return p0.reject(error)
-								this.afterCreate(doc,collection,db).then(function(){
+								this.afterCreate(doc).then(function(){
 									p0.resolve(doc)
 								}, _error0)
 							}.bind(this))
@@ -108,11 +108,11 @@ module.exports = Super.extend({
 			}.bind(this))
 			return p
 		},
-		beforeUpdate: function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		beforeUpdate: function(doc){
+			return this.cloudCode().beforeUpdate(doc)
 		},
-		afterUpdate:function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		afterUpdate:function(doc){
+			return this.cloudCode().afterUpdate(doc)
 		},
 		patch: function(id, doc){
 			return this.update(id, {$set:doc})
@@ -128,10 +128,10 @@ module.exports = Super.extend({
 					var changes=doc['$set']||doc
 					delete changes._id
 					changes.updatedAt=new Date()
-					this.beforeUpdate({_id:id,doc:doc},collection,db).then(function(){
+					this.beforeUpdate({_id:id,doc:doc}).then(function(){
 						collection.update({_id:id},doc, function (error) {
 							if(error) return p.reject(error)
-							this.afterUpdate({_id:id,doc:doc},collection,db).then(function(){
+							this.afterUpdate({_id:id,doc:doc}).then(function(){
 								p.resolve(changes)
 							},_error)
 						}.bind(this))
@@ -140,24 +140,25 @@ module.exports = Super.extend({
 			}.bind(this))
 			return p
 		},
-		beforeDelete: function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		beforeRemove: function(doc){
+			return this.cloudCode().beforeRemove(doc)
 		},
-		afterDelete: function(doc,collection,db){
-			return this.cloudCode().beforeCreate.call(global, doc, collection, db)
+		afterRemove: function(doc){
+			return this.cloudCode().afterRemove(doc)
 		},
-		delete: function(id){
+		remove: function(id){
 			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
 			ObjectID.isValid(id) && (id=new ObjectID(id));
+			var doc={_id:id}
 			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeDelete(id,collection,db).then(function(){
-						collection.remove({_id:id},function (error) {
+					this.beforeRemove(doc).then(function(){
+						collection.findAndRemove(doc,function (error,removed) {
 							if(error) return p.reject(error)
-							this.afterDelete(id,collection,db).then(function(){
+							this.afterRemove(removed).then(function(){
 								p.resolve()
 							},_error)
 						}.bind(this))
@@ -228,9 +229,9 @@ module.exports = Super.extend({
 					data=content ? JSON.parse(content) : null;
 					
 				if(service.db.databaseName!="test")
-					return this.error(res)("No hack");
+					return this.noSupport()
 					
-				service.reset(data)
+				service._reset(data)
 					.then(_.bind(function(result){
 						this.send(res, result)
 					},this),this.error(res))
@@ -272,10 +273,10 @@ module.exports = Super.extend({
 			},
 			"delete :id": function(req, res){
 				new this(req, res)
-					.delete(req.params.id)
-					.then(_.bind(function(num){
+					.remove(req.params.id)
+					.then(function(num){
 						this.send(res, true)
-					},this),this.error(res))
+					}.bind(this),this.error(res))
 			}
 		}
 	})
