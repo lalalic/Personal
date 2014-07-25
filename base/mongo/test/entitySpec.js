@@ -4,32 +4,15 @@ describe("1/classes/:collection", function(){
 		$=require('./ajax'),
 		_=require('underscore');
 	
-	console.inspect=function(o){
-		console.info(require('util').inspect(o))
-	}
-	
-	jasmine.getEnv().defaultTimeoutInterval = 250;
-	
-	
-	$.ajaxSetup({
-		async:false,
-		dataType:"json",
-		headers:{
-			"X-Application-Id":"test",
-			"X-Session-Token":"test"
-		},
-		error: function(error){
-			expect(error).toBe(null)
-		}
-	})
-	
 	it("restore Test database",function(done){
-		$.get(root+"/reset4Test")
-			.then(function(result){
-				expect(result.ok).toBe(1)
-				expect(result.n).toBe(10),
-				done()
-			},done)
+		$.reset4All(host).then(function(){
+			$.get(root+"/reset4Test")
+				.then(function(result){
+					expect(result.ok).toBe(1)
+					expect(result.n).toBe(10),
+					done()
+				},done)
+		},done())
 	})
 
 	describe("query with GET", function(done){

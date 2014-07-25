@@ -69,3 +69,47 @@ _.each("get,delete,put,post,patch".split(','),function(key){
 exports.ajax=function(options){
 	return _request(options.url,options)
 }
+
+
+//global setting for all spec
+
+exports.inspect=function(o){
+	console.info(require('util').inspect(o))
+}
+
+jasmine.getEnv().defaultTimeoutInterval = 250;
+
+exports.ajaxSetup({
+	async:false,
+	dataType:"json",
+	headers:{
+		"X-Application-Id":"test",
+		"X-Session-Token":"test"
+	},
+	error: function(error){
+		expect(error).toBe(null)
+	}
+})
+
+	
+
+exports.reset4All=function(host){
+	return exports.get(host+"/apps/reset4Test",{
+		dataType:"json",
+		headers:{
+			"X-Application-Id":"admin",
+			"X-Session-Token":"test"
+		},
+		error: function(error){
+			expect(error).toBe(null)
+		}
+	})
+	.then(function(result){
+		expect(result.ok).toBe(1)
+	})
+}
+
+exports.fail=function(){
+	expect(true).toBe(false)
+}
+	

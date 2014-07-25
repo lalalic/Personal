@@ -3,7 +3,8 @@ var _ = require("underscore"),
 	promise = require("node-promise"),
 	Promise = promise.Promise,
 	ObjectID = mongo.ObjectID,
-	Super = require("./service");
+	Super = require("./service"),
+	Internal_API=require("../server").config.Internal_API;
 
 module.exports = Super.extend({
 		constructor : function (req, res) {
@@ -11,38 +12,27 @@ module.exports = Super.extend({
 			req && req.header && req.params.collection && (this.kind = req.params.collection)
 			this.app && (this.db = new mongo.Db(this.app.name, this.getMongoServer(),{w:1}))
 		},
-		run: function(command){
-			var p = this.dbPromise();
-			this.db.open(function(error, db){
-				var convertNodeAsyncFunction = promise.convertNodeAsyncFunction
-				var runCommand=convertNodeAsyncFunction(db.command).bind(db)
-				db.command(command,function(error,result){
-					error ? p.reject(error) : p.resolve(result)
-				})
-			}.bind(this))
-			return p;
-		},
 		_reset: function(docs){
 			var p = this.dbPromise();
 			this.db.open(function(error, db){
 				if(error) return p.reject(error)
-				db.command({drop:this.kind},function(error,result){
+				db.command({drop:this.kind},{writeCommand:true},function(error,result){
 					if(error && error.errmsg=='ns not found')
 						error=null;
 					if(error) return p.reject(error)
 					
-					if(docs){
-						db.command({insert:this.kind,documents: docs}, function(error, result){
-							error ? p.reject(error) : p.resolve(result)
-						})
-					}else
-						p.resolve({ok:1,n:0})
+					if(!docs) return p.resolve({ok:1, n:0});
+					
+					db.command({insert:this.kind,documents: docs}, {writeCommand:true}, function(error, result){
+						error ? p.reject(error) : p.resolve(result)
+					})
 				}.bind(this))
 			}.bind(this))
 			return p;
 		},
 		get : function (query, options) {
 			var p = this.dbPromise();
+			query = _.isString(query) ? (ObjectID.isValid(query) ? {_id:new ObjectID(query)}: {_id:query}) : query;
 			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
@@ -66,18 +56,18 @@ module.exports = Super.extend({
 			return p
 		},
 		asPromise: function(v){
-			var p=new Promise()
-			p.resolve(v)
+			var p=new Promise();
+			(v instanceof Error) ? p.reject(v) : (v==='new' ? p : p.resolve(v))
 			return p
 		},
-		beforeCreate: function(doc){
+		beforeCreate: function(doc,collection){
 			return this.cloudCode().beforeCreate(doc)
 		},
-		afterCreate: function(doc){
+		afterCreate: function(doc,collection){
 			return this.cloudCode().beforeCreate(doc)
 		},
 		create : function (docs) {
-			var p = new Promise,
+			var p = this.dbPromise(),
 				_error=function(error){	p.reject(error)};
 			docs=_.isArray(docs) ? docs: [docs];
 			this.db.open(function (error, db) {
@@ -89,11 +79,11 @@ module.exports = Super.extend({
 						var p0 = new Promise,
 							_error0=function(error){p0.reject(error)};
 						!doc._id && (doc._id=new ObjectID())
-						this.beforeCreate(doc).then(function(){
+						this.beforeCreate(doc,collection).then(function(){
 							doc.createdAt=doc.updatedAt=new Date()
-							collection.insert(doc, function (error) {
+							collection.insert(doc,function (error) {
 								if(error) return p0.reject(error)
-								this.afterCreate(doc).then(function(){
+								this.afterCreate(doc,collection).then(function(){
 									p0.resolve(doc)
 								}, _error0)
 							}.bind(this))
@@ -108,10 +98,13 @@ module.exports = Super.extend({
 			}.bind(this))
 			return p
 		},
-		beforeUpdate: function(doc){
-			return this.cloudCode().beforeUpdate(doc)
+		beforeUpdate: function(doc,collection){
+			return this.checkACL(doc,collection,['update'])
+				.then(function(old){
+					return this.cloudCode().beforeUpdate(doc, old)	
+				}.bind(this))
 		},
-		afterUpdate:function(doc){
+		afterUpdate:function(doc,collection){
 			return this.cloudCode().afterUpdate(doc)
 		},
 		patch: function(id, doc){
@@ -119,19 +112,23 @@ module.exports = Super.extend({
 		},
 		update: function(id, doc){
 			var p = this.dbPromise(),
-				_error=function(error){	p.reject(error)};
+				_error=function(error){	
+					p.reject(error)
+				};
 			ObjectID.isValid(id) && (id=new ObjectID(id));
 			this.db.open(function (error, db) {
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					var changes=doc['$set']||doc
-					delete changes._id
-					changes.updatedAt=new Date()
-					this.beforeUpdate({_id:id,doc:doc}).then(function(){
-						collection.update({_id:id},doc, function (error) {
+					doc._id=id;
+					this.beforeUpdate(doc,collection).then(function(){
+						var changes=doc['$set']||doc
+						changes.updatedAt=new Date()
+						delete doc._id;
+						collection.update({_id:id}, doc, function (error) {
 							if(error) return p.reject(error)
-							this.afterUpdate({_id:id,doc:doc}).then(function(){
+							doc._id=id;
+							this.afterUpdate(doc, collection).then(function(){
 								p.resolve(changes)
 							},_error)
 						}.bind(this))
@@ -140,10 +137,13 @@ module.exports = Super.extend({
 			}.bind(this))
 			return p
 		},
-		beforeRemove: function(doc){
-			return this.cloudCode().beforeRemove(doc)
+		beforeRemove: function(doc,collection){
+			return this.checkACL(doc,collection,['remove'])
+			.then(function(doc){
+				return this.cloudCode().beforeRemove(doc)
+			}.bind(this))
 		},
-		afterRemove: function(doc){
+		afterRemove: function(doc,collection){
 			return this.cloudCode().afterRemove(doc)
 		},
 		remove: function(id){
@@ -155,11 +155,11 @@ module.exports = Super.extend({
 				if(error) return p.reject(error)
 				db.collection(this.kind, function (error, collection) {
 					if(error) return p.reject(error)
-					this.beforeRemove(doc).then(function(){
+					this.beforeRemove(doc,collection).then(function(){
 						collection.findAndRemove(doc,function (error,removed) {
 							if(error) return p.reject(error)
-							this.afterRemove(removed).then(function(){
-								p.resolve()
+							this.afterRemove(removed,collection).then(function(){
+								p.resolve(removed)
 							},_error)
 						}.bind(this))
 					}.bind(this),_error)
@@ -172,9 +172,26 @@ module.exports = Super.extend({
 				return this._cloud;
 				
 			return this._cloud=this.getCloudCode().asKindCallback(this)
+		},
+		checkACL: function(doc, collection, caps){
+			var p=this.asPromise('new')
+			collection.findOne({_id:doc._id},function(error, doc){
+				if(error) return p.reject(error);
+				try{
+					this.isAbleTo(doc,caps)
+				}catch(error){
+					return p.reject(error)
+				}
+				return p.resolve(doc)
+			}.bind(this))
+			return p
 		}
 	}, {
 		url : "/classes/:collection",
+		checkUrl: function(req,res){
+			if(req.params.collection && Internal_API.indexOf(req.params.collection)!=-1)
+				this.noSupport()
+		},
 		beforePost:function(doc){
 			if(_.isArray(doc))
 				throw Error("Don't support post array!")

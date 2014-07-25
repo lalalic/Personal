@@ -4,32 +4,15 @@ describe("1/users", function(){
 		$=require('./ajax'),
 		_=require('underscore');
 	
-	console.inspect=function(o){
-		console.info(require('util').inspect(o))
-	}
-	
-	jasmine.getEnv().defaultTimeoutInterval = 250;
-	
-	
-	$.ajaxSetup({
-		async:false,
-		dataType:"json",
-		headers:{
-			"X-Application-Id":"test",
-			"X-Session-Token":"test"
-		},
-		error: function(error){
-			expect(error).toBe(null)
-		}
-	})
-	
 	it("restore Test database",function(done){
-		$.get(root+"/reset4Test")
+		$.reset4All(host).then(function(){
+			$.get(root+"/reset4Test")
 			.then(function(result){
 				expect(result.ok).toBe(1)
 				expect(result.n).toBe(1)
 				done()
 			},done)
+		},done)
 	})
 	
 	describe("Account service", function(){
@@ -56,7 +39,7 @@ describe("1/users", function(){
 				},done)
 		})
 		
-		it("get /me with header 'X-Session-Token' of signedIn user to restore session without signin", function(done){
+		it("get /me with header 'X-Session-Token' of signedIn user to restore session", function(done){
 			$.get(root+"/me",{headers:{'X-Session-Token':'test'}})
 				.then(function(user){
 					expect(user.sessionToken).toBeDefined()
@@ -66,7 +49,7 @@ describe("1/users", function(){
 				},done)
 		})
 		
-		it("get /me with header 'X-Session-Token' of not signedIn user to restore session without signin", function(done){
+		it("get /me with header 'X-Session-Token' of not signedIn user to restore session", function(done){
 			$.get(root+"/me",{headers:{'X-Session-Token':'test54'},error: null})
 				.then(function(user){
 					expect(user).toBe(0)

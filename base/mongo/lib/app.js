@@ -6,57 +6,53 @@ var Super=require("./entity"),
 module.exports=Super.extend({
 	constructor:function(req, res){
 		Super.call(this,req,res);
+		if(arguments.length && !this.user)
+			throw new Error("no hack")
 	},
-	kind:"apps",
-	checkOwner: function(){
-		return true
-		if(this.app.author!=this.user._id)
-			Super.noSupport();
+	kind:"_apps",
+	isAbleTo: function(doc, caps){
+		if(doc.author._id!==this.user._id)
+			throw new Error("Only owner can update application")
 	},
-	beforeCreate:function(doc){
-		if(!doc.name){
-			var p=new promise.Promise()
-			p.reject(new Error("application name can't be empty"))
-			return p
-		}
+	beforeCreate:function(doc,collection){
+		if(!doc.name)
+			return this.asPromise(new Error("application name can't be empty"))
+		doc.author=_.pick(this.user,"_id","username")
+		return this.asPromise(doc)
+	},
+	afterCreate:function(doc, collection){
 		return this.asPromise()
 	},
-	afterCreate:function(){
-		return this.asPromise()
+	beforeUpdate:function(doc,collection){
+		return this.checkACL(doc,collection,['update'])
+			.then(function(old){
+				var attr=doc, changes=attr['$set']||attr,temp;
+				if((temp=changes.cloudCode)){
+					try{
+						new Function("Cloud",temp)
+					}catch(error){
+						return this.asPromise(error)
+					}
+				}
+				
+				if(changes.name && changes.name!=old.name)
+					throw new Error("application name can't be updated")
+				
+				changes.author=_.pick(this.user,"_id","username")
+				return this.asPromise()
+			}.bind(this))
+		
 	},
-	beforeUpdate:function(doc){
-		var attr=doc.doc, changes=attr['$set']||attr,temp;
-		if((temp=changes.cloudCode)){
-			try{
-				new Function("Cloud",temp)
-			}catch(error){
-				var p=new promise.Promise()
-				p.reject(error);
-				return p
-			}
-		}
-		this.author=_.pick(this.user,"_id","username")
-		return this.asPromise()
-	},
-	afterUpdate:function(){
+	afterUpdate:function(doc, collection){
 		return this.asPromise() 
 	},
-	beforeRemove: function(){
+	beforeRemove: function(doc, collection){
+		return this.checkACL(doc,collection,['remove'])
+	},
+	afterRemove: function(doc, collection){
 		return this.asPromise()
-	},
-	afterRemove: function(){
-		return this.asPromise()
-	},
-	update: function(id, doc){
-		this.checkOwner();
-		return Super.prototype.update.apply(this,arguments)
-	},
-	remove: function(){
-		this.checkOwner();
-		return Super.remove.call(this,arguments)
 	},
 	drop: function(name){
-		this.checkOwner();
 		var p=this.dbPromise()
 		this.db.open(function(error, db){
 			if(error) return p.reject(error);
@@ -79,7 +75,6 @@ module.exports=Super.extend({
 		return p
 	},
 	getSchema: function(){
-		this.checkOwner();
 		var p=this.dbPromise(), me=this;
 		this.db.open(function(error, db){
 			if(error) return p.reject(error);
@@ -106,8 +101,6 @@ module.exports=Super.extend({
 		return p
 	},
 	makeSchema: function(indexes){
-		this.checkOwner()
-		
 		_.each(indexes,function(items, kind){
 			delete indexes[kind]
 			var index=indexes[kind]={}
@@ -204,11 +197,11 @@ module.exports=Super.extend({
 			if(error) return p.reject(error)	
 			db.collection(this.kind,function(error, collection){
 				if(error) return p.reject(error)
-				collection.remove({author:"_test"}, function(error){
+				collection.remove({"author._id":"test"}, {writeCommand:true}, function(error){
 					if(error) return p.reject(error)
-					collection.remove({author:"__test"}, function(error){
+					collection.remove({"author._id":"_test"}, {writeCommand:true},function(error){
 						if(error) return p.reject(error)
-						collection.insert(docs,function(error){
+						collection.insert(docs, {writeCommand:true}, function(error){
 							if(error) return p.reject(error)
 							p.resolve({ok:1,n:docs.length})
 						})
@@ -220,6 +213,12 @@ module.exports=Super.extend({
 		return p
 	}
 },{
+	url:"/apps",
+	checkApp: function(app){
+		Super.checkApp(app)
+		if(app.name!='admin')
+			this.noSupport();
+	},
 	afterPost: function(doc){
 		var r=Super.afterPost.call(this,doc)
 		r.apiKey=this.createAppKey(doc)
@@ -231,7 +230,7 @@ module.exports=Super.extend({
 				d.apiKey=this.createAppKey(d)
 			}.bind(this));
 		}else
-			doc.apiKey=this.createAppkey(doc)
+			doc.apiKey=this.createAppKey(doc)
 		return doc;
 	},
 	createAppKey: function(doc){
@@ -250,7 +249,7 @@ module.exports=Super.extend({
 				fs=require('fs'),
 				exists=fs.existsSync(path),
 				content=exists ? require('fs').readFileSync(path, 'utf8') : null,
-				data=content ? JSON.parse(content) : null;
+				data=content ? (new Function("","return "+content))() : null;
 				
 			service.db=this.getAdminDB();
 				
@@ -273,6 +272,7 @@ module.exports=Super.extend({
 						error: function(error){me.error(res)(error)}})
 		},
 		"get /schemas": function(req, res){
+
 			(new this(req, res))
 				.getSchema()
 				.then(function(schema){

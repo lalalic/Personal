@@ -1,12 +1,12 @@
 var Super=require("./entity"), _=require("underscore");
 module.exports=Super.extend({
-	kind:"users",
+	kind:"_users",
 	encrypt: function(text){
 		var hasher=require("crypto").createHash("MD5")
 		hasher.update(text)
 		return hasher.digest("base64")
 	},
-	beforeCreate: function(doc, collection, db){
+	beforeCreate: function(doc){
 		if (!doc.username || !doc.password)
 				throw new Error("user/password can't be empty.");
 		doc.password=this.encrypt(doc.password);	
@@ -30,8 +30,15 @@ module.exports=Super.extend({
 	},
 	getUserInfo: function(){
 		return this.get(this.user,{limit:1})
+	},
+	_reset: function(){
+		if(this.db.databaseName=='admin')
+			this.noSupport()
+			
+		return Super.prototype._reset.apply(this,arguments)
 	}
 },{
+	url:"/users",
 	afterPost: function(doc){
 		delete doc.password
 		return _.extend(doc,{
@@ -67,7 +74,7 @@ module.exports=Super.extend({
 		}
 	},
 	resolvSessionToken: function(token){
-		return {username:token||"test1"}
+		return {_id:token||"test", username:token||"test"}
 	},
 	createSessionToken: function(user){
 		return user.username

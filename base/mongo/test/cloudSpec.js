@@ -1,4 +1,9 @@
 describe("cloud code", function(){
+	var host="http://127.0.0.1/1",
+		root=host+"/classes/books",
+		$=require('./ajax'),
+		_=require('underscore');
+		
 	describe("of collections",function(){
 		it("can inject code before creating document",function(){})
 		it("can inject code after creating document",function(){})
@@ -14,16 +19,14 @@ describe("cloud code", function(){
 	})
 	
 	describe("context seperation", function(){
-		it("can NOT change global context", function(){}
-		it("can NOT change other application's context", function(){}
+		it("can NOT change global context", function(){})
+		it("can NOT change other application's context", function(){})
 		it("can NOT shutdown vm", function(){})
 		it("should timeout for long time execution", function(){})
 	})
 	
 	describe("cloud modules", function(){
-		var modules=require("../server").config.sharedModules;
-		
-		_.each(modules, function(module){
+		_.each("underscore,backbone,node-promise,ajax".split(","), function(module){
 			describe("module: "+module, function(){
 				it("support require "+module, function(){
 			

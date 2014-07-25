@@ -50,26 +50,34 @@ _.extend((module.exports=_.extend(function(request, response){
 			var info=key.split(" "),
 				verb=info[0],
 				path=info.length>1 ? info[1] :"",
-				root=this.prototype.kind ? "/"+this.prototype.kind : this.url,
+				root=this.url ? this.url : "/"+this.prototype.kind,
 				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
 			if(!_.isFunction(handler))
 				handler=function(req,res){this.send(res,req.path)}.bind(this);
 			app[verb]("/"+this.version+url,function(req, res, next){
-				require("./app").resolveAppKey(req.header('X-Application-Id'))
+				try{
+					this.checkUrl(req,res)
+					require("./app").resolveAppKey(req.header('X-Application-Id'))
 					.then(function(app){
-						if(!app)
-							return this.error(res)("No hack")
-						req.application=app
 						try{
+							this.checkApp(req.application=app)
 							handler.call(this,req, res, next)
 						}catch(error){
 							this.error(res)(error)
 						}	
 					}.bind(this),this.error(res))
+				}catch(error){
+					this.error(res)(error)
+				}
 			}.bind(this))
 			console.log("added route: "+verb+" "+url)
 		},this)
 		console.log("\n\r")
+	},
+	checkUrl:function(){},
+	checkApp:function(app){
+		if(!app)
+			this.noSupport()
 	},
 	send: function(res, data){
 		res.header('Content-Type', 'application/json');
@@ -102,6 +110,9 @@ _.extend((module.exports=_.extend(function(request, response){
 			Module._cache[filename]=appModule; 
 		}
 		return appModule.exports;
+	},
+	isAbleTo: function(doc, caps){
+		return true
 	}
 })
 
