@@ -9,7 +9,11 @@ var _ = require("underscore"),
 module.exports = Super.extend({
 		constructor : function (req, res) {
 			Super.call(this,req,res);
-			req && req.header && req.params.collection && (this.kind = req.params.collection)
+			if(req && req.header && req.params.collection){
+				this.kind = req.params.collection
+				if(this.app.name=='admin' && this.kind=='apps')
+					throw new Error("no hack");		
+			}
 			this.app && (this.db = new mongo.Db(this.app.name, this.getMongoServer(),{w:1}))
 		},
 		_reset: function(docs){
@@ -61,10 +65,28 @@ module.exports = Super.extend({
 			return p
 		},
 		beforeCreate: function(doc,collection){
-			return this.cloudCode().beforeCreate(doc)
+			return this.cloudCode().beforeCreate(_.extend({object:doc},this._req), this._res)
 		},
 		afterCreate: function(doc,collection){
-			return this.cloudCode().beforeCreate(doc)
+			return this.cloudCode().afterCreate(_.extend({object:doc},this._req), this._res)
+		},
+		beforeUpdate: function(doc,collection){
+			return this.checkACL(doc,collection,['update'])
+				.then(function(old){
+					return this.cloudCode().beforeUpdate(_.extend({object:doc,old:old},this._req), this._res)	
+				}.bind(this))
+		},
+		afterUpdate:function(doc,collection){
+			return this.cloudCode().afterUpdate(_.extend({object:doc},this._req), this._res)
+		},
+		beforeRemove: function(doc,collection){
+			return this.checkACL(doc,collection,['remove'])
+			.then(function(doc){
+				return this.cloudCode().beforeRemove(_.extend({object:doc},this._req), this._res)
+			}.bind(this))
+		},
+		afterRemove: function(doc,collection){
+			return this.cloudCode().afterRemove(_.extend({object:doc},this._req), this._res)
 		},
 		create : function (docs) {
 			var p = this.dbPromise(),
@@ -98,15 +120,6 @@ module.exports = Super.extend({
 			}.bind(this))
 			return p
 		},
-		beforeUpdate: function(doc,collection){
-			return this.checkACL(doc,collection,['update'])
-				.then(function(old){
-					return this.cloudCode().beforeUpdate(doc, old)	
-				}.bind(this))
-		},
-		afterUpdate:function(doc,collection){
-			return this.cloudCode().afterUpdate(doc)
-		},
 		patch: function(id, doc){
 			return this.update(id, {$set:doc})
 		},
@@ -125,9 +138,8 @@ module.exports = Super.extend({
 						var changes=doc['$set']||doc
 						changes.updatedAt=new Date()
 						delete doc._id;
-						collection.update({_id:id}, doc, function (error) {
+						collection.findAndModify({_id:id}, null, doc, {new:true}, function (error,doc) {
 							if(error) return p.reject(error)
-							doc._id=id;
 							this.afterUpdate(doc, collection).then(function(){
 								p.resolve(changes)
 							},_error)
@@ -136,15 +148,6 @@ module.exports = Super.extend({
 				}.bind(this))
 			}.bind(this))
 			return p
-		},
-		beforeRemove: function(doc,collection){
-			return this.checkACL(doc,collection,['remove'])
-			.then(function(doc){
-				return this.cloudCode().beforeRemove(doc)
-			}.bind(this))
-		},
-		afterRemove: function(doc,collection){
-			return this.cloudCode().afterRemove(doc)
 		},
 		remove: function(id){
 			var p = this.dbPromise(),
@@ -239,11 +242,11 @@ module.exports = Super.extend({
 		routes : {
 			"get reset4Test": function(req, res){
 				var service=new this(req,res),
-					path=__dirname+"/../test/data/"+service.kind+".json",
+					path=__dirname+"/../test/data/"+service.kind+".js",
 					fs=require('fs'),
 					exists=fs.existsSync(path),
 					content=exists ? require('fs').readFileSync(path, 'utf8') : null,
-					data=content ? JSON.parse(content) : null;
+					data=content ? (new Function("","return "+content))() : null;
 					
 				if(service.db.databaseName!="test")
 					return this.noSupport()

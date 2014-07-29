@@ -21,7 +21,7 @@ var config = module.exports.config={
 	debug:true,
 	autoCreateIndex:true,
 	sharedModules:"underscore,backbone,node-promise,ajax".split(","),
-	Internal_API:["_users,_apps,_roles,_plugins".split(",")]
+	Internal_API:["users,roles,plugins".split(",")]
 };
 
 require("./lib/cloud").support()

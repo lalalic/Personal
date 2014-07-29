@@ -1,7 +1,7 @@
-describe("1/classes/:collection", function(){
+describe("entity", function(){
 	var host="http://127.0.0.1/1",
 		root=host+"/classes/books",
-		$=require('./ajax'),
+		$=require('./ajax')(),
 		_=require('underscore');
 	
 	it("restore Test database",function(done){
@@ -9,10 +9,9 @@ describe("1/classes/:collection", function(){
 			$.get(root+"/reset4Test")
 				.then(function(result){
 					expect(result.ok).toBe(1)
-					expect(result.n).toBe(10),
 					done()
 				},done)
-		},done())
+		},done)
 	})
 
 	describe("query with GET", function(done){
@@ -20,6 +19,14 @@ describe("1/classes/:collection", function(){
 			$.get(root+"/book1")
 				.then(function(data){
 					expect(data._id).toBe('book1')
+					done()
+				},done)
+		})
+		
+		it("not exists get with id should return {}", function(done){
+			$.get(root+"/booknoexist")
+				.then(function(data){
+					expect(_.keys(data).length).toBe(0)
 					done()
 				},done)
 		})

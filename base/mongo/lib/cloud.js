@@ -1,12 +1,12 @@
-var _=require("underscore"), promise=require("node-promise");
 function Cloud(){
+	var _=require("underscore"), promise=require("node-promise");
 	var callbacks={}, self=this;
 	_.each("before,after".split(","),function(a){
 		_.each("Create,Update,Remove".split(","),function(b){
 			this[a+b]=function(kind, callback, c){
 				c=callbacks[kind]||(callbacks[kind]={})
 				c=(c[a+b]||(c[a+b]=[]))
-				c.push(function(){return callback.apply(this,arguments)})
+				c.push(callback)
 			}
 		},self)
 	})
@@ -16,7 +16,10 @@ function Cloud(){
 		_.each("before,after".split(","),function(a){
 			_.each("Create,Update,Remove".split(","),function(b){
 				this[a+b]=function(){
-					return promise.all(kindCallbacks[a+b]||[])
+					var args=arguments
+					return promise.allOrNone(_.map(kindCallbacks[a+b]||[], function(callback){
+						return callback.apply(o,args)
+					}))
 				}
 			},o)
 		})
@@ -43,6 +46,7 @@ exports.load=function(app, filename){
 		Module=require('module');
 	require("vm").runInNewContext(app.cloudCode, {
 		Cloud:cloud,
+		console: console,
 		require: function(path){
 			if(!Module.isShareModule(path))
 				throw new Error(path+" module is not found.")
@@ -53,10 +57,10 @@ exports.load=function(app, filename){
 			if(thisLoadedShare[path])
 				return thisLoadedShare[path];
 				
-			if(!sharedModules[path])
+			if(!sharedModules[path]) 
 				parentRequire(path);
 			var m={exports:{}};
-			sharedModules[path](m.exports,parentRequire,m)
+			sharedModules[path] && sharedModules[path](m.exports,parentRequire,m)
 			
 			if(path=='backbone')
 				m.exports.ajax=ajax(app)
@@ -86,19 +90,21 @@ exports.support=function(){
 		sharedModulesPath={};
 	Module._resolveFilename=function(request){
 		var path=_resolveFilename.apply(this,arguments)
-		if(Module.isShareModule(request) && !sharedModules[request])
+		if(Module.isShareModule(request) && !sharedModules[request]){
 			sharedModulesPath[path]=request;
+		}
 		return path
 	}
 	
 	var __compile=Module.prototype._compile
-	Module.prototype._compile=function(content){
-		var r=__compile.apply(this,arguments), request=sharedModulesPath[this.filename];
+	Module.prototype._compile=function(content, filename){
+		var r=__compile.apply(this,arguments), request=sharedModulesPath[filename];
 		if(request && Module.isShareModule(request) && !sharedModules[request]){
-			delete sharedModulesPath[this.filename];
+			console.log("loaded shared "+request)
+			delete sharedModulesPath[filename];
 			sharedModules[request]=new Function("exports,require,module",content.replace(/^\#\!.*/, ''))
 		}
 		return r
-	}	
+	}
 }
 

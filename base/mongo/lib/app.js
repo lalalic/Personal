@@ -6,10 +6,14 @@ var Super=require("./entity"),
 module.exports=Super.extend({
 	constructor:function(req, res){
 		Super.call(this,req,res);
+		if(arguments.length && this.app._id!="admin")
+			throw new Error("no hack");
+		
 		if(arguments.length && !this.user)
 			throw new Error("no hack")
+
 	},
-	kind:"_apps",
+	kind:"apps",
 	isAbleTo: function(doc, caps){
 		if(doc.author._id!==this.user._id)
 			throw new Error("Only owner can update application")
@@ -62,6 +66,17 @@ module.exports=Super.extend({
 			})
 		})
 		return p
+	},
+	get: function(query, options){
+		if(this.user && _.isObject(query) && !query._id){
+			query['author._id']=this.user._id
+		}
+		return Super.prototype.get.call(this, query,options)
+			.then(function(doc){
+				if(this.user && !_.isArray(doc) && doc && doc.author._id!=this.user._id)
+					return this.asPromise(new Error("no hack"))
+				return doc;
+			}.bind(this))
 	},
 	_getCollectionSchema: function(name, db){
 		var p=new promise.Promise();
@@ -245,7 +260,7 @@ module.exports=Super.extend({
 	routes:_.extend({},Super.routes,{
 		"get reset4Test": function(req, res){
 			var service=new this(req,res),
-				path=__dirname+"/../test/data/"+service.kind+".json",
+				path=__dirname+"/../test/data/"+service.kind+".js",
 				fs=require('fs'),
 				exists=fs.existsSync(path),
 				content=exists ? require('fs').readFileSync(path, 'utf8') : null,
@@ -263,16 +278,7 @@ module.exports=Super.extend({
 			
 		},
 		"get /my/:app/bootstrap":function(req, res){this.send(res, req.path)},
-		"all /functions/:func":function(req, res){
-			var me=this,service=new this(req,res);
-			service.getCloudCode()
-				.run(req.params.func, 
-					{params:req.body||{},user:service.user}, 
-					{success: function(o){me.send(res, o)},
-						error: function(error){me.error(res)(error)}})
-		},
 		"get /schemas": function(req, res){
-
 			(new this(req, res))
 				.getSchema()
 				.then(function(schema){
@@ -307,7 +313,6 @@ module.exports=Super.extend({
 		var service=new this()
 		service.db=this.getAdminDB({w:1});
 		service.checkOwner=function(){return true}
-		//create admin db indexes
 		if(require('../server').config.autoCreateIndex)
 			service.makeSchema(JSON.parse(JSON.stringify(require("../data/schema"))))
 				.then(function(){

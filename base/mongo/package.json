@@ -40,7 +40,8 @@
     "node": ">= 0.4.4"
   },
   "scripts": {
-    "start": "node --debug server.js"
+    "start": "node --debug server.js",
+	"test": "jasmine-node test"
   },
   "readme":"mobiengine"
 }

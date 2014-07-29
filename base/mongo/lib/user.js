@@ -1,6 +1,6 @@
 var Super=require("./entity"), _=require("underscore");
 module.exports=Super.extend({
-	kind:"_users",
+	kind:"users",
 	encrypt: function(text){
 		var hasher=require("crypto").createHash("MD5")
 		hasher.update(text)
@@ -71,7 +71,14 @@ module.exports=Super.extend({
 		},
 		"post /requestPasswordReset": function(req, res){
 			this.error(res)("Not support yet")
-		}
+		},
+		"all /functions/:func":function(req, res){
+			var me=this,service=new this(req,res);
+			service._req.params=req.body||{}
+			service.getCloudCode()
+				.run(req.params.func, service._req, service._res)
+		},
+		
 	},
 	resolvSessionToken: function(token){
 		return {_id:token||"test", username:token||"test"}

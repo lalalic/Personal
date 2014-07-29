@@ -1,13 +1,22 @@
 var _=require("underscore"),
-	mongo=require("mongodb");
+	mongo=require("mongodb"),me;
 
-_.extend((module.exports=_.extend(function(request, response){
+_.extend((me=module.exports=_.extend(function(request, response){
 		if(!(request && request.header)){
 			this.app=request;
 			this.user=response;
 		}else{
 			this.app=request.application
 			this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
+			this._req={user:this.user};
+			this._res={
+				success: function(o){
+					me.send(response, o)
+				}, 
+				error: function(error){
+					me.error(response)(error)
+				}
+			};
 		}
 	},{
 	version:"1",
@@ -80,12 +89,17 @@ _.extend((module.exports=_.extend(function(request, response){
 			this.noSupport()
 	},
 	send: function(res, data){
+		if(res._sended)
+			return
 		res.header('Content-Type', 'application/json');
 		res.send(data||{})
+		res._sended=true
 	},
 	error: function(res){
 		return function(error){
+			if(res._sended) return;
 			res.send(400, error.message||error);	
+			res._sended=true
 		}
 	},
 	noSupport: function(){
@@ -101,7 +115,6 @@ _.extend((module.exports=_.extend(function(request, response){
 			filename=__dirname+"/_app/"+this.app.name+".js",
 			appModule=Module._cache[filename]=null;
 		if(!appModule || appModule.updatedAt!=this.app.updatedAt){
-			this.app.cloudCode="Cloud.define('a', function(req, res){res.success('ok')})";
 			var cloud=require("./cloud").load(this.app,filename);
 			appModule=new Module(filename);
 			appModule.exports=cloud;

@@ -1,7 +1,7 @@
-describe("1/users", function(){
+describe("user", function(){
 	var host="http://127.0.0.1/1",
 		root=host+"/users",	
-		$=require('./ajax'),
+		$=require('./ajax')(),
 		_=require('underscore');
 	
 	it("restore Test database",function(done){
