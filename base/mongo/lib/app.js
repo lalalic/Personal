@@ -246,7 +246,7 @@ module.exports=Super.extend({
 			}.bind(this));
 		}else
 			doc.apiKey=this.createAppKey(doc)
-		return doc;
+		return Super.afterGet(doc);
 	},
 	createAppKey: function(doc){
 		return doc.name

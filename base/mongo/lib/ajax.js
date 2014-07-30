@@ -14,7 +14,7 @@ var VERSION=require('./service').version,
 	})
 */
 module.exports= function(app){
-	return function(options){
+	function ajax(options){
 		var xhr={
 				settings:options,
 				response:null,
@@ -34,36 +34,53 @@ module.exports= function(app){
 		switch(method){
 		case 'get':
 			var query={}, id=info.length-1>i ? info[++i] : null;
-			url.query && _.each(url.query.split("&"),function(t){
+			url.query && _.each(decodeURI(url.query).split("&"),function(t){
 				var d=t.split('=')
 				this[d[0]]=d[1]
 			},query)
 			p=Service.prototype.get.apply(service, Service.parseQuery(id, query))
+			p=p.then(function(data){return Service.afterGet(data)})
 		break
 		case 'post':
-			p=service.create(data)
+			p=service.create(Service.beforePost(data))
+			p=p.then(function(data){return Service.afterPost(data)})
+			break
 		case 'put':
 			p=service.update(info[++i],data)
+			break
 		case 'delete':
-			p=service.delete(info[++i])
+			p=service.remove(info[++i])
+			break
 		case 'patch':
 			p=service.patch(info[++i],data)
+			break
 		default:
 			var Promise=require('node-promise').Promise
 			p=new Promise()
 			p.reject(new Error("Not support "+method))
 		}
-		
-		return p.then(function(doc){
+		var re=service.asPromise('new');
+		p.then(function(doc){
 			xhr.response=doc
 			xhr.status='success'
 			options.success && options.success.call(options.context,doc,xhr.status,xhr);
 			options.complete && options.complete.call(options.context,xhr,xhr.status);
+			re.resolve(doc)
 		},function(error){
 			xhr.response=error
 			xhr.status='error'
 			options.error && options.error.call(options.context,xhr,xhr.status,error);
 			options.complete && options.complete.call(options.context,xhr,xhr.status);
+			re.reject(error)
 		})
+		return re
+	}
+	
+	return {
+		ajax:ajax,
+		get: function(url,options){
+			return this.ajax(_.extend({},options,{type:'get',url:url}))
+		}
 	}
 }
+

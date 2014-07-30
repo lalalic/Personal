@@ -31,6 +31,10 @@ function Cloud(){
 		functions[url]=handler
 	}
 	
+	function timeout(){
+		
+	}
+	
 	this.run=function(url, req, res){
 		try{
 			functions[url](req, res)
@@ -63,7 +67,7 @@ exports.load=function(app, filename){
 			sharedModules[path] && sharedModules[path](m.exports,parentRequire,m)
 			
 			if(path=='backbone')
-				m.exports.ajax=ajax(app)
+				m.exports.ajax=ajax(app).ajax
 			return thisLoadedShare[path]=m.exports
 		},
 		exports:null,

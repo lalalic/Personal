@@ -74,5 +74,9 @@ if (false && cluster.isMaster) {
 		socket.setTimeout(config.server.timeout * 1000);
 		console.log("server is ready");
 	});
+	
+	process.on("uncaughtException",function(error){
+		console.error(error)
+	})
 }
 

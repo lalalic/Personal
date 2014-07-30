@@ -23,12 +23,15 @@ describe("entity", function(){
 				},done)
 		})
 		
-		it("not exists get with id should return {}", function(done){
-			$.get(root+"/booknoexist")
+		it("not exists get with id should return error", function(done){
+			$.get(root+"/booknoexist",{error:null})
 				.then(function(data){
-					expect(_.keys(data).length).toBe(0)
+					$.fail()
 					done()
-				},done)
+				},function(error){
+					expect(error).toBe('Not exists')
+					done()
+				})
 		})
 		
 		it("[all]", function(done){

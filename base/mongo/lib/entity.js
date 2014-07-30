@@ -44,10 +44,16 @@ module.exports = Super.extend({
 					var op=query._id||(options&&options.limit==1) ? 'findOne' : 'find';
 					collection[op](query, options||{}, function (error, result) {
 						if(error) return p.reject(error);
-						op=='findOne' ? p.resolve(result) :
+						if(op=='findOne'){
+							if(query._id && !result)
+								p.reject("Not exists")
+							else
+								p.resolve(result)
+						}else{
 							result.toArray(function (error, docs) {
 								error ? p.reject(error) : p.resolve(docs)
 							})
+						} 
 					})
 				})
 			}.bind(this))
@@ -204,7 +210,7 @@ module.exports = Super.extend({
 			return _.pick(doc,'createdAt', 'updatedAt', '_id')
 		},
 		afterGet: function(doc){
-			return doc
+			return _.isArray(doc) ? {results:doc} : doc
 		},
 		getAdminDB: function(option){
 			return new mongo.Db("admin", this.prototype.getMongoServer.call(),option||{w:0})
@@ -261,8 +267,7 @@ module.exports = Super.extend({
 				var query=this.parseQuery(req.params.id,req.query);
 				service.get.apply(service, query)
 				.then(function (data) {
-						data=this.afterGet(data)
-						this.send(res, _.isArray(data) ? {results:data} : data)
+						this.send(res, this.afterGet(data))
 					}.bind(this),this.error(res))
 			},
 			"post" : function(req, res){

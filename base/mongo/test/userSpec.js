@@ -52,10 +52,10 @@ describe("user", function(){
 		it("get /me with header 'X-Session-Token' of not signedIn user to restore session", function(done){
 			$.get(root+"/me",{headers:{'X-Session-Token':'test54'},error: null})
 				.then(function(user){
-					expect(user).toBe(0)
+					$.fail()
 					done()
 				},function(error){
-					expect(error).toBe("Invalid Session")
+					expect(error).toBe("Not exists")
 					done()
 				})
 		})

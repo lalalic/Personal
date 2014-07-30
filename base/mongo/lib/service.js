@@ -113,13 +113,13 @@ _.extend((me=module.exports=_.extend(function(request, response){
 	getCloudCode: function(){
 		var Module=module.constructor,
 			filename=__dirname+"/_app/"+this.app.name+".js",
-			appModule=Module._cache[filename]=null;
+			appModule=Module._cache[filename];
 		if(!appModule || appModule.updatedAt!=this.app.updatedAt){
 			var cloud=require("./cloud").load(this.app,filename);
 			appModule=new Module(filename);
 			appModule.exports=cloud;
 			appModule.filename=filename;
-			appModule.updatedAt=this.app.updatedAt;
+			appModule.updatedAt=this.app.updatedAt||this.app.createdAt;
 			Module._cache[filename]=appModule; 
 		}
 		return appModule.exports;
