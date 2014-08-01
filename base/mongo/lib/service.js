@@ -7,7 +7,7 @@ _.extend((me=module.exports=_.extend(function(request, response){
 			this.user=response;
 		}else{
 			this.app=request.application
-			this.user=require("./user").resolvSessionToken(request.header("X-Session-Token"))
+			this.user=require("./user").resolvSessionToken(request.header("X-Session-Token")||request.query['X-Session-Token'])
 			this._req={user:this.user};
 			this._res={
 				success: function(o){
@@ -66,7 +66,7 @@ _.extend((me=module.exports=_.extend(function(request, response){
 			app[verb]("/"+this.version+url,function(req, res, next){
 				try{
 					this.checkUrl(req,res)
-					require("./app").resolveAppKey(req.header('X-Application-Id'))
+					require("./app").resolveAppKey(req.header('X-Application-Id')||req.query['X-Application-Id'])
 					.then(function(app){
 						try{
 							this.checkApp(req.application=app)

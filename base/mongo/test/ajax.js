@@ -114,7 +114,7 @@ module.exports=function(){
 function inspect(o){
 	console.log(require('util').inspect(o))
 }
-function fail(){
-	expect(true).toBe(false)
+function fail(error){
+	expect(error||true).toBeUndefined()
 }
 	
