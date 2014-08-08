@@ -48,9 +48,15 @@ exports.load=function(app, filename){
 	var cloud=new Cloud(),parentRequire=require, 
 		thisLoadedShare={}, ajax=require('./ajax'),
 		Module=require('module');
+	var log=function(m,level){app.logs.push({createdAt:new Date(), message:m, level:level||'info'})};
 	require("vm").runInNewContext(app.cloudCode, {
 		Cloud:cloud,
-		console: console,
+		console: {
+			log: function(m){log(m,'info')},
+			info: function(m){log(m,'info')},
+			error:function(m){log(m,'error')},
+			warn:function(m){log(m,'warn')}
+		},
 		require: function(path){
 			if(!Module.isShareModule(path))
 				throw new Error(path+" module is not found.")

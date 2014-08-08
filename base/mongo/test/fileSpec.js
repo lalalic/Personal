@@ -38,7 +38,6 @@ describe('File Service', function(){
 			while(Date.now()<(now+1000));
 			var key="test/"+Date.now()
 			qiniu.io.put(token,key,"test",null,function(error,response){
-				$.inspect(response)
 				if(error)
 					expect(error).toBetruthy();
 				else

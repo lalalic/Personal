@@ -14,7 +14,16 @@ module.exports = Super.extend({
 				if(this.app.name=='admin' && this.kind=='apps')
 					throw new Error("no hack");		
 			}
-			this.app && (this.db = new mongo.Db(this.app.name, this.getMongoServer(),{w:1}))
+			if(this.app){
+				this.db = new mongo.Db(this.app.name, this.getMongoServer(),{w:1});
+				var log=function(){
+					res.log && (res.log.message.contentLenth=(res._headers||{})['content-length'])
+					this.saveLogs()
+					delete res.log
+				}.bind(this)
+				res.on('finish', log);
+      			res.on('close', log);
+			}
 		},
 		_reset: function(docs){
 			var p = this.dbPromise();
@@ -60,10 +69,26 @@ module.exports = Super.extend({
 			return p
 		},
 		dbPromise: function(){
-			var p=new Promise(),
-				closeDB=function(){this.db.close()}.bind(this);
-			p.then(closeDB,closeDB)
+			var p=new Promise();
+			p.addBoth(function(){this.db.close()}.bind(this))
 			return p
+		},
+		saveLogs: function(){
+			if(this.app && this.app.logs && this.app.logs.length){
+				var p=this.dbPromise();
+				this.db.open(function (error, db) {
+					if(error) return p.reject(error)
+					db.collection("logs",function(error, collection){
+						if(error) return p.reject(error);
+						collection.insert(this.app.logs,function(error){
+							if(error) 
+								return p.reject(error)
+							this.app.logs=[]
+							p.resolve()
+						}.bind(this))
+					}.bind(this))
+				}.bind(this))
+			}
 		},
 		asPromise: function(v){
 			var p=new Promise();

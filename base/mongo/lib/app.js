@@ -123,7 +123,7 @@ module.exports=Super.extend({
 				var name=""
 				for(var i in item)
 					i!="$option" && (name+=("_"+i+"_"+item[i]))
-				index[name.substr(1)]=item
+				index[(item['$option']&&item['$option'].name)||name.substr(1)]=item
 			})
 		})
 		

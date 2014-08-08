@@ -69,7 +69,19 @@ _.extend((me=module.exports=_.extend(function(request, response){
 					require("./app").resolveAppKey(req.header('X-Application-Id')||req.query['X-Application-Id'])
 					.then(function(app){
 						try{
-							this.checkApp(req.application=app)
+							this.checkApp(req.application=app);
+							(app.logs || (app.logs=[])).push(res.log={
+								createdAt:new Date(), 
+								message:{
+									remote:	req.ip||req._remoteAddress||(req.connection&&req.connection.remoteAddress),
+									method: req.method,
+									path: req.originalUrl || req.url,
+									httpVersion: req.httpVersionMajor + '.' + req.httpVersionMinor,
+									referrer: req.headers['referer'] || req.headers['referrer'],
+									userAgent: req.headers['user-agent']
+								}
+							})
+							
 							handler.call(this,req, res, next)
 						}catch(error){
 							this.error(res)(error)
@@ -92,12 +104,14 @@ _.extend((me=module.exports=_.extend(function(request, response){
 		if(res._sended)
 			return
 		res.header('Content-Type', 'application/json');
+		res.log && (res.log.message.status=200)
 		res.send(data||{})
 		res._sended=true
 	},
 	error: function(res){
 		return function(error){
 			if(res._sended) return;
+			res.log && (res.log.message.status=400)
 			res.send(400, error.message||error);	
 			res._sended=true
 		}
