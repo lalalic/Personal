@@ -72,6 +72,7 @@ _.extend((me=module.exports=_.extend(function(request, response){
 							this.checkApp(req.application=app);
 							(app.logs || (app.logs=[])).push(res.log={
 								createdAt:new Date(), 
+								level:"access",
 								message:{
 									remote:	req.ip||req._remoteAddress||(req.connection&&req.connection.remoteAddress),
 									method: req.method,
