@@ -31,10 +31,6 @@ function Cloud(){
 		functions[url]=handler
 	}
 	
-	function timeout(){
-		
-	}
-	
 	this.run=function(url, req, res){
 		try{
 			functions[url](req, res)
@@ -48,14 +44,17 @@ exports.load=function(app, filename){
 	var cloud=new Cloud(),parentRequire=require, 
 		thisLoadedShare={}, ajax=require('./ajax'),
 		Module=require('module');
-	var log=function(m,level){app.logs.push({createdAt:new Date(), message:m, level:level||'info'})};
+	var log=function(m,level){
+			if((app.logLevel||0)<=(level||0))
+				app.logs.push({createdAt:new Date(), message:m, level:level||0})
+		};
 	require("vm").runInNewContext(app.cloudCode, {
 		Cloud:cloud,
 		console: {
-			log: function(m){log(m,'info')},
-			info: function(m){log(m,'info')},
-			error:function(m){log(m,'error')},
-			warn:function(m){log(m,'warn')}
+			log: function(m){log(m,0)},
+			info: function(m){log(m,0)},
+			warn:function(m){log(m,1)},
+			error:function(m){log(m,2)}
 		},
 		require: function(path){
 			if(!Module.isShareModule(path))

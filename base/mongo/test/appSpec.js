@@ -39,7 +39,7 @@ var host="http://127.0.0.1/1",
 					},done)
 			})
 			
-			it("can't create application with same name", function(done){
+			it("can't create application with same name within an org", function(done){
 				$.ajax({url:root,type:'post',data:{name:"test10",url:"_test"}})
 					.then(function(doc){
 						expect(doc._id).toBeDefined()
@@ -50,7 +50,7 @@ var host="http://127.0.0.1/1",
 								$.fail()
 								done()
 							},function(error){
-								expect(error).toMatch(/.*(duplicate).*(test10).*/gi)
+								expect(error).toMatch(/duplicate key/gi)
 								done()
 							})
 					},done)
@@ -95,8 +95,8 @@ var host="http://127.0.0.1/1",
 				})
 			})
 			
-			it("can't update name/application token", function(done){
-				var newName="__dfasdf"
+			it("can't update name to be duplicated", function(done){
+				var newName="test"
 				$.ajax({
 					type:'patch',
 					url:root+"/test1",
@@ -106,7 +106,7 @@ var host="http://127.0.0.1/1",
 					$.fail()
 					done()
 				},function(error){
-					expect(error).toMatch(/(name).*(update)/gi)
+					expect(error).toMatch(/duplicate/gi)
 					done()
 				})
 			})

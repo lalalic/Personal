@@ -73,10 +73,10 @@ module.exports=Super.extend({
 			this.error(res)("Not support yet")
 		},
 		"all /functions/:func":function(req, res){
-			var me=this,service=new this(req,res);
+			var service=new this(req,res);
 			service._req.params=req.body||{}
-			service.getCloudCode()
-				.run(req.params.func, service._req, service._res)
+			var cloud=service.getCloudCode();
+			cloud.run(req.params.func, service._req, service._res)
 		},
 		
 	},

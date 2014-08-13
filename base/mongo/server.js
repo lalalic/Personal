@@ -23,7 +23,7 @@ var config = module.exports.config={
 	debug:true,
 	autoCreateIndex:true,
 	sharedModules:"underscore,backbone,node-promise,ajax".split(","),
-	Internal_API:["users,roles,plugins,files".split(",")],
+	Internal_API:["users,roles,files,logs".split(",")],
 	domain:"http://getzipweb.com"
 };
 
@@ -62,12 +62,13 @@ if (false && cluster.isMaster) {
 		app.use("/"+config.qiniu.bucket,express.static(__dirname+'/upload/'+config.qiniu.bucket));
 	}
 
+	require("./lib/log").init()
 	require("./lib/file").init()
 	require("./lib/user").init()
 	require("./lib/role").init()
 	require("./lib/app").init()
-	require("./lib/plugin").init()
 	require("./lib/entity").init()
+	
 	
 	app.use(express.static(__dirname+'/view'));
 	

@@ -1,7 +1,6 @@
 var Super=require("./entity"),
 	_=require('underscore'),
-	promise=require("node-promise"),
-	defaults=require('./schema');
+	promise=require("node-promise");
   
 module.exports=Super.extend({
 	constructor:function(req, res){
@@ -21,7 +20,9 @@ module.exports=Super.extend({
 	beforeCreate:function(doc,collection){
 		if(!doc.name)
 			return this.asPromise(new Error("application name can't be empty"))
+		
 		doc.author=_.pick(this.user,"_id","username")
+		
 		return this.asPromise(doc)
 	},
 	afterCreate:function(doc, collection){
@@ -38,9 +39,6 @@ module.exports=Super.extend({
 						return this.asPromise(error)
 					}
 				}
-				
-				if(changes.name && changes.name!=old.name)
-					throw new Error("application name can't be updated")
 				
 				changes.author=_.pick(this.user,"_id","username")
 				return this.asPromise()

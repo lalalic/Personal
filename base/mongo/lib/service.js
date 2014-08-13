@@ -62,7 +62,9 @@ _.extend((me=module.exports=_.extend(function(request, response){
 				root=this.url ? this.url : "/"+this.prototype.kind,
 				url=/^\//.test(path) ? path : (/\/$/.test(root)||path.length==0 ? root : root+"/")+path;
 			if(!_.isFunction(handler))
-				handler=function(req,res){this.send(res,req.path)}.bind(this);
+				handler=function(req,res){
+					this.send(res,req.path)
+				}.bind(this);
 			app[verb]("/"+this.version+url,function(req, res, next){
 				try{
 					this.checkUrl(req,res)
@@ -72,7 +74,7 @@ _.extend((me=module.exports=_.extend(function(request, response){
 							this.checkApp(req.application=app);
 							(app.logs || (app.logs=[])).push(res.log={
 								createdAt:new Date(), 
-								level:"access",
+								level:9,
 								message:{
 									remote:	req.ip||req._remoteAddress||(req.connection&&req.connection.remoteAddress),
 									method: req.method,

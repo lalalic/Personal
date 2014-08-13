@@ -366,7 +366,6 @@ describe("cloud", function(){
 				},root).then(function(){
 					$.get(host+"/functions/test",{error:null})
 					.then(function(data){
-						$.inspect(data)
 						$.fail()
 						done()
 					},function(error){

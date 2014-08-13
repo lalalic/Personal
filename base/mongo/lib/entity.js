@@ -21,8 +21,10 @@ module.exports = Super.extend({
 					this.saveLogs()
 					delete res.log
 				}.bind(this)
-				res.on('finish', log);
-      			res.on('close', log);
+				if(res){
+					res.on('finish', log);
+      				res.on('close', log);
+				}
 			}
 		},
 		_reset: function(docs){
@@ -34,7 +36,7 @@ module.exports = Super.extend({
 						error=null;
 					if(error) return p.reject(error)
 					
-					if(!docs) return p.resolve({ok:1, n:0});
+					if(!docs || docs.length==0) return p.resolve({ok:1, n:0});
 					
 					db.command({insert:this.kind,documents: docs}, {writeCommand:true}, function(error, result){
 						error ? p.reject(error) : p.resolve(result)
@@ -219,6 +221,9 @@ module.exports = Super.extend({
 				return p.resolve(doc)
 			}.bind(this))
 			return p
+		},
+		dump: function(){
+			throw new Error("Not support yet")
 		}
 	}, {
 		url : "/classes/:collection",
