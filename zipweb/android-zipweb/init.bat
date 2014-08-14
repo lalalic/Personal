@@ -1,1 +1,0 @@
-mklink /J .\assets\lib ..\..\base\android\assets\lib
